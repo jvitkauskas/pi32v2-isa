@@ -42,6 +42,49 @@ def cmd_stats(args):
     return 0
 
 
+def cmd_oracle(args):
+    from . import oracle
+
+    if args.action == "fetch":
+        print(oracle.fetch(args.release))
+        return 0
+    o = oracle.Oracle(args.release)
+    if args.action == "decode":
+        data = bytes(int(b, 16) for b in " ".join(args.items).split())
+        for addr, got, text in o.listing(data, args.feature):
+            print(f"{addr:8x}:  {got.hex(' '):<18} {text}")
+        return 0
+    if args.action == "encode":
+        for text, got in zip(args.items, o.encode(args.items, args.feature)):
+            print(f"{text}\t" + (f"error: {got}" if isinstance(got, str) else got.hex(" ")))
+        return 0
+    # confirm
+    t = table.load(args.table)
+    ids = args.items or [i.id for i in t.insns if i.status != "confirmed"]
+    failed = 0
+    for insn_id in ids:
+        insn = t.by_id(insn_id)
+        problems, examples, checked = oracle.confirm(o, t, insn)
+        if problems:
+            failed += 1
+            print(f"{insn_id}: {len(problems)} disagreements over {checked} encodings")
+            for p in problems[:args.show]:
+                print(f"  {p}")
+            if len(problems) > args.show:
+                print(f"  ... {len(problems) - args.show} more")
+            continue
+        print(f"{insn_id}: {checked} encodings agree both ways")
+        if args.write:
+            table.record_confirmation(args.table, insn_id, examples)
+    if args.write:
+        errors = table.check(table.load(args.table))
+        for e in errors:
+            print(e, file=sys.stderr)
+        if errors:
+            return 1
+    return 1 if failed else 0
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="pi32v2isa")
     p.add_argument("--table", default=table.TABLE, help="instruction table (default: isa/pi32v2.toml)")
@@ -52,6 +95,14 @@ def main(argv=None):
     d.add_argument("--base", type=lambda s: int(s, 0), default=0, help="address of the first byte")
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
+    o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "confirm"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: assembly lines; confirm: entry ids")
+    o.add_argument("--release", default="20260730.1", help="toolchain release")
+    o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
+    o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
+    o.add_argument("--show", type=int, default=8, help="confirm: problems to show per entry")
+    o.set_defaults(func=cmd_oracle)
     args = p.parse_args(argv)
     return args.func(args)
 

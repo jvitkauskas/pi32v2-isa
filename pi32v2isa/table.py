@@ -110,6 +110,40 @@ def load(path=TABLE):
     return Table(format=raw.get("format", 0), insns=insns)
 
 
+def record_confirmation(path, insn_id, examples, source="oracle"):
+    """Mark an entry confirmed in the table file, add `source` and append examples [(bytes, text, origin)].
+    Edits the text in place so the file's layout and comments stay as they are."""
+    path = Path(path)
+    lines = path.read_text().splitlines(keepends=True)
+    starts = [n for n, ln in enumerate(lines) if ln.startswith("[[insn]]")] + [len(lines)]
+    for a, b in zip(starts, starts[1:]):
+        if f'id = "{insn_id}"\n' in lines[a:b]:
+            break
+    else:
+        raise KeyError(insn_id)
+    block = lines[a:b]
+    end = len(block)        # trailing blank and comment lines belong to the next entry
+    while end and (not block[end - 1].strip() or block[end - 1].startswith("#")):
+        end -= 1
+    body, tail = block[:end], block[end:]
+    have = {x["bytes"] for x in tomllib.loads("".join(body)).get("insn", [{}])[0].get("example", [])}
+    for n, ln in enumerate(body):
+        if ln.startswith("status = "):
+            body[n] = 'status = "confirmed"\n'
+        elif ln.startswith("sources = "):
+            current = tomllib.loads(ln)["sources"]
+            if source not in current:
+                current.append(source)
+            body[n] = "sources = [" + ", ".join(f'"{s}"' for s in current) + "]\n"
+    for data, text, origin in examples:
+        if data.hex(" ") in have:
+            continue
+        body += ["\n", "[[insn.example]]\n", f'bytes = "{data.hex(" ")}"\n', f'text = "{text}"\n',
+                 f'origin = "{origin}"\n']
+    lines[a:b] = body + tail
+    path.write_text("".join(lines))
+
+
 def _overlap(a, b):
     """True if some instruction stream matches both entries: compare the words they have in common."""
     n = min(len(a.words), len(b.words))

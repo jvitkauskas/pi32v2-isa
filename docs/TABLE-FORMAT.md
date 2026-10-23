@@ -54,6 +54,10 @@ New kinds are added here and in `pi32v2isa/table.py` together.
 | `documented` | A cited source states it | at least one `sources` id other than `oracle` |
 | `confirmed` | Checked against the oracle | `oracle` in `sources` and examples covering every field ([ORACLE.md](ORACLE.md)) |
 
+`confirmed` covers the **encoding and the syntax**: JieLi's tools decode and assemble the entry exactly as the
+table says. It says nothing about **behaviour**: the `summary` still rests on the other sources (and `notes`
+says so where it is an assumption) until it is tested on hardware.
+
 ## Checks
 
 `python3 -m pi32v2isa check` rejects a table where:

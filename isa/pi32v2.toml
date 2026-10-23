@@ -13,8 +13,13 @@ syntax = "nop"
 encoding = ["0000000000000000"]
 group = "control"
 summary = "Do nothing."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "00 00"
+text = "nop"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "idle"
@@ -22,9 +27,14 @@ syntax = "idle"
 encoding = ["0000000000000001"]
 group = "control"
 summary = "Wait for an interrupt."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
 notes = "Meaning assumed from the name and Blackfin's IDLE; not observed."
+
+[[insn.example]]
+bytes = "01 00"
+text = "idle"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "csync"
@@ -32,9 +42,14 @@ syntax = "csync"
 encoding = ["0000000000100000"]
 group = "control"
 summary = "Core synchronisation barrier."
-status = "documented"
-sources = ["kagaimiq-jielie", "sources-in-use"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
 notes = "Exact ordering guarantees unknown."
+
+[[insn.example]]
+bytes = "20 00"
+text = "csync"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "cli"
@@ -42,8 +57,13 @@ syntax = "cli"
 encoding = ["0000000001100000"]
 group = "control"
 summary = "Disable interrupts."
-status = "documented"
-sources = ["kagaimiq-jielie", "sources-in-use"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "60 00"
+text = "cli"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "sti"
@@ -51,8 +71,13 @@ syntax = "sti"
 encoding = ["0000000001100001"]
 group = "control"
 summary = "Enable interrupts."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "61 00"
+text = "sti"
+origin = "oracle:objdump+clang:20260730.1"
 
 # ---- returns ----
 
@@ -62,8 +87,13 @@ syntax = "rts"
 encoding = ["0000000010000000"]
 group = "returns"
 summary = "Return from a subroutine: continue at the address in rets."
-status = "documented"
-sources = ["kagaimiq-jielie", "sources-in-use"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "80 00"
+text = "rts"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "rti"
@@ -71,8 +101,13 @@ syntax = "rti"
 encoding = ["0000000010000001"]
 group = "returns"
 summary = "Return from an interrupt: continue at the address in reti."
-status = "documented"
-sources = ["kagaimiq-jielie", "sources-in-use"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "81 00"
+text = "rti"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "rtx"
@@ -80,8 +115,13 @@ syntax = "rtx"
 encoding = ["0000000010000010"]
 group = "returns"
 summary = "Return from an exception: continue at the address in retx."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "82 00"
+text = "rtx"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "rte"
@@ -89,8 +129,13 @@ syntax = "rte"
 encoding = ["0000000010000011"]
 group = "returns"
 summary = "Return from emulation (debug) mode: continue at the address in rete."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "83 00"
+text = "rte"
+origin = "oracle:objdump+clang:20260730.1"
 
 # ---- jumps through a register ----
 
@@ -101,9 +146,18 @@ encoding = ["000000001100xxxx"]
 fields = { x = "gpr" }
 group = "jumps"
 summary = "Call the subroutine at the address in a register; the return address goes to rets."
-status = "documented"
-sources = ["kagaimiq-jielie"]
-notes = "Syntax spelling not yet checked against the oracle."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "c0 00"
+text = "call r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "cf 00"
+text = "call r15"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "goto.r"
@@ -112,9 +166,18 @@ encoding = ["000000001101xxxx"]
 fields = { x = "gpr" }
 group = "jumps"
 summary = "Jump to the address in a register."
-status = "documented"
-sources = ["kagaimiq-jielie"]
-notes = "Syntax spelling not yet checked against the oracle."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "d0 00"
+text = "goto r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "df 00"
+text = "goto r15"
+origin = "oracle:objdump+clang:20260730.1"
 
 # ---- moves ----
 
@@ -125,8 +188,28 @@ encoding = ["00010110yyyyxxxx"]
 fields = { x = "gpr", y = "gpr" }
 group = "moves"
 summary = "Copy one general register to another."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "00 16"
+text = "r0 = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 16"
+text = "r15 = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 16"
+text = "r0 = r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 16"
+text = "r15 = r15"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "mov.sp_usp"
@@ -134,8 +217,13 @@ syntax = "sp = usp"
 encoding = ["0001010001000000"]
 group = "moves"
 summary = "Make the user stack pointer the current stack pointer."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "40 14"
+text = "sp = usp"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "mov.sp_ssp"
@@ -143,8 +231,13 @@ syntax = "sp = ssp"
 encoding = ["0001010001000001"]
 group = "moves"
 summary = "Make the supervisor stack pointer the current stack pointer."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "41 14"
+text = "sp = ssp"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "mov.usp_sp"
@@ -152,8 +245,13 @@ syntax = "usp = sp"
 encoding = ["0001010001000010"]
 group = "moves"
 summary = "Save the current stack pointer as the user stack pointer."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "42 14"
+text = "usp = sp"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "mov.ssp_sp"
@@ -161,8 +259,13 @@ syntax = "ssp = sp"
 encoding = ["0001010001000011"]
 group = "moves"
 summary = "Save the current stack pointer as the supervisor stack pointer."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "43 14"
+text = "ssp = sp"
+origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
 id = "cc.set"
@@ -171,5 +274,15 @@ encoding = ["000101000000000v"]
 fields = { v = "uimm" }
 group = "moves"
 summary = "Set the condition flag to 0 or 1."
-status = "documented"
-sources = ["kagaimiq-jielie"]
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "00 14"
+text = "cc = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 14"
+text = "cc = 1"
+origin = "oracle:objdump+clang:20260730.1"

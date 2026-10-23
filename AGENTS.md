@@ -15,9 +15,11 @@ These rules apply to people and agents alike. They keep the reference trustworth
 - Each entry lists its `sources` (ids from `docs/SOURCES.md`) and a `status`:
   - `guessed`: inferred, not seen in any source or observation;
   - `documented`: stated by a cited source, not yet checked against the oracle;
-  - `confirmed`: checked against the oracle; the entry's examples are the evidence.
-- Only examples observed from the oracle may be marked as such (`origin = "oracle:..."`). Never write an
-  example by encoding the entry's own pattern and call it an observation.
+  - `confirmed`: encoding and syntax checked against the oracle; the entry's examples are the evidence.
+    Behaviour is not covered (`docs/TABLE-FORMAT.md`).
+- Use `python3 -m pi32v2isa oracle confirm <id> --write` to confirm an entry. An example with
+  `origin = "oracle:..."` must be bytes and text the oracle actually decoded and assembled; never write one by
+  hand from the entry's own pattern.
 - When a new finding contradicts an entry, fix the entry, keep the old claim in the commit message, and add an
   example that shows the difference.
 - Something known to exist but not understood goes in `docs/GAPS.md`, not in the table as a guess.
