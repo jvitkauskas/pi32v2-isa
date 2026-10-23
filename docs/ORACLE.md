@@ -53,6 +53,10 @@ negative weight), and whether the words form a complete pattern or have holes wh
 (`--split MASK` groups the words by some bits first). All three only feed the oracle input and read its
 output.
 
+```sh
+python3 -m pi32v2isa oracle coverage 0000-1fff     # what objdump decodes there that the table does not, by shape
+```
+
 ## Confirming entries
 
 ```sh

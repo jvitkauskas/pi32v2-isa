@@ -351,3 +351,22 @@ def fit(decoded, pattern, split=0):
         complete = len(ws) == 1 << (16 - bin(same & 0xFFFF).count("1"))
         out.append((pat, len(ws), complete, roles))
     return out
+
+
+def coverage(oracle, table, lo=0, hi=0xFFFF):
+    """Words lo..hi that objdump decodes and the table does not, grouped by shape. Each word is checked
+    followed by zero words, so a 32- or 48-bit first word counts as covered when the table decodes it with
+    a zero second (and third) word. Returns (decoded by objdump, covered by the table, missing shapes)."""
+    decoded = sweep(oracle)
+    missing, total, covered = {}, 0, 0
+    for w in range(lo, hi + 1):
+        n, text = decoded[w]
+        if text == UNKNOWN or not n:
+            continue
+        total += 1
+        got = codec.decode(table, bytes((w & 0xFF, w >> 8)) + bytes(4))
+        if got and got[2] == n:
+            covered += 1
+        else:
+            missing[w] = (n, text)
+    return total, covered, shapes(missing)

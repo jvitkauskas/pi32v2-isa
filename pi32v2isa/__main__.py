@@ -82,6 +82,13 @@ def cmd_oracle(args):
             for b, deltas in roles:
                 print(f"   bit {b:2d}: " + ", ".join(f"{d} x{c}" for d, c in deltas))
         return 0
+    if args.action == "coverage":
+        lo, _, hi = (args.items[0] if args.items else "0-ffff").partition("-")
+        total, covered, missing = oracle.coverage(o, table.load(args.table), int(lo, 16), int(hi or lo, 16))
+        print(f"{covered} of {total} decodable words covered; missing shapes:")
+        for shape, n, ws, pattern in missing:
+            print(f"{len(ws):6d}  {n}  {pattern}  {shape}")
+        return 0
     if args.action == "compare":
         t = table.load(args.table)
         total = collections.Counter()
@@ -132,8 +139,8 @@ def main(argv=None):
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "compare", "confirm"])
-    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; compare: objects; confirm: ids")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "confirm"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; compare: objects; confirm: ids")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
     o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
