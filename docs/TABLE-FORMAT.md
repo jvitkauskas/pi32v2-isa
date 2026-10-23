@@ -63,6 +63,8 @@ or as an inline table:
 | `scale` | 1 | `uimm`/`simm` only: the printed number is the raw value (sign-extended for `simm`) times `scale`, plus `add` |
 | `add` | 0 | `uimm`/`simm` only |
 
+`scale` may be negative: a one-bit `uimm` with `scale = -8`, `add = 4` is +4 or -4 (`ld.w.pin`).
+
 `letters` handles split fields: `li.u32` keeps a constant's low half in its second word and the high half in
 its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`.
 

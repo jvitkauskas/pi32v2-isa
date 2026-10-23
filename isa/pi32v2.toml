@@ -1148,3 +1148,2251 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "58 e9 ff ff"
 text = "[--sp] = {pc, sp, ssp, usp, icfg, icfgs, icfgn, sspn, uspn, cnum, psr, sr4, rets, retx, rete, reti}"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ==== region A: 0000-1FFF (and their C000-DFFF twins) ====
+
+# ---- post-increment loads and stores ----
+
+[[insn]]
+id = "ld.w.pi"
+syntax = "{d} = [{b}++={i}]"
+encoding = ["000010iiibbb0ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Load a word, from the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+
+[[insn.example]]
+bytes = "00 08"
+text = "r0 = [r0++=r8]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 08"
+text = "r0 = [r7++=r8]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 08"
+text = "r7 = [r0++=r8]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 0b"
+text = "r0 = [r0++=r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 0b"
+text = "r7 = [r7++=r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.w.pi"
+syntax = "[{b}++={i}] = {d}"
+encoding = ["000010iiibbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Store a word to the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+
+[[insn.example]]
+bytes = "08 08"
+text = "[r0++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 08"
+text = "[r7++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 08"
+text = "[r0++=r8] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 0b"
+text = "[r0++=r15] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 0b"
+text = "[r7++=r15] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.hu.pi"
+syntax = "{d} = h[{b}++={i}] (u)"
+encoding = ["000011iiibbb0ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Load a halfword, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+
+[[insn.example]]
+bytes = "00 0c"
+text = "r0 = h[r0++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 0c"
+text = "r0 = h[r7++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 0c"
+text = "r7 = h[r0++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 0f"
+text = "r0 = h[r0++=r15] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 0f"
+text = "r7 = h[r7++=r15] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.h.pi"
+syntax = "h[{b}++={i}] = {d}"
+encoding = ["000011iiibbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Store a halfword to the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+
+[[insn.example]]
+bytes = "08 0c"
+text = "h[r0++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 0c"
+text = "h[r7++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 0c"
+text = "h[r0++=r8] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 0f"
+text = "h[r0++=r15] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 0f"
+text = "h[r7++=r15] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.bu.pi"
+syntax = "{d} = b[{b}++={i}] (u)"
+encoding = ["000100iiibbb0ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Load a byte, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+
+[[insn.example]]
+bytes = "00 10"
+text = "r0 = b[r0++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 10"
+text = "r0 = b[r7++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 10"
+text = "r7 = b[r0++=r8] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 13"
+text = "r0 = b[r0++=r15] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 13"
+text = "r7 = b[r7++=r15] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.b.pi"
+syntax = "b[{b}++={i}] = {d}"
+encoding = ["000100iiibbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
+group = "memory"
+summary = "Store a byte to the address in a register, then add a register (r8..r15) to that address register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+
+[[insn.example]]
+bytes = "08 10"
+text = "b[r0++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 10"
+text = "b[r7++=r8] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 10"
+text = "b[r0++=r8] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 13"
+text = "b[r0++=r15] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 13"
+text = "b[r7++=r15] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.w.pin"
+syntax = "{d} = [{b}++={n}]"
+encoding = ["000001010bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -8, add = 4 } }
+group = "memory"
+summary = "Load a word, from the address in a register, then add or subtract 4 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "00 05"
+text = "r0 = [r0++=4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 05"
+text = "r0 = [r7++=4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 05"
+text = "r7 = [r0++=4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 05"
+text = "r0 = [r0++=-4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 05"
+text = "r7 = [r7++=-4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.w.pin"
+syntax = "[{b}++={n}] = {d}"
+encoding = ["000001011bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -8, add = 4 } }
+group = "memory"
+summary = "Store a word to the address in a register, then add or subtract 4 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "80 05"
+text = "[r0++=4] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 05"
+text = "[r7++=4] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 05"
+text = "[r0++=4] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 05"
+text = "[r0++=-4] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 05"
+text = "[r7++=-4] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.hu.pin"
+syntax = "{d} = h[{b}++={n}] (u)"
+encoding = ["000001100bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -4, add = 2 } }
+group = "memory"
+summary = "Load a halfword, zero-extended, from the address in a register, then add or subtract 2 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "00 06"
+text = "r0 = h[r0++=2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 06"
+text = "r0 = h[r7++=2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 06"
+text = "r7 = h[r0++=2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 06"
+text = "r0 = h[r0++=-2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 06"
+text = "r7 = h[r7++=-2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.h.pin"
+syntax = "h[{b}++={n}] = {d}"
+encoding = ["000001101bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -4, add = 2 } }
+group = "memory"
+summary = "Store a halfword to the address in a register, then add or subtract 2 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "80 06"
+text = "h[r0++=2] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 06"
+text = "h[r7++=2] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 06"
+text = "h[r0++=2] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 06"
+text = "h[r0++=-2] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 06"
+text = "h[r7++=-2] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.bu.pin"
+syntax = "{d} = b[{b}++={n}] (u)"
+encoding = ["000001110bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -2, add = 1 } }
+group = "memory"
+summary = "Load a byte, zero-extended, from the address in a register, then add or subtract 1 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "00 07"
+text = "r0 = b[r0++=1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 07"
+text = "r0 = b[r7++=1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 07"
+text = "r7 = b[r0++=1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 07"
+text = "r0 = b[r0++=-1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 07"
+text = "r7 = b[r7++=-1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.b.pin"
+syntax = "b[{b}++={n}] = {d}"
+encoding = ["000001111bbbsddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale = -2, add = 1 } }
+group = "memory"
+summary = "Store a byte to the address in a register, then add or subtract 1 to that register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+
+[[insn.example]]
+bytes = "80 07"
+text = "b[r0++=1] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 07"
+text = "b[r7++=1] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 07"
+text = "b[r0++=1] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 07"
+text = "b[r0++=-1] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 07"
+text = "b[r7++=-1] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- arithmetic and logic ----
+
+[[insn]]
+id = "add.rrr"
+syntax = "{d} = {a} + {b}"
+encoding = ["0001110xxaaayddd"]
+fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
+group = "arithmetic"
+summary = "Add two registers (r0..r7) into a third."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: first source in bits 6..4, destination in bits 2..0, second source in bits 8..7 and 3 (r0..r7 only)."
+
+[[insn.example]]
+bytes = "00 1c"
+text = "r0 = r0 + r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 1c"
+text = "r0 = r7 + r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 1d"
+text = "r0 = r0 + r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 1c"
+text = "r7 = r0 + r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 1d"
+text = "r7 = r7 + r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sub.rrr"
+syntax = "{d} = {a} - {b}"
+encoding = ["0001111xxaaayddd"]
+fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
+group = "arithmetic"
+summary = "Subtract the second register from the first (operand order as printed) into a third."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: first source in bits 6..4, destination in bits 2..0, second source in bits 8..7 and 3 (r0..r7 only). Which source is subtracted is read from the syntax."
+
+[[insn.example]]
+bytes = "00 1e"
+text = "r0 = r0 - r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 1e"
+text = "r0 = r7 - r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 1f"
+text = "r0 = r0 - r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 1e"
+text = "r7 = r0 - r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 1f"
+text = "r7 = r7 - r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.rr"
+syntax = "{d} += {s}"
+encoding = ["00011000ssssdddd"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Add a register to another."
+status = "guessed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 3..0, source in bits 7..4. Not confirmed: when both registers are r0..r7 the assembler writes r1 += r2 as add.rrr (r1 = r1 + r2) instead, which confirm does not treat as the same meaning; the other 192 combinations agree both ways."
+
+[[insn]]
+id = "mul.rr"
+syntax = "{d} *= {s}"
+encoding = ["00011011ssssdddd"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Multiply a register by another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 3..0, source in bits 7..4. Whether the result is truncated to 32 bits is not tested."
+
+[[insn.example]]
+bytes = "00 1b"
+text = "r0 *= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 1b"
+text = "r15 *= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 1b"
+text = "r0 *= r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 1b"
+text = "r15 *= r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "or.rr"
+syntax = "{d} |= {s}"
+encoding = ["000110010sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "OR a register into another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only)."
+
+[[insn.example]]
+bytes = "00 19"
+text = "r0 |= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 19"
+text = "r7 |= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 19"
+text = "r0 |= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 19"
+text = "r7 |= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "xor.rr"
+syntax = "{d} ^= {s}"
+encoding = ["000110010sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "XOR a register into another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only)."
+
+[[insn.example]]
+bytes = "08 19"
+text = "r0 ^= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 19"
+text = "r7 ^= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 19"
+text = "r0 ^= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 19"
+text = "r7 ^= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "and.rr"
+syntax = "{d} &= {s}"
+encoding = ["000110011sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "AND a register into another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only)."
+
+[[insn.example]]
+bytes = "80 19"
+text = "r0 &= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 19"
+text = "r7 &= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 19"
+text = "r0 &= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 19"
+text = "r7 &= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "not.rr"
+syntax = "{d} = ~{s}"
+encoding = ["000110011sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "Bitwise complement of a register into another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only)."
+
+[[insn.example]]
+bytes = "88 19"
+text = "r0 = ~r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 19"
+text = "r7 = ~r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 19"
+text = "r0 = ~r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 19"
+text = "r7 = ~r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsl.rr"
+syntax = "{d} <<= {s}"
+encoding = ["000110100sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register left by a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Behaviour for counts of 32 or more not tested."
+
+[[insn.example]]
+bytes = "00 1a"
+text = "r0 <<= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 1a"
+text = "r7 <<= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 1a"
+text = "r0 <<= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 1a"
+text = "r7 <<= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.rr"
+syntax = "{d} <<<= {s}"
+encoding = ["000110100sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register by a register, the <<< operation."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Meaning unknown; named after the symbol objdump prints."
+
+[[insn.example]]
+bytes = "08 1a"
+text = "r0 <<<= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 1a"
+text = "r7 <<<= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 1a"
+text = "r0 <<<= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 1a"
+text = "r7 <<<= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.rr"
+syntax = "{d} >>= {s}"
+encoding = ["000110101sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register right by a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Logical or arithmetic not tested."
+
+[[insn.example]]
+bytes = "80 1a"
+text = "r0 >>= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 1a"
+text = "r7 >>= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 1a"
+text = "r0 >>= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 1a"
+text = "r7 >>= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.rr"
+syntax = "{d} >>>= {s}"
+encoding = ["000110101sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register by a register, the >>> operation."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Meaning unknown; named after the symbol objdump prints."
+
+[[insn.example]]
+bytes = "88 1a"
+text = "r0 >>>= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 1a"
+text = "r7 >>>= r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 1a"
+text = "r0 >>>= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 1a"
+text = "r7 >>>= r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- extensions ----
+
+[[insn]]
+id = "ext.b0.u"
+syntax = "{d} = {s}.b0 (u)"
+encoding = ["000101110sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Zero-extend the low byte of a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 = 1 for the signed form (r0..r7 only)."
+
+[[insn.example]]
+bytes = "00 17"
+text = "r0 = r0.b0 (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 17"
+text = "r7 = r0.b0 (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 17"
+text = "r0 = r7.b0 (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 17"
+text = "r7 = r7.b0 (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.b0.s"
+syntax = "{d} = {s}.b0 (s)"
+encoding = ["000101110sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Sign-extend the low byte of a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 = 1 for the signed form (r0..r7 only)."
+
+[[insn.example]]
+bytes = "08 17"
+text = "r0 = r0.b0 (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 17"
+text = "r7 = r0.b0 (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 17"
+text = "r0 = r7.b0 (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 17"
+text = "r7 = r7.b0 (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.l.u"
+syntax = "{d} = {s}.l (u)"
+encoding = ["000101111sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Zero-extend the low halfword of a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 = 1 for the signed form (r0..r7 only)."
+
+[[insn.example]]
+bytes = "80 17"
+text = "r0 = r0.l (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 17"
+text = "r7 = r0.l (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 17"
+text = "r0 = r7.l (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 17"
+text = "r7 = r7.l (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.l.s"
+syntax = "{d} = {s}.l (s)"
+encoding = ["000101111sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Sign-extend the low halfword of a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 = 1 for the signed form (r0..r7 only)."
+
+[[insn.example]]
+bytes = "88 17"
+text = "r0 = r0.l (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 17"
+text = "r7 = r0.l (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 17"
+text = "r0 = r7.l (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 17"
+text = "r7 = r7.l (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- 64-bit register pairs ----
+
+[[insn]]
+id = "mov.pair"
+syntax = "{d} = {s}"
+encoding = ["00010101sss0ddd0"]
+fields = { d = "pair", s = "pair" }
+group = "moves"
+summary = "Copy a 64-bit register pair to another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep: source pair in bits 7..5, destination pair in bits 3..1."
+
+[[insn.example]]
+bytes = "00 15"
+text = "r1_r0 = r1_r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0e 15"
+text = "r15_r14 = r1_r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e0 15"
+text = "r1_r0 = r15_r14"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ee 15"
+text = "r15_r14 = r15_r14"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.zero_pair"
+syntax = "{p} = 0"
+encoding = ["000101001000ppp0"]
+fields = { p = "pair" }
+group = "constants"
+summary = "Clear a 64-bit register pair."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep; objdump prints the constant as 0 for all 8 words."
+
+[[insn.example]]
+bytes = "80 14"
+text = "r1_r0 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8e 14"
+text = "r15_r14 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- moves between stack pointers ----
+
+[[insn]]
+id = "mov.sp_uspn"
+syntax = "sp = uspn"
+encoding = ["0001010001000100"]
+group = "moves"
+summary = "Copy between sp and the special register uspn."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+
+[[insn.example]]
+bytes = "44 14"
+text = "sp = uspn"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sp_sspn"
+syntax = "sp = sspn"
+encoding = ["0001010001000101"]
+group = "moves"
+summary = "Copy between sp and the special register sspn."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+
+[[insn.example]]
+bytes = "45 14"
+text = "sp = sspn"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.uspn_sp"
+syntax = "uspn = sp"
+encoding = ["0001010001000110"]
+group = "moves"
+summary = "Copy between sp and the special register uspn."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+
+[[insn.example]]
+bytes = "46 14"
+text = "uspn = sp"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sspn_sp"
+syntax = "sspn = sp"
+encoding = ["0001010001000111"]
+group = "moves"
+summary = "Copy between sp and the special register sspn."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+
+[[insn.example]]
+bytes = "47 14"
+text = "sspn = sp"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- jumps and calls through a register ----
+
+[[insn]]
+id = "callns.r"
+syntax = "callns {x}"
+encoding = ["000000001001xxxx"]
+fields = { x = "gpr" }
+group = "jumps"
+summary = "Call through a register, variant 'ns'; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Meaning of 'ns' unknown."
+
+[[insn.example]]
+bytes = "90 00"
+text = "callns r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f 00"
+text = "callns r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "testset.b"
+syntax = "testset b[{x}]"
+encoding = ["000000001011xxxx"]
+fields = { x = "gpr" }
+group = "memory"
+summary = "Test-and-set the byte at the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Atomicity and result flag not tested."
+
+[[insn.example]]
+bytes = "b0 00"
+text = "testset b[r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf 00"
+text = "testset b[r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cli.r"
+syntax = "cli {x}"
+encoding = ["000000001110xxxx"]
+fields = { x = "gpr" }
+group = "control"
+summary = "Disable interrupts, taking a register operand; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0."
+
+[[insn.example]]
+bytes = "e0 00"
+text = "cli r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef 00"
+text = "cli r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sti.r"
+syntax = "sti {x}"
+encoding = ["000000001111xxxx"]
+fields = { x = "gpr" }
+group = "control"
+summary = "Enable interrupts, taking a register operand; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0."
+
+[[insn.example]]
+bytes = "f0 00"
+text = "sti r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 00"
+text = "sti r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "tbb"
+syntax = "tbb [{x}]"
+encoding = ["000000010000xxxx"]
+fields = { x = "gpr" }
+group = "branches"
+summary = "Table branch on bytes through the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Name suggests a table branch; meaning unknown."
+
+[[insn.example]]
+bytes = "00 01"
+text = "tbb [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 01"
+text = "tbb [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "tbh"
+syntax = "tbh [{x}]"
+encoding = ["000000010001xxxx"]
+fields = { x = "gpr" }
+group = "branches"
+summary = "Table branch on halfwords through the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Name suggests a table branch; meaning unknown."
+
+[[insn.example]]
+bytes = "10 01"
+text = "tbh [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f 01"
+text = "tbh [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "pfetch"
+syntax = "pfetch [{x}]"
+encoding = ["000000100000xxxx"]
+fields = { x = "gpr" }
+group = "cache"
+summary = "Cache prefetch of the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested."
+
+[[insn.example]]
+bytes = "00 02"
+text = "pfetch [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 02"
+text = "pfetch [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "iflush"
+syntax = "iflush [{x}]"
+encoding = ["000000100001xxxx"]
+fields = { x = "gpr" }
+group = "cache"
+summary = "Instruction-cache flush of the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested."
+
+[[insn.example]]
+bytes = "10 02"
+text = "iflush [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f 02"
+text = "iflush [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "flush"
+syntax = "flush [{x}]"
+encoding = ["000000100010xxxx"]
+fields = { x = "gpr" }
+group = "cache"
+summary = "Cache flush of the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested."
+
+[[insn.example]]
+bytes = "20 02"
+text = "flush [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f 02"
+text = "flush [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "flushinv"
+syntax = "flushinv [{x}]"
+encoding = ["000000100011xxxx"]
+fields = { x = "gpr" }
+group = "cache"
+summary = "Cache flush and invalidate of the address in a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested."
+
+[[insn.example]]
+bytes = "30 02"
+text = "flushinv [r0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f 02"
+text = "flushinv [r15]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "swi"
+syntax = "swi {n}"
+encoding = ["000000001010-nnn"]
+fields = { n = "uimm" }
+group = "control"
+summary = "Software interrupt with a number 0..7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit: number in bits 2..0; bit 3 is ignored by objdump (the assembler writes 0)."
+
+[[insn.example]]
+bytes = "a0 00"
+text = "swi 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a7 00"
+text = "swi 7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rep"
+syntax = "rep {n} {r} {{"
+encoding = ["00000011nnnnrrrr"]
+fields = { r = "gpr", n = { kind = "uimm", letters = "n", scale = 2, add = 2 } }
+group = "control"
+summary = "Start a hardware loop over the next N bytes of instructions (2..32, the loop body); the register named is the loop's count (meaning not tested)."
+status = "guessed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep. N is the byte length of the body: JieLi's assembler is written `rep r1 {` + body lines + `}` and fills N in itself (up to 16 words, else 'rep body out of range'); objdump prints `rep N r1 {`, the body indented, then a `}` line. Not confirmed because confirm cannot assemble the one-line text and because objdump omits the ` {` when the rep word is the last word of an enclosing rep body (seen: 'rep 6 r1' for N=6 probes spaced three words apart). Decoding was checked by hand for all 256 words 0300..03ff in isolation."
+
+# ---- single-word control and stack forms ----
+
+[[insn]]
+id = "bkpt"
+syntax = "bkpt"
+encoding = ["0000000000000010"]
+group = "control"
+summary = "Breakpoint."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "02 00"
+text = "bkpt"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "hbkpt"
+syntax = "hbkpt"
+encoding = ["0000000000000011"]
+group = "control"
+summary = "Hardware breakpoint."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "03 00"
+text = "hbkpt"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "syscall"
+syntax = "syscall"
+encoding = ["0000000000100001"]
+group = "control"
+summary = "System call."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "21 00"
+text = "syscall"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lockclr"
+syntax = "lockclr"
+encoding = ["0000000001000000"]
+group = "control"
+summary = "Clear the lock flag; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "40 00"
+text = "lockclr"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lockset"
+syntax = "lockset"
+encoding = ["0000000001000001"]
+group = "control"
+summary = "Set the lock flag; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "41 00"
+text = "lockset"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sevl"
+syntax = "sevl"
+encoding = ["0000000001000010"]
+group = "control"
+summary = "Send event, local; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "42 00"
+text = "sevl"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sevg"
+syntax = "sevg"
+encoding = ["0000000001000011"]
+group = "control"
+summary = "Send event, global; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "43 00"
+text = "sevg"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "wfe"
+syntax = "wfe"
+encoding = ["0000000001000100"]
+group = "control"
+summary = "Wait for event."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "44 00"
+text = "wfe"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rtss"
+syntax = "rtss"
+encoding = ["0000000010000100"]
+group = "control"
+summary = "Return variant 'ss'; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "84 00"
+text = "rtss"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rtns"
+syntax = "rtns"
+encoding = ["0000000010000101"]
+group = "control"
+summary = "Return variant 'ns'; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "85 00"
+text = "rtns"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rthw"
+syntax = "rthw"
+encoding = ["0000000010000110"]
+group = "control"
+summary = "Return variant 'hw'; meaning unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+
+[[insn.example]]
+bytes = "86 00"
+text = "rthw"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "pop.pc"
+syntax = "pc = [sp++]"
+encoding = ["0000010000000000"]
+group = "stack"
+summary = "Pop the program counter from the stack (return)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep."
+
+[[insn.example]]
+bytes = "00 04"
+text = "pc = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.rets"
+syntax = "[--sp] = rets"
+encoding = ["0000010000010000"]
+group = "stack"
+summary = "Push rets on the stack."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Found by the oracle sweep."
+
+[[insn.example]]
+bytes = "10 04"
+text = "[--sp] = rets"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ssync"
+syntax = "ssync"
+encoding = ["00000000001---10"]
+group = "control"
+summary = "System synchronisation barrier."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Exact ordering unknown."
+
+[[insn.example]]
+bytes = "22 00"
+text = "ssync"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "btbclr"
+syntax = "btbclr"
+encoding = ["00000000001---11"]
+group = "control"
+summary = "Clear the branch target buffer (name suggests)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Meaning unknown."
+
+[[insn.example]]
+bytes = "23 00"
+text = "btbclr"
+origin = "oracle:objdump+clang:20260730.1"
+
+
+# ---- parallel-issue twins (C000-DFFF) ----
+
+[[insn]]
+id = "mov.rr.p"
+syntax = "{x} = {y}  #"
+encoding = ["11010110yyyyxxxx"]
+fields = { x = "gpr", y = "gpr" }
+group = "moves"
+summary = "Copy one general register to another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 d6"
+text = "r0 = r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f d6"
+text = "r15 = r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 d6"
+text = "r0 = r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff d6"
+text = "r15 = r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sp_usp.p"
+syntax = "sp = usp  #"
+encoding = ["1101010001000000"]
+group = "moves"
+summary = "Make the user stack pointer the current stack pointer, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.sp_usp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "40 d4"
+text = "sp = usp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sp_ssp.p"
+syntax = "sp = ssp  #"
+encoding = ["1101010001000001"]
+group = "moves"
+summary = "Make the supervisor stack pointer the current stack pointer, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.sp_ssp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "41 d4"
+text = "sp = ssp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.usp_sp.p"
+syntax = "usp = sp  #"
+encoding = ["1101010001000010"]
+group = "moves"
+summary = "Save the current stack pointer as the user stack pointer, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.usp_sp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "42 d4"
+text = "usp = sp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.ssp_sp.p"
+syntax = "ssp = sp  #"
+encoding = ["1101010001000011"]
+group = "moves"
+summary = "Save the current stack pointer as the supervisor stack pointer, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.ssp_sp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "43 d4"
+text = "ssp = sp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cc.set.p"
+syntax = "cc = {v}  #"
+encoding = ["110101000000000v"]
+fields = { v = "uimm" }
+group = "moves"
+summary = "Set the condition flag to 0 or 1, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of cc.set: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 d4"
+text = "cc = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 d4"
+text = "cc = 1  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.zero_hi.p"
+syntax = "{r} = 0  #"
+encoding = ["1101010011000rrr"]
+fields = { r = "gpr_hi" }
+group = "constants"
+summary = "Clear one of r8..r15, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of li.zero_hi: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "c0 d4"
+text = "r8 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c7 d4"
+text = "r15 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.rrr.p"
+syntax = "{d} = {a} + {b}  #"
+encoding = ["1101110xxaaayddd"]
+fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
+group = "arithmetic"
+summary = "Add two registers (r0..r7) into a third, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of add.rrr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 dc"
+text = "r0 = r0 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 dc"
+text = "r0 = r7 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 dd"
+text = "r0 = r0 + r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 dc"
+text = "r7 = r0 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff dd"
+text = "r7 = r7 + r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sub.rrr.p"
+syntax = "{d} = {a} - {b}  #"
+encoding = ["1101111xxaaayddd"]
+fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
+group = "arithmetic"
+summary = "Subtract the second register from the first (operand order as printed) into a third, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of sub.rrr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 de"
+text = "r0 = r0 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 de"
+text = "r0 = r7 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 df"
+text = "r0 = r0 - r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 de"
+text = "r7 = r0 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff df"
+text = "r7 = r7 - r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.rr.p"
+syntax = "{d} += {s}  #"
+encoding = ["11011000ssssdddd"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Add a register to another, issued in parallel with a neighbouring instruction (the # form)."
+status = "guessed"
+sources = ["oracle"]
+notes = "Twin of add.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. Not confirmed, for the reason given in add.rr."
+
+[[insn]]
+id = "mul.rr.p"
+syntax = "{d} *= {s}  #"
+encoding = ["11011011ssssdddd"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Multiply a register by another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mul.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 db"
+text = "r0 *= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f db"
+text = "r15 *= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 db"
+text = "r0 *= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff db"
+text = "r15 *= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "or.rr.p"
+syntax = "{d} |= {s}  #"
+encoding = ["110110010sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "OR a register into another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of or.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 d9"
+text = "r0 |= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 d9"
+text = "r7 |= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 d9"
+text = "r0 |= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 d9"
+text = "r7 |= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "xor.rr.p"
+syntax = "{d} ^= {s}  #"
+encoding = ["110110010sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "XOR a register into another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of xor.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "08 d9"
+text = "r0 ^= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f d9"
+text = "r7 ^= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 d9"
+text = "r0 ^= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f d9"
+text = "r7 ^= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "and.rr.p"
+syntax = "{d} &= {s}  #"
+encoding = ["110110011sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "AND a register into another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of and.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "80 d9"
+text = "r0 &= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 d9"
+text = "r7 &= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 d9"
+text = "r0 &= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 d9"
+text = "r7 &= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "not.rr.p"
+syntax = "{d} = ~{s}  #"
+encoding = ["110110011sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "logic"
+summary = "Bitwise complement of a register into another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of not.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "88 d9"
+text = "r0 = ~r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f d9"
+text = "r7 = ~r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 d9"
+text = "r0 = ~r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff d9"
+text = "r7 = ~r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsl.rr.p"
+syntax = "{d} <<= {s}  #"
+encoding = ["110110100sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register left by a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of lsl.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 da"
+text = "r0 <<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 da"
+text = "r7 <<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 da"
+text = "r0 <<= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 da"
+text = "r7 <<= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.rr.p"
+syntax = "{d} <<<= {s}  #"
+encoding = ["110110100sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register by a register, the <<< operation, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of shl3.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "08 da"
+text = "r0 <<<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f da"
+text = "r7 <<<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 da"
+text = "r0 <<<= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f da"
+text = "r7 <<<= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.rr.p"
+syntax = "{d} >>= {s}  #"
+encoding = ["110110101sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register right by a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of lsr.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "80 da"
+text = "r0 >>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 da"
+text = "r7 >>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 da"
+text = "r0 >>= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 da"
+text = "r7 >>= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.rr.p"
+syntax = "{d} >>>= {s}  #"
+encoding = ["110110101sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "shifts"
+summary = "Shift a register by a register, the >>> operation, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of shr3.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "88 da"
+text = "r0 >>>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f da"
+text = "r7 >>>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 da"
+text = "r0 >>>= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff da"
+text = "r7 >>>= r7  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.b0.u.p"
+syntax = "{d} = {s}.b0 (u)  #"
+encoding = ["110101110sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Zero-extend the low byte of a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of ext.b0.u: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 d7"
+text = "r0 = r0.b0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 d7"
+text = "r7 = r0.b0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 d7"
+text = "r0 = r7.b0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 d7"
+text = "r7 = r7.b0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.b0.s.p"
+syntax = "{d} = {s}.b0 (s)  #"
+encoding = ["110101110sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Sign-extend the low byte of a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of ext.b0.s: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "08 d7"
+text = "r0 = r0.b0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f d7"
+text = "r7 = r0.b0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 d7"
+text = "r0 = r7.b0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f d7"
+text = "r7 = r7.b0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.l.u.p"
+syntax = "{d} = {s}.l (u)  #"
+encoding = ["110101111sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Zero-extend the low halfword of a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of ext.l.u: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "80 d7"
+text = "r0 = r0.l (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 d7"
+text = "r7 = r0.l (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 d7"
+text = "r0 = r7.l (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 d7"
+text = "r7 = r7.l (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ext.l.s.p"
+syntax = "{d} = {s}.l (s)  #"
+encoding = ["110101111sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo" }
+group = "arithmetic"
+summary = "Sign-extend the low halfword of a register, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of ext.l.s: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "88 d7"
+text = "r0 = r0.l (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f d7"
+text = "r7 = r0.l (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 d7"
+text = "r0 = r7.l (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff d7"
+text = "r7 = r7.l (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.pair.p"
+syntax = "{d} = {s}  #"
+encoding = ["11010101sss0ddd0"]
+fields = { d = "pair", s = "pair" }
+group = "moves"
+summary = "Copy a 64-bit register pair to another, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.pair: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "00 d5"
+text = "r1_r0 = r1_r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0e d5"
+text = "r15_r14 = r1_r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e0 d5"
+text = "r1_r0 = r15_r14  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ee d5"
+text = "r15_r14 = r15_r14  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.zero_pair.p"
+syntax = "{p} = 0  #"
+encoding = ["110101001000ppp0"]
+fields = { p = "pair" }
+group = "constants"
+summary = "Clear a 64-bit register pair, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of li.zero_pair: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "80 d4"
+text = "r1_r0 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8e d4"
+text = "r15_r14 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sp_uspn.p"
+syntax = "sp = uspn  #"
+encoding = ["1101010001000100"]
+group = "moves"
+summary = "Copy between sp and the special register uspn, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.sp_uspn: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "44 d4"
+text = "sp = uspn  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sp_sspn.p"
+syntax = "sp = sspn  #"
+encoding = ["1101010001000101"]
+group = "moves"
+summary = "Copy between sp and the special register sspn, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.sp_sspn: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "45 d4"
+text = "sp = sspn  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.uspn_sp.p"
+syntax = "uspn = sp  #"
+encoding = ["1101010001000110"]
+group = "moves"
+summary = "Copy between sp and the special register uspn, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.uspn_sp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "46 d4"
+text = "uspn = sp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sspn_sp.p"
+syntax = "sspn = sp  #"
+encoding = ["1101010001000111"]
+group = "moves"
+summary = "Copy between sp and the special register sspn, issued in parallel with a neighbouring instruction (the # form)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Twin of mov.sspn_sp: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+
+[[insn.example]]
+bytes = "47 d4"
+text = "sspn = sp  #"
+origin = "oracle:objdump+clang:20260730.1"
+
