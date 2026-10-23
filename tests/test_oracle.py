@@ -53,6 +53,53 @@ class Recording(unittest.TestCase):
             self.assertEqual(table.check(t, sources={"kagaimiq-jielie", "oracle"}), [])
 
 
+class Aliases(unittest.TestCase):
+    def test_other_encoding_of_the_same_entry_with_the_same_text_is_no_disagreement(self):
+        """A modimm has several raw values for 0; the assembler writes the first, which must not count as a mismatch."""
+        from pi32v2isa import codec
+        i = table.Insn(id="m", syntax="m {n}", words=["0000000000000000", "0000nnnnnnnnnnnn"], fields={"n": table.Field("modimm", "n")},
+                       summary="s", status="guessed", sources=["x"], notes="n")
+        t = table.Table(format=1, insns=[i])
+
+        class Fake:
+            def decode(self, probes, features=()):
+                return [(p, codec.format(i, codec.fields_of(i, p))) for p in probes]
+
+            def encode(self, texts, features=()):
+                out = []
+                for text in texts:
+                    value = int(text.split()[1], 0)
+                    raw = next(r for r in range(4096) if codec.modimm(r) == value)    # the first raw value for it
+                    out.append(codec.encode(i, {"n": raw}))
+                return out
+
+            def origin(self, tool):
+                return "oracle:fake"
+
+        problems, _, _, preferred = oracle.confirm(Fake(), t, i)
+        self.assertEqual(problems, [])
+        self.assertEqual(preferred, {})
+
+
+class BlockEncoding(unittest.TestCase):
+    def test_block_opener_gets_body_and_brace(self):
+        """`if (r0 == r1) {` is assembled with a nop body and a closing brace, and the body is dropped from the answer."""
+        seen = []
+
+        class Fake(oracle.Oracle):
+            def __init__(self):
+                pass
+
+            def _assemble(self, source, features=()):
+                seen.append(source)
+                return ("   0:  10 e8 00 01  \tif (r0 == r1) {\n   4:  00 00  \t\tnop\n"
+                        "                  \t}\n   6:  00 00  \tnop\n"), ""
+
+        got = Fake().encode(["if (r0 == r1) {", "nop"])
+        self.assertEqual(got, [bytes.fromhex("10 e8 00 01"), bytes.fromhex("00 00")])
+        self.assertIn("\tif (r0 == r1) {\n\tnop\n\t}\n\tnop\n", seen[0])
+
+
 class Probes(unittest.TestCase):
     def setUp(self):
         self.t = table.load()
@@ -69,6 +116,18 @@ class Probes(unittest.TestCase):
         for f in ("a", "b"):
             seen = {v[f] for v in values}
             self.assertTrue({0, 255, 1, 2, 4, 8, 16, 32, 64, 128} <= seen)
+
+    def test_wide_entries_stay_small(self):
+        """Nine register fields would give millions of combinations; they are sampled, ends first and last."""
+        letters = "abcdefghi"
+        i = table.Insn(id="w", syntax="w " + " ".join("{%s}" % c for c in letters), words=["aaaabbbbccccdddd", "eeeeffffgggghhhh", "iiii000000000000"],
+                       fields={c: table.Field("gpr", c) for c in letters}, summary="s", status="documented", sources=["x"])
+        values = oracle.probe_values(i)
+        self.assertLess(len(values), 7000)
+        self.assertEqual(values[0], {c: 0 for c in letters})
+        self.assertEqual(values[-1], {c: 15 for c in letters})
+        for c in letters:
+            self.assertTrue({0, 1, 2, 4, 8, 15} <= {v[c] for v in values})
 
     def test_examples_tell_fields_apart(self):
         i = self.t.by_id("mov.rr")

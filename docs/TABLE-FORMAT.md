@@ -60,6 +60,11 @@ or as an inline table:
 | --- | --- | --- |
 | `kind` | (required) | an operand kind, below |
 | `letters` | the field's own name | the encoding letters that hold it, most significant part first: `letters = "po"` puts the `p` bits above the `o` bits |
+| `values` | (none) | `enum` only: the text printed for each raw value, a list of exactly 2^width strings |
+| `invert` | false | `modimm` only: print the bitwise complement of the modified immediate |
+| `decimal` | false | `modimm` only: print as an unsigned 32-bit decimal instead of hex |
+| `lead` | (none) | `rmask` only: a name printed first, before the registers (`{rets, r3-r0}`; just `{rets}` when the mask is empty) |
+| `zero_as` | (none) | `uimm` only: the number printed for the raw value 0 (a shift amount where 0 means 32) |
 | `scale` | 1 | `uimm`/`simm` only: the printed number is the raw value (sign-extended for `simm`) times `scale`, plus `add` |
 | `add` | 0 | `uimm`/`simm` only |
 
@@ -84,6 +89,7 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `gpr_lo` | 3 | `r0`..`r7` | `r5` |
 | `gpr_hi` | 3 | `r8`..`r15` (field value + 8) | `r13` |
 | `pair` | 3 | 64-bit register pair `r(2n+1)_r(2n)` | `r3_r2` |
+| `pair_regs` | 5 | two names for registers of one 64-bit pair: the pair number (3 bits), then one bit per name saying which register of the pair it is (0 = even, 1 = odd) | `r2,r3`, `r5,r5` |
 | `sr` | 4 | special register by number ([ISA.md](ISA.md) §2) | `reti`, `sr4`, `sp` |
 | `uimm` | any | unsigned number | `252` |
 | `simm` | any | two's-complement number | `-11` |
@@ -91,6 +97,7 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `invbit` | 5 | a bit number, printed as the 32-bit complement of the bit's value | `4294950911` |
 | `uimm_zero_max` | any | unsigned number with raw zero printed as 2 to the field width (a 5-bit field prints 1..32) | `32` |
 | `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
+| `enum` | any | one of a fixed set of words or suffixes, chosen by the raw value from the field's `values` list (`".l"`/`".h"`, `"usat"`/`"ssat"`) | `.h` |
 | `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |
 | `rmask` | 16 | set of general registers, bit n = `rn` | `r11-r8, r3-r0` |
 | `srmask` | any | set of special registers, bit n = special register n | `psr, rets, reti` |

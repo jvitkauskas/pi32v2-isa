@@ -6,6 +6,7 @@ import collections
 import hashlib
 import itertools
 import os
+import random
 import re
 import subprocess
 import tarfile
@@ -68,7 +69,10 @@ class Oracle:
         return f"oracle:{tool}:{self.release}"
 
     def _run(self, args):
-        r = subprocess.run([str(a) for a in args], capture_output=True, text=True)
+        try:
+            r = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:      # the assembler loops on some malformed input
+            return 124, "", "timed out after 120 s"
         return r.returncode, r.stdout, r.stderr
 
     def _assemble(self, source, features=()):
@@ -122,11 +126,19 @@ class Oracle:
 
     def encode(self, texts, features=()):
         """For each assembly line, the bytes JieLi's assembler produced, or an error message (str)."""
-        listing, err = self._assemble("\t.text\n" + "".join(f"\t{t}\n" for t in texts), features)
+        # A line that opens a block (`if (r0 == r1) {`) needs a body and a closing brace, or the assembler fails
+        # or never returns. The body is a nop, dropped again below; the brace is a directive that emits no bytes.
+        opens = [t.rstrip().endswith("{") for t in texts]
+        source = "\t.text\n" + "".join(f"\t{t}\n" + ("\tnop\n\t}\n" if o else "") for t, o in zip(texts, opens))
+        listing, err = self._assemble(source, features)
         if listing is not None:
-            lines = sorted(self._lines(listing).items())
-            if len(lines) == len(texts):
-                return [b for _, (b, _) in lines]
+            lines = [b for _, (b, _) in sorted(self._lines(listing).items())]
+            if len(lines) == len(texts) + sum(opens):
+                out, k = [], 0
+                for o in opens:
+                    out.append(lines[k])
+                    k += 2 if o else 1
+                return out
         if len(texts) == 1:
             return [err or "assembler output did not match the input"]
         return [r for t in texts for r in self.encode([t], features)]   # find which line failed
@@ -170,20 +182,37 @@ def same_meaning(a, b):
     return norm(a) == norm(b)
 
 
-def probe_values(insn, limit=4096):
+def probe_values(insn, limit=4096, wide=6000):
     """Field-value combinations to check: every combination when that is at most `limit`, else the
     extremes, a middle value, each single bit and three irregular values of every field (irregular so that
-    a wide constant does not also fit a shorter form)."""
+    a wide constant does not also fit a shorter form). When the product of those candidates is more than
+    `wide` (entries with many fields), the candidates are tried one field at a time and in seeded random
+    combinations instead. The first combination is all minimum and the last all maximum."""
     widths = {f: len(insn.field_bits(f)) for f in sorted(insn.fields)}
     total = 1
     for w in widths.values():
         total *= 1 << w
     if total <= limit:
-        ranges = [range(1 << w) for w in widths.values()]
-    else:
-        ranges = [sorted({0, (1 << w) - 1, (1 << w) // 3, *(1 << b for b in range(w)),
-                          *((0x9E3779B9 * k) & ((1 << w) - 1) for k in (1, 2, 3))}) for w in widths.values()]
-    return [dict(zip(widths, combo)) for combo in itertools.product(*ranges)]
+        return [dict(zip(widths, combo)) for combo in itertools.product(*[range(1 << w) for w in widths.values()])]
+    ranges = [sorted({0, (1 << w) - 1, (1 << w) // 3, *(1 << b for b in range(w)),
+                      *((0x9E3779B9 * k) & ((1 << w) - 1) for k in (1, 2, 3))}) for w in widths.values()]
+    size = 1
+    for r in ranges:
+        size *= len(r)
+    if size <= wide:
+        return [dict(zip(widths, combo)) for combo in itertools.product(*ranges)]
+    rng = random.Random(7)
+    lo = {f: 0 for f in widths}
+    hi = {f: (1 << w) - 1 for f, w in widths.items()}
+    picks = [lo] + [{**lo, f: v} for f, r in zip(widths, ranges) for v in r]
+    picks += [{f: rng.choice(r) for f, r in zip(widths, ranges)} for _ in range(wide // 2)]
+    out, seen = [], set()
+    for d in [d for d in picks if d != hi] + [hi]:
+        key = tuple(d.items())
+        if key not in seen:
+            seen.add(key)
+            out.append(d)
+    return out
 
 
 def chosen_examples(insn, values_list):
@@ -225,9 +254,11 @@ def confirm(oracle, table, insn):
             problems.append(f"encode {text!r}: assembler error: {got.splitlines()[0] if got else '?'}")
         elif got != data:
             other = codec.decode(table, got)
-            if (other and other[0] is not insn and other[2] == len(got)
-                    and same_meaning(codec.format(other[0], other[1]), text)):
-                preferred[other[0].id] += 1     # a shorter or equivalent form the table already has
+            if (other and other[2] == len(got) and same_meaning(codec.format(other[0], other[1]), text)):
+                if other[0] is not insn:
+                    preferred[other[0].id] += 1     # a shorter or equivalent form the table already has
+                # else: another encoding of this entry that prints the same text (a modimm has several
+                # for one value); the assembler picks one, which is no disagreement
             else:
                 problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
     if preferred and sum(preferred.values()) == len(texts) - len(insn.asm_rejects):
