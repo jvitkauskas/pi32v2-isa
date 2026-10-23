@@ -1355,7 +1355,7 @@ group = "arithmetic"
 summary = "Operation printed `R = R - R`: meaning not known beyond the syntax."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. For some operands the assembler emits the 16-bit sub.rrr instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "b4 e0 02 00"
@@ -1687,7 +1687,7 @@ group = "arithmetic"
 summary = "Add a constant to the stack pointer."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "f0 e8 00 00"
@@ -1708,7 +1708,7 @@ group = "arithmetic"
 summary = "Add a constant to the stack pointer into a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.r_sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "f8 e8 00 00"
@@ -7358,7 +7358,7 @@ group = "memory"
 summary = "Load a word from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ec 02 00"
@@ -7394,7 +7394,7 @@ group = "memory"
 summary = "Store a word to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ec 03 00"
@@ -7430,7 +7430,7 @@ group = "memory"
 summary = "Load a word from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d8 ec 00 00"
@@ -7466,7 +7466,7 @@ group = "memory"
 summary = "Store a word to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d8 ec 01 00"
@@ -7502,7 +7502,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at register plus a constant offset."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "50 ed 00 00"
@@ -7538,7 +7538,7 @@ group = "memory"
 summary = "Store a halfword to memory at register plus a constant offset."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "50 ed 01 00"
@@ -7790,7 +7790,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d0 ed 00 00"
@@ -7826,7 +7826,7 @@ group = "memory"
 summary = "Store a halfword to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d0 ed 01 00"
@@ -8366,7 +8366,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ed 00 00"
@@ -8438,7 +8438,7 @@ group = "memory"
 summary = "Store a halfword to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ed 01 00"
@@ -8726,7 +8726,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d0 ee 00 00"
@@ -8762,7 +8762,7 @@ group = "memory"
 summary = "Store a byte to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "d2 ee 00 00"
@@ -9050,7 +9050,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ee 00 00"
@@ -9122,7 +9122,7 @@ group = "memory"
 summary = "Store a byte to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
 
 [[insn.example]]
 bytes = "de ee 01 00"
