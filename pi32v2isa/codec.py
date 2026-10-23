@@ -106,6 +106,8 @@ def operand(field, raw, width):
         return f"r{2 * raw + 1}_r{2 * raw}"
     if kind == "sr":
         return SR_NAMES[raw]
+    if kind == "shift":
+        return str(raw or (1 << width))
     if kind == "bit":
         return str(1 << raw)
     if kind == "rlist4":            # 0..3: r3 down to r<raw>; 4..15: r<raw> down to r4

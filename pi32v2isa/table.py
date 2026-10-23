@@ -26,6 +26,7 @@ KINDS = {
     "uimm": None,
     "simm": None,
     "bit": {5},
+    "shift": {5, 6},
     "rlist4": {4},
     "rmask": {16},
     "srmask": None,

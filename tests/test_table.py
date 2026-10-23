@@ -76,6 +76,16 @@ class RealTable(unittest.TestCase):
         for insn_id, values, text in cases:
             self.assertEqual(codec.format(t.by_id(insn_id), values), text)
 
+    def test_shift_counts(self):
+        """A zero shift field represents the full width, as objdump prints it."""
+        field = table.Field(kind="shift", letters="n")
+        for width in (5, 6):
+            self.assertEqual(codec.operand(field, 0, width), str(1 << width))
+            self.assertEqual(codec.operand(field, 1, width), "1")
+            self.assertEqual(codec.operand(field, (1 << width) - 1, width), str((1 << width) - 1))
+        bad = insn(words=["000000000000nnnn"], fields={"n": "shift"}, syntax="t {n}")
+        self.assertTrue(any("needs [5, 6]" in p for p in problems(bad)))
+
     def test_split_field_order(self):
         """li.u32 keeps the low half first in memory."""
         i = self.t.by_id("li.u32")

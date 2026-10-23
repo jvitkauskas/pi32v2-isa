@@ -85,6 +85,7 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `sr` | 4 | special register by number ([ISA.md](ISA.md) §2) | `reti`, `sr4`, `sp` |
 | `uimm` | any | unsigned number | `252` |
 | `simm` | any | two's-complement number | `-11` |
+| `shift` | 5 or 6 | unsigned shift count; raw zero means 32 or 64 respectively | `32` |
 | `bit` | 5 | a bit number, printed as the bit's value | `16384` |
 | `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
 | `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |

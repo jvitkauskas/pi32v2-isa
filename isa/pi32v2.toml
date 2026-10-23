@@ -1148,3 +1148,3726 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "58 e9 ff ff"
 text = "[--sp] = {pc, sp, ssp, usp, icfg, icfgs, icfgn, sspn, uspn, cnum, psr, sr4, rets, retx, rete, reti}"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ==== region D: f000-ffff ====
+
+# ---- compare and branch ----
+
+[[insn]]
+id = "beq.ri"
+syntax = "if ({r} == {i}) goto {n}"
+encoding = ["111110000iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register == a signed 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 f8 00 00"
+text = "if (r0 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f8 00 fe"
+text = "if (r0 == -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 f8 ff 01"
+text = "if (r0 == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f f8 00 00"
+text = "if (r15 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f f8 ff ff"
+text = "if (r15 == -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bne.ri"
+syntax = "if ({r} != {i}) goto {n}"
+encoding = ["111110001iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register != a signed 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 f8 00 00"
+text = "if (r0 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f8 00 fe"
+text = "if (r0 != -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f8 ff 01"
+text = "if (r0 != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f f8 00 00"
+text = "if (r15 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff f8 ff ff"
+text = "if (r15 != -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bge.ri"
+syntax = "if ({r} >= {i}) goto {n}"
+encoding = ["111110010iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register >= a unsigned 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 f9 00 00"
+text = "if (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f9 00 fe"
+text = "if (r0 >= 1023) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 f9 ff 01"
+text = "if (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f f9 00 00"
+text = "if (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f f9 ff ff"
+text = "if (r15 >= 1023) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blt.ri"
+syntax = "if ({r} < {i}) goto {n}"
+encoding = ["111110011iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register < a unsigned 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 f9 00 00"
+text = "if (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f9 00 fe"
+text = "if (r0 < 1023) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f9 ff 01"
+text = "if (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f f9 00 00"
+text = "if (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff f9 ff ff"
+text = "if (r15 < 1023) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgt.ri"
+syntax = "if ({r} > {i}) goto {n}"
+encoding = ["111111000iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register > a unsigned 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 fc 00 00"
+text = "if (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 fc 00 fe"
+text = "if (r0 > 1023) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 fc ff 01"
+text = "if (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f fc 00 00"
+text = "if (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f fc ff ff"
+text = "if (r15 > 1023) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ble.ri"
+syntax = "if ({r} <= {i}) goto {n}"
+encoding = ["111111001iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register <= a unsigned 10-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 fc 00 00"
+text = "if (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 fc 00 fe"
+text = "if (r0 <= 1023) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 fc ff 01"
+text = "if (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f fc 00 00"
+text = "if (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff fc ff ff"
+text = "if (r15 <= 1023) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bges.ri"
+syntax = "ifs ({r} >= {i}) goto {n}"
+encoding = ["111111010iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register >= a signed 10-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 fd 00 00"
+text = "ifs (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 fd 00 fe"
+text = "ifs (r0 >= -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 fd ff 01"
+text = "ifs (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f fd 00 00"
+text = "ifs (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f fd ff ff"
+text = "ifs (r15 >= -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blts.ri"
+syntax = "ifs ({r} < {i}) goto {n}"
+encoding = ["111111011iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register < a signed 10-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 fd 00 00"
+text = "ifs (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 fd 00 fe"
+text = "ifs (r0 < -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 fd ff 01"
+text = "ifs (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f fd 00 00"
+text = "ifs (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff fd ff ff"
+text = "ifs (r15 < -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgts.ri"
+syntax = "ifs ({r} > {i}) goto {n}"
+encoding = ["111111100iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register > a signed 10-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 fe 00 00"
+text = "ifs (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 fe 00 fe"
+text = "ifs (r0 > -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 fe ff 01"
+text = "ifs (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f fe 00 00"
+text = "ifs (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f fe ff ff"
+text = "ifs (r15 > -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bles.ri"
+syntax = "ifs ({r} <= {i}) goto {n}"
+encoding = ["111111101iiirrrr", "iiiiiiinnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -512..510 bytes when a register <= a signed 10-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 fe 00 00"
+text = "ifs (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 fe 00 fe"
+text = "ifs (r0 <= -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 fe ff 01"
+text = "ifs (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f fe 00 00"
+text = "ifs (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff fe ff ff"
+text = "ifs (r15 <= -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "beq.and.rr"
+syntax = "if (({r} & {s}) == 0) goto {n}"
+encoding = ["11111010ssssrrrr", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes if the bitwise AND of two registers == zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 fa 00 00"
+text = "if ((r0 & r0) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 fa ff ff"
+text = "if ((r0 & r0) == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f fa 00 00"
+text = "if ((r15 & r0) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 fa 00 00"
+text = "if ((r0 & r15) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff fa ff ff"
+text = "if ((r15 & r15) == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bne.and.rr"
+syntax = "if (({r} & {s}) != 0) goto {n}"
+encoding = ["11111011ssssrrrr", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes if the bitwise AND of two registers != zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "00 fb 00 00"
+text = "if ((r0 & r0) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 fb ff ff"
+text = "if ((r0 & r0) != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f fb 00 00"
+text = "if ((r15 & r0) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 fb 00 00"
+text = "if ((r0 & r15) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff fb ff ff"
+text = "if ((r15 & r15) != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "beq.ri.l"
+syntax = "if ({r} == {i}) goto {n}"
+encoding = ["1111111100-00000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register == a signed 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "00 ff 00 00 00 00"
+text = "if (r0 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 ff ff 0f 00 00"
+text = "if (r0 == -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 ff 00 00 ff ff"
+text = "if (r0 == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 ff 00 f0 00 00"
+text = "if (r15 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 ff ff ff ff ff"
+text = "if (r15 == -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bne.ri.l"
+syntax = "if ({r} != {i}) goto {n}"
+encoding = ["1111111100-00001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register != a signed 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "01 ff 00 00 00 00"
+text = "if (r0 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 ff ff 0f 00 00"
+text = "if (r0 != -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 ff 00 00 ff ff"
+text = "if (r0 != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 ff 00 f0 00 00"
+text = "if (r15 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "01 ff ff ff ff ff"
+text = "if (r15 != -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bge.ri.l"
+syntax = "if ({r} >= {i}) goto {n}"
+encoding = ["1111111100-00010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register >= a unsigned 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "02 ff 00 00 00 00"
+text = "if (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "02 ff ff 0f 00 00"
+text = "if (r0 >= 4095) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "02 ff 00 00 ff ff"
+text = "if (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "02 ff 00 f0 00 00"
+text = "if (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "02 ff ff ff ff ff"
+text = "if (r15 >= 4095) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blt.ri.l"
+syntax = "if ({r} < {i}) goto {n}"
+encoding = ["1111111100-00011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register < a unsigned 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "03 ff 00 00 00 00"
+text = "if (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "03 ff ff 0f 00 00"
+text = "if (r0 < 4095) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "03 ff 00 00 ff ff"
+text = "if (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "03 ff 00 f0 00 00"
+text = "if (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "03 ff ff ff ff ff"
+text = "if (r15 < 4095) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgt.ri.l"
+syntax = "if ({r} > {i}) goto {n}"
+encoding = ["1111111100-01000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register > a unsigned 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "08 ff 00 00 00 00"
+text = "if (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 ff ff 0f 00 00"
+text = "if (r0 > 4095) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 ff 00 00 ff ff"
+text = "if (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 ff 00 f0 00 00"
+text = "if (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 ff ff ff ff ff"
+text = "if (r15 > 4095) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ble.ri.l"
+syntax = "if ({r} <= {i}) goto {n}"
+encoding = ["1111111100-01001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register <= a unsigned 12-bit immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "09 ff 00 00 00 00"
+text = "if (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "09 ff ff 0f 00 00"
+text = "if (r0 <= 4095) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "09 ff 00 00 ff ff"
+text = "if (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "09 ff 00 f0 00 00"
+text = "if (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "09 ff ff ff ff ff"
+text = "if (r15 <= 4095) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bges.ri.l"
+syntax = "ifs ({r} >= {i}) goto {n}"
+encoding = ["1111111100-01010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register >= a signed 12-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "0a ff 00 00 00 00"
+text = "ifs (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0a ff ff 0f 00 00"
+text = "ifs (r0 >= -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0a ff 00 00 ff ff"
+text = "ifs (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0a ff 00 f0 00 00"
+text = "ifs (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0a ff ff ff ff ff"
+text = "ifs (r15 >= -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blts.ri.l"
+syntax = "ifs ({r} < {i}) goto {n}"
+encoding = ["1111111100-01011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register < a signed 12-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "0b ff 00 00 00 00"
+text = "ifs (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0b ff ff 0f 00 00"
+text = "ifs (r0 < -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0b ff 00 00 ff ff"
+text = "ifs (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0b ff 00 f0 00 00"
+text = "ifs (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0b ff ff ff ff ff"
+text = "ifs (r15 < -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgts.ri.l"
+syntax = "ifs ({r} > {i}) goto {n}"
+encoding = ["1111111100-01100", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register > a signed 12-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "0c ff 00 00 00 00"
+text = "ifs (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0c ff ff 0f 00 00"
+text = "ifs (r0 > -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0c ff 00 00 ff ff"
+text = "ifs (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0c ff 00 f0 00 00"
+text = "ifs (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0c ff ff ff ff ff"
+text = "ifs (r15 > -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bles.ri.l"
+syntax = "ifs ({r} <= {i}) goto {n}"
+encoding = ["1111111100-01101", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register <= a signed 12-bit immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+
+[[insn.example]]
+bytes = "0d ff 00 00 00 00"
+text = "ifs (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0d ff ff 0f 00 00"
+text = "ifs (r0 <= -1) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0d ff 00 00 ff ff"
+text = "ifs (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0d ff 00 f0 00 00"
+text = "ifs (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0d ff ff ff ff ff"
+text = "ifs (r15 <= -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- 48-bit register compare and branch ----
+
+[[insn]]
+id = "beq.rr.l"
+syntax = "if ({r} == {s}) goto {n}"
+encoding = ["1111111101000000", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register == another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "40 ff 00 00 00 00"
+text = "if (r0 == r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 00 00 ff ff"
+text = "if (r0 == r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 00 f0 00 00"
+text = "if (r15 == r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 00 0f 00 00"
+text = "if (r0 == r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 00 ff ff ff"
+text = "if (r15 == r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bne.rr.l"
+syntax = "if ({r} != {s}) goto {n}"
+encoding = ["1111111101000001", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register != another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "41 ff 00 00 00 00"
+text = "if (r0 != r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 00 00 ff ff"
+text = "if (r0 != r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 00 f0 00 00"
+text = "if (r15 != r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 00 0f 00 00"
+text = "if (r0 != r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 00 ff ff ff"
+text = "if (r15 != r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bge.rr.l"
+syntax = "if ({r} >= {s}) goto {n}"
+encoding = ["1111111101000010", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register >= another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "42 ff 00 00 00 00"
+text = "if (r0 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 00 00 ff ff"
+text = "if (r0 >= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 00 f0 00 00"
+text = "if (r15 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 00 0f 00 00"
+text = "if (r0 >= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 00 ff ff ff"
+text = "if (r15 >= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blt.rr.l"
+syntax = "if ({r} < {s}) goto {n}"
+encoding = ["1111111101000011", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register < another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "43 ff 00 00 00 00"
+text = "if (r0 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 00 00 ff ff"
+text = "if (r0 < r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 00 f0 00 00"
+text = "if (r15 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 00 0f 00 00"
+text = "if (r0 < r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 00 ff ff ff"
+text = "if (r15 < r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgt.rr.l"
+syntax = "if ({r} > {s}) goto {n}"
+encoding = ["1111111101001000", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register > another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "48 ff 00 00 00 00"
+text = "if (r0 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 00 00 ff ff"
+text = "if (r0 > r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 00 f0 00 00"
+text = "if (r15 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 00 0f 00 00"
+text = "if (r0 > r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 00 ff ff ff"
+text = "if (r15 > r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ble.rr.l"
+syntax = "if ({r} <= {s}) goto {n}"
+encoding = ["1111111101001001", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register <= another."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "49 ff 00 00 00 00"
+text = "if (r0 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 00 00 ff ff"
+text = "if (r0 <= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 00 f0 00 00"
+text = "if (r15 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 00 0f 00 00"
+text = "if (r0 <= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 00 ff ff ff"
+text = "if (r15 <= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bges.rr.l"
+syntax = "ifs ({r} >= {s}) goto {n}"
+encoding = ["1111111101001010", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register >= another in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "4a ff 00 00 00 00"
+text = "ifs (r0 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 00 00 ff ff"
+text = "ifs (r0 >= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 00 f0 00 00"
+text = "ifs (r15 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 00 0f 00 00"
+text = "ifs (r0 >= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 00 ff ff ff"
+text = "ifs (r15 >= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "blts.rr.l"
+syntax = "ifs ({r} < {s}) goto {n}"
+encoding = ["1111111101001011", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register < another in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "4b ff 00 00 00 00"
+text = "ifs (r0 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 00 00 ff ff"
+text = "ifs (r0 < r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 00 f0 00 00"
+text = "ifs (r15 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 00 0f 00 00"
+text = "ifs (r0 < r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 00 ff ff ff"
+text = "ifs (r15 < r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bgts.rr.l"
+syntax = "ifs ({r} > {s}) goto {n}"
+encoding = ["1111111101001100", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register > another in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "4c ff 00 00 00 00"
+text = "ifs (r0 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 00 00 ff ff"
+text = "ifs (r0 > r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 00 f0 00 00"
+text = "ifs (r15 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 00 0f 00 00"
+text = "ifs (r0 > r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 00 ff ff ff"
+text = "ifs (r15 > r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bles.rr.l"
+syntax = "ifs ({r} <= {s}) goto {n}"
+encoding = ["1111111101001101", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when one register <= another in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero."
+
+[[insn.example]]
+bytes = "4d ff 00 00 00 00"
+text = "ifs (r0 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 00 00 ff ff"
+text = "ifs (r0 <= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 00 f0 00 00"
+text = "ifs (r15 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 00 0f 00 00"
+text = "ifs (r0 <= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 00 ff ff ff"
+text = "ifs (r15 <= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfeq.rr.l"
+syntax = "iff ({r} == {s}) goto {n}"
+encoding = ["1111111101000000", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison ==."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "40 ff 80 00 00 00"
+text = "iff (r0 == r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 80 00 ff ff"
+text = "iff (r0 == r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 80 f0 00 00"
+text = "iff (r15 == r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 80 0f 00 00"
+text = "iff (r0 == r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 ff 80 ff ff ff"
+text = "iff (r15 == r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfune.rr.l"
+syntax = "iff ({r} u!= {s}) goto {n}"
+encoding = ["1111111101000001", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison u!=."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "41 ff 80 00 00 00"
+text = "iff (r0 u!= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 80 00 ff ff"
+text = "iff (r0 u!= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 80 f0 00 00"
+text = "iff (r15 u!= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 80 0f 00 00"
+text = "iff (r0 u!= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 ff 80 ff ff ff"
+text = "iff (r15 u!= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfuge.rr.l"
+syntax = "iff ({r} u>= {s}) goto {n}"
+encoding = ["1111111101000010", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison u>=."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "42 ff 80 00 00 00"
+text = "iff (r0 u>= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 80 00 ff ff"
+text = "iff (r0 u>= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 80 f0 00 00"
+text = "iff (r15 u>= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 80 0f 00 00"
+text = "iff (r0 u>= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "42 ff 80 ff ff ff"
+text = "iff (r15 u>= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bflt.rr.l"
+syntax = "iff ({r} < {s}) goto {n}"
+encoding = ["1111111101000011", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison <."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "43 ff 80 00 00 00"
+text = "iff (r0 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 80 00 ff ff"
+text = "iff (r0 < r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 80 f0 00 00"
+text = "iff (r15 < r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 80 0f 00 00"
+text = "iff (r0 < r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "43 ff 80 ff ff ff"
+text = "iff (r15 < r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfugt.rr.l"
+syntax = "iff ({r} u> {s}) goto {n}"
+encoding = ["1111111101001000", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison u>."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "48 ff 80 00 00 00"
+text = "iff (r0 u> r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 80 00 ff ff"
+text = "iff (r0 u> r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 80 f0 00 00"
+text = "iff (r15 u> r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 80 0f 00 00"
+text = "iff (r0 u> r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "48 ff 80 ff ff ff"
+text = "iff (r15 u> r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfle.rr.l"
+syntax = "iff ({r} <= {s}) goto {n}"
+encoding = ["1111111101001001", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison <=."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "49 ff 80 00 00 00"
+text = "iff (r0 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 80 00 ff ff"
+text = "iff (r0 <= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 80 f0 00 00"
+text = "iff (r15 <= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 80 0f 00 00"
+text = "iff (r0 <= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "49 ff 80 ff ff ff"
+text = "iff (r15 <= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfge.rr.l"
+syntax = "iff ({r} >= {s}) goto {n}"
+encoding = ["1111111101001010", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison >=."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "4a ff 80 00 00 00"
+text = "iff (r0 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 80 00 ff ff"
+text = "iff (r0 >= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 80 f0 00 00"
+text = "iff (r15 >= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 80 0f 00 00"
+text = "iff (r0 >= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4a ff 80 ff ff ff"
+text = "iff (r15 >= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfult.rr.l"
+syntax = "iff ({r} u< {s}) goto {n}"
+encoding = ["1111111101001011", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison u<."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "4b ff 80 00 00 00"
+text = "iff (r0 u< r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 80 00 ff ff"
+text = "iff (r0 u< r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 80 f0 00 00"
+text = "iff (r15 u< r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 80 0f 00 00"
+text = "iff (r0 u< r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4b ff 80 ff ff ff"
+text = "iff (r15 u< r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfgt.rr.l"
+syntax = "iff ({r} > {s}) goto {n}"
+encoding = ["1111111101001100", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison >."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "4c ff 80 00 00 00"
+text = "iff (r0 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 80 00 ff ff"
+text = "iff (r0 > r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 80 f0 00 00"
+text = "iff (r15 > r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 80 0f 00 00"
+text = "iff (r0 > r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c ff 80 ff ff ff"
+text = "iff (r15 > r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bfule.rr.l"
+syntax = "iff ({r} u<= {s}) goto {n}"
+encoding = ["1111111101001101", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes on floating-point comparison u<=."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. NaN comparison behavior is unknown."
+
+[[insn.example]]
+bytes = "4d ff 80 00 00 00"
+text = "iff (r0 u<= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 80 00 ff ff"
+text = "iff (r0 u<= r0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 80 f0 00 00"
+text = "iff (r15 u<= r0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 80 0f 00 00"
+text = "iff (r0 u<= r15) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d ff 80 ff ff ff"
+text = "iff (r15 u<= r15) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- floating-point arithmetic and conversions, parallel issue ----
+
+[[insn]]
+id = "add.f.rrr.p"
+syntax = "{d} = {a} + {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0000"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Floating-point add of two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 00 00"
+text = "r0 = r0 + r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f0 00"
+text = "r0 = r15 + r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 00 0f"
+text = "r0 = r0 + r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 00 f0"
+text = "r15 = r0 + r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f0 ff"
+text = "r15 = r15 + r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sub.f.rrr.p"
+syntax = "{d} = {a} - {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0001"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Floating-point sub of two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 01 00"
+text = "r0 = r0 - r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f1 00"
+text = "r0 = r15 - r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 01 0f"
+text = "r0 = r0 - r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 01 f0"
+text = "r15 = r0 - r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f1 ff"
+text = "r15 = r15 - r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mul.f.rrr.p"
+syntax = "{d} = {a} * {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0010"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Floating-point mul of two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 02 00"
+text = "r0 = r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f2 00"
+text = "r0 = r15 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 02 0f"
+text = "r0 = r0 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 02 f0"
+text = "r15 = r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f2 ff"
+text = "r15 = r15 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "div.f.rrr.p"
+syntax = "{d} = {a} / {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0011"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Floating-point div of two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 03 00"
+text = "r0 = r0 / r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f3 00"
+text = "r0 = r15 / r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 03 0f"
+text = "r0 = r0 / r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 03 f0"
+text = "r15 = r0 / r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f3 ff"
+text = "r15 = r15 / r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "fcmp.rr.p"
+syntax = "fcmp {a}, {b}  #"
+encoding = ["1111010100111111", "----bbbbaaaa0100"]
+fields = { a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Compare two general registers as floating-point values, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown. The high nibble of the second word is ignored by objdump and zeroed by the assembler."
+
+[[insn.example]]
+bytes = "3f f5 04 00"
+text = "fcmp r0, r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f4 00"
+text = "fcmp r15, r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 04 0f"
+text = "fcmp r0, r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f4 0f"
+text = "fcmp r15, r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "fmin.rrr.p"
+syntax = "{d} = fmin({a}, {b})  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0101"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Apply fmin to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 05 00"
+text = "r0 = fmin(r0, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f5 00"
+text = "r0 = fmin(r15, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 05 0f"
+text = "r0 = fmin(r0, r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 05 f0"
+text = "r15 = fmin(r0, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f5 ff"
+text = "r15 = fmin(r15, r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "fmax.rrr.p"
+syntax = "{d} = fmax({a}, {b})  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0110"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Apply fmax to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 06 00"
+text = "r0 = fmax(r0, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f6 00"
+text = "r0 = fmax(r15, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 06 0f"
+text = "r0 = fmax(r0, r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 06 f0"
+text = "r15 = fmax(r0, r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f6 ff"
+text = "r15 = fmax(r15, r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "madd.f.rrr.p"
+syntax = "{d} += {a} * {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa0111"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Accumulate a floating-point product into a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown. Whether the arithmetic is fused is unknown."
+
+[[insn.example]]
+bytes = "3f f5 07 00"
+text = "r0 += r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f7 00"
+text = "r0 += r15 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 07 0f"
+text = "r0 += r0 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 07 f0"
+text = "r15 += r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f7 ff"
+text = "r15 += r15 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "msub.f.rrr.p"
+syntax = "{d} -= {a} * {b} (f)  #"
+encoding = ["1111010100111111", "ddddbbbbaaaa1000"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "floating-point"
+summary = "Accumulate a floating-point product into a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown. Whether the arithmetic is fused is unknown."
+
+[[insn.example]]
+bytes = "3f f5 08 00"
+text = "r0 -= r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f8 00"
+text = "r0 -= r15 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 08 0f"
+text = "r0 -= r0 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 08 f0"
+text = "r15 -= r0 * r0 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 f8 ff"
+text = "r15 -= r15 * r15 (f)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftoi.even.rr.p"
+syntax = "{d} = ftoi({s}) (even)  #"
+encoding = ["1111010100111111", "ddddssss00001111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftoi with the even rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 0f 00"
+text = "r0 = ftoi(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 0f f0"
+text = "r15 = ftoi(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 0f 0f"
+text = "r0 = ftoi(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 0f ff"
+text = "r15 = ftoi(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftoi.trunc.rr.p"
+syntax = "{d} = ftoi({s}) (trunc)  #"
+encoding = ["1111010100111111", "ddddssss00011111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftoi with the trunc rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 1f 00"
+text = "r0 = ftoi(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 1f f0"
+text = "r15 = ftoi(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 1f 0f"
+text = "r0 = ftoi(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 1f ff"
+text = "r15 = ftoi(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftoi.ceil.rr.p"
+syntax = "{d} = ftoi({s}) (ceil)  #"
+encoding = ["1111010100111111", "ddddssss00101111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftoi with the ceil rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 2f 00"
+text = "r0 = ftoi(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 2f f0"
+text = "r15 = ftoi(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 2f 0f"
+text = "r0 = ftoi(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 2f ff"
+text = "r15 = ftoi(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftoi.floor.rr.p"
+syntax = "{d} = ftoi({s}) (floor)  #"
+encoding = ["1111010100111111", "ddddssss00111111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftoi with the floor rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 3f 00"
+text = "r0 = ftoi(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 3f f0"
+text = "r15 = ftoi(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 3f 0f"
+text = "r0 = ftoi(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 3f ff"
+text = "r15 = ftoi(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftou.even.rr.p"
+syntax = "{d} = ftou({s}) (even)  #"
+encoding = ["1111010100111111", "ddddssss01001111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftou with the even rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 4f 00"
+text = "r0 = ftou(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 4f f0"
+text = "r15 = ftou(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 4f 0f"
+text = "r0 = ftou(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 4f ff"
+text = "r15 = ftou(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftou.trunc.rr.p"
+syntax = "{d} = ftou({s}) (trunc)  #"
+encoding = ["1111010100111111", "ddddssss01011111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftou with the trunc rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 5f 00"
+text = "r0 = ftou(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 5f f0"
+text = "r15 = ftou(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 5f 0f"
+text = "r0 = ftou(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 5f ff"
+text = "r15 = ftou(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftou.ceil.rr.p"
+syntax = "{d} = ftou({s}) (ceil)  #"
+encoding = ["1111010100111111", "ddddssss01101111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftou with the ceil rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 6f 00"
+text = "r0 = ftou(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 6f f0"
+text = "r15 = ftou(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 6f 0f"
+text = "r0 = ftou(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 6f ff"
+text = "r15 = ftou(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftou.floor.rr.p"
+syntax = "{d} = ftou({s}) (floor)  #"
+encoding = ["1111010100111111", "ddddssss01111111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftou with the floor rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 7f 00"
+text = "r0 = ftou(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 7f f0"
+text = "r15 = ftou(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 7f 0f"
+text = "r0 = ftou(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 7f ff"
+text = "r15 = ftou(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.even.rr.p"
+syntax = "{d} = ftof({s}) (even)  #"
+encoding = ["1111010100111111", "ddddssss11001111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftof with the even rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 cf 00"
+text = "r0 = ftof(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 cf f0"
+text = "r15 = ftof(r0) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 cf 0f"
+text = "r0 = ftof(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 cf ff"
+text = "r15 = ftof(r15) (even)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.trunc.rr.p"
+syntax = "{d} = ftof({s}) (trunc)  #"
+encoding = ["1111010100111111", "ddddssss11011111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftof with the trunc rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 df 00"
+text = "r0 = ftof(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 df f0"
+text = "r15 = ftof(r0) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 df 0f"
+text = "r0 = ftof(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 df ff"
+text = "r15 = ftof(r15) (trunc)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.ceil.rr.p"
+syntax = "{d} = ftof({s}) (ceil)  #"
+encoding = ["1111010100111111", "ddddssss11101111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftof with the ceil rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 ef 00"
+text = "r0 = ftof(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ef f0"
+text = "r15 = ftof(r0) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ef 0f"
+text = "r0 = ftof(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ef ff"
+text = "r15 = ftof(r15) (ceil)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.floor.rr.p"
+syntax = "{d} = ftof({s}) (floor)  #"
+encoding = ["1111010100111111", "ddddssss11111111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Apply ftof with the floor rounding modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 ff 00"
+text = "r0 = ftof(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ff f0"
+text = "r15 = ftof(r0) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ff 0f"
+text = "r0 = ftof(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 ff ff"
+text = "r15 = ftof(r15) (floor)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "itof.rr.p"
+syntax = "{d} = itof({s})  #"
+encoding = ["1111010100111111", "ddddssss10001111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Convert the value in a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 8f 00"
+text = "r0 = itof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 8f f0"
+text = "r15 = itof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 8f 0f"
+text = "r0 = itof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 8f ff"
+text = "r15 = itof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "utof.rr.p"
+syntax = "{d} = utof({s})  #"
+encoding = ["1111010100111111", "ddddssss10011111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Convert the value in a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 9f 00"
+text = "r0 = utof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 9f f0"
+text = "r15 = utof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 9f 0f"
+text = "r0 = utof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 9f ff"
+text = "r15 = utof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.half.rr.p"
+syntax = "{d}.l = ftof({s})  #"
+encoding = ["1111010100111111", "ddddssss10101111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Convert the value in a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 af 00"
+text = "r0.l = ftof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 af f0"
+text = "r15.l = ftof(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 af 0f"
+text = "r0.l = ftof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 af ff"
+text = "r15.l = ftof(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ftof.full.rr.p"
+syntax = "{d} = ftof({s}.l)  #"
+encoding = ["1111010100111111", "ddddssss10111111"]
+fields = { d = "gpr", s = "gpr" }
+group = "floating-point"
+summary = "Convert the value in a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
+
+[[insn.example]]
+bytes = "3f f5 bf 00"
+text = "r0 = ftof(r0.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 bf f0"
+text = "r15 = ftof(r0.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 bf 0f"
+text = "r0 = ftof(r15.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f5 bf ff"
+text = "r15 = ftof(r15.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- 48-bit calls and memory ----
+
+[[insn]]
+id = "call.xl"
+syntax = "call {n}"
+encoding = ["1111111110000000", "iiiiiiiiiiiiiii0", "jjjjjjjjjjjjjjjj"]
+fields = { n = { kind = "simm", letters = "ji", scale = 2 } }
+group = "branches"
+summary = "Call with a signed 32-bit byte offset whose low bit is zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout inferred from oracle sweep, fit and vary probes."
+
+[[insn.example]]
+bytes = "80 ff 00 00 00 00"
+text = "call 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 ff fe ff ff ff"
+text = "call -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "gotoss.xl"
+syntax = "gotoss {n}"
+encoding = ["1111111110000000", "iiiiiiiiiiiiiii1", "jjjjjjjjjjjjjjjj"]
+fields = { n = { kind = "simm", letters = "ji", scale = 2 } }
+group = "branches"
+summary = "Execute gotoss with a signed 32-bit byte offset whose low bit is zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep ff80 and vary probes. Meaning unknown."
+
+[[insn.example]]
+bytes = "80 ff 01 00 00 00"
+text = "gotoss 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 ff ff ff ff ff"
+text = "gotoss -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.w.npc"
+syntax = "{r} = [npc + {n}]"
+encoding = ["111111111010rrrr", "iiiiiiiiiiiiiii0", "jjjjjjjjjjjjjjjj"]
+fields = { r = "gpr", n = { kind = "simm", letters = "ji", scale = 2 } }
+group = "memory"
+summary = "Load a word using npc plus an even signed 32-bit offset."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit ffa0 and vary probes. Meaning of npc and its base address are unknown."
+
+[[insn.example]]
+bytes = "a0 ff 00 00 00 00"
+text = "r0 = [npc + 0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 ff fe ff ff ff"
+text = "r0 = [npc + -2]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af ff 00 00 00 00"
+text = "r15 = [npc + 0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af ff fe ff ff ff"
+text = "r15 = [npc + -2]"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- constants, moves and scalar arithmetic, parallel issue ----
+
+[[insn]]
+id = "li.low16.p"
+syntax = "{d}.l = {n}  #"
+encoding = ["111100000000dddd", "nnnnnnnnnnnnnnnn"]
+fields = { d = "gpr", n = "uimm" }
+group = "constants"
+summary = "Load an unsigned 16-bit immediate into one half of a register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "00 f0 00 00"
+text = "r0.l = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f f0 00 00"
+text = "r15.l = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 f0 ff ff"
+text = "r0.l = 65535  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f f0 ff ff"
+text = "r15.l = 65535  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.high16.p"
+syntax = "{d}.h = {n}  #"
+encoding = ["111100000001dddd", "nnnnnnnnnnnnnnnn"]
+fields = { d = "gpr", n = "uimm" }
+group = "constants"
+summary = "Load an unsigned 16-bit immediate into one half of a register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "10 f0 00 00"
+text = "r0.h = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f f0 00 00"
+text = "r15.h = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 f0 ff ff"
+text = "r0.h = 65535  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f f0 ff ff"
+text = "r15.h = 65535  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.byte.p"
+syntax = "{d}.b{b} = {n}  #"
+encoding = ["1111000000100000", "ddddbb00nnnnnnnn"]
+fields = { d = "gpr", b = "uimm", n = "uimm" }
+group = "constants"
+summary = "Load an unsigned 8-bit immediate into a selected register byte, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "20 f0 00 00"
+text = "r0.b0 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f0 00 0c"
+text = "r0.b3 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f0 00 f0"
+text = "r15.b0 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f0 ff 00"
+text = "r0.b0 = 255  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f0 ff fc"
+text = "r15.b3 = 255  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.s16.p"
+syntax = "{d} = {n}  #"
+encoding = ["111100000100dddd", "nnnnnnnnnnnnnnnn"]
+fields = { d = "gpr", n = "simm" }
+group = "constants"
+summary = "Load a signed 16-bit immediate, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "40 f0 00 00"
+text = "r0 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f f0 00 00"
+text = "r15 = 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 f0 ff ff"
+text = "r0 = -1  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f f0 ff ff"
+text = "r15 = -1  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.modimm.p"
+syntax = "{r} = {n}  #"
+encoding = ["1111000001100000", "rrrrnnnnnnnnnnnn"]
+fields = { r = "gpr", n = "modimm" }
+group = "constants"
+summary = "Load a modified immediate, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "60 f0 00 00"
+text = "r0 = 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 f0 ff 0f"
+text = "r0 = 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 f0 00 f0"
+text = "r15 = 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 f0 ff ff"
+text = "r15 = 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.r_sr.p"
+syntax = "{r} = {s}  #"
+encoding = ["1111000001100100", "rrrrssss00000000"]
+fields = { r = "gpr", s = "sr" }
+group = "moves"
+summary = "Copy a special register to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "64 f0 00 00"
+text = "r0 = reti  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 00 f0"
+text = "r15 = reti  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 00 0f"
+text = "r0 = pc  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 00 ff"
+text = "r15 = pc  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sr_r.p"
+syntax = "{s} = {r}  #"
+encoding = ["1111000001100100", "rrrrssss10000000"]
+fields = { r = "gpr", s = "sr" }
+group = "moves"
+summary = "Copy a general register to a special register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "64 f0 80 00"
+text = "reti = r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 80 f0"
+text = "reti = r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 80 0f"
+text = "pc = r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 f0 80 ff"
+text = "pc = r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.l_l.p"
+syntax = "{d}.l = {s}.l  #"
+encoding = ["1111000001101000", "ddddssss00000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "moves"
+summary = "Copy a register half, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "68 f0 00 00"
+text = "r0.l = r0.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 00 f0"
+text = "r15.l = r0.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 00 0f"
+text = "r0.l = r15.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 00 ff"
+text = "r15.l = r15.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.l_h.p"
+syntax = "{d}.l = {s}.h  #"
+encoding = ["1111000001101000", "ddddssss01000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "moves"
+summary = "Copy a register half, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "68 f0 40 00"
+text = "r0.l = r0.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 40 f0"
+text = "r15.l = r0.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 40 0f"
+text = "r0.l = r15.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 40 ff"
+text = "r15.l = r15.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.h_l.p"
+syntax = "{d}.h = {s}.l  #"
+encoding = ["1111000001101000", "ddddssss10000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "moves"
+summary = "Copy a register half, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "68 f0 80 00"
+text = "r0.h = r0.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 80 f0"
+text = "r15.h = r0.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 80 0f"
+text = "r0.h = r15.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 80 ff"
+text = "r15.h = r15.l  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.h_h.p"
+syntax = "{d}.h = {s}.h  #"
+encoding = ["1111000001101000", "ddddssss11000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "moves"
+summary = "Copy a register half, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "68 f0 c0 00"
+text = "r0.h = r0.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 c0 f0"
+text = "r15.h = r0.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 c0 0f"
+text = "r0.h = r15.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "68 f0 c0 ff"
+text = "r15.h = r15.h  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "popcnt.r_pair.p"
+syntax = "{d} = popcnt({s})  #"
+encoding = ["1111000001101100", "ddddsss000000000"]
+fields = { d = "gpr", s = "pair" }
+group = "arithmetic"
+summary = "Apply popcnt to a register pair, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. The assembler requires instrev3 for popcnt."
+
+requires = ["instrev3"]
+
+[[insn.example]]
+bytes = "6c f0 00 00"
+text = "r0 = popcnt(r1_r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "6c f0 00 f0"
+text = "r15 = popcnt(r1_r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "6c f0 00 0e"
+text = "r0 = popcnt(r15_r14)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "6c f0 00 fe"
+text = "r15 = popcnt(r15_r14)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rev8.rr.p"
+syntax = "{d} = rev8({s})  #"
+encoding = ["1111000001110000", "ddddssss00000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply rev8 to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f070. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "70 f0 00 00"
+text = "r0 = rev8(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 00 f0"
+text = "r15 = rev8(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 00 0f"
+text = "r0 = rev8(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 00 ff"
+text = "r15 = rev8(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "rev16.rr.p"
+syntax = "{d} = rev16({s})  #"
+encoding = ["1111000001110000", "ddddssss01000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply rev16 to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f070. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "70 f0 40 00"
+text = "r0 = rev16(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 40 f0"
+text = "r15 = rev16(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 40 0f"
+text = "r0 = rev16(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 40 ff"
+text = "r15 = rev16(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "revs.rr.p"
+syntax = "{d} = revs({s}.l)  #"
+encoding = ["1111000001110000", "ddddssss10000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply revs to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f070. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "70 f0 80 00"
+text = "r0 = revs(r0.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 80 f0"
+text = "r15 = revs(r0.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 80 0f"
+text = "r0 = revs(r15.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 80 ff"
+text = "r15 = revs(r15.l)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "popcnt.rr.p"
+syntax = "{d} = popcnt({s})  #"
+encoding = ["1111000001110000", "ddddssss11000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply popcnt to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f070. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+requires = ["instrev3"]
+
+[[insn.example]]
+bytes = "70 f0 c0 00"
+text = "r0 = popcnt(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 c0 f0"
+text = "r15 = popcnt(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 c0 0f"
+text = "r0 = popcnt(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f0 c0 ff"
+text = "r15 = popcnt(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.brev.rr.p"
+syntax = "{d} += {s} (brev)  #"
+encoding = ["1111000010110000", "ddddssss00000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Add a register with the brev modifier, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f0b0. Meaning of brev is unknown."
+
+[[insn.example]]
+bytes = "b0 f0 00 00"
+text = "r0 += r0 (brev)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 f0 00 f0"
+text = "r15 += r0 (brev)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 f0 00 0f"
+text = "r0 += r15 (brev)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 f0 00 ff"
+text = "r15 += r15 (brev)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "clz.rr.p"
+syntax = "{d} = clz({s})  #"
+encoding = ["1111000110000000", "ddddssss00000000"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply clz to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f180. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "80 f1 00 00"
+text = "r0 = clz(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 00 f0"
+text = "r15 = clz(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 00 0f"
+text = "r0 = clz(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 00 ff"
+text = "r15 = clz(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cls.rr.p"
+syntax = "{d} = cls({s})  #"
+encoding = ["1111000110000000", "ddddssss00000001"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply cls to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f180. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "80 f1 01 00"
+text = "r0 = cls(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 01 f0"
+text = "r15 = cls(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 01 0f"
+text = "r0 = cls(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 01 ff"
+text = "r15 = cls(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "zcmp.rr.p"
+syntax = "{d} = zcmp({s})  #"
+encoding = ["1111000110000000", "ddddssss00000010"]
+fields = { d = "gpr", s = "gpr" }
+group = "arithmetic"
+summary = "Apply zcmp to a general register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep f180. Meaning unknown beyond the printed operation name; # marks parallel issue."
+
+[[insn.example]]
+bytes = "80 f1 02 00"
+text = "r0 = zcmp(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 02 f0"
+text = "r15 = zcmp(r0)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 02 0f"
+text = "r0 = zcmp(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 f1 02 ff"
+text = "r15 = zcmp(r15)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sub.rrr.p"
+syntax = "{d} = {a} - {b}  #"
+encoding = ["1111000010110100", "ddddbbbbaaaa0010"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply sub to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "b4 f0 02 00"
+text = "r0 = r0 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 f2 00"
+text = "r0 = r15 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 02 0f"
+text = "r0 = r0 - r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 02 f0"
+text = "r15 = r0 - r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 f2 ff"
+text = "r15 = r15 - r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "addc.rrr.p"
+syntax = "{d} = {a} + {b} + c  #"
+encoding = ["1111000010111000", "ddddbbbbaaaa0000"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply addc to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "b8 f0 00 00"
+text = "r0 = r0 + r0 + c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 f0 00"
+text = "r0 = r15 + r0 + c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 00 0f"
+text = "r0 = r0 + r15 + c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 00 f0"
+text = "r15 = r0 + r0 + c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 f0 ff"
+text = "r15 = r15 + r15 + c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "subc.rrr.p"
+syntax = "{d} = {a} - {b} - !c  #"
+encoding = ["1111000010111000", "ddddbbbbaaaa0010"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply subc to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "b8 f0 02 00"
+text = "r0 = r0 - r0 - !c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 f2 00"
+text = "r0 = r15 - r0 - !c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 02 0f"
+text = "r0 = r0 - r15 - !c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 02 f0"
+text = "r15 = r0 - r0 - !c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 f0 f2 ff"
+text = "r15 = r15 - r15 - !c  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bic.rrr.p"
+syntax = "{d} = {a} & ~{b}  #"
+encoding = ["1111000110010000", "ddddbbbbaaaa0011"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply bic to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "90 f1 03 00"
+text = "r0 = r0 & ~r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f3 00"
+text = "r0 = r15 & ~r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 03 0f"
+text = "r0 = r0 & ~r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 03 f0"
+text = "r15 = r0 & ~r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f3 ff"
+text = "r15 = r15 & ~r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "div.u.rrr.p"
+syntax = "{d} = {a} / {b} (u)  #"
+encoding = ["1111000111110100", "ddddbbbbaaaa0000"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply div.u to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "f4 f1 00 00"
+text = "r0 = r0 / r0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 f0 00"
+text = "r0 = r15 / r0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 00 0f"
+text = "r0 = r0 / r15 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 00 f0"
+text = "r15 = r0 / r0 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 f0 ff"
+text = "r15 = r15 / r15 (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "div.s.rrr.p"
+syntax = "{d} = {a} / {b} (s)  #"
+encoding = ["1111000111110100", "ddddbbbbaaaa0001"]
+fields = { d = "gpr", a = "gpr", b = "gpr" }
+group = "arithmetic"
+summary = "Apply div.s to two general registers, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "f4 f1 01 00"
+text = "r0 = r0 / r0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 f1 00"
+text = "r0 = r15 / r0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 01 0f"
+text = "r0 = r0 / r15 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 01 f0"
+text = "r15 = r0 / r0 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f4 f1 f1 ff"
+text = "r15 = r15 / r15 (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.s14.rri.p"
+syntax = "{d} = {s} + {n}  #"
+encoding = ["1111000100nndddd", "ssssnnnnnnnnnnnn"]
+fields = { d = "gpr", s = "gpr", n = "simm" }
+group = "arithmetic"
+summary = "Add a signed 14-bit immediate to a register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
+
+[[insn.example]]
+bytes = "00 f1 00 00"
+text = "r0 = r0 + 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f f1 00 00"
+text = "r15 = r0 + 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 f1 ff 0f"
+text = "r0 = r0 + -1  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 f1 00 f0"
+text = "r0 = r15 + 0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f f1 ff ff"
+text = "r15 = r15 + -1  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsl.rri.p"
+syntax = "{d} = {s} << {n}  #"
+encoding = ["1111000111000000", "dddd000nssssnnnn"]
+fields = { d = "gpr", s = "gpr", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register by an immediate from 1 to 32, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "c0 f1 00 00"
+text = "r0 = r0 << 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 00 f0"
+text = "r15 = r0 << 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 0f 01"
+text = "r0 = r0 << 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 f0 00"
+text = "r0 = r15 << 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 ff f1"
+text = "r15 = r15 << 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.rri.p"
+syntax = "{d} = {s} <<< {n}  #"
+encoding = ["1111000111000000", "dddd010nssssnnnn"]
+fields = { d = "gpr", s = "gpr", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register by an immediate from 1 to 32, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "c0 f1 00 04"
+text = "r0 = r0 <<< 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 00 f4"
+text = "r15 = r0 <<< 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 0f 05"
+text = "r0 = r0 <<< 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 f0 04"
+text = "r0 = r15 <<< 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 ff f5"
+text = "r15 = r15 <<< 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.rri.p"
+syntax = "{d} = {s} >> {n}  #"
+encoding = ["1111000111000000", "dddd100nssssnnnn"]
+fields = { d = "gpr", s = "gpr", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register by an immediate from 1 to 32, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "c0 f1 00 08"
+text = "r0 = r0 >> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 00 f8"
+text = "r15 = r0 >> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 0f 09"
+text = "r0 = r0 >> 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 f0 08"
+text = "r0 = r15 >> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 ff f9"
+text = "r15 = r15 >> 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.rri.p"
+syntax = "{d} = {s} >>> {n}  #"
+encoding = ["1111000111000000", "dddd110nssssnnnn"]
+fields = { d = "gpr", s = "gpr", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register by an immediate from 1 to 32, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "c0 f1 00 0c"
+text = "r0 = r0 >>> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 00 fc"
+text = "r15 = r0 >>> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 0f 0d"
+text = "r0 = r0 >>> 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 f0 0c"
+text = "r0 = r15 >>> 32  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 f1 ff fd"
+text = "r15 = r15 >>> 31  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.modimm.rri.p"
+syntax = "{d} = {s} + {n}  #"
+encoding = ["111100001110dddd", "ssssnnnnnnnnnnnn"]
+fields = { d = "gpr", s = "gpr", n = "modimm" }
+group = "arithmetic"
+summary = "Add a modified immediate to a register, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f0e0 and vary probes. The assembler can prefer the signed 14-bit immediate form, including for redundant modified-immediate zeros."
+
+[[insn.example]]
+bytes = "e0 f0 00 00"
+text = "r0 = r0 + 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef f0 00 00"
+text = "r15 = r0 + 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e0 f0 ff 0f"
+text = "r0 = r0 + 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e0 f0 00 f0"
+text = "r0 = r15 + 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef f0 ff ff"
+text = "r15 = r15 + 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- register-pair shifts, parallel issue ----
+
+[[insn]]
+id = "lsl.pair.i.p"
+syntax = "{p} <<= {n}  #"
+encoding = ["1111000111010000", "ppp000nn0000nnnn"]
+fields = { p = "pair", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register pair by an immediate from 1 to 64, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d0 f1 00 00"
+text = "r1_r0 <<= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f 03"
+text = "r1_r0 <<= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 00 e0"
+text = "r15_r14 <<= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f e3"
+text = "r15_r14 <<= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsl.pair.r.p"
+syntax = "{p} <<= {r}  #"
+encoding = ["1111000111011000", "ppp0rrrr00000000"]
+fields = { p = "pair", r = "gpr" }
+group = "arithmetic"
+summary = "Shift a register pair by a general register count, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d8 f1 00 00"
+text = "r1_r0 <<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 00 e0"
+text = "r15_r14 <<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 00 0f"
+text = "r1_r0 <<= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 00 ef"
+text = "r15_r14 <<= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.pair.i.p"
+syntax = "{p} <<<= {n}  #"
+encoding = ["1111000111010000", "ppp001nn0000nnnn"]
+fields = { p = "pair", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register pair by an immediate from 1 to 64, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d0 f1 00 04"
+text = "r1_r0 <<<= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f 07"
+text = "r1_r0 <<<= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 00 e4"
+text = "r15_r14 <<<= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f e7"
+text = "r15_r14 <<<= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.pair.r.p"
+syntax = "{p} <<<= {r}  #"
+encoding = ["1111000111011000", "ppp0rrrr00000001"]
+fields = { p = "pair", r = "gpr" }
+group = "arithmetic"
+summary = "Shift a register pair by a general register count, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d8 f1 01 00"
+text = "r1_r0 <<<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 01 e0"
+text = "r15_r14 <<<= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 01 0f"
+text = "r1_r0 <<<= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 01 ef"
+text = "r15_r14 <<<= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.pair.i.p"
+syntax = "{p} >>= {n}  #"
+encoding = ["1111000111010000", "ppp010nn0000nnnn"]
+fields = { p = "pair", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register pair by an immediate from 1 to 64, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d0 f1 00 08"
+text = "r1_r0 >>= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f 0b"
+text = "r1_r0 >>= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 00 e8"
+text = "r15_r14 >>= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f eb"
+text = "r15_r14 >>= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.pair.r.p"
+syntax = "{p} >>= {r}  #"
+encoding = ["1111000111011000", "ppp0rrrr00000010"]
+fields = { p = "pair", r = "gpr" }
+group = "arithmetic"
+summary = "Shift a register pair by a general register count, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d8 f1 02 00"
+text = "r1_r0 >>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 02 e0"
+text = "r15_r14 >>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 02 0f"
+text = "r1_r0 >>= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 02 ef"
+text = "r15_r14 >>= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.pair.i.p"
+syntax = "{p} >>>= {n}  #"
+encoding = ["1111000111010000", "ppp011nn0000nnnn"]
+fields = { p = "pair", n = "shift" }
+group = "arithmetic"
+summary = "Shift a register pair by an immediate from 1 to 64, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d0 f1 00 0c"
+text = "r1_r0 >>>= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f 0f"
+text = "r1_r0 >>>= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 00 ec"
+text = "r15_r14 >>>= 64  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d0 f1 0f ef"
+text = "r15_r14 >>>= 63  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.pair.r.p"
+syntax = "{p} >>>= {r}  #"
+encoding = ["1111000111011000", "ppp0rrrr00000011"]
+fields = { p = "pair", r = "gpr" }
+group = "arithmetic"
+summary = "Shift a register pair by a general register count, marked for parallel issue."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
+
+[[insn.example]]
+bytes = "d8 f1 03 00"
+text = "r1_r0 >>>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 03 e0"
+text = "r15_r14 >>>= r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 03 0f"
+text = "r1_r0 >>>= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 f1 03 ef"
+text = "r15_r14 >>>= r15  #"
+origin = "oracle:objdump+clang:20260730.1"
