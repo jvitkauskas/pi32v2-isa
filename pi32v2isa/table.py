@@ -26,6 +26,8 @@ KINDS = {
     "uimm": None,
     "simm": None,
     "bit": {5},
+    "invbit": {5},
+    "uimm_zero_max": None,
     "rlist4": {4},
     "rmask": {16},
     "srmask": None,

@@ -65,6 +65,11 @@ class RealTable(unittest.TestCase):
             ("li.modimm", {"r": 1, "n": 0x101}, "r1 = 0x10001"),
             ("li.modimm", {"r": 1, "n": 0xB80}, "r1 = 0x10000"),
             ("or.bit", {"r": 1, "b": 14}, "r1 |= 16384"),
+            ("and.invbit", {"r": 0, "b": 0}, "r0 &= 4294967294"),
+            ("and.invbit", {"r": 7, "b": 31}, "r7 &= 2147483647"),
+            ("lsl.rri", {"d": 0, "s": 1, "n": 0}, "r0 = r1 << 32"),
+            ("lsl.rri", {"d": 0, "s": 1, "n": 1}, "r0 = r1 << 1"),
+            ("shr3.rri", {"d": 7, "s": 0, "n": 31}, "r7 = r0 >>> 31"),
             ("pop.rl", {"l": 2}, "{r3, r2} = [sp++]"),
             ("pop.rl", {"l": 6}, "{r6-r4} = [sp++]"),
             ("push.rmask", {"m": 0b110110}, "[--sp] = {r5, r4, r2, r1}"),
@@ -75,6 +80,15 @@ class RealTable(unittest.TestCase):
         ]
         for insn_id, values, text in cases:
             self.assertEqual(codec.format(t.by_id(insn_id), values), text)
+
+    def test_non_linear_immediate_kinds(self):
+        """The inverse-bit mask stays 32 bits; wrapped zero follows the field width."""
+        invbit = table.Field(kind="invbit", letters="b")
+        self.assertEqual(codec.operand(invbit, 14, 5), "4294950911")
+        wrapped = table.Field(kind="uimm_zero_max", letters="n")
+        self.assertEqual(codec.operand(wrapped, 0, 3), "8")
+        self.assertEqual(codec.operand(wrapped, 1, 3), "1")
+        self.assertEqual(codec.operand(wrapped, 7, 3), "7")
 
     def test_split_field_order(self):
         """li.u32 keeps the low half first in memory."""

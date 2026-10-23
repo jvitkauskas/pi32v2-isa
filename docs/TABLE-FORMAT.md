@@ -88,6 +88,8 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `uimm` | any | unsigned number | `252` |
 | `simm` | any | two's-complement number | `-11` |
 | `bit` | 5 | a bit number, printed as the bit's value | `16384` |
+| `invbit` | 5 | a bit number, printed as the 32-bit complement of the bit's value | `4294950911` |
+| `uimm_zero_max` | any | unsigned number with raw zero printed as 2 to the field width (a 5-bit field prints 1..32) | `32` |
 | `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
 | `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |
 | `rmask` | 16 | set of general registers, bit n = `rn` | `r11-r8, r3-r0` |
