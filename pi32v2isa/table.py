@@ -1,0 +1,195 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+"""Load and check the instruction table (docs/TABLE-FORMAT.md)."""
+
+import re
+import tomllib
+from dataclasses import dataclass, field
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+TABLE = ROOT / "isa" / "pi32v2.toml"
+SOURCES = ROOT / "docs" / "SOURCES.md"
+
+STATUSES = ("guessed", "documented", "confirmed")
+WORD_CHARS = re.compile(r"^[01a-z-]{16}$")
+PLACEHOLDER = re.compile(r"\{([a-z])\}")
+
+# kind -> (allowed field widths, or None for any width >= 1)
+KINDS = {
+    "gpr": {4},
+    "gpr_lo": {3},
+    "gpr_hi": {3},
+    "pair": {3},
+    "uimm": None,
+    "simm": None,
+}
+
+
+@dataclass
+class Example:
+    bytes: bytes
+    text: str
+    origin: str
+
+
+@dataclass
+class Insn:
+    id: str
+    syntax: str
+    words: list[str]
+    fields: dict[str, str]
+    summary: str
+    status: str
+    sources: list[str]
+    group: str = ""
+    requires: list[str] = field(default_factory=list)
+    notes: str = ""
+    examples: list[Example] = field(default_factory=list)
+
+    @property
+    def nbits(self):
+        return 16 * len(self.words)
+
+    def _bits(self):
+        """The encoding as one string, first word's most significant bit first."""
+        return "".join(self.words)
+
+    @property
+    def mask(self):
+        return int("".join("1" if c in "01" else "0" for c in self._bits()), 2)
+
+    @property
+    def value(self):
+        return int("".join("1" if c == "1" else "0" for c in self._bits()), 2)
+
+    def field_bits(self, letter):
+        """Bit positions of a field, most significant first, counted from the high end of the encoding."""
+        return [i for i, c in enumerate(self._bits()) if c == letter]
+
+    def letters(self):
+        return sorted({c for c in self._bits() if c.isalpha()})
+
+
+@dataclass
+class Table:
+    format: int
+    insns: list[Insn]
+
+    def by_id(self, insn_id):
+        return next(i for i in self.insns if i.id == insn_id)
+
+
+def source_ids(path=SOURCES):
+    """The source ids listed in docs/SOURCES.md: the first column of its table."""
+    return {m.group(1) for m in re.finditer(r"^\| `([a-z0-9-]+)` \|", path.read_text(), re.M)}
+
+
+def _parse_bytes(text):
+    return bytes(int(b, 16) for b in text.split())
+
+
+def load(path=TABLE):
+    raw = tomllib.loads(Path(path).read_text())
+    insns = []
+    for e in raw.get("insn", []):
+        insns.append(Insn(
+            id=e.get("id", ""),
+            syntax=e.get("syntax", ""),
+            words=list(e.get("encoding", [])),
+            fields=dict(e.get("fields", {})),
+            summary=e.get("summary", ""),
+            status=e.get("status", ""),
+            sources=list(e.get("sources", [])),
+            group=e.get("group", ""),
+            requires=list(e.get("requires", [])),
+            notes=e.get("notes", ""),
+            examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
+                      for x in e.get("example", [])],
+        ))
+    return Table(format=raw.get("format", 0), insns=insns)
+
+
+def _overlap(a, b):
+    """True if some instruction stream matches both entries: compare the words they have in common."""
+    n = min(len(a.words), len(b.words))
+    shift_a, shift_b = 16 * (len(a.words) - n), 16 * (len(b.words) - n)
+    ma, va = a.mask >> shift_a, a.value >> shift_a
+    mb, vb = b.mask >> shift_b, b.value >> shift_b
+    return (va ^ vb) & ma & mb == 0
+
+
+def check(table, sources=None):
+    """Return a list of problems; an empty list means the table is consistent."""
+    from . import codec
+
+    sources = source_ids() if sources is None else sources
+    errors = []
+    if table.format != 1:
+        errors.append(f"format is {table.format!r}, expected 1")
+    seen = set()
+    for i in table.insns:
+        where = i.id or "<no id>"
+        for key in ("id", "syntax", "words", "summary", "status", "sources"):
+            if not getattr(i, key):
+                errors.append(f"{where}: missing {'encoding' if key == 'words' else key}")
+        if i.id in seen:
+            errors.append(f"{where}: duplicate id")
+        seen.add(i.id)
+        for w in i.words:
+            if not WORD_CHARS.match(w):
+                errors.append(f"{where}: encoding word {w!r} is not 16 characters of 0, 1, -, a-z")
+        used = set(i.letters())
+        for letter in used - i.fields.keys():
+            errors.append(f"{where}: field {letter!r} in the encoding has no kind in fields")
+        for letter in i.fields.keys() - used:
+            errors.append(f"{where}: field {letter!r} is listed but not in the encoding")
+        for letter, kind in i.fields.items():
+            if kind not in KINDS:
+                errors.append(f"{where}: unknown kind {kind!r} for field {letter!r}")
+                continue
+            width = len(i.field_bits(letter))
+            allowed = KINDS[kind]
+            if width and allowed is not None and width not in allowed:
+                errors.append(f"{where}: field {letter!r} is {width} bits, kind {kind} needs {sorted(allowed)}")
+            if kind == "simm" and width == 1:
+                errors.append(f"{where}: field {letter!r} is a 1-bit simm")
+        placeholders = set(PLACEHOLDER.findall(i.syntax))
+        for letter in placeholders - i.fields.keys():
+            errors.append(f"{where}: syntax uses {{{letter}}}, which is not a field")
+        for letter in i.fields.keys() - placeholders:
+            errors.append(f"{where}: field {letter!r} never appears in syntax")
+        if i.status not in STATUSES:
+            errors.append(f"{where}: unknown status {i.status!r}")
+        for s in i.sources:
+            if s not in sources:
+                errors.append(f"{where}: unknown source {s!r} (not in docs/SOURCES.md)")
+        if i.status == "guessed" and not i.notes:
+            errors.append(f"{where}: guessed, but no notes on how")
+        if i.status == "documented" and not [s for s in i.sources if s != "oracle"]:
+            errors.append(f"{where}: documented, but no source other than the oracle")
+        if i.status == "confirmed":
+            observed = [x for x in i.examples if x.origin.startswith("oracle:")]
+            if "oracle" not in i.sources or not observed:
+                errors.append(f"{where}: confirmed, but no oracle source and observed examples")
+            for letter in i.fields:
+                values = {codec.fields_of(i, x.bytes).get(letter) for x in observed}
+                if len(values) < 2:
+                    errors.append(f"{where}: confirmed, but field {letter!r} is seen at fewer than 2 values")
+    for n, a in enumerate(table.insns):
+        for b in table.insns[n + 1:]:
+            if a.words and b.words and _overlap(a, b):
+                errors.append(f"{a.id} and {b.id}: encodings overlap")
+    if errors:
+        return errors       # examples are only meaningful in a consistent table
+    for i in table.insns:
+        for x in i.examples:
+            got = codec.decode(table, x.bytes)
+            if got is None or got[0] is not i:
+                errors.append(f"{i.id}: example {x.bytes.hex(' ')} decodes to {got[0].id if got else 'nothing'}")
+            elif got[2] != len(x.bytes):
+                errors.append(f"{i.id}: example {x.bytes.hex(' ')} is {len(x.bytes)} bytes, the entry {got[2]}")
+            elif codec.format(i, got[1]) != x.text:
+                errors.append(f"{i.id}: example {x.bytes.hex(' ')} prints {codec.format(i, got[1])!r}, "
+                              f"the example says {x.text!r}")
+    return errors

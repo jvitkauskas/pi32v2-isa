@@ -1,0 +1,13 @@
+version = 1
+
+# Code (Python, tests, tooling) is MIT-0; each source file also carries an SPDX header.
+[[annotations]]
+path = ["pi32v2isa/**", "tests/**", "pyproject.toml", ".gitignore", "REUSE.toml"]
+SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
+SPDX-License-Identifier = "MIT-0"
+
+# Documentation and the instruction table are CC0-1.0.
+[[annotations]]
+path = ["*.md", "docs/**", "isa/**"]
+SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
+SPDX-License-Identifier = "CC0-1.0"

@@ -1,0 +1,175 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: CC0-1.0
+#
+# The pi32v2 instruction table. Format: docs/TABLE-FORMAT.md. Rules: AGENTS.md.
+
+format = 1
+
+# ---- control ----
+
+[[insn]]
+id = "nop"
+syntax = "nop"
+encoding = ["0000000000000000"]
+group = "control"
+summary = "Do nothing."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "idle"
+syntax = "idle"
+encoding = ["0000000000000001"]
+group = "control"
+summary = "Wait for an interrupt."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+notes = "Meaning assumed from the name and Blackfin's IDLE; not observed."
+
+[[insn]]
+id = "csync"
+syntax = "csync"
+encoding = ["0000000000100000"]
+group = "control"
+summary = "Core synchronisation barrier."
+status = "documented"
+sources = ["kagaimiq-jielie", "sources-in-use"]
+notes = "Exact ordering guarantees unknown."
+
+[[insn]]
+id = "cli"
+syntax = "cli"
+encoding = ["0000000001100000"]
+group = "control"
+summary = "Disable interrupts."
+status = "documented"
+sources = ["kagaimiq-jielie", "sources-in-use"]
+
+[[insn]]
+id = "sti"
+syntax = "sti"
+encoding = ["0000000001100001"]
+group = "control"
+summary = "Enable interrupts."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+# ---- returns ----
+
+[[insn]]
+id = "rts"
+syntax = "rts"
+encoding = ["0000000010000000"]
+group = "returns"
+summary = "Return from a subroutine: continue at the address in rets."
+status = "documented"
+sources = ["kagaimiq-jielie", "sources-in-use"]
+
+[[insn]]
+id = "rti"
+syntax = "rti"
+encoding = ["0000000010000001"]
+group = "returns"
+summary = "Return from an interrupt: continue at the address in reti."
+status = "documented"
+sources = ["kagaimiq-jielie", "sources-in-use"]
+
+[[insn]]
+id = "rtx"
+syntax = "rtx"
+encoding = ["0000000010000010"]
+group = "returns"
+summary = "Return from an exception: continue at the address in retx."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "rte"
+syntax = "rte"
+encoding = ["0000000010000011"]
+group = "returns"
+summary = "Return from emulation (debug) mode: continue at the address in rete."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+# ---- jumps through a register ----
+
+[[insn]]
+id = "call.r"
+syntax = "call {x}"
+encoding = ["000000001100xxxx"]
+fields = { x = "gpr" }
+group = "jumps"
+summary = "Call the subroutine at the address in a register; the return address goes to rets."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+notes = "Syntax spelling not yet checked against the oracle."
+
+[[insn]]
+id = "goto.r"
+syntax = "goto {x}"
+encoding = ["000000001101xxxx"]
+fields = { x = "gpr" }
+group = "jumps"
+summary = "Jump to the address in a register."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+notes = "Syntax spelling not yet checked against the oracle."
+
+# ---- moves ----
+
+[[insn]]
+id = "mov.rr"
+syntax = "{x} = {y}"
+encoding = ["00010110yyyyxxxx"]
+fields = { x = "gpr", y = "gpr" }
+group = "moves"
+summary = "Copy one general register to another."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "mov.sp_usp"
+syntax = "sp = usp"
+encoding = ["0001010001000000"]
+group = "moves"
+summary = "Make the user stack pointer the current stack pointer."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "mov.sp_ssp"
+syntax = "sp = ssp"
+encoding = ["0001010001000001"]
+group = "moves"
+summary = "Make the supervisor stack pointer the current stack pointer."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "mov.usp_sp"
+syntax = "usp = sp"
+encoding = ["0001010001000010"]
+group = "moves"
+summary = "Save the current stack pointer as the user stack pointer."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "mov.ssp_sp"
+syntax = "ssp = sp"
+encoding = ["0001010001000011"]
+group = "moves"
+summary = "Save the current stack pointer as the supervisor stack pointer."
+status = "documented"
+sources = ["kagaimiq-jielie"]
+
+[[insn]]
+id = "cc.set"
+syntax = "cc = {v}"
+encoding = ["000101000000000v"]
+fields = { v = "uimm" }
+group = "moves"
+summary = "Set the condition flag to 0 or 1."
+status = "documented"
+sources = ["kagaimiq-jielie"]
