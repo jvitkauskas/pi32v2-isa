@@ -68,7 +68,10 @@ class Oracle:
         return f"oracle:{tool}:{self.release}"
 
     def _run(self, args):
-        r = subprocess.run([str(a) for a in args], capture_output=True, text=True)
+        try:
+            r = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:      # the assembler loops on some malformed input
+            return 124, "", "timed out after 120 s"
         return r.returncode, r.stdout, r.stderr
 
     def _assemble(self, source, features=()):
@@ -122,11 +125,19 @@ class Oracle:
 
     def encode(self, texts, features=()):
         """For each assembly line, the bytes JieLi's assembler produced, or an error message (str)."""
-        listing, err = self._assemble("\t.text\n" + "".join(f"\t{t}\n" for t in texts), features)
+        # A line that opens a block (`if (r0 == r1) {`) needs a body and a closing brace, or the assembler fails
+        # or never returns. The body is a nop, dropped again below; the brace is a directive that emits no bytes.
+        opens = [t.rstrip().endswith("{") for t in texts]
+        source = "\t.text\n" + "".join(f"\t{t}\n" + ("\tnop\n\t}\n" if o else "") for t, o in zip(texts, opens))
+        listing, err = self._assemble(source, features)
         if listing is not None:
-            lines = sorted(self._lines(listing).items())
-            if len(lines) == len(texts):
-                return [b for _, (b, _) in lines]
+            lines = [b for _, (b, _) in sorted(self._lines(listing).items())]
+            if len(lines) == len(texts) + sum(opens):
+                out, k = [], 0
+                for o in opens:
+                    out.append(lines[k])
+                    k += 2 if o else 1
+                return out
         if len(texts) == 1:
             return [err or "assembler output did not match the input"]
         return [r for t in texts for r in self.encode([t], features)]   # find which line failed

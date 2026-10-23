@@ -30,6 +30,7 @@ KINDS = {
     "rmask": {16},
     "srmask": None,
     "modimm": {12},
+    "enum": None,
 }
 NUMERIC = ("uimm", "simm")      # the kinds `scale` and `add` apply to
 
@@ -45,6 +46,11 @@ class Field:
     letters: str            # encoding letters that hold the field, most significant part first
     scale: int = 1          # printed value = raw (sign-extended for simm) * scale + add
     add: int = 0
+    values: list[str] = field(default_factory=list)   # enum only: the text for each raw value
+    invert: bool = False    # modimm only: the complement of the modified immediate
+    decimal: bool = False   # modimm only: printed as a signed decimal instead of hex
+    lead: str = ""          # rmask only: a register name printed first, before the list
+    zero_as: int | None = None   # uimm only: the number the raw value 0 stands for
 
 
 @dataclass
@@ -116,7 +122,9 @@ def _field(name, spec):
     if isinstance(spec, str):
         return Field(kind=spec, letters=name)
     return Field(kind=spec.get("kind", ""), letters=spec.get("letters", name),
-                 scale=spec.get("scale", 1), add=spec.get("add", 0))
+                 scale=spec.get("scale", 1), add=spec.get("add", 0), values=list(spec.get("values", [])),
+                 invert=spec.get("invert", False), decimal=spec.get("decimal", False),
+                 lead=spec.get("lead", ""), zero_as=spec.get("zero_as"))
 
 
 def load(path=TABLE):
@@ -225,6 +233,16 @@ def check(table, sources=None):
                 errors.append(f"{where}: field {name!r} is {width} bits, kind {f.kind} needs {sorted(allowed)}")
             if f.kind == "simm" and width == 1:
                 errors.append(f"{where}: field {name!r} is a 1-bit simm")
+            if f.kind == "enum" and len(f.values) != 1 << width:
+                errors.append(f"{where}: enum field {name!r} is {width} bits and needs {1 << width} values, has {len(f.values)}")
+            if (f.invert or f.decimal) and f.kind != "modimm":
+                errors.append(f"{where}: field {name!r}: invert and decimal apply only to modimm")
+            if f.lead and f.kind != "rmask":
+                errors.append(f"{where}: field {name!r}: lead applies only to rmask")
+            if f.zero_as is not None and f.kind != "uimm":
+                errors.append(f"{where}: field {name!r}: zero_as applies only to uimm")
+            if f.kind != "enum" and f.values:
+                errors.append(f"{where}: field {name!r}: values apply only to enum")
             if (f.scale != 1 or f.add) and f.kind not in NUMERIC:
                 errors.append(f"{where}: field {name!r}: scale and add apply only to {', '.join(NUMERIC)}")
         names = placeholders(i.syntax)

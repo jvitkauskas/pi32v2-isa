@@ -97,6 +97,39 @@ class Checks(unittest.TestCase):
         e = insn(words=["0000000000000xxx"], fields={"x": "gpr"}, syntax="t {x}")
         self.assertTrue(any("needs [4]" in p for p in problems(e)))
 
+    def test_enum_values(self):
+        e = insn(words=["000000000000000x"], fields={"x": {"kind": "enum", "values": [".l", ".h"]}}, syntax="t{x}")
+        self.assertEqual(problems(e), [])
+        self.assertEqual(codec.format(e, {"x": 1}), "t.h")
+        bad = insn(words=["00000000000000xx"], fields={"x": {"kind": "enum", "values": ["a", "b", "c"]}}, syntax="t {x}")
+        self.assertTrue(any("needs 4 values" in p for p in problems(bad)))
+        stray = insn(words=["000000000000000x"], fields={"x": {"kind": "gpr_lo", "values": ["a"]}}, syntax="t {x}")
+        self.assertTrue(any("values apply only to enum" in p for p in problems(stray)))
+
+    def test_modimm_options(self):
+        e = insn(words=["00000000nnnnnnnn", "0000nnnn00000000"],
+                 fields={"n": {"kind": "modimm", "invert": True}}, syntax="t {n}")
+        self.assertEqual(problems(e), [])
+        self.assertEqual(codec.format(e, {"n": 0x1F}), "t 0xFFFFFFE0")
+        d = insn(words=["000000000000nnnn", "nnnnnnnn00000000"], fields={"n": {"kind": "modimm", "decimal": True}}, syntax="t {n}")
+        self.assertEqual(codec.format(d, {"n": 0xB80}), "t 65536")
+        self.assertEqual(codec.format(d, {"n": 0xFF | 0x300}), "t 4294967295")
+        bad = insn(words=["00000000000000xx"], fields={"x": {"kind": "gpr_lo", "invert": True}}, syntax="t {x}")
+        self.assertTrue(any("apply only to modimm" in p for p in problems(bad)))
+
+    def test_lead_and_zero_as(self):
+        e = insn(words=["0000000000000000", "mmmmmmmmmmmmmmmm"],
+                 fields={"m": {"kind": "rmask", "lead": "rets"}}, syntax="{{{m}}}")
+        self.assertEqual(problems(e), [])
+        self.assertEqual(codec.format(e, {"m": 0}), "{rets}")
+        self.assertEqual(codec.format(e, {"m": 0x00FF}), "{rets, r7-r0}")
+        z = insn(words=["000000000000nnnn"], fields={"n": {"kind": "uimm", "zero_as": 16}}, syntax="t {n}")
+        self.assertEqual(problems(z), [])
+        self.assertEqual(codec.format(z, {"n": 0}), "t 16")
+        self.assertEqual(codec.format(z, {"n": 3}), "t 3")
+        bad = insn(words=["00000000000000xx"], fields={"x": {"kind": "simm", "zero_as": 4}}, syntax="t {x}")
+        self.assertTrue(any("zero_as applies only to uimm" in p for p in problems(bad)))
+
     def test_field_without_kind_or_syntax(self):
         e = insn(words=["000000000000xxxx"], fields={}, syntax="t")
         self.assertTrue(any("belongs to no field" in p for p in problems(e)))

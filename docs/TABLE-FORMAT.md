@@ -60,6 +60,11 @@ or as an inline table:
 | --- | --- | --- |
 | `kind` | (required) | an operand kind, below |
 | `letters` | the field's own name | the encoding letters that hold it, most significant part first: `letters = "po"` puts the `p` bits above the `o` bits |
+| `values` | (none) | `enum` only: the text printed for each raw value, a list of exactly 2^width strings |
+| `invert` | false | `modimm` only: print the bitwise complement of the modified immediate |
+| `decimal` | false | `modimm` only: print as an unsigned 32-bit decimal instead of hex |
+| `lead` | (none) | `rmask` only: a name printed first, before the registers (`{rets, r3-r0}`; just `{rets}` when the mask is empty) |
+| `zero_as` | (none) | `uimm` only: the number printed for the raw value 0 (a shift amount where 0 means 32) |
 | `scale` | 1 | `uimm`/`simm` only: the printed number is the raw value (sign-extended for `simm`) times `scale`, plus `add` |
 | `add` | 0 | `uimm`/`simm` only |
 
@@ -87,6 +92,7 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `simm` | any | two's-complement number | `-11` |
 | `bit` | 5 | a bit number, printed as the bit's value | `16384` |
 | `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
+| `enum` | any | one of a fixed set of words or suffixes, chosen by the raw value from the field's `values` list (`".l"`/`".h"`, `"usat"`/`"ssat"`) | `.h` |
 | `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |
 | `rmask` | 16 | set of general registers, bit n = `rn` | `r11-r8, r3-r0` |
 | `srmask` | any | set of special registers, bit n = special register n | `psr, rets, reti` |

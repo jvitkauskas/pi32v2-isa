@@ -92,6 +92,8 @@ def value(field, raw, width):
     """The number a uimm or simm field stands for."""
     if field.kind == "simm" and raw >= 1 << (width - 1):
         raw -= 1 << width
+    if raw == 0 and field.zero_as is not None:
+        return field.zero_as
     return raw * field.scale + field.add
 
 
@@ -112,9 +114,19 @@ def operand(field, raw, width):
         hi, lo = (3, raw) if raw < 4 else (raw, 4)
         return _runs(list(range(hi, lo - 1, -1)))
     if kind == "rmask":
-        return _runs([r for r in range(15, -1, -1) if raw >> r & 1])
+        regs = _runs([r for r in range(15, -1, -1) if raw >> r & 1])
+        if field.lead:
+            return f"{field.lead}, {regs}" if regs else field.lead
+        return regs
     if kind == "modimm":
-        return f"0x{modimm(raw):X}"
+        v = modimm(raw)
+        if field.invert:
+            v ^= 0xFFFFFFFF
+        if field.decimal:
+            return str(v)
+        return f"0x{v:X}"
+    if kind == "enum":
+        return field.values[raw]
     if kind == "srmask":
         return ", ".join(SR_NAMES[r] for r in range(width - 1, -1, -1) if raw >> r & 1)
     return str(value(field, raw, width))
