@@ -1148,3 +1148,472 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "58 e9 ff ff"
 text = "[--sp] = {pc, sp, ssp, usp, icfg, icfgs, icfgn, sspn, uspn, cnum, psr, sr4, rets, retx, rete, reti}"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ==== region B: 2000-BFFF ====
+
+# ---- arithmetic ----
+
+[[insn]]
+id = "add.ri.neg7"
+syntax = "{r} += {n}"
+encoding = ["001ooooo111pprrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", letters = "po", add = -128 } }
+group = "arithmetic"
+summary = "Add -128..-1 to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings."
+
+[[insn.example]]
+bytes = "e0 20"
+text = "r0 += -128"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 3f"
+text = "r0 += -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e7 20"
+text = "r7 += -128"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 3f"
+text = "r7 += -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.ri.u5_hi"
+syntax = "{r} += {n}"
+encoding = ["001nnnnn11001rrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", add = 32 } }
+group = "arithmetic"
+summary = "Add 32..63 to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings."
+
+[[insn.example]]
+bytes = "c8 20"
+text = "r0 += 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 3f"
+text = "r0 += 63"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "cf 20"
+text = "r7 += 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "cf 3f"
+text = "r7 += 63"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.ri.u6_hi"
+syntax = "{r} += {n}"
+encoding = ["001ooooo1101prrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", letters = "po", add = 64 } }
+group = "arithmetic"
+summary = "Add 64..127 to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings."
+
+[[insn.example]]
+bytes = "d0 20"
+text = "r0 += 64"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 3f"
+text = "r0 += 127"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d7 20"
+text = "r7 += 64"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "df 3f"
+text = "r7 += 127"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.rri"
+syntax = "{d} = {s} + {n}"
+encoding = ["100nnnnn0sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo", n = "uimm" }
+group = "arithmetic"
+summary = "Add 0..31 to r0..r7 and write the result to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form."
+
+[[insn.example]]
+bytes = "08 80"
+text = "r0 = r0 + 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 80"
+text = "r7 = r0 + 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 9f"
+text = "r0 = r0 + 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 80"
+text = "r0 = r7 + 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 9f"
+text = "r7 = r7 + 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.r_sp_i"
+syntax = "{r} = sp + {n}"
+encoding = ["100ooooo1pp01rrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", letters = "po" } }
+group = "arithmetic"
+summary = "Write sp plus 0..127 to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The immediate is unscaled; 88 81 prints r0 = sp + 1."
+
+[[insn.example]]
+bytes = "88 80"
+text = "r0 = sp + 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e8 9f"
+text = "r0 = sp + 127"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 80"
+text = "r7 = sp + 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef 9f"
+text = "r7 = sp + 127"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.sp_i"
+syntax = "sp += {n}"
+encoding = ["100oooooppp00010"]
+fields = { n = { kind = "simm", letters = "po", scale = 4 } }
+group = "arithmetic"
+summary = "Add a multiple of four from -512..508 to sp."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form."
+
+[[insn.example]]
+bytes = "02 80"
+text = "sp += 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e2 9f"
+text = "sp += -4"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- memory ----
+
+[[insn]]
+id = "ld.hu"
+syntax = "{d} = h[{b}+{n}] (u)"
+encoding = ["011ooooo0bbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale = 2 } }
+group = "memory"
+summary = "Load a halfword, zero-extended, from memory at r0..r7 plus -32..30."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form."
+
+[[insn.example]]
+bytes = "08 60"
+text = "r0 = h[r0+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 60"
+text = "r0 = h[r7+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 60"
+text = "r7 = h[r0+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 7f"
+text = "r0 = h[r0+-2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 7f"
+text = "r7 = h[r7+-2] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.h"
+syntax = "h[{b}+{n}] = {d}"
+encoding = ["011ooooo1bbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale = 2 } }
+group = "memory"
+summary = "Store the low halfword of r0..r7 to memory at r0..r7 plus -32..30."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form."
+
+[[insn.example]]
+bytes = "88 60"
+text = "h[r0+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 60"
+text = "h[r7+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 60"
+text = "h[r0+0] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 7f"
+text = "h[r0+-2] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 7f"
+text = "h[r7+-2] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- logic ----
+
+[[insn]]
+id = "xor.bit"
+syntax = "{r} ^= {b}"
+encoding = ["001bbbbb00111rrr"]
+fields = { r = "gpr_lo", b = "bit" }
+group = "logic"
+summary = "Toggle one bit of r0..r7; the field is the bit number."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form."
+
+[[insn.example]]
+bytes = "38 20"
+text = "r0 ^= 1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 3f"
+text = "r0 ^= 2147483648"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f 20"
+text = "r7 ^= 1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f 3f"
+text = "r7 ^= 2147483648"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "and.invbit"
+syntax = "{r} &= {b}"
+encoding = ["001bbbbb10111rrr"]
+fields = { r = "gpr_lo", b = "invbit" }
+group = "logic"
+summary = "Clear one bit of r0..r7; print the immediate as a 32-bit mask."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The mask is the 32-bit complement of one shifted left by the encoded bit number."
+
+[[insn.example]]
+bytes = "b8 20"
+text = "r0 &= 4294967294"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b8 3f"
+text = "r0 &= 2147483647"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf 20"
+text = "r7 &= 4294967294"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf 3f"
+text = "r7 &= 2147483647"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- shifts ----
+
+[[insn]]
+id = "lsl.rri"
+syntax = "{d} = {s} << {n}"
+encoding = ["101nnnnn0sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo", n = "uimm_zero_max" }
+group = "shifts"
+summary = "Shift r0..r7 left by 1..32 and write the result to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The zero immediate encoding prints 32, not 0."
+
+[[insn.example]]
+bytes = "00 a0"
+text = "r0 = r0 << 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 a0"
+text = "r7 = r0 << 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 bf"
+text = "r0 = r0 << 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 a0"
+text = "r0 = r7 << 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 bf"
+text = "r7 = r7 << 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.rri"
+syntax = "{d} = {s} <<< {n}"
+encoding = ["101nnnnn0sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo", n = "uimm_zero_max" }
+group = "shifts"
+summary = "Write r0..r7 <<< 1..32 to r0..r7, as printed by objdump."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. Operation meaning unknown. The zero immediate encoding prints 32, not 0."
+
+[[insn.example]]
+bytes = "08 a0"
+text = "r0 = r0 <<< 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f a0"
+text = "r7 = r0 <<< 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 bf"
+text = "r0 = r0 <<< 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 a0"
+text = "r0 = r7 <<< 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f bf"
+text = "r7 = r7 <<< 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.rri"
+syntax = "{d} = {s} >> {n}"
+encoding = ["101nnnnn1sss0ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo", n = "uimm_zero_max" }
+group = "shifts"
+summary = "Shift r0..r7 right by 1..32 and write the result to r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The zero immediate encoding prints 32, not 0; signedness is not established."
+
+[[insn.example]]
+bytes = "80 a0"
+text = "r0 = r0 >> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 a0"
+text = "r7 = r0 >> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 bf"
+text = "r0 = r0 >> 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 a0"
+text = "r0 = r7 >> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 bf"
+text = "r7 = r7 >> 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.rri"
+syntax = "{d} = {s} >>> {n}"
+encoding = ["101nnnnn1sss1ddd"]
+fields = { d = "gpr_lo", s = "gpr_lo", n = "uimm_zero_max" }
+group = "shifts"
+summary = "Write r0..r7 >>> 1..32 to r0..r7, as printed by objdump."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. Operation meaning unknown. The zero immediate encoding prints 32, not 0."
+
+[[insn.example]]
+bytes = "88 a0"
+text = "r0 = r0 >>> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f a0"
+text = "r7 = r0 >>> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 bf"
+text = "r0 = r0 >>> 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 a0"
+text = "r0 = r7 >>> 32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff bf"
+text = "r7 = r7 >>> 31"
+origin = "oracle:objdump+clang:20260730.1"
