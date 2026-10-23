@@ -13,17 +13,38 @@ SOURCES = ROOT / "docs" / "SOURCES.md"
 
 STATUSES = ("guessed", "documented", "confirmed")
 WORD_CHARS = re.compile(r"^[01a-z-]{16}$")
-PLACEHOLDER = re.compile(r"\{([a-z])\}")
+# In syntax: {x} is field x, {+x} prints "+value" or nothing when the value is 0, {{ and }} are literal braces.
+SYNTAX_TOKEN = re.compile(r"\{\{|\}\}|\{(\+?)([a-z])\}")
 
-# kind -> (allowed field widths, or None for any width >= 1)
+# kind -> allowed field widths, or None for any width >= 1 (docs/TABLE-FORMAT.md)
 KINDS = {
     "gpr": {4},
     "gpr_lo": {3},
     "gpr_hi": {3},
     "pair": {3},
+    "sr": {4},
     "uimm": None,
     "simm": None,
+    "bit": {5},
+    "rlist4": {4},
+    "rmask": {16},
+    "srmask": None,
+    "modimm": {12},
 }
+NUMERIC = ("uimm", "simm")      # the kinds `scale` and `add` apply to
+
+
+def placeholders(syntax):
+    """The field names a syntax string uses, in order."""
+    return [m.group(2) for m in SYNTAX_TOKEN.finditer(syntax) if m.group(2)]
+
+
+@dataclass
+class Field:
+    kind: str
+    letters: str            # encoding letters that hold the field, most significant part first
+    scale: int = 1          # printed value = raw (sign-extended for simm) * scale + add
+    add: int = 0
 
 
 @dataclass
@@ -38,7 +59,7 @@ class Insn:
     id: str
     syntax: str
     words: list[str]
-    fields: dict[str, str]
+    fields: dict[str, Field]
     summary: str
     status: str
     sources: list[str]
@@ -46,6 +67,7 @@ class Insn:
     requires: list[str] = field(default_factory=list)
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
+    asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
 
     @property
     def nbits(self):
@@ -63,9 +85,10 @@ class Insn:
     def value(self):
         return int("".join("1" if c == "1" else "0" for c in self._bits()), 2)
 
-    def field_bits(self, letter):
+    def field_bits(self, name):
         """Bit positions of a field, most significant first, counted from the high end of the encoding."""
-        return [i for i, c in enumerate(self._bits()) if c == letter]
+        bits = self._bits()
+        return [i for letter in self.fields[name].letters for i, c in enumerate(bits) if c == letter]
 
     def letters(self):
         return sorted({c for c in self._bits() if c.isalpha()})
@@ -89,6 +112,13 @@ def _parse_bytes(text):
     return bytes(int(b, 16) for b in text.split())
 
 
+def _field(name, spec):
+    if isinstance(spec, str):
+        return Field(kind=spec, letters=name)
+    return Field(kind=spec.get("kind", ""), letters=spec.get("letters", name),
+                 scale=spec.get("scale", 1), add=spec.get("add", 0))
+
+
 def load(path=TABLE):
     raw = tomllib.loads(Path(path).read_text())
     insns = []
@@ -97,7 +127,7 @@ def load(path=TABLE):
             id=e.get("id", ""),
             syntax=e.get("syntax", ""),
             words=list(e.get("encoding", [])),
-            fields=dict(e.get("fields", {})),
+            fields={name: _field(name, spec) for name, spec in e.get("fields", {}).items()},
             summary=e.get("summary", ""),
             status=e.get("status", ""),
             sources=list(e.get("sources", [])),
@@ -106,6 +136,7 @@ def load(path=TABLE):
             notes=e.get("notes", ""),
             examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
                       for x in e.get("example", [])],
+            asm_rejects=list(e.get("asm_rejects", [])),
         ))
     return Table(format=raw.get("format", 0), insns=insns)
 
@@ -174,25 +205,35 @@ def check(table, sources=None):
             if not WORD_CHARS.match(w):
                 errors.append(f"{where}: encoding word {w!r} is not 16 characters of 0, 1, -, a-z")
         used = set(i.letters())
-        for letter in used - i.fields.keys():
-            errors.append(f"{where}: field {letter!r} in the encoding has no kind in fields")
-        for letter in i.fields.keys() - used:
-            errors.append(f"{where}: field {letter!r} is listed but not in the encoding")
-        for letter, kind in i.fields.items():
-            if kind not in KINDS:
-                errors.append(f"{where}: unknown kind {kind!r} for field {letter!r}")
+        owners = {}
+        for name, f in i.fields.items():
+            for letter in f.letters:
+                if letter in owners:
+                    errors.append(f"{where}: letter {letter!r} belongs to fields {owners[letter]!r} and {name!r}")
+                owners[letter] = name
+                if letter not in used:
+                    errors.append(f"{where}: field {name!r} uses letter {letter!r}, which is not in the encoding")
+        for letter in used - owners.keys():
+            errors.append(f"{where}: letter {letter!r} in the encoding belongs to no field")
+        for name, f in i.fields.items():
+            if f.kind not in KINDS:
+                errors.append(f"{where}: unknown kind {f.kind!r} for field {name!r}")
                 continue
-            width = len(i.field_bits(letter))
-            allowed = KINDS[kind]
+            width = len(i.field_bits(name))
+            allowed = KINDS[f.kind]
             if width and allowed is not None and width not in allowed:
-                errors.append(f"{where}: field {letter!r} is {width} bits, kind {kind} needs {sorted(allowed)}")
-            if kind == "simm" and width == 1:
-                errors.append(f"{where}: field {letter!r} is a 1-bit simm")
-        placeholders = set(PLACEHOLDER.findall(i.syntax))
-        for letter in placeholders - i.fields.keys():
-            errors.append(f"{where}: syntax uses {{{letter}}}, which is not a field")
-        for letter in i.fields.keys() - placeholders:
-            errors.append(f"{where}: field {letter!r} never appears in syntax")
+                errors.append(f"{where}: field {name!r} is {width} bits, kind {f.kind} needs {sorted(allowed)}")
+            if f.kind == "simm" and width == 1:
+                errors.append(f"{where}: field {name!r} is a 1-bit simm")
+            if (f.scale != 1 or f.add) and f.kind not in NUMERIC:
+                errors.append(f"{where}: field {name!r}: scale and add apply only to {', '.join(NUMERIC)}")
+        names = placeholders(i.syntax)
+        for name in set(names) - i.fields.keys():
+            errors.append(f"{where}: syntax uses {{{name}}}, which is not a field")
+        for name in i.fields.keys() - set(names):
+            errors.append(f"{where}: field {name!r} never appears in syntax")
+        if SYNTAX_TOKEN.sub("", i.syntax).count("{") or SYNTAX_TOKEN.sub("", i.syntax).count("}"):
+            errors.append(f"{where}: syntax has a lone brace; write {{{{ or }}}} for a literal one")
         if i.status not in STATUSES:
             errors.append(f"{where}: unknown status {i.status!r}")
         for s in i.sources:

@@ -25,8 +25,9 @@ linker and a compiler backend are later, separate projects that use this referen
 
 ## Status
 
-Early. The table holds 17 simple 16-bit forms, all confirmed against JieLi's toolchain (encoding and syntax,
-every field value). The disassembler decodes whatever the table describes; the assembler is not written yet.
+Early. The table holds 49 forms, all confirmed against JieLi's toolchain (encoding and syntax, every field
+value or a wide sample): everything the FM-1 projects' assembly uses. The disassembler reads all 674
+instructions of that assembly exactly as JieLi's objdump does. The assembler is not written yet.
 [docs/GAPS.md](docs/GAPS.md) lists what comes next.
 
 ## Use
@@ -37,6 +38,7 @@ Python 3.11 or later, no dependencies.
 python3 -m pi32v2isa check                 # validate the table
 python3 -m pi32v2isa disasm 80 00 01 00    # decode bytes (hex)
 python3 -m pi32v2isa oracle fetch          # get JieLi's toolchain, for checking entries (docs/ORACLE.md)
+python3 -m pi32v2isa oracle sweep          # see what the toolchain makes of every 16-bit word
 python3 -m pi32v2isa oracle confirm        # check entries against it
 python3 -m unittest discover -s tests      # run the tests
 ```

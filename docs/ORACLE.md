@@ -33,6 +33,20 @@ python3 -m pi32v2isa oracle encode "rts" "call r5"     # what JieLi's assembler 
 Both are needed: the disassembler may print the same text for different encodings, and the assembler may
 pick one encoding of several.
 
+## Finding a form's layout
+
+```sh
+python3 -m pi32v2isa oracle sweep                  # objdump's reading of all 65536 16-bit words, by shape
+python3 -m pi32v2isa oracle sweep e064             # the same for every second word after first word e064
+python3 -m pi32v2isa oracle vary "r{x} = [sp+{n}]" x=0..15 n=0,4,8,16,128   # assemble variants, show bits
+```
+
+`sweep` groups the decoded words by shape (registers become `R`, numbers `N`) and prints the bits common to
+every word of a shape. It takes about a second and is the quickest way to see what a region of the encoding
+space holds, including which first words begin 32- or 48-bit instructions (the length column). `vary`
+assembles one line with different operands and prints each result's words in binary, which shows where each
+operand's bits go. Both only feed the oracle input and read its output.
+
 ## Confirming entries
 
 ```sh
@@ -42,9 +56,19 @@ python3 -m pi32v2isa oracle confirm mov.rr --write  # check one, and record it i
 
 For each entry, `confirm` encodes field values with the table and checks that JieLi's objdump prints the
 table's text for those bytes and that JieLi's assembler turns that text back into the same bytes. It tries
-every combination of field values when there are at most 4096, else each field's extremes, a middle value and
-every single bit. Each probe is followed by two `nop`s, so a probe objdump reads as longer shows up as a
-mismatch instead of desynchronising the rest.
+every combination of field values when there are at most 4096, else each field's extremes, a middle value,
+every single bit and three irregular values (so a wide constant does not also fit a shorter form). Each probe
+is followed by two `nop`s, so a probe objdump reads as longer shows up as a mismatch instead of
+desynchronising the rest.
+
+Two cases are not mismatches:
+
+- **The assembler prefers another form.** `call 0` assembles to the 16-bit `call.s`, not `call.l`. When the
+  bytes the assembler gives decode, with this table, to another entry that means the same (numbers compared
+  by 32-bit value, so `0xFF` and `255` match), `confirm` accepts it and says which entries it preferred. If
+  the assembler never once picks the entry being checked, that is a mismatch.
+- **The assembler refuses a text objdump prints.** objdump prints an empty register list as `{}`, which the
+  assembler rejects. An entry lists such texts in `asm_rejects`, and `confirm` checks they really are refused.
 
 With `--write`, a passing entry becomes `confirmed`, gains the `oracle` source, and gets a few examples: all
 fields at their minimum, each field alone at its maximum (so swapped fields would show), all at maximum.
@@ -55,6 +79,17 @@ bytes = "0f 16"
 text = "r15 = r0"
 origin = "oracle:objdump+clang:20260730.1"
 ```
+
+## Checking real code
+
+```sh
+python3 -m pi32v2isa oracle compare build/*.o
+```
+
+`compare` disassembles each object's code sections with the table and with JieLi's objdump and reports every
+instruction where they differ. It needs a stock `readelf` and `objcopy` (GNU binutils). On 2026-10-23 the
+assembly of m-bootloader, Felucca and felucca-bsp (11 objects, assembled with JieLi's clang) gave 674
+identical instructions and 2 data words objdump does not decode either.
 
 ## Rules
 

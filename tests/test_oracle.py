@@ -61,7 +61,8 @@ class Probes(unittest.TestCase):
         self.assertEqual(len(oracle.probe_values(self.t.by_id("mov.rr"))), 256)
 
     def test_reduced_when_large(self):
-        i = table.Insn(id="w", syntax="w {a} {b}", words=["aaaaaaaabbbbbbbb"], fields={"a": "uimm", "b": "uimm"},
+        i = table.Insn(id="w", syntax="w {a} {b}", words=["aaaaaaaabbbbbbbb"],
+                       fields={"a": table.Field("uimm", "a"), "b": table.Field("uimm", "b")},
                        summary="s", status="documented", sources=["x"])
         values = oracle.probe_values(i, limit=100)
         self.assertLess(len(values), 256 * 256)
@@ -93,13 +94,13 @@ class Live(unittest.TestCase):
     def test_confirmed_entries_agree(self):
         for i in self.t.insns:
             if i.status == "confirmed":
-                problems, _, _ = oracle.confirm(self.o, self.t, i)
+                problems, _, _, _ = oracle.confirm(self.o, self.t, i)
                 self.assertEqual(problems, [], i.id)
 
     def test_swapped_fields_are_caught(self):
         wrong = copy.deepcopy(self.t.by_id("mov.rr"))
         wrong.syntax = "{y} = {x}"
-        problems, _, _ = oracle.confirm(self.o, self.t, wrong)
+        problems, _, _, _ = oracle.confirm(self.o, self.t, wrong)
         self.assertTrue(any("objdump prints 'r0 = r1'" in p for p in problems))
 
 

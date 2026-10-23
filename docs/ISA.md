@@ -23,7 +23,8 @@ results such as multiply-accumulate [kagaimiq-jielie].
 
 ### Special registers
 
-Sixteen special-register numbers `sr0`..`sr15`, some with names [kagaimiq-jielie]:
+Sixteen special-register numbers `sr0`..`sr15` [kagaimiq-jielie]; the names are the ones JieLi's objdump
+prints, which its assembler also accepts as `sr<n>` [oracle]:
 
 | Number | Name | Purpose |
 | --- | --- | --- |
@@ -32,15 +33,22 @@ Sixteen special-register numbers `sr0`..`sr15`, some with names [kagaimiq-jielie
 | `sr2` | `retx` | return address from an exception |
 | `sr3` | `rets` | return address from a subroutine call |
 | `sr5` | `psr` | processor status |
+| `sr4` | (none) | not yet known; printed `sr4` |
 | `sr6` | `cnum` | not yet known |
+| `sr7` | `uspn` | not yet known [oracle] |
+| `sr8` | `sspn` | not yet known [oracle] |
+| `sr9` | `icfgn` | not yet known [oracle] |
+| `sr10` | `icfgs` | not yet known [oracle] |
 | `sr11` | `icfg` | interrupt configuration |
 | `sr12` | `usp` | user-mode stack pointer |
 | `sr13` | `ssp` | supervisor-mode stack pointer |
 | `sr14` | `sp` | the current stack pointer |
 | `sr15` | `pc` | program counter |
 
-`sr4` and `sr7`..`sr10` have no known name. Unlike pi32, `sp` is its own register and `r15` is a general
-register [kagaimiq-jielie].
+The names of `sr7`..`sr10` suggest copies of `usp`, `ssp` and `icfg`; what they do is not known. Unlike
+pi32, `sp` is its own register and `r15` is a general register [kagaimiq-jielie]. Special registers are read
+and written with `mov.r_sr` and `mov.sr_r`, loaded with `li.sr_u32`, and pushed and popped with `push.srl`,
+`pop.srl` (`sr0`..`sr5`) and `push.srmask` (any).
 
 There is also a condition flag, `cc`, set directly by `cc = 0` / `cc = 1` [kagaimiq-jielie]. **Pending:**
 which instructions set and test it.
@@ -61,43 +69,93 @@ rti
 ```
 
 In order: load a constant, store a word, write a special register, push a register range (written high to
-low), pop special registers, call, return from interrupt. The table's `syntax` strings use the same notation.
+low), pop special registers, call, return from interrupt. The table's `syntax` strings use the same notation,
+spelled as JieLi's objdump prints it ([TABLE-FORMAT.md](TABLE-FORMAT.md#syntax)).
+
+Spellings found so far [oracle]:
+
+- objdump writes no spaces inside brackets (`[r1+0]`); the assembler accepts them (`[r1 + 0]`).
+- A negative offset is written `[r4+-11]`; the assembler refuses `[r4-11]`.
+- `[sp]` has no offset when it is 0, but `[r1+0]` keeps it.
+- Byte and halfword loads end in `(u)` (zero-extended) or `(s)`; the assembler accepts the line without it.
+- Constants print in decimal, except `li.modimm`'s, which print in hex.
+- A branch prints its offset followed by the target as `<symbol+offset : address >`.
 
 **Pending:** the assembler's comment syntax (the projects run their `.S` files through the C preprocessor
-and use C comments), directives, the exact spelling accepted for each form, and how parallel issue is
-written (reported as `ins1 # ins2` [kagaimiq-jielie]).
+and use C comments), directives, and how parallel issue is written (reported as `ins1 # ins2`
+[kagaimiq-jielie]; objdump prints a trailing `#` on such 16-bit words [oracle]).
 
 ## 4. Encoding
 
 - Instruction words are 16 bits, stored little-endian, and fetched one at a time [sstic2026].
 - The table writes each word most significant bit first ([TABLE-FORMAT.md](TABLE-FORMAT.md)).
-- **Pending:** the instruction groups (the SSTIC paper numbers them; groups 6 and 7 hold the harder
-  ones), how the first word selects a 32- or 48-bit length, and where immediates sit in the extra words.
+- The first word decides the length [oracle, from decoding all 65536 words]:
+  - `0000`..`DFFF`: a 16-bit instruction (or no instruction). In `C000`..`DFFF`, 2650 words are the
+    instruction at the same low 13 bits in `0000`..`1FFF`, printed with a trailing `#` (parallel issue);
+    the other 5542 are not instructions. Control instructions such as `nop` have no `#` form.
+  - `E000`..`FFFF`: the first word of a 32-bit instruction, except 99 words in `FF00`..`FFEF` that begin a
+    48-bit one. Words in this range that begin neither are not instructions. 774 of the 32-bit first words
+    also print with `#`.
+- Extra words hold immediates and operands. A 32-bit constant in a 48-bit instruction is stored low half
+  first (`li.u32`, `li.sr_u32`).
+- Small immediates are often split across the word, and offsets are scaled by the access size (words by 4,
+  branch targets by 2); each entry's `fields` gives the exact layout.
+- **Pending:** the SSTIC paper's group numbering, and most of the 16-bit map: about 1000 distinct shapes
+  decode, of which the table so far has the ones the FM-1 sources need ([GAPS.md](GAPS.md)).
 
-## 5. Execution model
+## 5. Instruction groups
 
-**Pending:** parallel issue, `rep` hardware loops (`rep` takes a count register and covers the following
+The table's `group` keys, with the entries in each so far:
+
+| Group | Entries |
+| --- | --- |
+| control | `nop`, `idle`, `csync`, `cli`, `sti`, `trigger` |
+| returns | `rts`, `rti`, `rtx`, `rte` |
+| jumps (through a register) | `call.r`, `goto.r` |
+| branches | `beqz`, `bnez`, `goto.s`, `goto.l`, `call.s`, `call.l` |
+| moves | `mov.rr`, `mov.r_sr`, `mov.sr_r`, `mov.sp_usp`, `mov.sp_ssp`, `mov.usp_sp`, `mov.ssp_sp`, `cc.set` |
+| constants | `li.u8`, `li.neg5`, `li.zero_hi`, `li.s16`, `li.modimm`, `li.u32`, `li.sr_u32`, `or.bit` |
+| memory | `ld.w`, `st.w`, `ld.w.sp`, `st.w.sp`, `ld.bu`, `st.b` |
+| stack | `push.rl`, `pop.rl`, `push.rets_rl`, `pop.rets_rl`, `pop.pc_rl`, `push.srl`, `pop.srl`, `push.rmask`, `push.srmask` |
+
+Several operations have more than one encoding. JieLi's assembler picks the shortest that fits: a constant
+goes to `li.u8`, `li.neg5` or `li.zero_hi` if it can, then `li.s16` or `li.modimm`, and only then `li.u32`;
+`call`/`goto` take the 16-bit form when the target is near and the 32-bit one for symbols.
+
+## 6. Execution model
+
+**Pending:** what a branch offset is relative to (objdump prints the same offset at any address), parallel
+issue, `rep` hardware loops (`rep` takes a count register and covers the following
 instruction words [kagaimiq-jielie]), if/then/else blocks [virtualabs-ghidra], flags, delay slots if any.
 
-## 6. Interrupts, exceptions and modes
+## 7. Interrupts, exceptions and modes
 
 **Pending.** Known so far: separate return registers for interrupts, exceptions and emulation (`reti`,
 `retx`, `rete`), and user and supervisor stack pointers (`usp`, `ssp`) [kagaimiq-jielie]. Firmware switches
 `sp` between them and saves `psr`, `rets` and `reti` on entry to a handler [sources-in-use].
 
-## 7. CPU variants and features
+## 8. CPU variants and features
 
 **Pending.** The toolchain ships pi32v2 libraries for CPU models `r1`..`r5`, each also as a "large" build
 [oracle]. Features to pin down: `fprev1` (the FPU), SIMD, the instruction revisions and newer CPU models
 ([GAPS.md](GAPS.md)).
 
-## 8. Calling convention
+## 9. Calling convention
 
 The first two argument words are passed in `r0` and `r1` and the result is returned in `r0`; a call saves
 its return address in `rets` [m-bootloader-spec]. **Pending:** the remaining argument registers, which
 registers a function must preserve, stack alignment, 64-bit and floating-point values.
 
-## 9. ELF object files
+## 10. ELF object files
 
-**Pending.** e_machine `0xF1` [kagaimiq-jielie]. The relocation types, section flags and symbol conventions
-JieLi's linker expects are needed for the assembler to write objects that linker accepts.
+e_machine `0xF1` [kagaimiq-jielie]; objdump calls the format `ELF32-pi32v2` [oracle].
+
+Relocations seen in the FM-1 objects [oracle]:
+
+| Type | Used by |
+| --- | --- |
+| `R_PI32V2_MOV_ABS32` | `li.u32`, `li.sr_u32` with a symbol: the 32-bit constant |
+| `R_PI32V2_LONG_JUMP_23M2` | `call.l`, `goto.l` with a symbol: the 22-bit offset, in units of 2 |
+
+**Pending:** the other relocation types, their numbers and exact fields, section flags and symbol conventions,
+which the assembler needs to write objects JieLi's linker accepts.

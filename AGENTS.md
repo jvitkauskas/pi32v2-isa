@@ -13,10 +13,12 @@ These rules apply to people and agents alike. They keep the reference trustworth
 ## Every fact has a source and a status
 
 - Each entry lists its `sources` (ids from `docs/SOURCES.md`) and a `status`:
-  - `guessed`: inferred, not seen in any source or observation;
+  - `guessed`: inferred (from a sweep, or by reasoning) but not yet confirmed or stated by a source;
   - `documented`: stated by a cited source, not yet checked against the oracle;
   - `confirmed`: encoding and syntax checked against the oracle; the entry's examples are the evidence.
     Behaviour is not covered (`docs/TABLE-FORMAT.md`).
+- To add a form: find its layout with `oracle sweep` / `oracle vary`, write the entry as `guessed` (or
+  `documented` if a source has it) with a note on where the layout came from, then confirm it.
 - Use `python3 -m pi32v2isa oracle confirm <id> --write` to confirm an entry. An example with
   `origin = "oracle:..."` must be bytes and text the oracle actually decoded and assembled; never write one by
   hand from the entry's own pattern.

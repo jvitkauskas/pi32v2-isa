@@ -286,3 +286,865 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "01 14"
 text = "cc = 1"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ---- moves to and from special registers ----
+
+[[insn]]
+id = "mov.r_sr"
+syntax = "{r} = {s}"
+encoding = ["1110000001100100", "rrrrssss00000000"]
+fields = { r = "gpr", s = "sr" }
+group = "moves"
+summary = "Copy a special register to a general register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout found by varying operands with the oracle (docs/ORACLE.md); setting any of the low 7 bits makes objdump reject the word."
+
+[[insn.example]]
+bytes = "64 e0 00 00"
+text = "r0 = reti"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 00 f0"
+text = "r15 = reti"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 00 0f"
+text = "r0 = pc"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 00 ff"
+text = "r15 = pc"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mov.sr_r"
+syntax = "{s} = {r}"
+encoding = ["1110000001100100", "rrrrssss10000000"]
+fields = { r = "gpr", s = "sr" }
+group = "moves"
+summary = "Copy a general register to a special register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Same word as mov.r_sr with the direction bit set."
+
+[[insn.example]]
+bytes = "64 e0 80 00"
+text = "reti = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 80 f0"
+text = "reti = r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 80 0f"
+text = "pc = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "64 e0 80 ff"
+text = "pc = r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "trigger"
+syntax = "trigger"
+encoding = ["1110100001110000", "0000000000000000"]
+group = "control"
+summary = "Purpose unknown; used by the FM-1 firmware's second-core start-up."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "The only second word objdump accepts after e870 is 0000."
+
+[[insn.example]]
+bytes = "70 e8 00 00"
+text = "trigger"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- constants ----
+
+[[insn]]
+id = "li.u8"
+syntax = "{r} = {n}"
+encoding = ["001iiiii01jjjrrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", letters = "ji" } }
+group = "constants"
+summary = "Load an unsigned 8-bit constant (0..255) into r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's 16-bit decoding sweep: constant bits 7..5 sit in bits 5..3, bits 4..0 in bits 12..8."
+
+[[insn.example]]
+bytes = "40 20"
+text = "r0 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 3f"
+text = "r0 = 255"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "47 20"
+text = "r7 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 3f"
+text = "r7 = 255"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.neg5"
+syntax = "{r} = {n}"
+encoding = ["001iiiii00010rrr"]
+fields = { r = "gpr_lo", n = { kind = "uimm", letters = "i", add = -32 } }
+group = "constants"
+summary = "Load a constant from -32 to -1 into r0..r7."
+status = "confirmed"
+sources = ["oracle"]
+notes = "From the 16-bit sweep: the field holds the constant + 32."
+
+[[insn.example]]
+bytes = "10 20"
+text = "r0 = -32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 3f"
+text = "r0 = -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "17 20"
+text = "r7 = -32"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "17 3f"
+text = "r7 = -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.zero_hi"
+syntax = "{r} = 0"
+encoding = ["0001010011000rrr"]
+fields = { r = "gpr_hi" }
+group = "constants"
+summary = "Clear one of r8..r15."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "c0 14"
+text = "r8 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c7 14"
+text = "r15 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.modimm"
+syntax = "{r} = {n}"
+encoding = ["1110000001100000", "rrrrnnnnnnnnnnnn"]
+fields = { r = "gpr", n = "modimm" }
+group = "constants"
+summary = "Load a 32-bit constant built from a 12-bit modified immediate (docs/TABLE-FORMAT.md, modimm)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "From the second-word sweep after e060: 8 bits repeated in a pattern or rotated, the scheme ARM Thumb-2 uses; objdump prints it in hex."
+
+[[insn.example]]
+bytes = "60 e0 00 00"
+text = "r0 = 0x0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 e0 ff 0f"
+text = "r0 = 0x1FE"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 e0 00 f0"
+text = "r15 = 0x0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 e0 ff ff"
+text = "r15 = 0x1FE"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.s16"
+syntax = "{r} = {n}"
+encoding = ["111000000100rrrr", "iiiiiiiiiiiiiiii"]
+fields = { r = "gpr", n = { kind = "simm", letters = "i" } }
+group = "constants"
+summary = "Load a signed 16-bit constant into a general register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "All 65536 second words decode after e040..e04f."
+
+[[insn.example]]
+bytes = "40 e0 00 00"
+text = "r0 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 e0 ff ff"
+text = "r0 = -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f e0 00 00"
+text = "r15 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f e0 ff ff"
+text = "r15 = -1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.u32"
+syntax = "{r} = {n}"
+encoding = ["111111111100rrrr", "iiiiiiiiiiiiiiii", "jjjjjjjjjjjjjjjj"]
+fields = { r = "gpr", n = { kind = "uimm", letters = "ji" } }
+group = "constants"
+summary = "Load a 32-bit constant into a general register; the low half comes first in memory."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "The FM-1 sources use it for symbol addresses, with relocation R_PI32V2_MOV_ABS32."
+
+[[insn.example]]
+bytes = "c0 ff 00 00 00 00"
+text = "r0 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 ff ff ff ff ff"
+text = "r0 = 4294967295"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "cf ff 00 00 00 00"
+text = "r15 = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "cf ff ff ff ff ff"
+text = "r15 = 4294967295"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "li.sr_u32"
+syntax = "{s} = {n}"
+encoding = ["111111111110ssss", "iiiiiiiiiiiiiiii", "jjjjjjjjjjjjjjjj"]
+fields = { s = "sr", n = { kind = "uimm", letters = "ji" } }
+group = "constants"
+summary = "Load a 32-bit constant into a special register; the low half comes first in memory."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "e0 ff 00 00 00 00"
+text = "reti = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "e0 ff ff ff ff ff"
+text = "reti = 4294967295"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef ff 00 00 00 00"
+text = "pc = 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ef ff ff ff ff ff"
+text = "pc = 4294967295"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "or.bit"
+syntax = "{r} |= {b}"
+encoding = ["001bbbbb00110rrr"]
+fields = { r = "gpr_lo", b = "bit" }
+group = "constants"
+summary = "Set one bit of r0..r7; the field is the bit number, printed as its value."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "30 20"
+text = "r0 |= 1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 3f"
+text = "r0 |= 2147483648"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "37 20"
+text = "r7 |= 1"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "37 3f"
+text = "r7 |= 2147483648"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- memory ----
+
+[[insn]]
+id = "ld.w.sp"
+syntax = "{r} = [sp{+n}]"
+encoding = ["001ooooo00p0rrrr"]
+fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
+group = "memory"
+summary = "Load a word from the stack at sp plus 0..252."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump omits the offset when it is 0 ([sp])."
+
+[[insn.example]]
+bytes = "00 20"
+text = "r0 = [sp]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 3f"
+text = "r0 = [sp+252]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 20"
+text = "r15 = [sp]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f 3f"
+text = "r15 = [sp+252]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.w.sp"
+syntax = "[sp{+n}] = {r}"
+encoding = ["001ooooo10p0rrrr"]
+fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
+group = "memory"
+summary = "Store a word to the stack at sp plus 0..252."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "80 20"
+text = "[sp] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 3f"
+text = "[sp+252] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 20"
+text = "[sp] = r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af 3f"
+text = "[sp+252] = r15"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.w"
+syntax = "{d} = [{b}+{n}]"
+encoding = ["011ooooo0bbb0ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale = 4 } }
+group = "memory"
+summary = "Load a word from memory at r0..r7 plus -64..60."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump prints [r1+0] here, unlike [sp]."
+
+[[insn.example]]
+bytes = "00 60"
+text = "r0 = [r0+0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 60"
+text = "r0 = [r7+0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 60"
+text = "r7 = [r0+0]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "00 7f"
+text = "r0 = [r0+-4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 7f"
+text = "r7 = [r7+-4]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.w"
+syntax = "[{b}+{n}] = {d}"
+encoding = ["011ooooo1bbb0ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale = 4 } }
+group = "memory"
+summary = "Store a word to memory at r0..r7 plus -64..60."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "80 60"
+text = "[r0+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 60"
+text = "[r7+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 60"
+text = "[r0+0] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "80 7f"
+text = "[r0+-4] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 7f"
+text = "[r7+-4] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "ld.bu"
+syntax = "{d} = b[{b}+{n}] (u)"
+encoding = ["010ooooo0bbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o" } }
+group = "memory"
+summary = "Load a byte, zero-extended, from memory at r0..r7 plus -16..15."
+status = "confirmed"
+sources = ["oracle"]
+notes = "The assembler also accepts the line without (u); a negative offset is written +-11."
+
+[[insn.example]]
+bytes = "08 40"
+text = "r0 = b[r0+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "78 40"
+text = "r0 = b[r7+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "0f 40"
+text = "r7 = b[r0+0] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 5f"
+text = "r0 = b[r0+-1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 5f"
+text = "r7 = b[r7+-1] (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "st.b"
+syntax = "b[{b}+{n}] = {d}"
+encoding = ["010ooooo1bbb1ddd"]
+fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o" } }
+group = "memory"
+summary = "Store the low byte of r0..r7 to memory at r0..r7 plus -16..15."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "88 40"
+text = "b[r0+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f8 40"
+text = "b[r7+0] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "8f 40"
+text = "b[r0+0] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "88 5f"
+text = "b[r0+-1] = r0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 5f"
+text = "b[r7+-1] = r7"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- branches ----
+
+[[insn]]
+id = "beqz"
+syntax = "if ({r} == 0) goto {n}"
+encoding = ["010ooooo0ppp0rrr"]
+fields = { r = "gpr_lo", n = { kind = "simm", letters = "po", scale = 2 } }
+group = "branches"
+summary = "Branch by -256..254 bytes if r0..r7 is zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "The printed offset does not depend on the instruction's address; what it is relative to is not yet pinned down."
+
+[[insn.example]]
+bytes = "00 40"
+text = "if (r0 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 5f"
+text = "if (r0 == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 40"
+text = "if (r7 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "77 5f"
+text = "if (r7 == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bnez"
+syntax = "if ({r} != 0) goto {n}"
+encoding = ["010ooooo1ppp0rrr"]
+fields = { r = "gpr_lo", n = { kind = "simm", letters = "po", scale = 2 } }
+group = "branches"
+summary = "Branch by -256..254 bytes if r0..r7 is not zero."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "80 40"
+text = "if (r0 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 5f"
+text = "if (r0 != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "87 40"
+text = "if (r7 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 5f"
+text = "if (r7 != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "goto.s"
+syntax = "goto {n}"
+encoding = ["100ooooopppp01qq"]
+fields = { n = { kind = "simm", letters = "qpo", scale = 2 } }
+group = "branches"
+summary = "Jump by -4096..4094 bytes."
+status = "confirmed"
+sources = ["oracle"]
+notes = "The offset's two top bits sit at the bottom of the word."
+
+[[insn.example]]
+bytes = "04 80"
+text = "goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f7 9f"
+text = "goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "call.s"
+syntax = "call {n}"
+encoding = ["100ooooo0ppp0001"]
+fields = { n = { kind = "simm", letters = "po", scale = 2 } }
+group = "branches"
+summary = "Call a subroutine -256..254 bytes away; the return address goes to rets."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "01 80"
+text = "call 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "71 9f"
+text = "call -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "call.l"
+syntax = "call {n}"
+encoding = ["1110101010pppppp", "ssssssssssssssss"]
+fields = { n = { kind = "simm", letters = "ps", scale = 2 } }
+group = "branches"
+summary = "Call a subroutine up to about 4 MiB away; the return address goes to rets."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "Relocation R_PI32V2_LONG_JUMP_23M2 when the target is a symbol."
+
+[[insn.example]]
+bytes = "80 ea 00 00"
+text = "call 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf ea ff ff"
+text = "call -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "goto.l"
+syntax = "goto {n}"
+encoding = ["1110101011pppppp", "ssssssssssssssss"]
+fields = { n = { kind = "simm", letters = "ps", scale = 2 } }
+group = "branches"
+summary = "Jump up to about 4 MiB away."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "c0 ea 00 00"
+text = "goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff ea ff ff"
+text = "goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- stack ----
+
+[[insn]]
+id = "pop.rl"
+syntax = "{{{l}}} = [sp++]"
+encoding = ["000001000100kkkk"]
+fields = { l = { kind = "rlist4", letters = "k" } }
+group = "stack"
+summary = "Pop a range of general registers ending at r3 or starting at r4."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "40 04"
+text = "{r3-r0} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f 04"
+text = "{r15-r4} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "pop.pc_rl"
+syntax = "{{pc, {l}}} = [sp++]"
+encoding = ["000001000101kkkk"]
+fields = { l = { kind = "rlist4", letters = "k" } }
+group = "stack"
+summary = "Pop a range of general registers, then pop pc (return)."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "50 04"
+text = "{pc, r3-r0} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "5f 04"
+text = "{pc, r15-r4} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "pop.rets_rl"
+syntax = "{{rets, {l}}} = [sp++]"
+encoding = ["000001000011kkkk"]
+fields = { l = { kind = "rlist4", letters = "k" } }
+group = "stack"
+summary = "Pop a range of general registers, then pop rets."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "30 04"
+text = "{rets, r3-r0} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f 04"
+text = "{rets, r15-r4} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.rl"
+syntax = "[--sp] = {{{l}}}"
+encoding = ["000001000110kkkk"]
+fields = { l = { kind = "rlist4", letters = "k" } }
+group = "stack"
+summary = "Push a range of general registers ending at r3 or starting at r4."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "60 04"
+text = "[--sp] = {r3-r0}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "6f 04"
+text = "[--sp] = {r15-r4}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.rets_rl"
+syntax = "[--sp] = {{rets, {l}}}"
+encoding = ["000001000111kkkk"]
+fields = { l = { kind = "rlist4", letters = "k" } }
+group = "stack"
+summary = "Push rets, then a range of general registers."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "oracle"]
+
+[[insn.example]]
+bytes = "70 04"
+text = "[--sp] = {rets, r3-r0}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f 04"
+text = "[--sp] = {rets, r15-r4}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "pop.srl"
+syntax = "{{{m}}} = [sp++]"
+encoding = ["0000010010mmmmmm"]
+fields = { m = "srmask" }
+asm_rejects = ["{} = [sp++]"]   # objdump prints an empty list; the assembler wants a register
+group = "stack"
+summary = "Pop any of reti, rete, retx, rets, sr4 and psr (one mask bit each, sr0 first)."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "80 04"
+text = "{} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf 04"
+text = "{psr, sr4, rets, retx, rete, reti} = [sp++]"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.srl"
+syntax = "[--sp] = {{{m}}}"
+encoding = ["0000010011mmmmmm"]
+fields = { m = "srmask" }
+asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wants a register
+group = "stack"
+summary = "Push any of reti, rete, retx, rets, sr4 and psr (one mask bit each, sr0 first)."
+status = "confirmed"
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+
+[[insn.example]]
+bytes = "c0 04"
+text = "[--sp] = {}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff 04"
+text = "[--sp] = {psr, sr4, rets, retx, rete, reti}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.rmask"
+syntax = "[--sp] = {{{m}}}"
+encoding = ["1110100011011000", "mmmmmmmmmmmmmmmm"]
+fields = { m = "rmask" }
+asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wants a register
+group = "stack"
+summary = "Push any set of general registers (one mask bit per register)."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "objdump writes runs of three or more registers as a range."
+
+[[insn.example]]
+bytes = "d8 e8 00 00"
+text = "[--sp] = {}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "d8 e8 ff ff"
+text = "[--sp] = {r15-r0}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "push.srmask"
+syntax = "[--sp] = {{{m}}}"
+encoding = ["1110100101011000", "mmmmmmmmmmmmmmmm"]
+fields = { m = "srmask" }
+asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wants a register
+group = "stack"
+summary = "Push any set of special registers (one mask bit per register number)."
+status = "confirmed"
+sources = ["oracle", "sources-in-use"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+
+[[insn.example]]
+bytes = "58 e9 00 00"
+text = "[--sp] = {}"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "58 e9 ff ff"
+text = "[--sp] = {pc, sp, ssp, usp, icfg, icfgs, icfgn, sspn, uspn, cnum, psr, sr4, rets, retx, rete, reti}"
+origin = "oracle:objdump+clang:20260730.1"

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 """JieLi's toolchain as a black-box oracle (docs/ORACLE.md): feed it bytes or text, read what it does."""
 
+import collections
 import hashlib
 import itertools
 import os
@@ -24,7 +25,9 @@ DEFAULT_RELEASE = "20260730.1"
 URL = "https://jl-update.oss-cn-shenzhen.aliyuncs.com/jieli-linux-toolchains-{}.tar.xz"
 CPU = "r3"
 PAD = b"\x00\x00\x00\x00"   # two nops after each probe: a probe misread as longer cannot swallow the next one
-LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*\t(.*)$")
+LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*(.*)$")
+ANNOTATION = re.compile(r"\s+<[^<>]*>$")      # objdump's "<symbol+offset : address >" after a branch target
+UNKNOWN = "<unknown instruction>"
 
 
 class OracleError(Exception):
@@ -88,7 +91,10 @@ class Oracle:
         for ln in listing.splitlines():
             m = LINE.match(ln)
             if m:
-                out[int(m.group(1), 16)] = (bytes.fromhex(m.group(2)), m.group(3).strip())
+                text = m.group(3).strip()
+                if text != UNKNOWN:
+                    text = ANNOTATION.sub("", text)
+                out[int(m.group(1), 16)] = (bytes.fromhex(m.group(2)), text)
         return out
 
     def decode(self, probes, features=()):
@@ -126,9 +132,48 @@ class Oracle:
         return [r for t in texts for r in self.encode([t], features)]   # find which line failed
 
 
+def parse_values(spec):
+    """'0,1,4' or '0..15' or '-8..8/4' -> list of ints; other words (register names) are kept as text."""
+    out = []
+    for part in spec.split(","):
+        if ".." in part:
+            lo, _, rest = part.partition("..")
+            hi, _, step = rest.partition("/")
+            out += list(range(int(lo, 0), int(hi, 0) + 1, int(step or "1", 0)))
+        else:
+            try:
+                out.append(int(part, 0))
+            except ValueError:
+                out.append(part)
+    return out
+
+
+def vary(oracle, template, values, features=()):
+    """Assemble a template such as 'r{x} = [r{y}+{n}]' for every combination of the given values.
+    Returns [(text, bytes or error message)]. This is how a field's bit positions are found."""
+    names = list(values)
+    texts = [template.format(**dict(zip(names, combo))) for combo in itertools.product(*values.values())]
+    return list(zip(texts, oracle.encode(texts, features)))
+
+
+def bits(data):
+    """'1110000001100100 0001111000000000': the 16-bit words of data, most significant bit first."""
+    return " ".join(f"{data[k] | data[k + 1] << 8:016b}" for k in range(0, len(data) - 1, 2))
+
+
+NUMBER = re.compile(r"(?<![\w])(-?(?:0x[0-9A-Fa-f]+|\d+))(?![\w])")
+
+
+def same_meaning(a, b):
+    """Texts equal once every number is compared by its 32-bit value (0xFF and 255, -1 and 0xFFFFFFFF)."""
+    norm = lambda t: NUMBER.sub(lambda m: str(int(m.group(1), 0) & 0xFFFFFFFF), t)
+    return norm(a) == norm(b)
+
+
 def probe_values(insn, limit=4096):
     """Field-value combinations to check: every combination when that is at most `limit`, else the
-    extremes, a middle value and each single bit of every field."""
+    extremes, a middle value, each single bit and three irregular values of every field (irregular so that
+    a wide constant does not also fit a shorter form)."""
     widths = {f: len(insn.field_bits(f)) for f in sorted(insn.fields)}
     total = 1
     for w in widths.values():
@@ -136,7 +181,8 @@ def probe_values(insn, limit=4096):
     if total <= limit:
         ranges = [range(1 << w) for w in widths.values()]
     else:
-        ranges = [sorted({0, (1 << w) - 1, (1 << w) // 3, *(1 << b for b in range(w))}) for w in widths.values()]
+        ranges = [sorted({0, (1 << w) - 1, (1 << w) // 3, *(1 << b for b in range(w)),
+                          *((0x9E3779B9 * k) & ((1 << w) - 1) for k in (1, 2, 3))}) for w in widths.values()]
     return [dict(zip(widths, combo)) for combo in itertools.product(*ranges)]
 
 
@@ -155,7 +201,8 @@ def chosen_examples(insn, values_list):
 
 
 def confirm(oracle, table, insn):
-    """Check one entry both ways. Returns (problems, examples) where examples are (bytes, text, origin)."""
+    """Check one entry both ways. Returns (problems, examples, encodings checked, preferred) where examples
+    are (bytes, text, origin) and preferred counts the other entries the assembler chose for the same text."""
     values_list = probe_values(insn)
     encodings = [codec.encode(insn, v) for v in values_list]
     texts = [codec.format(insn, v) for v in values_list]
@@ -169,12 +216,87 @@ def confirm(oracle, table, insn):
         elif got[1] != text:
             problems.append(f"decode {data.hex(' ')}: objdump prints {got[1]!r}, table says {text!r}")
     assembled = oracle.encode(texts, insn.requires)
+    preferred = collections.Counter()   # other entries the assembler chose for the same text
     for data, text, got in zip(encodings, texts, assembled):
-        if isinstance(got, str):
+        if text in insn.asm_rejects:
+            if not isinstance(got, str):
+                problems.append(f"encode {text!r}: listed in asm_rejects, but the assembler gives {got.hex(' ')}")
+        elif isinstance(got, str):
             problems.append(f"encode {text!r}: assembler error: {got.splitlines()[0] if got else '?'}")
         elif got != data:
-            problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
+            other = codec.decode(table, got)
+            if (other and other[0] is not insn and other[2] == len(got)
+                    and same_meaning(codec.format(other[0], other[1]), text)):
+                preferred[other[0].id] += 1     # a shorter or equivalent form the table already has
+            else:
+                problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
+    if preferred and sum(preferred.values()) == len(texts) - len(insn.asm_rejects):
+        problems.append(f"encode: the assembler never chose this form (always {', '.join(preferred)})")
     examples = []
     for v in chosen_examples(insn, values_list):
         examples.append((codec.encode(insn, v), codec.format(insn, v), oracle.origin("objdump+clang")))
-    return problems, examples, len(values_list)
+    return problems, examples, len(values_list), dict(preferred)
+
+
+def sweep(oracle, first=None, features=("fprev1",)):
+    """Decode every 16-bit word, or every second word after `first`. Returns {word: (length, text)}."""
+    words = range(65536)
+    if first is None:
+        probes = [bytes((w & 0xFF, w >> 8)) for w in words]
+    else:
+        probes = [bytes((first & 0xFF, first >> 8, w & 0xFF, w >> 8)) for w in words]
+    out = {}
+    for start in range(0, 65536, 8192):
+        for w, got in zip(words[start:start + 8192], oracle.decode(probes[start:start + 8192], features)):
+            out[w] = (len(got[0]), got[1]) if got else (0, "")
+    return out
+
+
+def shapes(decoded):
+    """Group a sweep by instruction shape (registers -> R, numbers -> N): [(shape, length, words, pattern)],
+    largest first. The pattern shows the bits common to all the words ('.' where they differ)."""
+    groups = collections.defaultdict(list)
+    for w, (n, text) in decoded.items():
+        shape = re.sub(r"(?<![\w])-?(?:0x[0-9A-Fa-f]+|\d+)(?![\w])", "N", re.sub(r"\br\d+\b", "R", text))
+        groups[(shape, n)].append(w)
+    out = []
+    for (shape, n), ws in groups.items():
+        same, ones = 0xFFFF, 0xFFFF
+        for w in ws:
+            same &= ~(w ^ ws[0])
+            ones &= w
+        pattern = "".join(("1" if ones >> b & 1 else "0") if same >> b & 1 else "." for b in range(15, -1, -1))
+        out.append((shape, n, ws, pattern))
+    return sorted(out, key=lambda x: -len(x[2]))
+
+
+def compare(oracle, table, obj):
+    """Disassemble an object's code sections with the table and with JieLi's objdump, instruction by
+    instruction. Needs a stock readelf and objcopy. Returns (counts, differences)."""
+    counts, diffs = collections.Counter(), []
+    sections = subprocess.run(["readelf", "-SW", str(obj)], capture_output=True, text=True, check=True).stdout
+    names = [m.group(1) for ln in sections.splitlines()
+             if (m := re.match(r"\s*\[\s*\d+\]\s+(\S+)", ln)) and " AX " in ln]
+    _, listing, _ = oracle._run([oracle.objdump, "-d", f"-mcpu={CPU}", obj])
+    for name in names:
+        part = listing.split(f"Disassembly of section {name}:", 1)
+        if len(part) < 2:
+            continue
+        lines = oracle._lines(part[1].split("Disassembly of section", 1)[0])
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "section.bin"
+            subprocess.run(["objcopy", "-I", "elf32-little", "-O", "binary", "-j", name, str(obj), str(out)],
+                           check=True)
+            data = out.read_bytes()
+        for addr, (expect, text) in sorted(lines.items()):
+            if text == UNKNOWN:
+                counts["unknown to objdump"] += 1
+                continue
+            got = codec.decode(table, data, addr)
+            mine = codec.format(got[0], got[1]) if got else None
+            if got and got[2] == len(expect) and mine == text:
+                counts["identical"] += 1
+            else:
+                counts["different" if got else "not in table"] += 1
+                diffs.append(f"{obj}:{name}+{addr:x}: {expect.hex(' ')}  objdump {text!r}, table {mine!r}")
+    return counts, diffs

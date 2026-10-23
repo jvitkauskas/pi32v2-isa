@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import copy
+import re
 import unittest
 
 from pi32v2isa import codec, table
@@ -14,6 +15,7 @@ def insn(**kw):
     base = dict(id="t", syntax="t", words=["0000000000000000"], fields={}, summary="s",
                 status="documented", sources=["kagaimiq-jielie"])
     base.update(kw)
+    base["fields"] = {k: table._field(k, v) for k, v in base["fields"].items()}
     return Insn(**base)
 
 
@@ -40,7 +42,7 @@ class RealTable(unittest.TestCase):
                 self.assertIs(got[0], i)
                 self.assertEqual(got[1], values, i.id)
                 self.assertEqual(got[2], len(data))
-                self.assertNotIn("{", codec.format(i, values))
+                self.assertIsNone(re.search(r"\{\+?[a-z]\}", codec.format(i, values)), i.id)
 
     def test_known_encodings(self):
         """Byte order and field placement, worked by hand from the documented patterns."""
@@ -50,6 +52,34 @@ class RealTable(unittest.TestCase):
         mov = self.t.by_id("mov.rr")
         self.assertEqual(codec.encode(mov, {"x": 1, "y": 2}), bytes.fromhex("21 16"))
         self.assertEqual(codec.format(mov, {"x": 1, "y": 2}), "r1 = r2")
+
+
+    def test_kinds_print_like_objdump(self):
+        """Each kind's printing, against texts JieLi's objdump printed in the sweeps."""
+        t = self.t
+        cases = [
+            ("ld.w.sp", {"r": 1, "n": 0}, "r1 = [sp]"),                 # {+n} drops a zero offset
+            ("ld.w.sp", {"r": 13, "n": 49}, "r13 = [sp+196]"),
+            ("ld.bu", {"d": 4, "b": 4, "n": 21}, "r4 = b[r4+-11] (u)"),
+            ("li.neg5", {"r": 1, "n": 0}, "r1 = -32"),
+            ("li.modimm", {"r": 1, "n": 0x101}, "r1 = 0x10001"),
+            ("li.modimm", {"r": 1, "n": 0xB80}, "r1 = 0x10000"),
+            ("or.bit", {"r": 1, "b": 14}, "r1 |= 16384"),
+            ("pop.rl", {"l": 2}, "{r3, r2} = [sp++]"),
+            ("pop.rl", {"l": 6}, "{r6-r4} = [sp++]"),
+            ("push.rmask", {"m": 0b110110}, "[--sp] = {r5, r4, r2, r1}"),
+            ("push.rmask", {"m": 0x0F0F}, "[--sp] = {r11-r8, r3-r0}"),
+            ("push.srmask", {"m": 0x782F}, "[--sp] = {sp, ssp, usp, icfg, psr, rets, retx, rete, reti}"),
+            ("pop.srl", {"m": 0}, "{} = [sp++]"),
+            ("mov.r_sr", {"r": 1, "s": 7}, "r1 = uspn"),
+        ]
+        for insn_id, values, text in cases:
+            self.assertEqual(codec.format(t.by_id(insn_id), values), text)
+
+    def test_split_field_order(self):
+        """li.u32 keeps the low half first in memory."""
+        i = self.t.by_id("li.u32")
+        self.assertEqual(codec.encode(i, {"r": 3, "n": 0x01C07F00}), bytes.fromhex("c3 ff 00 7f c0 01"))
 
 
 class Checks(unittest.TestCase):
@@ -69,7 +99,7 @@ class Checks(unittest.TestCase):
 
     def test_field_without_kind_or_syntax(self):
         e = insn(words=["000000000000xxxx"], fields={}, syntax="t")
-        self.assertTrue(any("has no kind" in p for p in problems(e)))
+        self.assertTrue(any("belongs to no field" in p for p in problems(e)))
         e = insn(words=["000000000000xxxx"], fields={"x": "gpr"}, syntax="t")
         self.assertTrue(any("never appears in syntax" in p for p in problems(e)))
 

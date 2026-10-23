@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 """Encode and decode single instructions from the table. The assembler and disassembler build on this."""
 
-from .table import PLACEHOLDER
+from .table import SYNTAX_TOKEN
 
 
 def _words(data, offset, n):
@@ -60,22 +60,75 @@ def encode(insn, values):
     return _to_bytes(value, len(insn.words))
 
 
-def operand(kind, raw, width):
+SR_NAMES = ["reti", "rete", "retx", "rets", "sr4", "psr", "cnum", "uspn",
+            "sspn", "icfgn", "icfgs", "icfg", "usp", "ssp", "sp", "pc"]
+
+
+def _runs(regs):
+    """Registers high to low, with runs of three or more written as a range: [15, 14, 13, 2] -> r15-r13, r2."""
+    out, k = [], 0
+    while k < len(regs):
+        j = k
+        while j + 1 < len(regs) and regs[j + 1] == regs[j] - 1:
+            j += 1
+        if j - k >= 2:
+            out.append(f"r{regs[k]}-r{regs[j]}")
+        else:
+            out += [f"r{r}" for r in regs[k:j + 1]]
+        k = j + 1
+    return ", ".join(out)
+
+
+def modimm(raw):
+    """A 12-bit modified immediate: 8 bits repeated in a pattern, or rotated (as in ARM Thumb-2)."""
+    if raw >> 10 == 0:
+        xy = raw & 0xFF
+        return [xy, xy * 0x00010001, xy * 0x01000100, xy * 0x01010101][raw >> 8 & 3]
+    rot, byte = raw >> 7, 0x80 | (raw & 0x7F)
+    return ((byte >> rot) | (byte << (32 - rot))) & 0xFFFFFFFF
+
+
+def value(field, raw, width):
+    """The number a uimm or simm field stands for."""
+    if field.kind == "simm" and raw >= 1 << (width - 1):
+        raw -= 1 << width
+    return raw * field.scale + field.add
+
+
+def operand(field, raw, width):
     """How a raw field value is written in assembly."""
+    kind = field.kind
     if kind in ("gpr", "gpr_lo"):
         return f"r{raw}"
     if kind == "gpr_hi":
         return f"r{raw + 8}"
     if kind == "pair":
         return f"r{2 * raw + 1}_r{2 * raw}"
-    if kind == "simm" and raw >= 1 << (width - 1):
-        return str(raw - (1 << width))
-    return str(raw)
+    if kind == "sr":
+        return SR_NAMES[raw]
+    if kind == "bit":
+        return str(1 << raw)
+    if kind == "rlist4":            # 0..3: r3 down to r<raw>; 4..15: r<raw> down to r4
+        hi, lo = (3, raw) if raw < 4 else (raw, 4)
+        return _runs(list(range(hi, lo - 1, -1)))
+    if kind == "rmask":
+        return _runs([r for r in range(15, -1, -1) if raw >> r & 1])
+    if kind == "modimm":
+        return f"0x{modimm(raw):X}"
+    if kind == "srmask":
+        return ", ".join(SR_NAMES[r] for r in range(width - 1, -1, -1) if raw >> r & 1)
+    return str(value(field, raw, width))
 
 
 def format(insn, values):
     """The assembly text of insn with the given raw field values."""
     def sub(m):
-        letter = m.group(1)
-        return operand(insn.fields[letter], values[letter], len(insn.field_bits(letter)))
-    return PLACEHOLDER.sub(sub, insn.syntax)
+        if m.group(0) in ("{{", "}}"):
+            return m.group(0)[0]
+        plus, name = m.groups()
+        field = insn.fields[name]
+        text = operand(field, values[name], len(insn.field_bits(name)))
+        if plus:
+            return "" if text == "0" else "+" + text
+        return text
+    return SYNTAX_TOKEN.sub(sub, insn.syntax)

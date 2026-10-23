@@ -7,21 +7,22 @@ instruction form is one encoding with one operand layout: `r1 = r2` and `r1 = [r
 
 ```toml
 [[insn]]
-id = "call.r"                       # unique and stable; other documents refer to it
-syntax = "call {x}"                 # JieLi's assembly syntax; {letter} is an operand field
-encoding = ["000000001100xxxx"]     # one string per 16-bit word, see below
-fields = { x = "gpr" }              # field letter -> operand kind
-group = "control"                   # optional: a heading for docs/ISA.md
+id = "ld.w.sp"                      # unique and stable; other documents refer to it
+syntax = "{r} = [sp{+n}]"           # JieLi's assembly syntax, see below
+encoding = ["001ooooo00p0rrrr"]     # one string per 16-bit word, see below
+fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
+group = "memory"                    # optional: a heading for docs/ISA.md
 requires = []                       # CPU features needed, e.g. ["fprev1"]
-summary = "Call the subroutine at the address in a register."
-status = "documented"               # guessed | documented | confirmed
-sources = ["kagaimiq-jielie"]       # ids from docs/SOURCES.md
-notes = "Syntax spelling not yet checked against the oracle."   # optional
+summary = "Load a word from the stack at sp plus 0..252."
+status = "confirmed"                # guessed | documented | confirmed
+sources = ["oracle"]                # ids from docs/SOURCES.md
+notes = "objdump omits the offset when it is 0 ([sp])."   # optional
+asm_rejects = []                    # optional: texts objdump prints that JieLi's assembler refuses
 
 [[insn.example]]                    # optional; zero or more
-bytes = "c5 00"                     # hex, in memory order
-text = "call r5"                    # what the oracle printed or accepted
-origin = "oracle:objdump:20260730.1"
+bytes = "2d 31"                     # hex, in memory order
+text = "r13 = [sp+196]"             # what the oracle printed and accepted
+origin = "oracle:objdump+clang:20260730.1"
 ```
 
 ## Encoding strings
@@ -29,9 +30,31 @@ origin = "oracle:objdump:20260730.1"
 - Each string is one 16-bit instruction word, written most significant bit first. Words are listed in
   memory order. Each word is stored little-endian (low byte first).
 - Characters: `0` and `1` are fixed bits; `-` is a bit the decoder ignores and the assembler writes as `0`;
-  a lowercase letter is a bit of the operand field with that letter.
-- A field's bits are concatenated in the order they appear, across words, most significant first. A field
-  may be split.
+  a lowercase letter is a bit of an operand field.
+- Bits with the same letter are read in the order they appear, across words, most significant first.
+
+## Fields
+
+`fields` maps each operand name (a lowercase letter used in `syntax`) to its kind, either as a plain string
+or as an inline table:
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `kind` | (required) | an operand kind, below |
+| `letters` | the field's own name | the encoding letters that hold it, most significant part first: `letters = "po"` puts the `p` bits above the `o` bits |
+| `scale` | 1 | `uimm`/`simm` only: the printed number is the raw value (sign-extended for `simm`) times `scale`, plus `add` |
+| `add` | 0 | `uimm`/`simm` only |
+
+`letters` handles split fields: `li.u32` keeps a constant's low half in its second word and the high half in
+its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`.
+
+## Syntax
+
+- `{x}` is field `x`.
+- `{+x}` prints `+` and the value, or nothing when the value is 0 (`[sp]`, `[sp+4]`).
+- `{{` and `}}` are literal braces (`[--sp] = {{{l}}}` prints `[--sp] = {r3-r0}`).
+- The text follows JieLi's **objdump**. The assembler accepts more spellings (`[r1 + 0]`, `b[r4+4]` without
+  `(u)`); an assembler written from this table must accept those too.
 
 ## Operand kinds
 
@@ -41,16 +64,26 @@ origin = "oracle:objdump:20260730.1"
 | `gpr_lo` | 3 | `r0`..`r7` | `r5` |
 | `gpr_hi` | 3 | `r8`..`r15` (field value + 8) | `r13` |
 | `pair` | 3 | 64-bit register pair `r(2n+1)_r(2n)` | `r3_r2` |
-| `uimm` | any | unsigned immediate | `12` |
-| `simm` | any | two's-complement immediate | `-4` |
+| `sr` | 4 | special register by number ([ISA.md](ISA.md) §2) | `reti`, `sr4`, `sp` |
+| `uimm` | any | unsigned number | `252` |
+| `simm` | any | two's-complement number | `-11` |
+| `bit` | 5 | a bit number, printed as the bit's value | `16384` |
+| `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
+| `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |
+| `rmask` | 16 | set of general registers, bit n = `rn` | `r11-r8, r3-r0` |
+| `srmask` | any | set of special registers, bit n = special register n | `psr, rets, reti` |
 
-New kinds are added here and in `pi32v2isa/table.py` together.
+Register lists are printed highest first; in `rlist4` and `rmask` a run of three or more is written as a
+range. An empty `rmask` or `srmask` prints as nothing (`{}`), which JieLi's assembler refuses: such entries
+list that text in `asm_rejects`.
+
+New kinds are added here and in `pi32v2isa/table.py` and `pi32v2isa/codec.py` together.
 
 ## Status
 
 | Status | Meaning | Needs |
 | --- | --- | --- |
-| `guessed` | Inferred; no source states it | a `notes` line on how it was inferred |
+| `guessed` | Inferred (from a sweep, or by reasoning); not confirmed, no source states it | a `notes` line on how it was inferred |
 | `documented` | A cited source states it | at least one `sources` id other than `oracle` |
 | `confirmed` | Checked against the oracle | `oracle` in `sources` and examples covering every field ([ORACLE.md](ORACLE.md)) |
 
@@ -63,9 +96,10 @@ says so where it is an assumption) until it is tested on hardware.
 `python3 -m pi32v2isa check` rejects a table where:
 
 - an `id` repeats, or a required key is missing;
-- an encoding word is not 16 characters, or uses a letter not listed in `fields` (or lists one it doesn't use);
-- a field's width doesn't fit its kind;
-- a `{letter}` in `syntax` isn't a field, or a field never appears in `syntax`;
+- an encoding word is not 16 characters, a letter belongs to no field or to two, or a field names a letter
+  the encoding doesn't have;
+- a field's width doesn't fit its kind, or `scale`/`add` is given for a kind other than `uimm`/`simm`;
+- a `{x}` in `syntax` isn't a field, a field never appears in `syntax`, or a brace is unescaped;
 - a `status`, kind or source id is unknown;
 - two entries' encodings overlap (some bit pattern matches both);
-- an example's bytes don't decode to its own entry.
+- an example's bytes don't decode to its own entry, or print differently from its `text`.
