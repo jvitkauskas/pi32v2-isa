@@ -39,13 +39,19 @@ pick one encoding of several.
 python3 -m pi32v2isa oracle sweep                  # objdump's reading of all 65536 16-bit words, by shape
 python3 -m pi32v2isa oracle sweep e064             # the same for every second word after first word e064
 python3 -m pi32v2isa oracle vary "r{x} = [sp+{n}]" x=0..15 n=0,4,8,16,128   # assemble variants, show bits
+python3 -m pi32v2isa oracle fit 'r(\d+) = \[r(\d+)\+(-?\d+)\]'              # which bits carry each operand
+python3 -m pi32v2isa oracle fit '(\w+) = r(\d+)' e064                          # same, over second words
 ```
 
 `sweep` groups the decoded words by shape (registers become `R`, numbers `N`) and prints the bits common to
 every word of a shape. It takes about a second and is the quickest way to see what a region of the encoding
 space holds, including which first words begin 32- or 48-bit instructions (the length column). `vary`
 assembles one line with different operands and prints each result's words in binary, which shows where each
-operand's bits go. Both only feed the oracle input and read its output.
+operand's bits go. `fit` takes a regex whose groups are the operands, over a sweep: for each bit it shows
+how flipping it changes each operand (a register field shows +1, +2, +4, +8; a signed offset's top bit a
+negative weight), and whether the words form a complete pattern or have holes where other shapes sit
+(`--split MASK` groups the words by some bits first). All three only feed the oracle input and read its
+output.
 
 ## Confirming entries
 

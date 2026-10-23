@@ -74,6 +74,14 @@ def cmd_oracle(args):
         for shape, n, ws, pattern in oracle.shapes(oracle.sweep(o, first)):
             print(f"{len(ws):6d}  {n or '-'}  {pattern}  {shape or '(nothing)'}")
         return 0
+    if args.action == "fit":
+        regex, *rest = args.items
+        first = int(rest[0], 16) if rest else None
+        for pat, n, complete, roles in oracle.fit(oracle.sweep(o, first), regex, args.split):
+            print(f"{pat}  {n} words{'' if complete else '  (holes: other shapes inside)'}")
+            for b, deltas in roles:
+                print(f"   bit {b:2d}: " + ", ".join(f"{d} x{c}" for d, c in deltas))
+        return 0
     if args.action == "compare":
         t = table.load(args.table)
         total = collections.Counter()
@@ -124,12 +132,13 @@ def main(argv=None):
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "compare", "confirm"])
-    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; compare: objects; confirm: ids")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "compare", "confirm"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; compare: objects; confirm: ids")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
     o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
     o.add_argument("--show", type=int, default=8, help="confirm: problems to show per entry")
+    o.add_argument("--split", type=lambda v: int(v, 0), default=0, help="fit: bits to group the words by")
     o.set_defaults(func=cmd_oracle)
     args = p.parse_args(argv)
     return args.func(args)

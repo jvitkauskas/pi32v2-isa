@@ -25,6 +25,24 @@ text = "r13 = [sp+196]"             # what the oracle printed and accepted
 origin = "oracle:objdump+clang:20260730.1"
 ```
 
+## Naming ids
+
+Ids are lowercase words joined by dots: the operation first, then what distinguishes this form from others
+with the same operation. Follow the existing entries:
+
+| Pattern | Examples |
+| --- | --- |
+| loads and stores: `ld`/`st`, size `w`/`h`/`b`, `u`/`s` for a load's extension, then the addressing | `ld.w`, `st.b`, `ld.bu`, `ld.w.sp` |
+| addressing suffixes: none = register + offset, `.sp` = sp + offset, `.pi` = post-increment by a register (`[r1++=r2]`), `.pin` = post-increment by a number (`[r1++=4]`) | `ld.hu.pi`, `st.w.pin` |
+| arithmetic and logic: `add`, `sub`, `mul`, `and`, `or`, `xor`, `not`, `lsl` (`<<`), `lsr` (`>>`), then operand shape: `.rrr` (`r1 = r2 op r3`), `.rr` (`r1 op= r2`), `.rri` (`r1 = r2 op n`), `.ri` (`r1 op= n`) | `add.rrr`, `xor.ri` |
+| constants and moves: `li.` + range, `mov.` + operands | `li.u8`, `mov.r_sr` |
+| branches: `b` + condition + `z` when against zero, `goto.`/`call.` + reach | `beqz`, `goto.s`, `call.l` |
+| stack: `push.`/`pop.` + what | `push.rl`, `pop.srl` |
+| parallel-issue (`#`) twin of an entry: the entry's id + `.p` | `add.rrr.p` |
+
+When an operation's meaning is not known, name it after what objdump prints (`<<<` is `shl3`, not a guess
+at "rotate"), and say so in `notes`. A name says what the instruction is, never where it was found.
+
 ## Encoding strings
 
 - Each string is one 16-bit instruction word, written most significant bit first. Words are listed in

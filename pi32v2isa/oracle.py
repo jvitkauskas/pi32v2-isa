@@ -300,3 +300,54 @@ def compare(oracle, table, obj):
                 counts["different" if got else "not in table"] += 1
                 diffs.append(f"{obj}:{name}+{addr:x}: {expect.hex(' ')}  objdump {text!r}, table {mine!r}")
     return counts, diffs
+
+
+def _operand_value(text):
+    text = text.strip()
+    if text == "":
+        return 0
+    if re.fullmatch(r"r\d+", text):
+        return int(text[1:])
+    if text in codec.SR_NAMES:
+        return codec.SR_NAMES.index(text)
+    return int(text, 0)
+
+
+def fit(decoded, pattern, split=0):
+    """For the words whose text fully matches `pattern` (a regex whose groups are operands: registers,
+    numbers or special-register names), group them by the bits in `split` and, per group, report which
+    word bits carry which operand. Returns [(pattern, words, complete, [(bit, [(delta, count)])])]:
+    flipping `bit` from 0 to 1 changes the operands by `delta` (one number per operand). A group is
+    complete when every combination of its varying bits decodes to this shape (no holes)."""
+    rx = re.compile(pattern)
+    hits = {}
+    for w, (n, text) in decoded.items():
+        m = rx.fullmatch(text)
+        if m:
+            try:
+                hits[w] = [_operand_value(g or "") for g in m.groups()]
+            except ValueError:
+                continue
+    groups = collections.defaultdict(dict)
+    for w, ops in hits.items():
+        groups[w & split][w] = ops
+    out = []
+    for _, ws in sorted(groups.items()):
+        first = next(iter(ws))
+        same, ones = 0xFFFF, 0xFFFF
+        for w in ws:
+            same &= ~(w ^ first)
+            ones &= w
+        pat = "".join(("1" if ones >> b & 1 else "0") if same >> b & 1 else "." for b in range(15, -1, -1))
+        roles = []
+        for b in range(15, -1, -1):
+            if same >> b & 1:
+                continue
+            deltas = collections.Counter()
+            for w, ops in ws.items():
+                if not w >> b & 1 and (w | 1 << b) in ws:
+                    deltas[tuple(x - y for x, y in zip(ws[w | 1 << b], ops))] += 1
+            roles.append((b, deltas.most_common(3)))
+        complete = len(ws) == 1 << (16 - bin(same & 0xFFFF).count("1"))
+        out.append((pat, len(ws), complete, roles))
+    return out
