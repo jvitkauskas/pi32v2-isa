@@ -87,6 +87,7 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `gpr_lo` | 3 | `r0`..`r7` | `r5` |
 | `gpr_hi` | 3 | `r8`..`r15` (field value + 8) | `r13` |
 | `pair` | 3 | 64-bit register pair `r(2n+1)_r(2n)` | `r3_r2` |
+| `pair_regs` | 5 | two names for registers of one 64-bit pair: the pair number (3 bits), then one bit per name saying which register of the pair it is (0 = even, 1 = odd) | `r2,r3`, `r5,r5` |
 | `sr` | 4 | special register by number ([ISA.md](ISA.md) §2) | `reti`, `sr4`, `sp` |
 | `uimm` | any | unsigned number | `252` |
 | `simm` | any | two's-complement number | `-11` |

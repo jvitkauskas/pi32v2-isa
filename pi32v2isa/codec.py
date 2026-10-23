@@ -106,6 +106,8 @@ def operand(field, raw, width):
         return f"r{raw + 8}"
     if kind == "pair":
         return f"r{2 * raw + 1}_r{2 * raw}"
+    if kind == "pair_regs":         # pair number (3 bits), then one bit for each of the two names: r2,r3
+        return f"r{2 * (raw >> 2) + (raw >> 1 & 1)},r{2 * (raw >> 2) + (raw & 1)}"
     if kind == "sr":
         return SR_NAMES[raw]
     if kind == "bit":

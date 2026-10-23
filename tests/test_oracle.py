@@ -53,6 +53,25 @@ class Recording(unittest.TestCase):
             self.assertEqual(table.check(t, sources={"kagaimiq-jielie", "oracle"}), [])
 
 
+class BlockEncoding(unittest.TestCase):
+    def test_block_opener_gets_body_and_brace(self):
+        """`if (r0 == r1) {` is assembled with a nop body and a closing brace, and the body is dropped from the answer."""
+        seen = []
+
+        class Fake(oracle.Oracle):
+            def __init__(self):
+                pass
+
+            def _assemble(self, source, features=()):
+                seen.append(source)
+                return ("   0:  10 e8 00 01  \tif (r0 == r1) {\n   4:  00 00  \t\tnop\n"
+                        "                  \t}\n   6:  00 00  \tnop\n"), ""
+
+        got = Fake().encode(["if (r0 == r1) {", "nop"])
+        self.assertEqual(got, [bytes.fromhex("10 e8 00 01"), bytes.fromhex("00 00")])
+        self.assertIn("\tif (r0 == r1) {\n\tnop\n\t}\n\tnop\n", seen[0])
+
+
 class Probes(unittest.TestCase):
     def setUp(self):
         self.t = table.load()

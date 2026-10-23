@@ -22,6 +22,7 @@ KINDS = {
     "gpr_lo": {3},
     "gpr_hi": {3},
     "pair": {3},
+    "pair_regs": {5},
     "sr": {4},
     "uimm": None,
     "simm": None,

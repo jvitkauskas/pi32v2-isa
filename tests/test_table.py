@@ -117,6 +117,13 @@ class Checks(unittest.TestCase):
         bad = insn(words=["00000000000000xx"], fields={"x": {"kind": "gpr_lo", "invert": True}}, syntax="t {x}")
         self.assertTrue(any("apply only to modimm" in p for p in problems(bad)))
 
+    def test_pair_regs(self):
+        e = insn(words=["000000000000xxxx", "x000000000000000"], fields={"x": "pair_regs"}, syntax="t {x}")
+        self.assertEqual(problems(e), [])
+        self.assertEqual(codec.format(e, {"x": 0b00101}), "t r2,r3")
+        self.assertEqual(codec.format(e, {"x": 0b11010}), "t r13,r12")
+        self.assertEqual(codec.format(e, {"x": 0b00011}), "t r1,r1")
+
     def test_lead_and_zero_as(self):
         e = insn(words=["0000000000000000", "mmmmmmmmmmmmmmmm"],
                  fields={"m": {"kind": "rmask", "lead": "rets"}}, syntax="{{{m}}}")

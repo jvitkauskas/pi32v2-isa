@@ -9731,7 +9731,7 @@ syntax = "if ({r} == {s}) goto {n}"
 encoding = ["111010000000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is equal the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is equal to the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -9767,7 +9767,7 @@ syntax = "iff ({r} == {s}) goto {n}"
 encoding = ["111010000000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -9927,7 +9927,7 @@ syntax = "ifeq goto {n}"
 encoding = ["1110100001000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (eq); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (eq); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -10062,7 +10062,7 @@ syntax = "if ({r} != {s}) goto {n}"
 encoding = ["111010001000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is not equal the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is not equal to the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10098,7 +10098,7 @@ syntax = "iff ({r} u!= {s}) goto {n}"
 encoding = ["111010001000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is unordered or not equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is unordered or not equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10258,7 +10258,7 @@ syntax = "ifne goto {n}"
 encoding = ["1110100011000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (ne); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (ne); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -10279,7 +10279,7 @@ syntax = "if ({r} >= {s}) goto {n}"
 encoding = ["111010010000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater or equal the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than or equal to the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10315,7 +10315,7 @@ syntax = "iff ({r} u>= {s}) goto {n}"
 encoding = ["111010010000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is unordered or greater or equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is unordered or greater than or equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10475,7 +10475,7 @@ syntax = "ifcs goto {n}"
 encoding = ["1110100101000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (cs); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (cs); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -10496,7 +10496,7 @@ syntax = "if ({r} < {s}) goto {n}"
 encoding = ["111010011000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less than the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10532,7 +10532,7 @@ syntax = "iff ({r} < {s}) goto {n}"
 encoding = ["111010011000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less than the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -10692,7 +10692,7 @@ syntax = "ifcc goto {n}"
 encoding = ["1110100111000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (cc); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (cc); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -11060,7 +11060,7 @@ syntax = "if ({r} > {s}) goto {n}"
 encoding = ["111011000000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater than the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11096,7 +11096,7 @@ syntax = "iff ({r} u> {s}) goto {n}"
 encoding = ["111011000000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is unordered or greater the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is unordered or greater than the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11256,7 +11256,7 @@ syntax = "ifhi goto {n}"
 encoding = ["1110110001000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (hi); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (hi); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -11277,7 +11277,7 @@ syntax = "if ({r} <= {s}) goto {n}"
 encoding = ["111011001000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less or equal the second (`if` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than or equal to the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11313,7 +11313,7 @@ syntax = "iff ({r} <= {s}) goto {n}"
 encoding = ["111011001000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less or equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than or equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11473,7 +11473,7 @@ syntax = "ifls goto {n}"
 encoding = ["1110110011000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (ls); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (ls); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -11494,7 +11494,7 @@ syntax = "ifs ({r} >= {s}) goto {n}"
 encoding = ["111011010000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater or equal the second (`ifs` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than or equal to the second (`ifs` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11530,7 +11530,7 @@ syntax = "iff ({r} >= {s}) goto {n}"
 encoding = ["111011010000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater or equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than or equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11690,7 +11690,7 @@ syntax = "ifge goto {n}"
 encoding = ["1110110101000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (ge); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (ge); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -11711,7 +11711,7 @@ syntax = "ifs ({r} < {s}) goto {n}"
 encoding = ["111011011000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less than the second (`ifs` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than the second (`ifs` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11747,7 +11747,7 @@ syntax = "iff ({r} u< {s}) goto {n}"
 encoding = ["111011011000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is unordered or less the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is unordered or less than the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11907,7 +11907,7 @@ syntax = "iflt goto {n}"
 encoding = ["1110110111000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (lt); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (lt); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -11928,7 +11928,7 @@ syntax = "ifs ({r} > {s}) goto {n}"
 encoding = ["111011100000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater than the second (`ifs` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than the second (`ifs` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -11964,7 +11964,7 @@ syntax = "iff ({r} > {s}) goto {n}"
 encoding = ["111011100000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is greater than the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is greater than the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -12124,7 +12124,7 @@ syntax = "ifgt goto {n}"
 encoding = ["1110111001000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (gt); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (gt); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -12145,7 +12145,7 @@ syntax = "ifs ({r} <= {s}) goto {n}"
 encoding = ["111011101000ssss", "rrrr0--nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is less or equal the second (`ifs` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is less than or equal to the second (`ifs` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -12181,7 +12181,7 @@ syntax = "iff ({r} u<= {s}) goto {n}"
 encoding = ["111011101000ssss", "rrrr10-nnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Compare two registers and branch when the first is unordered or less or equal the second (`iff` form); the target is a signed 10-bit halfword offset."
+summary = "Compare two registers and branch when the first is unordered or less than or equal to the second (`iff` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump."
@@ -12341,7 +12341,7 @@ syntax = "ifle goto {n}"
 encoding = ["1110111011000000", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "simm", scale = 2 } }
 group = "branches"
-summary = "Branch on the condition flags (le); the target is a signed 17-bit halfword offset."
+summary = "Branch on the condition flags (le); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known."
@@ -22493,4 +22493,52 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn.example]]
 bytes = "ef e8 ff ff"
 text = "r15_r14 -= h[r15 ++= r15.h]*h[r15 ++= r15.l] (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+# ---- DSP and SIMD: register-name pairs ----
+
+[[insn]]
+id = "addsub.pqq.sat"
+syntax = "{r} = {s} {n} {m} {p}"
+encoding = ["1110010001--uu-p", "rrr-ttt-sss-nnss"]
+fields = { r = "pair", s = "pair_regs", n = { kind = "enum", values = ["+|+", "+|-", "-|+", "-|-"] }, m = { kind = "pair_regs", letters = "tu" }, p = { kind = "enum", values = ["(usat)", "(ssat)"] } }
+group = "dsp"
+summary = "Two-lane add/subtract with a sign pattern (+|+, +|-, -|+, -|-) and saturation (usat or ssat) on two register-name pairs, result to a register pair; semantics beyond the syntax unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The operands name two registers of one 64-bit pair (pair_regs); the assembler refuses names from different pairs (\"should in same 64-bit register as previous register\")."
+
+[[insn.example]]
+bytes = "40 e4 00 00"
+text = "r1_r0 = r0,r0 +|+ r0,r0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4c e4 00 0e"
+text = "r1_r0 = r0,r0 +|+ r15,r15 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 e4 0c 00"
+text = "r1_r0 = r0,r0 -|- r0,r0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "41 e4 00 00"
+text = "r1_r0 = r0,r0 +|+ r0,r0 (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 e4 00 e0"
+text = "r15_r14 = r0,r0 +|+ r0,r0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 e4 e3 00"
+text = "r1_r0 = r15,r15 +|+ r0,r0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4d e4 ef ee"
+text = "r15_r14 = r15,r15 -|- r15,r15 (ssat)"
 origin = "oracle:objdump+clang:20260730.1"
