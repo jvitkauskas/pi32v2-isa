@@ -9,6 +9,7 @@ import os
 import random
 import re
 import subprocess
+import sys
 import tarfile
 import tempfile
 import urllib.request
@@ -687,3 +688,33 @@ def linkcompare(oracle, path, flags=(), include=(), define=(), table=None, featu
         if sa.get(name) != sb.get(name):
             diffs.append(f"linked section {name}: JieLi {sa.get(name, ('-',))[0]} vs ours {sb.get(name, ('-',))[0]}, contents differ")
     return diffs
+
+
+def objdumpcompare(oracle, path, options=(), table=None):
+    """Run JieLi's objdump and this repo's (pi32v2isa.objdump) on a file with the same options and compare the
+    output text line by line. Returns a list of differences, each "line N: ..." (empty when identical)."""
+    import difflib
+    import io
+    from . import objdump
+
+    code, theirs, err = oracle._run([oracle.objdump, *options, path])
+    saved, saved_err = sys.stdout, sys.stderr
+    sys.stdout = buf = io.StringIO()
+    sys.stderr = io.StringIO()
+    try:
+        status = objdump.main([*options, str(path)], tab=table)
+    finally:
+        sys.stdout, sys.stderr = saved, saved_err
+    if code or status:
+        return [] if bool(code) == bool(status) else [f"exit status: JieLi {code}, ours {status}"]
+    mine = buf.getvalue()
+    if theirs == mine:
+        return []
+    a, b = theirs.splitlines(), mine.splitlines()
+    diffs = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        diffs.append(f"line {i1 + 1}: JieLi {a[i1:i2][:3]!r}{' ...' if i2 - i1 > 3 else ''}  ours {b[j1:j2][:3]!r}"
+                     f"{' ...' if j2 - j1 > 3 else ''}")
+    return diffs or ["the lines agree but the text ends differently"]

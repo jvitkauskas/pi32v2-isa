@@ -161,8 +161,48 @@ def cmd_oracle(args):
     return 1 if failed else 0
 
 
+STANDARD_OBJDUMP_SETS = [["-d"], ["-d", "-mcpu=r3"], ["-d", "-r"], ["-D"], ["-h"], ["-t"], ["-r"], ["-s"]]
+
+
+def cmd_objdumpcompare(argv):
+    """oracle objdumpcompare FILE... [objdump options]: JieLi's objdump against ours, line by line. Without
+    options every standard set (-d, -d -mcpu=r3, -d -r, -D, -h, -t, -r, -s) is run. --show N, --release R."""
+    from . import oracle
+
+    files, opts, show, release = [], [], 8, oracle.DEFAULT_RELEASE
+    it = iter(argv)
+    for a in it:
+        if a == "--show":
+            show = int(next(it))
+        elif a == "--release":
+            release = next(it)
+        elif a in ("-j", "-section"):
+            opts += [a, next(it, "")]
+        elif a.startswith("-"):
+            opts.append(a)
+        else:
+            files.append(a)
+    o = oracle.Oracle(release)
+    t = table.load()
+    bad = 0
+    for path in files:
+        for sets in ([opts] if opts else STANDARD_OBJDUMP_SETS):
+            diffs = oracle.objdumpcompare(o, path, sets, t)
+            print(f"{path} {' '.join(sets)}: " + ("identical" if not diffs else f"{len(diffs)} differences"))
+            for d in diffs[:show]:
+                print(f"  {d}")
+            bad += bool(diffs)
+    return 1 if bad else 0
+
+
 def main(argv=None):
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)     # quiet when piped into head
+    if (sys.argv[1:] if argv is None else argv)[:2] == ["oracle", "objdumpcompare"]:
+        return cmd_objdumpcompare((sys.argv[1:] if argv is None else argv)[2:])
+    if (sys.argv[1:] if argv is None else argv)[:1] == ["objdump"]:     # its options are objdump's, not argparse's
+        from . import objdump
+
+        return objdump.main((sys.argv[1:] if argv is None else argv)[1:])
     p = argparse.ArgumentParser(prog="pi32v2isa")
     p.add_argument("--table", default=table.TABLE, help="instruction table (default: isa/pi32v2.toml)")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -172,6 +212,7 @@ def main(argv=None):
     d.add_argument("--base", type=lambda s: int(s, 0), default=0, help="address of the first byte")
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
+    sub.add_parser("objdump", help="objdump FILE... [-d -D -h -t -r -s -j SECTION -mcpu=r3] (docs/OBJDUMP.md)")
     a = sub.add_parser("as", help="assemble a pi32v2 source file into an ELF object (docs/ASSEMBLER.md)")
     a.add_argument("input", help="assembly source (- for stdin); .S files go through cpp")
     a.add_argument("-o", "--output", help="object file to write (default: the input's name with .o)")
