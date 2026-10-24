@@ -41,28 +41,36 @@ the table). Both images now read the same with this repo's objdump as with JieLi
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
-source `compiler`) and from the FM-1 itself (source `hardware`): 770 of the 803 forms (parallel twins not
+source `compiler`) and from the FM-1 itself (source `hardware`): 773 of the 803 forms (parallel twins not
 counted, 282 of which ran too) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
 stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md), and the
 `if` blocks, `rep` loops, table branches and parallel twins in [run 3](../hw/fm1-2026-10-24-v3/README.md), and
 40 additional control, return, special-register and unnamed-block forms in [run 4](../hw/fm1-2026-10-24-v4/README.md).
-Every non-parallel form has now been attempted; the other 33 have failure observations without results.
+Every non-parallel form has now been attempted. Run 5 adds successful `syscall`, `hbkpt` and `btbclr` captures with RAM handlers;
+the other 30 have failure observations without results. Its six `iff.ne.rr.1`..`.6` forms match AND-nonzero
+blocks on this chip (480 earlier cases and 48 distinguishing follow-ups).
 Executable models of the settled forms (`tools/hwtest/semantics/`) match every captured case, flags, memory,
 `sp`, `rets` and the path taken included. The `psr` flags (N, Z, C, V in bits 3..0, and which forms write which)
 are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in [ISA.md](ISA.md). Still open:
 
-- Control effects still open: `callns.r` depends on its operand and flags (r0 followed rets; r7/r15 also
-  changed sp/r0 with flags zero and reset with flags 15), mode changes of the return variants and
+- Control effects still open: `callns.r` selects rets/reti/retx/rete by the encoded field low two bits
+  in controlled [run-5](../hw/fm1-2026-10-24-v5/README.md) probes of all sixteen fields, with flags 0 and 15;
+  its mode effects, mode changes of the return variants and
   `gotoss.xl`, icfg bits other than bit 9, event delivery/consumption, lock exclusion and barrier ordering.
   The rete-only pops and a multi-register `pop.srmask` sequence initially hung, then completed on a
   motherboard USB port; the earlier failures are not established as instruction traps. `hbkpt` hung
   again on that port, then reset in a final retry using the other RAM slot. [Run 4](../hw/fm1-2026-10-24-v4/README.md) separates captures from failures.
+- RAM handlers in run 5 identify table entry 2 for `syscall` (reti/rti), entry 0 for `bkpt`/`hbkpt`
+  (rete/rte works in both slots), and entry 1 for the delayed `btbclr` exception. Debug reti/rti handlers
+  returned captures but following uploads hung; reaching the main instruction in those failed batches,
+  including the earlier `swi 0` batch, is unproved. Fresh hooked `swi 0` completed without handler entry;
+  `idle` reset. Other modes, software-interrupt delivery/acknowledgement and the branch-buffer effect
+  of `btbclr` remain open.
 - Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks,
   an unprimed `wfe`, and software-interrupt numbers other than 0.
-- `iff.ne.rr.1`..`.6`: true for equal or unordered clean operands, but also for many ordered unequal random
-  words; no rule found ([run 3](../hw/fm1-2026-10-24-v3/README.md)).
-- `copex.ppi`: depends on something besides its operands (identical inputs gave different results in mode
-  15); internal state or history is suspected ([report](../hw/report-q.md)).
+- `copex.ppi`: run 5 reproduces different mode-15 outputs after restoring all GPR inputs and flags,
+  including the old destination, and inserting waits. Unobserved state/history remains unresolved
+  ([run 5](../hw/fm1-2026-10-24-v5/README.md), earlier [report](../hw/report-q.md)).
 - Instruction revision 3 on this chip: it is not implemented as such. `popcnt.rr` does nothing, and the other
   revision-3 forms (`popcnt.r_pair`, `sat8.rr`, `vsat16`, `unpack4`, `sum` with `usat`/`ssat`/`msat`) behave
   exactly as an older form whose encoding differs by one selector bit. What they do on a revision-3 core is

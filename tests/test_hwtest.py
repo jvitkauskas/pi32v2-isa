@@ -74,12 +74,28 @@ class Pipeline(unittest.TestCase):
     def test_analysis_keeps_setup_and_readback(self):
         self.simulate()
         c = self.manifest["cases"][-1]
-        c.update(before=[{"id": "mov.r_sr", "values": {"s": 3, "r": 8}}], after=[], entry=c["stub"] - 4)
+        c.update(before=[{"id": "mov.r_sr", "values": {"s": 3, "r": 8}}], after=[], entry=c["stub"] - 4,
+                 model="test.context")
         (self.d / "batch-selftest-000.json").write_text(json.dumps(self.manifest))
         records, problems, _ = analyze.analyse(self.d)
         self.assertFalse(problems)
-        for key in ("before", "after", "entry"):
+        for key in ("before", "after", "entry", "model"):
             self.assertEqual(records[-1][key], c[key])
+
+    def test_context_model_overrides_single_instruction_model(self):
+        self.simulate()
+        records, _, _ = analyze.analyse(self.d)
+        rec = records[0]
+        rec['model'] = 'test.context'
+        def wrong(R, flags, op):
+            return {0: R[0] ^ 1}, flags
+        def context(R, flags, op):
+            return {}, flags
+        tab = gen.table.load()
+        pats = {rec['batch']: self.manifest['pattern']}
+        self.assertEqual(check.check([rec], tab, {'nop': wrong}, pats=pats), {})
+        result = check.check([rec], tab, {'nop': wrong, 'test.context': context}, pats=pats)
+        self.assertEqual(result['nop']['ok'], 1)
 
     def test_special_waves_build(self):
         d = Path(tempfile.mkdtemp())
@@ -105,12 +121,14 @@ class CustomCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "custom.json"
             source = [{"id": "mov.sr_r", "values": {"r": 0, "s": 3}, "in": list(range(16)),
-                       "force": True, "before": [setup], "after": [read], "misalign": misalign}
+                       "force": True, "before": [setup], "after": [read], "misalign": misalign,
+                       "model": "test.context"}
                       for misalign in (False, True)]
             path.write_text(json.dumps(source))
             cases = gen.cases_from_file(tab, path)
             image, syms = gen.build_batch(cases, d)
             for n, case in enumerate(cases):
+                self.assertEqual(case["model"], "test.context")
                 stub, entry = syms[f"hw_stub_{n}"], syms[f"hw_entry_{n}"]
                 self.assertEqual(stub % 4, 2 if source[n]["misalign"] else 0)
                 self.assertEqual(stub - entry, 6)

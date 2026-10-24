@@ -80,6 +80,21 @@ result. `entry`, when present, is where setup starts; `stub` is still the tested
 For blocks, readback follows the generated then/else markers. An unconditional jump skips fall-through
 readback, so return probes must explicitly target their restore sequence.
 
+`model` optionally names a context model in `check.py`, overriding the form's ordinary model. It is carried
+through the manifest and analysis without changing the image. An unknown name is reported as unmodeled;
+this prevents a trap experiment's setup from being checked as if it were a bare instruction.
+
+The optional `hw_probe_handler` in `runner.S` saves GPRs and flags, increments `hw_probe_seen`, records
+icfg/reti/retx/rete and entry sp at `hw_probe_context+52..68`, then sets reti from `hw_probe_resume` and
+tries `rti`. Nothing installs it automatically. Probes must save/restore their RAM vector pointers and core
+state. Its presence does not establish the ROM's vector layout or exception-return convention.
+Entries `hw_probe_handler_0`, `_1`, `_2` and `_120` first preserve r0/r1 and write that tag at
+`hw_probe_context+72`, then join the same handler. The caller must install each at the intended RAM entry.
+`hw_probe_handler_0_rete` also sets `hw_probe_context+76` to 1: the common handler then writes the
+continuation to rete and returns with `rte`. Its default zero selects reti/rti. Run 5 found that both
+debug forms returned captures with reti/rti but the following upload hung; rete/rte permitted subsequent
+uploads in both slots. A capture alone is insufficient to establish a usable exception return.
+
 `"force": true` permits a form outside the automatic waves and requires `--batch 1` (in addition to the
 two calibration nops). It does not prove that a form is safe. Preserve the ROM's state around special-register
 writes and keep all stack/store addresses in the allocated RAM. The generator verifies bytes and layout;

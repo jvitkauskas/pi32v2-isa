@@ -1,0 +1,4050 @@
+[
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 8
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 8,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 9
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 9,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 10
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 10,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 11
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 11,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 12
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 12,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 13
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 13,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 14
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 14,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 15
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 0,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 15,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 0
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 8
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 8,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 9
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 9,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 10
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 10,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 11
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 11,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 12
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 12,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 13
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 13,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 14
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 14,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  },
+  {
+    "id": "callns.r",
+    "values": {
+      "x": 15
+    },
+    "in": [
+      "hw_stub_2+22",
+      "hw_stub_2+10",
+      "hw_stub_2+18",
+      "hw_stub_2+14",
+      "hw_stub_2+6",
+      305399045,
+      305399302,
+      "hw_stub_2+22",
+      305399816,
+      "hw_stub_2+26",
+      305400330,
+      305400587,
+      305400844,
+      305401101,
+      305401358,
+      305401615
+    ],
+    "flags": 15,
+    "force": true,
+    "before": [
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 1
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 4
+        }
+      },
+      {
+        "id": "st.w.sp",
+        "values": {
+          "r": 9,
+          "n": 0
+        }
+      },
+      {
+        "id": "push.rmask",
+        "values": {
+          "m": 64512
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 15,
+          "y": 7
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 4,
+          "n": 260
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 5,
+          "n": 261
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 6,
+          "n": 262
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 7,
+          "n": 263
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 8,
+          "n": 264
+        }
+      },
+      {
+        "id": "li.s16",
+        "values": {
+          "r": 9,
+          "n": 265
+        }
+      },
+      {
+        "id": "mov.rr",
+        "values": {
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 5,
+          "r": 2
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 11,
+          "r": 3
+        }
+      },
+      {
+        "id": "mov.r_sr",
+        "values": {
+          "s": 14,
+          "r": 8
+        }
+      },
+      {
+        "id": "pop.rmask",
+        "values": {
+          "n": 64512
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 14,
+          "r": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 11,
+          "r": 14
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 0,
+          "r": 10
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 1,
+          "r": 11
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 2,
+          "r": 12
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 3,
+          "r": 13
+        }
+      },
+      {
+        "id": "li.u32",
+        "values": {
+          "r": 10,
+          "n": 15
+        }
+      },
+      {
+        "id": "mov.sr_r",
+        "values": {
+          "s": 5,
+          "r": 10
+        }
+      }
+    ],
+    "model": "v5.callns-targets"
+  }
+]

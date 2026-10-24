@@ -109,7 +109,7 @@ def analyse(outdir):
             rec.update(decode_extra(m, c, w))
             if "pair_b" in c:                # the load or store that followed a parallel twin
                 rec["pair_b"] = c["pair_b"]
-            for key in ("before", "after", "entry"):
+            for key in ("before", "after", "entry", "model"):
                 if key in c:
                     rec[key] = c[key]
             records.append(rec)

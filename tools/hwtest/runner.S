@@ -295,3 +295,80 @@ hw_send:	.4byte 0
 hw_savedsp:	.4byte 0
 hw_in:		.space 76
 hw_out:		.space 212
+
+/* Optional RAM-only trap probe. Cases install and restore the candidate vector table themselves.
+   The tested ROM route and its ability to return via rti are experimental. */
+	.text
+	.globl hw_probe_handler
+/* Tagged entries preserve GPRs and flags before recording which candidate vector was followed. */
+	.globl hw_probe_handler_0, hw_probe_handler_1, hw_probe_handler_2, hw_probe_handler_120
+	.globl hw_probe_handler_0_rete
+hw_probe_handler_0_rete:
+	[--sp] = {r1-r0}
+	r0 = hw_probe_context
+	r1 = 1
+	[r0+76] = r1
+	r0 = 0
+	goto hw_probe_tag
+hw_probe_handler_0:
+	[--sp] = {r1-r0}
+	r0 = 0
+	goto hw_probe_tag
+hw_probe_handler_1:
+	[--sp] = {r1-r0}
+	r0 = 1
+	goto hw_probe_tag
+hw_probe_handler_2:
+	[--sp] = {r1-r0}
+	r0 = 2
+	goto hw_probe_tag
+hw_probe_handler_120:
+	[--sp] = {r1-r0}
+	r0 = 120
+hw_probe_tag:
+	r1 = hw_probe_context
+	[r1+72] = r0
+	{r1-r0} = [sp++]
+	goto hw_probe_handler
+hw_probe_handler:
+	[--sp] = {rets, r15-r0}
+	r0 = psr
+	[--sp] = {r0}
+	r0 = hw_probe_seen
+	r1 = [r0+0]
+	r1 = r1 + 1
+	[r0+0] = r1
+	r0 = hw_probe_context
+	r1 = icfg
+	[r0+52] = r1
+	r1 = reti
+	[r0+56] = r1
+	r1 = retx
+	[r0+60] = r1
+	r1 = rete
+	[r0+64] = r1
+	r1 = sp
+	r1 = r1 + 72
+	[r0+68] = r1
+	r0 = hw_probe_resume
+	r0 = [r0+0]
+	r1 = hw_probe_context
+	r1 = [r1+76]
+	if (r1 != 0) goto hw_probe_return_rete
+	reti = r0
+	{r0} = [sp++]
+	psr = r0
+	{rets, r15-r0} = [sp++]
+	rti
+hw_probe_return_rete:
+	rete = r0
+	{r0} = [sp++]
+	psr = r0
+	{rets, r15-r0} = [sp++]
+	rte
+	.data
+	.p2align 2
+	.globl hw_probe_seen, hw_probe_resume, hw_probe_context
+hw_probe_seen:	.4byte 0
+hw_probe_resume:	.4byte 0
+hw_probe_context:	.space 80

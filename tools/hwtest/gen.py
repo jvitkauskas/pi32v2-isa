@@ -423,7 +423,8 @@ def cases_from_file(tab, path):
     boundary instead of on one), "before" / "after" (lists of {"id", "values"}: instructions run before / after
     the one under test, e.g. to set or read a special register), "force" (true: run a form the generator would
     not, e.g. control forms, one case per batch), and "bytes" (hex) to run exactly those bytes, which
-    must decode as the entry with those values."""
+    must decode as the entry with those values. "model" selects a context model in check.py instead of the
+    entry's ordinary single-instruction model; it has no effect on the image."""
     cases = []
     for c in json.loads(Path(path).read_text()):
         i = tab.by_id(c["id"])
@@ -441,7 +442,7 @@ def cases_from_file(tab, path):
                 raise SystemExit(f"{i.id}: bytes {data.hex()} do not decode as this entry with these values")
         case = {"id": i.id, "values": values, "bytes": data.hex(), "text": codec.format(i, values), "in": regs,
                 "flags": c.get("flags", 0) & 0xF}
-        for k in ("sp", "rets", "taken", "misalign", "force"):
+        for k in ("sp", "rets", "taken", "misalign", "force", "model"):
             if k in c:
                 case[k] = c[k]
         if i.block:                     # the block's body: markers (block_lines)

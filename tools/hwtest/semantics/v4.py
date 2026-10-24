@@ -76,6 +76,20 @@ def trace(R, f, o, st):
         elif id_ == 'st.w':
             addr = R[v['b']] + codec.value(TAB.by_id(id_).fields['n'], v['n'], len(TAB.by_id(id_).field_bits('n')))
             mem[addr & M] = R[v['d']]
+        elif id_ == 'st.w.sp':
+            addr = sr[14] + codec.value(TAB.by_id(id_).fields['n'], v['n'], len(TAB.by_id(id_).field_bits('n')))
+            mem[addr & M] = R[v['r']]
+        elif id_ == 'push.rmask':
+            regs = [r for r in range(16) if v['m'] >> r & 1]
+            sr[14] -= 4 * len(regs)
+            for k, r in enumerate(regs):
+                mem[sr[14] + 4 * k] = R[r]
+        elif id_ == 'pop.rmask':
+            for r in range(16):
+                if v['n'] >> r & 1:
+                    addr = sr[14]
+                    R[r] = mem[addr] if addr in mem else st.load(addr)
+                    sr[14] += 4
         elif id_ in ('pop.srl', 'pop.srmask'):
             mask = v.get('m', v.get('n'))
             addr = sr[14]

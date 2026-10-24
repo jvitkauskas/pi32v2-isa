@@ -23,6 +23,9 @@ scratch, and load(address, size) for the scratch as it was before the case), and
 "regs" ({register: value}), "flags", "sp", "rets", "exit" (0 fell through, 1 taken) and "mem" ({word address:
 value} for every scratch word it changes). Keys it leaves out must be unchanged (exit: 0); "flags": None means not
 modelled. A word stored over the 16 words below the final sp (where the runner's exit pushes) is not seen.
+
+A record may name a context model with "model"; it overrides the ordinary model for that entry. Unknown
+context names are reported as unmodeled, even when the instruction itself has an ordinary model.
 """
 import argparse
 import importlib
@@ -124,10 +127,11 @@ def check(records, tab, models, ids=None, pats=None):
     out = defaultdict(lambda: {"cases": 0, "ok": 0, "bad": []})
     for rec in records:
         i = rec["id"]
-        if i not in models or (ids and i not in ids):
+        model = rec.get("model", i)
+        if model not in models or (ids and i not in ids):
             continue
         insn = tab.by_id(i)
-        fn = models[i]
+        fn = models[model]
         op = operands(insn, rec["values"])
         v2 = "exit" in rec
         if takes_state(fn):
@@ -201,10 +205,12 @@ def main():
         for rec, why in s["bad"][:a.show]:
             print(f"    {rec['text']}  in {[hex(v) for v in rec['in']]} flags {rec['flags_in']:04b}: {why}")
     tested = {r["id"] for r in records}
+    missing = {(r["id"], r.get("model", r["id"])) for r in records
+               if r.get("model", r["id"]) not in models}
     print(f"{good}/{len(res)} modelled entries match on every case; "
-          f"{len(tested - set(models))} of {len(tested)} tested entries have no model")
+          f"{len({i for i, _ in missing})} of {len(tested)} tested entries have unmodeled cases")
     if a.missing:
-        print("no model:", " ".join(sorted(tested - set(models))))
+        print("no model:", " ".join(sorted(i if i == m else f"{i} ({m})" for i, m in missing)))
     return 0 if good == len(res) else 1
 
 
