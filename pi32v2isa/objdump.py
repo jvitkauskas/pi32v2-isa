@@ -30,22 +30,6 @@ OPTIONS_HELP = """usage: objdump [options] FILE...
 # Instruction forms JieLi's objdump decodes only when told the CPU has them (found with `oracle` probes of every
 # table example, docs/OBJDUMP.md): -mcpu=r3 / -mcpu=r4 / -mattr=+fprev1 enable the floating-point ones; -mcpu=r2
 # and r3 also enable the six `copex` / `shiftr ... mode` forms.
-FPU_IDS = frozenset("""
-add.f.rrr add.f.rrr.p bfeq.rr bfeq.rr.l bfge.rr bfge.rr.l bfgt.rr bfgt.rr.l bfle.rr bfle.rr.l bflt.rr
-bflt.rr.l bfne.rr.l bford.rr.l bfueq.rr.l bfuge.rr bfuge.rr.l bfugt.rr bfugt.rr.l bfule.rr bfule.rr.l bfult.rr
-bfult.rr.l bfune.rr bfune.rr.l bfunknown.rr.l bfuno.rr.l div.f.rrr div.f.rrr.p fcmp.rr fcmp.rr.p fmax.rrr
-fmax.rrr.p fmin.rrr fmin.rrr.p ftof.ceil.rr ftof.ceil.rr.p ftof.even.rr ftof.even.rr.p ftof.floor.rr
-ftof.floor.rr.p ftof.full.rr ftof.full.rr.p ftof.half.rr ftof.half.rr.p ftof.trunc.rr ftof.trunc.rr.p
-ftoi.ceil.rr ftoi.ceil.rr.p ftoi.even.rr ftoi.even.rr.p ftoi.floor.rr ftoi.floor.rr.p ftoi.trunc.rr
-ftoi.trunc.rr.p ftou.ceil.rr ftou.ceil.rr.p ftou.even.rr ftou.even.rr.p ftou.floor.rr ftou.floor.rr.p
-ftou.trunc.rr ftou.trunc.rr.p iff.eq.rr iff.ge.rr iff.gt.rr iff.le.rr iff.lt.rr iff.ne.rr.1 iff.ne.rr.2
-iff.ne.rr.3 iff.ne.rr.4 iff.ne.rr.5 iff.ne.rr.6 iff.uge.rr iff.ugt.rr iff.ule.rr iff.ult.rr iff.une.rr itof.rr
-itof.rr.p madd.f.rrr madd.f.rrr.p msub.f.rrr msub.f.rrr.p mul.f.rrr mul.f.rrr.p sub.f.rrr sub.f.rrr.p utof.rr
-utof.rr.p
-""".split())
-R2_IDS = frozenset("copex.ppi copex.ppi.p shiftr.rpi.mode shiftr.rpi.mode.p shiftr.rpr.mode shiftr.rpr.mode.p".split())
-
-
 # Relocation type names objdump knows (docs/ELF.md lists the ones the assembler writes); others print "Unknown".
 RELOC_NAMES = dict(elf.RELOCS)
 RELOC_NAMES.update({9: "R_PI32V2_GOT", 10: "R_PI32V2_GOTFUNCDESC", 12: "R_PI32V2_FUNCDESCVALUE",
@@ -119,20 +103,18 @@ class Decoder:
 
 
 def decoder_for(tab, mcpu=None, mattr=()):
-    """The decoder for a CPU choice: no -mcpu leaves out the floating-point and r2 forms."""
-    off = FPU_IDS | R2_IDS
-    cpu = (mcpu or "").lower()
-    if cpu in ("r3", "r4"):
-        off = frozenset()
-    elif cpu == "r2":
-        off = FPU_IDS
-    elif cpu not in ("", "r2", "r3", "r4"):
+    """The decoder for a CPU choice, from the table's absent_on and decode_requires (no -mcpu is "generic")."""
+    cpu = (mcpu or "generic").lower()
+    if cpu not in SUPPORTED_CPUS:
         raise ObjdumpError(f"unsupported -mcpu={mcpu}")
-    if any(a.lstrip("+") == "fprev1" for a in mattr):
-        off = off - FPU_IDS
     given = {a.lstrip("+") for a in mattr}
-    off = off | {i.id for i in tab.insns if set(i.decode_requires) - given}   # e.g. sat8 without +instrev3
+    off = frozenset(i.id for i in tab.insns if not tablemod.shown_by_objdump(i, cpu, given))
     return Decoder(tab, off)
+
+
+# models whose whole encoding space was compared with JieLi's objdump; r1 and r5 read some words as other
+# instructions, and the rev3 models were not swept (docs/GAPS.md)
+SUPPORTED_CPUS = ("generic", "r2", "r3", "r4")
 
 
 # --- reading the file ------------------------------------------------------------------------------------------

@@ -98,6 +98,27 @@ class RealTable(unittest.TestCase):
         self.assertEqual(codec.encode(i, {"r": 3, "n": 0x01C07F00}), bytes.fromhex("c3 ff 00 7f c0 01"))
 
 
+class CpuModels(unittest.TestCase):
+    def test_shown_by_objdump(self):
+        """The objdump visibility rules measured on JieLi's objdump (docs/TABLE-FORMAT.md, CPU models)."""
+        t = table.load()
+        fpu, copex, plain, rev3 = (t.by_id(i) for i in ("add.f.rrr", "copex.ppi", "nop", "sat8.u.rr"))
+        self.assertFalse(table.shown_by_objdump(fpu))                      # no -mcpu: no FPU
+        self.assertTrue(table.shown_by_objdump(fpu, "generic", ["fprev1"]))
+        self.assertTrue(table.shown_by_objdump(fpu, "r3"))                 # r3 implies fprev1
+        self.assertFalse(table.shown_by_objdump(fpu, "r2"))
+        self.assertFalse(table.shown_by_objdump(copex))                    # copex needs a named model
+        self.assertTrue(table.shown_by_objdump(copex, "r2"))
+        self.assertTrue(table.shown_by_objdump(plain, "r1"))
+        self.assertFalse(table.shown_by_objdump(rev3, "r3"))
+        self.assertTrue(table.shown_by_objdump(rev3, "r3", ["instrev3"]))
+        self.assertEqual(sum(1 for i in t.insns if "r1" in i.absent_on), 426)
+
+    def test_unknown_model_is_an_error(self):
+        e = insn(absent_on=["r9"])
+        self.assertTrue(any("unknown CPU model" in p for p in problems(e)))
+
+
 class Checks(unittest.TestCase):
     def test_overlap(self):
         a = insn(id="a", words=["000000001100xxxx"], fields={"x": "gpr"}, syntax="a {x}")

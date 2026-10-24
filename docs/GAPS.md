@@ -70,9 +70,8 @@ notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
 
 ## Known to exist, not needed yet
 
-- Which CPU models decode which forms: JieLi's objdump hides 91 floating-point forms (all `iff` blocks and
-  `bf*` branches among them) unless given `-mcpu=r3` or `r4`, adds 6 with `-mcpu=r2`, and decodes 418 forms
-  differently with `-mcpu=r1` ([OBJDUMP.md](OBJDUMP.md)). The table has no field for the CPU model yet; the
-  lists are in `pi32v2isa/objdump.py`.
+- Other CPU models: the table records which models' objdump shows each form (`absent_on`, `decode_requires`,
+  [TABLE-FORMAT.md](TABLE-FORMAT.md#cpu-models)), but only `r3` was swept; what `r1` and `r5` decode in place of
+  the 426 forms they lack, and anything the rev3 models add, is not in the table.
 - Instruction revisions and newer CPU models, and which instructions each needs (`instrev3` so far).
 - The other CPU models `r1`, `r2`, `r4`, `r5` and how they differ from `r3`.

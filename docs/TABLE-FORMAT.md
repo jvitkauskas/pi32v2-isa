@@ -14,6 +14,7 @@ fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
 group = "memory"                    # optional: a heading for docs/ISA.md
 requires = []                       # CPU features the assembler needs for it, e.g. ["instrev3"]
 decode_requires = []                # optional: features without which JieLi's objdump does not show it
+absent_on = []                      # optional: CPU models whose objdump does not show it, see "CPU models"
 summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"                # guessed | documented | confirmed
 sources = ["oracle"]                # ids from docs/SOURCES.md
@@ -122,6 +123,16 @@ range. An empty `rmask` or `srmask` prints as nothing (`{}`), which JieLi's asse
 list that text in `asm_rejects`.
 
 New kinds are added here and in `pi32v2isa/table.py` and `pi32v2isa/codec.py` together.
+
+## CPU models
+
+JieLi's objdump decodes according to `-mcpu` (one of `r1`..`r5`, `r2v3`, `r3v3`, `r4v3`, `r4v3s`; none is called
+`generic` here) and `-mattr` features. An entry is shown when its CPU model is not in `absent_on` and its
+`decode_requires` features are given, or implied by the model: `r3`, `r4`, `r5`, `r3v3`, `r4v3` and `r4v3s` imply
+`fprev1` (`pi32v2isa.table.CPU_FEATURES`; `table.shown_by_objdump` applies the rule). Measured 2026-10-24 on every
+entry's examples: 642 entries show everywhere; 91 floating-point forms need `fprev1`; 426 are absent on `r1` and
+`r5`; 6 (`copex`, `shiftr ... mode`) are absent without `-mcpu`. On `r1` and `r5` some of those words decode as
+other instructions, which the table does not describe (only `r3`, the FM-1's, was swept).
 
 ## Status
 

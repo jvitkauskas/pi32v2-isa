@@ -12,6 +12,10 @@ TABLE = ROOT / "isa" / "pi32v2.toml"
 SOURCES = ROOT / "docs" / "SOURCES.md"
 
 STATUSES = ("guessed", "documented", "confirmed")
+# JieLi objdump's -mcpu models ("generic" = no -mcpu) and the features each one implies (docs/TABLE-FORMAT.md)
+CPU_MODELS = ("generic", "r1", "r2", "r3", "r4", "r5", "r2v3", "r3v3", "r4v3", "r4v3s")
+CPU_FEATURES = {"r3": ("fprev1",), "r4": ("fprev1",), "r5": ("fprev1",), "r3v3": ("fprev1",),
+                "r4v3": ("fprev1",), "r4v3s": ("fprev1",)}
 WORD_CHARS = re.compile(r"^[01a-z-]{16}$")
 # In syntax: {x} is field x, {+x} prints "+value" or nothing when the value is 0, {{ and }} are literal braces.
 SYNTAX_TOKEN = re.compile(r"\{\{|\}\}|\{(\+?)([a-z])\}")
@@ -75,6 +79,7 @@ class Insn:
     group: str = ""
     requires: list[str] = field(default_factory=list)          # features the assembler needs for it
     decode_requires: list[str] = field(default_factory=list)   # features without which objdump does not show it
+    absent_on: list[str] = field(default_factory=list)         # CPU models whose objdump does not show it
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
     asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
@@ -151,6 +156,7 @@ def load(path=TABLE):
             group=e.get("group", ""),
             requires=list(e.get("requires", [])),
             decode_requires=list(e.get("decode_requires", [])),
+            absent_on=list(e.get("absent_on", [])),
             notes=e.get("notes", ""),
             examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
                       for x in e.get("example", [])],
@@ -280,6 +286,9 @@ def check(table, sources=None):
             errors.append(f"{where}: asm_syntax uses {{{name}}}, which is not a field")
         if i.body and (i.body not in i.fields or i.fields[i.body].kind not in NUMERIC):
             errors.append(f"{where}: body {i.body!r} is not a uimm or simm field")
+        for cpu in i.absent_on:
+            if cpu not in CPU_MODELS:
+                errors.append(f"{where}: unknown CPU model {cpu!r} in absent_on")
         if i.status not in STATUSES:
             errors.append(f"{where}: unknown status {i.status!r}")
         for s in i.sources:
@@ -314,3 +323,9 @@ def check(table, sources=None):
                 errors.append(f"{i.id}: example {x.bytes.hex(' ')} prints {codec.format(i, got[1])!r}, "
                               f"the example says {x.text!r}")
     return errors
+
+
+def shown_by_objdump(insn, cpu="generic", features=()):
+    """Whether JieLi's objdump with -mcpu=cpu (or none: "generic") and -mattr=features shows this form."""
+    have = set(features) | set(CPU_FEATURES.get(cpu, ()))
+    return cpu not in insn.absent_on and set(insn.decode_requires) <= have
