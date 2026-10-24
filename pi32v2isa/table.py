@@ -77,6 +77,7 @@ class Insn:
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
     asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
+    asm_no_syntax: bool = False   # every printed text is refused or emits no instruction
     asm_wrong: list[str] = field(default_factory=list)     # texts JieLi's assembler is known to mis-assemble
     asm_syntax: str = ""    # how the assembler wants the line, when it differs from objdump's syntax
     body: str = ""          # a block opener: the field whose value is the body's length in bytes
@@ -152,6 +153,7 @@ def load(path=TABLE):
                       for x in e.get("example", [])],
             asm_rejects=list(e.get("asm_rejects", [])),
             asm_wrong=list(e.get("asm_wrong", [])),
+            asm_no_syntax=e.get("asm_no_syntax", False),
             asm_syntax=e.get("asm_syntax", ""),
             body=e.get("body", ""),
         ))
@@ -256,6 +258,10 @@ def check(table, sources=None):
                 errors.append(f"{where}: field {name!r}: values apply only to enum")
             if (f.scale != 1 or f.add) and f.kind not in NUMERIC:
                 errors.append(f"{where}: field {name!r}: scale and add apply only to {', '.join(NUMERIC)}")
+        if not isinstance(i.asm_no_syntax, bool):
+            errors.append(f"{where}: asm_no_syntax must be a boolean")
+        if i.asm_no_syntax and (i.asm_syntax or i.asm_wrong or i.asm_rejects):
+            errors.append(f"{where}: asm_no_syntax cannot be combined with asm_syntax, asm_wrong or asm_rejects")
         names = placeholders(i.syntax)
         for name in set(names) - i.fields.keys():
             errors.append(f"{where}: syntax uses {{{name}}}, which is not a field")

@@ -315,9 +315,10 @@ def confirm(oracle, table, insn):
         elif refused:
             if not isinstance(got, str):
                 problems.append(f"encode {text!r}: outside asm_range, but the assembler gives {got.hex(' ')}")
-        elif text in insn.asm_rejects:
+        elif insn.asm_no_syntax or text in insn.asm_rejects:
             if not isinstance(got, str):
-                problems.append(f"encode {text!r}: listed in asm_rejects, but the assembler gives {got.hex(' ')}")
+                reason = "asm_no_syntax" if insn.asm_no_syntax else "asm_rejects"
+                problems.append(f"encode {text!r}: listed in {reason}, but the assembler gives {got.hex(' ')}")
         elif isinstance(got, str):
             problems.append(f"encode {text!r}: assembler error: {got.splitlines()[0] if got else '?'}")
         elif got != data:
@@ -329,11 +330,10 @@ def confirm(oracle, table, insn):
                 # for one value); the assembler picks one, which is no disagreement
             else:
                 problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
-    if preferred and sum(preferred.values()) == len(texts) - len(insn.asm_rejects) - sum(out_of_range):
-        problems.append(f"encode: the assembler never chose this form (always {', '.join(preferred)})")
     examples = []
     for v in chosen_examples(insn, values_list):
-        examples.append((codec.encode(insn, v), codec.format(insn, v), oracle.origin("objdump+clang")))
+        tool = "objdump+clang-reject" if insn.asm_no_syntax else "objdump+clang"
+        examples.append((codec.encode(insn, v), codec.format(insn, v), oracle.origin(tool)))
     return problems, examples, len(values_list), dict(preferred)
 
 
@@ -487,8 +487,13 @@ def check_examples(oracle, table):
         for (i, x), got in zip(items, decoded):
             if got is None or got[0] != x.bytes or got[1] != x.text:
                 problems.append(f"{i.id}: {x.bytes.hex(' ')} now decodes as {got}, example says {x.text!r}")
+        unavailable = [(i, x) for i, x in items if i.asm_no_syntax]
+        for (i, x), got in zip(unavailable, oracle.encode([x.text for _, x in unavailable], features)):
+            if not isinstance(got, str):
+                problems.append(f"{i.id}: {x.text!r} now assembles despite asm_no_syntax: {got.hex(' ')}")
         plain = [(i, x) for i, x in items
-                 if not i.asm_syntax and not i.body and x.text not in i.asm_rejects and x.text not in i.asm_wrong]
+                 if not i.asm_no_syntax and not i.asm_syntax and not i.body
+                 and x.text not in i.asm_rejects and x.text not in i.asm_wrong]
         for (i, x), got in zip(plain, oracle.encode([x.text for _, x in plain], features)):
             if isinstance(got, str):
                 problems.append(f"{i.id}: {x.text!r} no longer assembles: {got.splitlines()[0] if got else '?'}")

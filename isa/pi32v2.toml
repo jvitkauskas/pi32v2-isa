@@ -37245,3 +37245,4429 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "4d f4 ef ee"
 text = "r15_r14 = r15,r15 -|- r15,r15 (ssat)  #"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ==== round 2: G ====
+
+[[insn]]
+id = "add.rrr.l.p"
+syntax = "{r} = {s} + {t}  #"
+encoding = ["1111000010110100", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "arithmetic"
+summary = "Operation printed `R = R + R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of add.rrr.l: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "b4 f0 00 00"
+text = "r0 = r0 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 00 f0"
+text = "r15 = r0 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 f0 00"
+text = "r0 = r15 + r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 00 0f"
+text = "r0 = r0 + r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b4 f0 f0 ff"
+text = "r15 = r15 + r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sub.modimm.rri.p"
+syntax = "{r} = {s} - {n}  #"
+encoding = ["111100001111rrrr", "ssssnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = "modimm" }
+group = "arithmetic"
+summary = "Subtract a modified immediate from a register."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of sub.modimm.rri: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "f0 f0 00 00"
+text = "r0 = r0 - 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f0 ff 0f"
+text = "r0 = r0 - 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff f0 00 00"
+text = "r15 = r0 - 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f0 00 f0"
+text = "r0 = r15 - 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "ff f0 ff ff"
+text = "r15 = r15 - 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mul.rrr.p"
+syntax = "{r} = {s} * {t}  #"
+encoding = ["1111000111110000", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "arithmetic"
+summary = "Multiply two registers, keeping the low 32 bits."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of mul.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "f0 f1 00 00"
+text = "r0 = r0 * r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f1 00 f0"
+text = "r15 = r0 * r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f1 f0 00"
+text = "r0 = r15 * r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f1 00 0f"
+text = "r0 = r0 * r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "f0 f1 f0 ff"
+text = "r15 = r15 * r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "or.modimm.rri.p"
+syntax = "{r} = {s} | {n}  #"
+encoding = ["111100010100rrrr", "ssssnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = "modimm" }
+group = "logic"
+summary = "OR a register with a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of or.modimm.rri: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "40 f1 00 00"
+text = "r0 = r0 | 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 f1 ff 0f"
+text = "r0 = r0 | 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f f1 00 00"
+text = "r15 = r0 | 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "40 f1 00 f0"
+text = "r0 = r15 | 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "4f f1 ff ff"
+text = "r15 = r15 | 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "xor.modimm.rri.p"
+syntax = "{r} = {s} ^ {n}  #"
+encoding = ["111100010101rrrr", "ssssnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = "modimm" }
+group = "logic"
+summary = "XOR a register with a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of xor.modimm.rri: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "50 f1 00 00"
+text = "r0 = r0 ^ 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "50 f1 ff 0f"
+text = "r0 = r0 ^ 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "5f f1 00 00"
+text = "r15 = r0 ^ 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "50 f1 00 f0"
+text = "r0 = r15 ^ 0x0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "5f f1 ff ff"
+text = "r15 = r15 ^ 0x1FE  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "and.nmodimm.rri.p"
+syntax = "{r} = {s} & {n}  #"
+encoding = ["111100010111rrrr", "ssssnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "modimm", invert = true } }
+group = "logic"
+summary = "AND a register with the complement of a modified immediate (printed as the complemented constant)."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of and.nmodimm.rri: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "70 f1 00 00"
+text = "r0 = r0 & 0xFFFFFFFF  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f1 ff 0f"
+text = "r0 = r0 & 0xFFFFFE01  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f f1 00 00"
+text = "r15 = r0 & 0xFFFFFFFF  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "70 f1 00 f0"
+text = "r0 = r15 & 0xFFFFFFFF  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7f f1 ff ff"
+text = "r15 = r15 & 0xFFFFFE01  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "or.rrr.p"
+syntax = "{r} = {s} | {t}  #"
+encoding = ["1111000110010000", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "logic"
+summary = "Operation printed `R = R | R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of or.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "90 f1 00 00"
+text = "r0 = r0 | r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 00 f0"
+text = "r15 = r0 | r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f0 00"
+text = "r0 = r15 | r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 00 0f"
+text = "r0 = r0 | r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f0 ff"
+text = "r15 = r15 | r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "xor.rrr.p"
+syntax = "{r} = {s} ^ {t}  #"
+encoding = ["1111000110010000", "rrrrttttssss0001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "logic"
+summary = "Operation printed `R = R ^ R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of xor.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "90 f1 01 00"
+text = "r0 = r0 ^ r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 01 f0"
+text = "r15 = r0 ^ r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f1 00"
+text = "r0 = r15 ^ r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 01 0f"
+text = "r0 = r0 ^ r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f1 ff"
+text = "r15 = r15 ^ r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "and.rrr.p"
+syntax = "{r} = {s} & {t}  #"
+encoding = ["1111000110010000", "rrrrttttssss0010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "logic"
+summary = "Operation printed `R = R & R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of and.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "90 f1 02 00"
+text = "r0 = r0 & r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 02 f0"
+text = "r15 = r0 & r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f2 00"
+text = "r0 = r15 & r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 02 0f"
+text = "r0 = r0 & r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 f1 f2 ff"
+text = "r15 = r15 & r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsl.rrr.p"
+syntax = "{r} = {s} << {t}  #"
+encoding = ["1111000111001000", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "shifts"
+summary = "Operation printed `R = R << R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of lsl.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "c8 f1 00 00"
+text = "r0 = r0 << r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 00 f0"
+text = "r15 = r0 << r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f0 00"
+text = "r0 = r15 << r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 00 0f"
+text = "r0 = r0 << r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f0 ff"
+text = "r15 = r15 << r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shl3.rrr.p"
+syntax = "{r} = {s} <<< {t}  #"
+encoding = ["1111000111001000", "rrrrttttssss0001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "shifts"
+summary = "Operation printed `R = R <<< R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of shl3.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "c8 f1 01 00"
+text = "r0 = r0 <<< r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 01 f0"
+text = "r15 = r0 <<< r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f1 00"
+text = "r0 = r15 <<< r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 01 0f"
+text = "r0 = r0 <<< r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f1 ff"
+text = "r15 = r15 <<< r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "lsr.rrr.p"
+syntax = "{r} = {s} >> {t}  #"
+encoding = ["1111000111001000", "rrrrttttssss0010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "shifts"
+summary = "Operation printed `R = R >> R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of lsr.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "c8 f1 02 00"
+text = "r0 = r0 >> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 02 f0"
+text = "r15 = r0 >> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f2 00"
+text = "r0 = r15 >> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 02 0f"
+text = "r0 = r0 >> r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f2 ff"
+text = "r15 = r15 >> r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "shr3.rrr.p"
+syntax = "{r} = {s} >>> {t}  #"
+encoding = ["1111000111001000", "rrrrttttssss0011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "shifts"
+summary = "Operation printed `R = R >>> R`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Parallel twin of shr3.rrr: first word with bit 12 set, printed with a trailing #."
+
+[[insn.example]]
+bytes = "c8 f1 03 00"
+text = "r0 = r0 >>> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 03 f0"
+text = "r15 = r0 >>> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f3 00"
+text = "r0 = r15 >>> r0  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 03 0f"
+text = "r0 = r0 >>> r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c8 f1 f3 ff"
+text = "r15 = r15 >>> r15  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.eq.ppp.v.p"
+syntax = "{r} = all({s} == {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-0000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P == P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.eq.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 00 00"
+text = "r1_r0 = all(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 00 e0"
+text = "r15_r14 = all(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e0 00"
+text = "r1_r0 = all(r15_r14 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 00 0e"
+text = "r1_r0 = all(r1_r0 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e0 ee"
+text = "r15_r14 = all(r15_r14 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.ne.ppp.v.p"
+syntax = "{r} = all({s} != {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-0001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P != P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.ne.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 01 00"
+text = "r1_r0 = all(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 01 e0"
+text = "r15_r14 = all(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e1 00"
+text = "r1_r0 = all(r15_r14 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 01 0e"
+text = "r1_r0 = all(r1_r0 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e1 ee"
+text = "r15_r14 = all(r15_r14 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.ge.ppp.v.p"
+syntax = "{r} = all({s} >= {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-0010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 02 00"
+text = "r1_r0 = all(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 02 e0"
+text = "r15_r14 = all(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e2 00"
+text = "r1_r0 = all(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 02 0e"
+text = "r1_r0 = all(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e2 ee"
+text = "r15_r14 = all(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.lt.ppp.v.p"
+syntax = "{r} = all({s} < {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-0011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 03 00"
+text = "r1_r0 = all(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 03 e0"
+text = "r15_r14 = all(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e3 00"
+text = "r1_r0 = all(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 03 0e"
+text = "r1_r0 = all(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e3 ee"
+text = "r15_r14 = all(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.gt.ppp.v.p"
+syntax = "{r} = all({s} > {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 08 00"
+text = "r1_r0 = all(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 08 e0"
+text = "r15_r14 = all(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e8 00"
+text = "r1_r0 = all(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 08 0e"
+text = "r1_r0 = all(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e8 ee"
+text = "r15_r14 = all(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.le.ppp.v.p"
+syntax = "{r} = all({s} <= {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = all(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 09 00"
+text = "r1_r0 = all(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 09 e0"
+text = "r15_r14 = all(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e9 00"
+text = "r1_r0 = all(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 09 0e"
+text = "r1_r0 = all(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e9 ee"
+text = "r15_r14 = all(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.ge.ppp.v.p"
+syntax = "{r} = alls({s} >= {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = alls(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 0a 00"
+text = "r1_r0 = alls(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0a e0"
+text = "r15_r14 = alls(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ea 00"
+text = "r1_r0 = alls(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0a 0e"
+text = "r1_r0 = alls(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ea ee"
+text = "r15_r14 = alls(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.lt.ppp.v.p"
+syntax = "{r} = alls({s} < {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = alls(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 0b 00"
+text = "r1_r0 = alls(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0b e0"
+text = "r15_r14 = alls(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 eb 00"
+text = "r1_r0 = alls(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0b 0e"
+text = "r1_r0 = alls(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 eb ee"
+text = "r15_r14 = alls(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.gt.ppp.v.p"
+syntax = "{r} = alls({s} > {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1100"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = alls(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 0c 00"
+text = "r1_r0 = alls(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0c e0"
+text = "r15_r14 = alls(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ec 00"
+text = "r1_r0 = alls(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0c 0e"
+text = "r1_r0 = alls(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ec ee"
+text = "r15_r14 = alls(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.le.ppp.v.p"
+syntax = "{r} = alls({s} <= {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-1101"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = alls(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "38 f5 0d 00"
+text = "r1_r0 = alls(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0d e0"
+text = "r15_r14 = alls(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ed 00"
+text = "r1_r0 = alls(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0d 0e"
+text = "r1_r0 = alls(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ed ee"
+text = "r15_r14 = alls(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.eq.rrr.v.p"
+syntax = "{r} = all({s} == {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R == R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.eq.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 00 00"
+text = "r0 = all(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 00 f0"
+text = "r15 = all(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f0 00"
+text = "r0 = all(r15 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 00 0f"
+text = "r0 = all(r0 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f0 ff"
+text = "r15 = all(r15 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.ne.rrr.v.p"
+syntax = "{r} = all({s} != {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss0001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R != R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.ne.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 01 00"
+text = "r0 = all(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 01 f0"
+text = "r15 = all(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f1 00"
+text = "r0 = all(r15 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 01 0f"
+text = "r0 = all(r0 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f1 ff"
+text = "r15 = all(r15 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.ge.rrr.v.p"
+syntax = "{r} = all({s} >= {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss0010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 02 00"
+text = "r0 = all(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 02 f0"
+text = "r15 = all(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f2 00"
+text = "r0 = all(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 02 0f"
+text = "r0 = all(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f2 ff"
+text = "r15 = all(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.lt.rrr.v.p"
+syntax = "{r} = all({s} < {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss0011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 03 00"
+text = "r0 = all(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 03 f0"
+text = "r15 = all(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f3 00"
+text = "r0 = all(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 03 0f"
+text = "r0 = all(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f3 ff"
+text = "r15 = all(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.gt.rrr.v.p"
+syntax = "{r} = all({s} > {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 08 00"
+text = "r0 = all(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 08 f0"
+text = "r15 = all(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f8 00"
+text = "r0 = all(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 08 0f"
+text = "r0 = all(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f8 ff"
+text = "r15 = all(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "all.le.rrr.v.p"
+syntax = "{r} = all({s} <= {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = all(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of all.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = all({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 09 00"
+text = "r0 = all(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 09 f0"
+text = "r15 = all(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f9 00"
+text = "r0 = all(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 09 0f"
+text = "r0 = all(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f9 ff"
+text = "r15 = all(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.ge.rrr.v.p"
+syntax = "{r} = alls({s} >= {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = alls(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 0a 00"
+text = "r0 = alls(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0a f0"
+text = "r15 = alls(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fa 00"
+text = "r0 = alls(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0a 0f"
+text = "r0 = alls(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fa ff"
+text = "r15 = alls(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.lt.rrr.v.p"
+syntax = "{r} = alls({s} < {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = alls(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 0b 00"
+text = "r0 = alls(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0b f0"
+text = "r15 = alls(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fb 00"
+text = "r0 = alls(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0b 0f"
+text = "r0 = alls(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fb ff"
+text = "r15 = alls(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.gt.rrr.v.p"
+syntax = "{r} = alls({s} > {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1100"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = alls(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 0c 00"
+text = "r0 = alls(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0c f0"
+text = "r15 = alls(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fc 00"
+text = "r0 = alls(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0c 0f"
+text = "r0 = alls(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fc ff"
+text = "r15 = alls(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "alls.le.rrr.v.p"
+syntax = "{r} = alls({s} <= {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss1101"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = alls(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of alls.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = alls({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "39 f5 0d 00"
+text = "r0 = alls(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0d f0"
+text = "r15 = alls(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fd 00"
+text = "r0 = alls(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0d 0f"
+text = "r0 = alls(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fd ff"
+text = "r15 = alls(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.eq.ppp.v.p"
+syntax = "{r} = any({s} == {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-0000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P == P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.eq.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 00 00"
+text = "r1_r0 = any(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 00 e0"
+text = "r15_r14 = any(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e0 00"
+text = "r1_r0 = any(r15_r14 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 00 0e"
+text = "r1_r0 = any(r1_r0 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e0 ee"
+text = "r15_r14 = any(r15_r14 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.ne.ppp.v.p"
+syntax = "{r} = any({s} != {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-0001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P != P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.ne.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 01 00"
+text = "r1_r0 = any(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 01 e0"
+text = "r15_r14 = any(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e1 00"
+text = "r1_r0 = any(r15_r14 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 01 0e"
+text = "r1_r0 = any(r1_r0 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e1 ee"
+text = "r15_r14 = any(r15_r14 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.ge.ppp.v.p"
+syntax = "{r} = any({s} >= {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-0010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 02 00"
+text = "r1_r0 = any(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 02 e0"
+text = "r15_r14 = any(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e2 00"
+text = "r1_r0 = any(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 02 0e"
+text = "r1_r0 = any(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e2 ee"
+text = "r15_r14 = any(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.lt.ppp.v.p"
+syntax = "{r} = any({s} < {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-0011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 03 00"
+text = "r1_r0 = any(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 03 e0"
+text = "r15_r14 = any(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e3 00"
+text = "r1_r0 = any(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 03 0e"
+text = "r1_r0 = any(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e3 ee"
+text = "r15_r14 = any(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.gt.ppp.v.p"
+syntax = "{r} = any({s} > {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 08 00"
+text = "r1_r0 = any(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 08 e0"
+text = "r15_r14 = any(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e8 00"
+text = "r1_r0 = any(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 08 0e"
+text = "r1_r0 = any(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e8 ee"
+text = "r15_r14 = any(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.le.ppp.v.p"
+syntax = "{r} = any({s} <= {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = any(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 09 00"
+text = "r1_r0 = any(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 09 e0"
+text = "r15_r14 = any(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e9 00"
+text = "r1_r0 = any(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 09 0e"
+text = "r1_r0 = any(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e9 ee"
+text = "r15_r14 = any(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.ge.ppp.v.p"
+syntax = "{r} = anys({s} >= {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = anys(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 0a 00"
+text = "r1_r0 = anys(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0a e0"
+text = "r15_r14 = anys(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ea 00"
+text = "r1_r0 = anys(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0a 0e"
+text = "r1_r0 = anys(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ea ee"
+text = "r15_r14 = anys(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.lt.ppp.v.p"
+syntax = "{r} = anys({s} < {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = anys(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 0b 00"
+text = "r1_r0 = anys(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0b e0"
+text = "r15_r14 = anys(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 eb 00"
+text = "r1_r0 = anys(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0b 0e"
+text = "r1_r0 = anys(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 eb ee"
+text = "r15_r14 = anys(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.gt.ppp.v.p"
+syntax = "{r} = anys({s} > {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1100"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = anys(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 0c 00"
+text = "r1_r0 = anys(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0c e0"
+text = "r15_r14 = anys(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ec 00"
+text = "r1_r0 = anys(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0c 0e"
+text = "r1_r0 = anys(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ec ee"
+text = "r15_r14 = anys(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.le.ppp.v.p"
+syntax = "{r} = anys({s} <= {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-1101"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = anys(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3a f5 0d 00"
+text = "r1_r0 = anys(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0d e0"
+text = "r15_r14 = anys(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ed 00"
+text = "r1_r0 = anys(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0d 0e"
+text = "r1_r0 = anys(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ed ee"
+text = "r15_r14 = anys(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.eq.rrr.v.p"
+syntax = "{r} = any({s} == {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R == R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.eq.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 00 00"
+text = "r0 = any(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 00 f0"
+text = "r15 = any(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f0 00"
+text = "r0 = any(r15 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 00 0f"
+text = "r0 = any(r0 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f0 ff"
+text = "r15 = any(r15 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.ne.rrr.v.p"
+syntax = "{r} = any({s} != {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss0001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R != R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.ne.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 01 00"
+text = "r0 = any(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 01 f0"
+text = "r15 = any(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f1 00"
+text = "r0 = any(r15 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 01 0f"
+text = "r0 = any(r0 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f1 ff"
+text = "r15 = any(r15 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.ge.rrr.v.p"
+syntax = "{r} = any({s} >= {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss0010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 02 00"
+text = "r0 = any(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 02 f0"
+text = "r15 = any(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f2 00"
+text = "r0 = any(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 02 0f"
+text = "r0 = any(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f2 ff"
+text = "r15 = any(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.lt.rrr.v.p"
+syntax = "{r} = any({s} < {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss0011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 03 00"
+text = "r0 = any(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 03 f0"
+text = "r15 = any(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f3 00"
+text = "r0 = any(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 03 0f"
+text = "r0 = any(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f3 ff"
+text = "r15 = any(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.gt.rrr.v.p"
+syntax = "{r} = any({s} > {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 08 00"
+text = "r0 = any(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 08 f0"
+text = "r15 = any(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f8 00"
+text = "r0 = any(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 08 0f"
+text = "r0 = any(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f8 ff"
+text = "r15 = any(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "any.le.rrr.v.p"
+syntax = "{r} = any({s} <= {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = any(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of any.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = any({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 09 00"
+text = "r0 = any(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 09 f0"
+text = "r15 = any(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f9 00"
+text = "r0 = any(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 09 0f"
+text = "r0 = any(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f9 ff"
+text = "r15 = any(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.ge.rrr.v.p"
+syntax = "{r} = anys({s} >= {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = anys(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 0a 00"
+text = "r0 = anys(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0a f0"
+text = "r15 = anys(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fa 00"
+text = "r0 = anys(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0a 0f"
+text = "r0 = anys(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fa ff"
+text = "r15 = anys(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.lt.rrr.v.p"
+syntax = "{r} = anys({s} < {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = anys(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 0b 00"
+text = "r0 = anys(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0b f0"
+text = "r15 = anys(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fb 00"
+text = "r0 = anys(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0b 0f"
+text = "r0 = anys(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fb ff"
+text = "r15 = anys(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.gt.rrr.v.p"
+syntax = "{r} = anys({s} > {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1100"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = anys(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 0c 00"
+text = "r0 = anys(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0c f0"
+text = "r15 = anys(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fc 00"
+text = "r0 = anys(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0c 0f"
+text = "r0 = anys(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fc ff"
+text = "r15 = anys(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "anys.le.rrr.v.p"
+syntax = "{r} = anys({s} <= {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss1101"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = anys(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of anys.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = anys({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3b f5 0d 00"
+text = "r0 = anys(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0d f0"
+text = "r15 = anys(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fd 00"
+text = "r0 = anys(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0d 0f"
+text = "r0 = anys(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fd ff"
+text = "r15 = anys(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.eq.ppp.v.p"
+syntax = "{r} = cmp({s} == {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-0000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P == P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.eq.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 00 00"
+text = "r1_r0 = cmp(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 00 e0"
+text = "r15_r14 = cmp(r1_r0 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e0 00"
+text = "r1_r0 = cmp(r15_r14 == r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 00 0e"
+text = "r1_r0 = cmp(r1_r0 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e0 ee"
+text = "r15_r14 = cmp(r15_r14 == r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.ne.ppp.v.p"
+syntax = "{r} = cmp({s} != {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-0001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P != P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.ne.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 01 00"
+text = "r1_r0 = cmp(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 01 e0"
+text = "r15_r14 = cmp(r1_r0 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e1 00"
+text = "r1_r0 = cmp(r15_r14 != r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 01 0e"
+text = "r1_r0 = cmp(r1_r0 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e1 ee"
+text = "r15_r14 = cmp(r15_r14 != r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.ge.ppp.v.p"
+syntax = "{r} = cmp({s} >= {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-0010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 02 00"
+text = "r1_r0 = cmp(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 02 e0"
+text = "r15_r14 = cmp(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e2 00"
+text = "r1_r0 = cmp(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 02 0e"
+text = "r1_r0 = cmp(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e2 ee"
+text = "r15_r14 = cmp(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.lt.ppp.v.p"
+syntax = "{r} = cmp({s} < {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-0011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 03 00"
+text = "r1_r0 = cmp(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 03 e0"
+text = "r15_r14 = cmp(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e3 00"
+text = "r1_r0 = cmp(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 03 0e"
+text = "r1_r0 = cmp(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e3 ee"
+text = "r15_r14 = cmp(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.gt.ppp.v.p"
+syntax = "{r} = cmp({s} > {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1000"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 08 00"
+text = "r1_r0 = cmp(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 08 e0"
+text = "r15_r14 = cmp(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e8 00"
+text = "r1_r0 = cmp(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 08 0e"
+text = "r1_r0 = cmp(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e8 ee"
+text = "r15_r14 = cmp(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.le.ppp.v.p"
+syntax = "{r} = cmp({s} <= {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1001"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmp(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 09 00"
+text = "r1_r0 = cmp(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 09 e0"
+text = "r15_r14 = cmp(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e9 00"
+text = "r1_r0 = cmp(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 09 0e"
+text = "r1_r0 = cmp(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e9 ee"
+text = "r15_r14 = cmp(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.ge.ppp.v.p"
+syntax = "{r} = cmps({s} >= {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1010"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmps(P >= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.ge.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 0a 00"
+text = "r1_r0 = cmps(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0a e0"
+text = "r15_r14 = cmps(r1_r0 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ea 00"
+text = "r1_r0 = cmps(r15_r14 >= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0a 0e"
+text = "r1_r0 = cmps(r1_r0 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ea ee"
+text = "r15_r14 = cmps(r15_r14 >= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.lt.ppp.v.p"
+syntax = "{r} = cmps({s} < {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1011"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmps(P < P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.lt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 0b 00"
+text = "r1_r0 = cmps(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0b e0"
+text = "r15_r14 = cmps(r1_r0 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 eb 00"
+text = "r1_r0 = cmps(r15_r14 < r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0b 0e"
+text = "r1_r0 = cmps(r1_r0 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 eb ee"
+text = "r15_r14 = cmps(r15_r14 < r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.gt.ppp.v.p"
+syntax = "{r} = cmps({s} > {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1100"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmps(P > P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.gt.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 0c 00"
+text = "r1_r0 = cmps(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0c e0"
+text = "r15_r14 = cmps(r1_r0 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ec 00"
+text = "r1_r0 = cmps(r15_r14 > r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0c 0e"
+text = "r1_r0 = cmps(r1_r0 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ec ee"
+text = "r15_r14 = cmps(r15_r14 > r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.le.ppp.v.p"
+syntax = "{r} = cmps({s} <= {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-1101"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Operation printed `P = cmps(P <= P) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.le.ppp.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3c f5 0d 00"
+text = "r1_r0 = cmps(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0d e0"
+text = "r15_r14 = cmps(r1_r0 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ed 00"
+text = "r1_r0 = cmps(r15_r14 <= r1_r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0d 0e"
+text = "r1_r0 = cmps(r1_r0 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ed ee"
+text = "r15_r14 = cmps(r15_r14 <= r15_r14) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.eq.rrr.v.p"
+syntax = "{r} = cmp({s} == {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss0000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R == R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.eq.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} == {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 00 00"
+text = "r0 = cmp(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 00 f0"
+text = "r15 = cmp(r0 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f0 00"
+text = "r0 = cmp(r15 == r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 00 0f"
+text = "r0 = cmp(r0 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f0 ff"
+text = "r15 = cmp(r15 == r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.ne.rrr.v.p"
+syntax = "{r} = cmp({s} != {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss0001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R != R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.ne.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} != {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 01 00"
+text = "r0 = cmp(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 01 f0"
+text = "r15 = cmp(r0 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f1 00"
+text = "r0 = cmp(r15 != r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 01 0f"
+text = "r0 = cmp(r0 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f1 ff"
+text = "r15 = cmp(r15 != r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.ge.rrr.v.p"
+syntax = "{r} = cmp({s} >= {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss0010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 02 00"
+text = "r0 = cmp(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 02 f0"
+text = "r15 = cmp(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f2 00"
+text = "r0 = cmp(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 02 0f"
+text = "r0 = cmp(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f2 ff"
+text = "r15 = cmp(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.lt.rrr.v.p"
+syntax = "{r} = cmp({s} < {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss0011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 03 00"
+text = "r0 = cmp(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 03 f0"
+text = "r15 = cmp(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f3 00"
+text = "r0 = cmp(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 03 0f"
+text = "r0 = cmp(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f3 ff"
+text = "r15 = cmp(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.gt.rrr.v.p"
+syntax = "{r} = cmp({s} > {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1000"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 08 00"
+text = "r0 = cmp(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 08 f0"
+text = "r15 = cmp(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f8 00"
+text = "r0 = cmp(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 08 0f"
+text = "r0 = cmp(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f8 ff"
+text = "r15 = cmp(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmp.le.rrr.v.p"
+syntax = "{r} = cmp({s} <= {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1001"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmp(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmp.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmp({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 09 00"
+text = "r0 = cmp(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 09 f0"
+text = "r15 = cmp(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f9 00"
+text = "r0 = cmp(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 09 0f"
+text = "r0 = cmp(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f9 ff"
+text = "r15 = cmp(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.ge.rrr.v.p"
+syntax = "{r} = cmps({s} >= {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1010"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmps(R >= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.ge.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} >= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 0a 00"
+text = "r0 = cmps(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0a f0"
+text = "r15 = cmps(r0 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fa 00"
+text = "r0 = cmps(r15 >= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0a 0f"
+text = "r0 = cmps(r0 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fa ff"
+text = "r15 = cmps(r15 >= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.lt.rrr.v.p"
+syntax = "{r} = cmps({s} < {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1011"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmps(R < R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.lt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} < {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 0b 00"
+text = "r0 = cmps(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0b f0"
+text = "r15 = cmps(r0 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fb 00"
+text = "r0 = cmps(r15 < r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0b 0f"
+text = "r0 = cmps(r0 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fb ff"
+text = "r15 = cmps(r15 < r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.gt.rrr.v.p"
+syntax = "{r} = cmps({s} > {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1100"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmps(R > R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.gt.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} > {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 0c 00"
+text = "r0 = cmps(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0c f0"
+text = "r15 = cmps(r0 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fc 00"
+text = "r0 = cmps(r15 > r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0c 0f"
+text = "r0 = cmps(r0 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fc ff"
+text = "r15 = cmps(r15 > r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "cmps.le.rrr.v.p"
+syntax = "{r} = cmps({s} <= {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss1101"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Operation printed `R = cmps(R <= R) (v)`: meaning not known beyond the syntax."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Bit-12-set form of cmps.le.rrr.v, observed by objdump probes. Unlike the ordinary parallel twins, objdump omits the trailing #; the assembler needs it to select this form. Behavior with parallel issue is untested."
+asm_syntax = "{r} = cmps({s} <= {t}) (v)  #"
+
+[[insn.example]]
+bytes = "3d f5 0d 00"
+text = "r0 = cmps(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0d f0"
+text = "r15 = cmps(r0 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fd 00"
+text = "r0 = cmps(r15 <= r0) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0d 0f"
+text = "r0 = cmps(r0 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fd ff"
+text = "r15 = cmps(r15 <= r15) (v)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "add.ri.u5"
+syntax = "{r} += {n}"
+encoding = ["001nnnnn11000rrr"]
+fields = { r = "gpr_lo", n = "uimm" }
+group = "arithmetic"
+summary = "Add 0..31 to r0..r7."
+notes = "Layout inferred from the 16-bit oracle sweep. The assembler always selects add.rri with the same source and destination; equivalent assignment spellings confirm this decoding alias."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "c0 20"
+text = "r0 += 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c0 3f"
+text = "r0 += 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c7 20"
+text = "r7 += 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "c7 3f"
+text = "r7 += 31"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "beq.and.modimm.ri.l"
+syntax = "if (({r} & {i}) == 0) goto {n}"
+encoding = ["1111111101100000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "modimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Compare a register masked by a modified immediate with zero and branch on equality."
+notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts."
+asm_wrong = ["if ((r0 & 0x0) == 0) goto -2", "if ((r0 & 0x0) == 0) goto 0", "if ((r0 & 0x0) == 0) goto 128", "if ((r0 & 0x0) == 0) goto 16", "if ((r0 & 0x0) == 0) goto 2", "if ((r0 & 0x0) == 0) goto 256", "if ((r0 & 0x0) == 0) goto 32", "if ((r0 & 0x0) == 0) goto 4", "if ((r0 & 0x0) == 0) goto 64", "if ((r0 & 0x0) == 0) goto 8", "if ((r1 & 0x0) == 0) goto -2", "if ((r1 & 0x0) == 0) goto 0", "if ((r1 & 0x0) == 0) goto 128", "if ((r1 & 0x0) == 0) goto 16", "if ((r1 & 0x0) == 0) goto 2", "if ((r1 & 0x0) == 0) goto 256", "if ((r1 & 0x0) == 0) goto 32", "if ((r1 & 0x0) == 0) goto 4", "if ((r1 & 0x0) == 0) goto 64", "if ((r1 & 0x0) == 0) goto 8", "if ((r11 & 0x0) == 0) goto -2", "if ((r11 & 0x0) == 0) goto 0", "if ((r11 & 0x0) == 0) goto 128", "if ((r11 & 0x0) == 0) goto 16", "if ((r11 & 0x0) == 0) goto 2", "if ((r11 & 0x0) == 0) goto 256", "if ((r11 & 0x0) == 0) goto 32", "if ((r11 & 0x0) == 0) goto 4", "if ((r11 & 0x0) == 0) goto 64", "if ((r11 & 0x0) == 0) goto 8", "if ((r15 & 0x0) == 0) goto -2", "if ((r15 & 0x0) == 0) goto 0", "if ((r15 & 0x0) == 0) goto 128", "if ((r15 & 0x0) == 0) goto 16", "if ((r15 & 0x0) == 0) goto 2", "if ((r15 & 0x0) == 0) goto 256", "if ((r15 & 0x0) == 0) goto 32", "if ((r15 & 0x0) == 0) goto 4", "if ((r15 & 0x0) == 0) goto 64", "if ((r15 & 0x0) == 0) goto 8", "if ((r2 & 0x0) == 0) goto -2", "if ((r2 & 0x0) == 0) goto 0", "if ((r2 & 0x0) == 0) goto 128", "if ((r2 & 0x0) == 0) goto 16", "if ((r2 & 0x0) == 0) goto 2", "if ((r2 & 0x0) == 0) goto 256", "if ((r2 & 0x0) == 0) goto 32", "if ((r2 & 0x0) == 0) goto 4", "if ((r2 & 0x0) == 0) goto 64", "if ((r2 & 0x0) == 0) goto 8", "if ((r4 & 0x0) == 0) goto -2", "if ((r4 & 0x0) == 0) goto 0", "if ((r4 & 0x0) == 0) goto 128", "if ((r4 & 0x0) == 0) goto 16", "if ((r4 & 0x0) == 0) goto 2", "if ((r4 & 0x0) == 0) goto 256", "if ((r4 & 0x0) == 0) goto 32", "if ((r4 & 0x0) == 0) goto 4", "if ((r4 & 0x0) == 0) goto 64", "if ((r4 & 0x0) == 0) goto 8", "if ((r5 & 0x0) == 0) goto -2", "if ((r5 & 0x0) == 0) goto 0", "if ((r5 & 0x0) == 0) goto 128", "if ((r5 & 0x0) == 0) goto 16", "if ((r5 & 0x0) == 0) goto 2", "if ((r5 & 0x0) == 0) goto 256", "if ((r5 & 0x0) == 0) goto 32", "if ((r5 & 0x0) == 0) goto 4", "if ((r5 & 0x0) == 0) goto 64", "if ((r5 & 0x0) == 0) goto 8", "if ((r8 & 0x0) == 0) goto -2", "if ((r8 & 0x0) == 0) goto 0", "if ((r8 & 0x0) == 0) goto 128", "if ((r8 & 0x0) == 0) goto 16", "if ((r8 & 0x0) == 0) goto 2", "if ((r8 & 0x0) == 0) goto 256", "if ((r8 & 0x0) == 0) goto 32", "if ((r8 & 0x0) == 0) goto 4", "if ((r8 & 0x0) == 0) goto 64", "if ((r8 & 0x0) == 0) goto 8", "if ((r9 & 0x0) == 0) goto -2", "if ((r9 & 0x0) == 0) goto 0", "if ((r9 & 0x0) == 0) goto 128", "if ((r9 & 0x0) == 0) goto 16", "if ((r9 & 0x0) == 0) goto 2", "if ((r9 & 0x0) == 0) goto 256", "if ((r9 & 0x0) == 0) goto 32", "if ((r9 & 0x0) == 0) goto 4", "if ((r9 & 0x0) == 0) goto 64", "if ((r9 & 0x0) == 0) goto 8"]
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "60 ff 00 00 00 00"
+text = "if ((r0 & 0x0) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 ff ff 0f 00 00"
+text = "if ((r0 & 0x1FE) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 ff 00 00 ff ff"
+text = "if ((r0 & 0x0) == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 ff 00 f0 00 00"
+text = "if ((r15 & 0x0) == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "60 ff ff ff ff ff"
+text = "if ((r15 & 0x1FE) == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bne.and.modimm.ri.l"
+syntax = "if (({r} & {i}) != 0) goto {n}"
+encoding = ["1111111101100001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "modimm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Compare a register masked by a modified immediate with zero and branch on inequality."
+notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts."
+asm_wrong = ["if ((r0 & 0x0) != 0) goto -2", "if ((r0 & 0x0) != 0) goto 0", "if ((r0 & 0x0) != 0) goto 128", "if ((r0 & 0x0) != 0) goto 16", "if ((r0 & 0x0) != 0) goto 2", "if ((r0 & 0x0) != 0) goto 256", "if ((r0 & 0x0) != 0) goto 32", "if ((r0 & 0x0) != 0) goto 4", "if ((r0 & 0x0) != 0) goto 64", "if ((r0 & 0x0) != 0) goto 8", "if ((r1 & 0x0) != 0) goto -2", "if ((r1 & 0x0) != 0) goto 0", "if ((r1 & 0x0) != 0) goto 128", "if ((r1 & 0x0) != 0) goto 16", "if ((r1 & 0x0) != 0) goto 2", "if ((r1 & 0x0) != 0) goto 256", "if ((r1 & 0x0) != 0) goto 32", "if ((r1 & 0x0) != 0) goto 4", "if ((r1 & 0x0) != 0) goto 64", "if ((r1 & 0x0) != 0) goto 8", "if ((r11 & 0x0) != 0) goto -2", "if ((r11 & 0x0) != 0) goto 0", "if ((r11 & 0x0) != 0) goto 128", "if ((r11 & 0x0) != 0) goto 16", "if ((r11 & 0x0) != 0) goto 2", "if ((r11 & 0x0) != 0) goto 256", "if ((r11 & 0x0) != 0) goto 32", "if ((r11 & 0x0) != 0) goto 4", "if ((r11 & 0x0) != 0) goto 64", "if ((r11 & 0x0) != 0) goto 8", "if ((r15 & 0x0) != 0) goto -2", "if ((r15 & 0x0) != 0) goto 0", "if ((r15 & 0x0) != 0) goto 128", "if ((r15 & 0x0) != 0) goto 16", "if ((r15 & 0x0) != 0) goto 2", "if ((r15 & 0x0) != 0) goto 256", "if ((r15 & 0x0) != 0) goto 32", "if ((r15 & 0x0) != 0) goto 4", "if ((r15 & 0x0) != 0) goto 64", "if ((r15 & 0x0) != 0) goto 8", "if ((r2 & 0x0) != 0) goto -2", "if ((r2 & 0x0) != 0) goto 0", "if ((r2 & 0x0) != 0) goto 128", "if ((r2 & 0x0) != 0) goto 16", "if ((r2 & 0x0) != 0) goto 2", "if ((r2 & 0x0) != 0) goto 256", "if ((r2 & 0x0) != 0) goto 32", "if ((r2 & 0x0) != 0) goto 4", "if ((r2 & 0x0) != 0) goto 64", "if ((r2 & 0x0) != 0) goto 8", "if ((r4 & 0x0) != 0) goto -2", "if ((r4 & 0x0) != 0) goto 0", "if ((r4 & 0x0) != 0) goto 128", "if ((r4 & 0x0) != 0) goto 16", "if ((r4 & 0x0) != 0) goto 2", "if ((r4 & 0x0) != 0) goto 256", "if ((r4 & 0x0) != 0) goto 32", "if ((r4 & 0x0) != 0) goto 4", "if ((r4 & 0x0) != 0) goto 64", "if ((r4 & 0x0) != 0) goto 8", "if ((r5 & 0x0) != 0) goto -2", "if ((r5 & 0x0) != 0) goto 0", "if ((r5 & 0x0) != 0) goto 128", "if ((r5 & 0x0) != 0) goto 16", "if ((r5 & 0x0) != 0) goto 2", "if ((r5 & 0x0) != 0) goto 256", "if ((r5 & 0x0) != 0) goto 32", "if ((r5 & 0x0) != 0) goto 4", "if ((r5 & 0x0) != 0) goto 64", "if ((r5 & 0x0) != 0) goto 8", "if ((r8 & 0x0) != 0) goto -2", "if ((r8 & 0x0) != 0) goto 0", "if ((r8 & 0x0) != 0) goto 128", "if ((r8 & 0x0) != 0) goto 16", "if ((r8 & 0x0) != 0) goto 2", "if ((r8 & 0x0) != 0) goto 256", "if ((r8 & 0x0) != 0) goto 32", "if ((r8 & 0x0) != 0) goto 4", "if ((r8 & 0x0) != 0) goto 64", "if ((r8 & 0x0) != 0) goto 8", "if ((r9 & 0x0) != 0) goto -2", "if ((r9 & 0x0) != 0) goto 0", "if ((r9 & 0x0) != 0) goto 128", "if ((r9 & 0x0) != 0) goto 16", "if ((r9 & 0x0) != 0) goto 2", "if ((r9 & 0x0) != 0) goto 256", "if ((r9 & 0x0) != 0) goto 32", "if ((r9 & 0x0) != 0) goto 4", "if ((r9 & 0x0) != 0) goto 64", "if ((r9 & 0x0) != 0) goto 8"]
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "61 ff 00 00 00 00"
+text = "if ((r0 & 0x0) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "61 ff ff 0f 00 00"
+text = "if ((r0 & 0x1FE) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "61 ff 00 00 ff ff"
+text = "if ((r0 & 0x0) != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "61 ff 00 f0 00 00"
+text = "if ((r15 & 0x0) != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "61 ff ff ff ff ff"
+text = "if ((r15 & 0x1FE) != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bunknown.ri.l.4to7"
+syntax = "if ({r} ?? {i}) goto {n}"
+encoding = ["11111111000001--", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 4to7 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "04 ff 00 00 00 00"
+text = "if (r0 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "04 ff ff 0f 00 00"
+text = "if (r0 ?? -1) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "04 ff 00 00 ff ff"
+text = "if (r0 ?? 0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "04 ff 00 f0 00 00"
+text = "if (r15 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "04 ff ff ff ff ff"
+text = "if (r15 ?? -1) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bunknown.rr.l.4to7"
+syntax = "if ({r} ?? {s}) goto {n}"
+encoding = ["11111111010001--", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a register branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "44 ff 00 00 00 00"
+text = "if (r0 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 00 00 ff ff"
+text = "if (r0 ?? r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 00 f0 00 00"
+text = "if (r15 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 00 0f 00 00"
+text = "if (r0 ?? r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 00 ff ff ff"
+text = "if (r15 ?? r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bunknown.ri.l.14to15"
+syntax = "if ({r} ?? {i}) goto {n}"
+encoding = ["111111110000111-", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 14to15 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "0e ff 00 00 00 00"
+text = "if (r0 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "0e ff ff 0f 00 00"
+text = "if (r0 ?? -1) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "0e ff 00 00 ff ff"
+text = "if (r0 ?? 0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "0e ff 00 f0 00 00"
+text = "if (r15 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "0e ff ff ff ff ff"
+text = "if (r15 ?? -1) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bunknown.rr.l.14to15"
+syntax = "if ({r} ?? {s}) goto {n}"
+encoding = ["111111110100111-", "rrrrssss0-------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a register branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "4e ff 00 00 00 00"
+text = "if (r0 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 00 00 ff ff"
+text = "if (r0 ?? r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 00 f0 00 00"
+text = "if (r15 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 00 0f 00 00"
+text = "if (r0 ?? r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 00 ff ff ff"
+text = "if (r15 ?? r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bfne.rr.l"
+syntax = "iff ({r} != {s}) goto {n}"
+encoding = ["1111111101000100", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a floating-point branch with condition !=; hardware behavior is untested."
+asm_no_syntax = true
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "44 ff 80 00 00 00"
+text = "iff (r0 != r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 80 00 ff ff"
+text = "iff (r0 != r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 80 f0 00 00"
+text = "iff (r15 != r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 80 0f 00 00"
+text = "iff (r0 != r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "44 ff 80 ff ff ff"
+text = "iff (r15 != r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bfueq.rr.l"
+syntax = "iff ({r} u== {s}) goto {n}"
+encoding = ["1111111101000101", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a floating-point branch with condition u==; hardware behavior is untested."
+asm_no_syntax = true
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "45 ff 80 00 00 00"
+text = "iff (r0 u== r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "45 ff 80 00 ff ff"
+text = "iff (r0 u== r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "45 ff 80 f0 00 00"
+text = "iff (r15 u== r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "45 ff 80 0f 00 00"
+text = "iff (r0 u== r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "45 ff 80 ff ff ff"
+text = "iff (r15 u== r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bfuno.rr.l"
+syntax = "iff ({r} uno {s}) goto {n}"
+encoding = ["1111111101000110", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a floating-point branch with condition uno; hardware behavior is untested."
+asm_no_syntax = true
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "46 ff 80 00 00 00"
+text = "iff (r0 uno r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "46 ff 80 00 ff ff"
+text = "iff (r0 uno r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "46 ff 80 f0 00 00"
+text = "iff (r15 uno r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "46 ff 80 0f 00 00"
+text = "iff (r0 uno r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "46 ff 80 ff ff ff"
+text = "iff (r15 uno r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bford.rr.l"
+syntax = "iff ({r} ord {s}) goto {n}"
+encoding = ["1111111101000111", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a floating-point branch with condition ord; hardware behavior is untested."
+asm_no_syntax = true
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "47 ff 80 00 00 00"
+text = "iff (r0 ord r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "47 ff 80 00 ff ff"
+text = "iff (r0 ord r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "47 ff 80 f0 00 00"
+text = "iff (r15 ord r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "47 ff 80 0f 00 00"
+text = "iff (r0 ord r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "47 ff 80 ff ff ff"
+text = "iff (r15 ord r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown4to7.ppp.v"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1110010100111000", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "38 e5 04 00"
+text = "r1_r0 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 04 e0"
+text = "r15_r14 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 e4 00"
+text = "r1_r0 = all(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 04 0e"
+text = "r1_r0 = all(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 e4 ee"
+text = "r15_r14 = all(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown4to7.ppp.v.p"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "38 f5 04 00"
+text = "r1_r0 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 04 e0"
+text = "r15_r14 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e4 00"
+text = "r1_r0 = all(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 04 0e"
+text = "r1_r0 = all(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 e4 ee"
+text = "r15_r14 = all(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown14to15.ppp.v"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1110010100111000", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "38 e5 0e 00"
+text = "r1_r0 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 0e e0"
+text = "r15_r14 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 ee 00"
+text = "r1_r0 = all(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 0e 0e"
+text = "r1_r0 = all(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 e5 ee ee"
+text = "r15_r14 = all(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown14to15.ppp.v.p"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1111010100111000", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "38 f5 0e 00"
+text = "r1_r0 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0e e0"
+text = "r15_r14 = all(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ee 00"
+text = "r1_r0 = all(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 0e 0e"
+text = "r1_r0 = all(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "38 f5 ee ee"
+text = "r15_r14 = all(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown4to7.rrr.v"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1110010100111001", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "39 e5 04 00"
+text = "r0 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 04 f0"
+text = "r15 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 f4 00"
+text = "r0 = all(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 04 0f"
+text = "r0 = all(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 f4 ff"
+text = "r15 = all(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown4to7.rrr.v.p"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "39 f5 04 00"
+text = "r0 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 04 f0"
+text = "r15 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f4 00"
+text = "r0 = all(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 04 0f"
+text = "r0 = all(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 f4 ff"
+text = "r15 = all(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown14to15.rrr.v"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1110010100111001", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "39 e5 0e 00"
+text = "r0 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 0e f0"
+text = "r15 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 fe 00"
+text = "r0 = all(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 0e 0f"
+text = "r0 = all(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 e5 fe ff"
+text = "r15 = all(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "all.unknown14to15.rrr.v.p"
+syntax = "{r} = all({s} ?? {t}) (v)"
+encoding = ["1111010100111001", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "39 f5 0e 00"
+text = "r0 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0e f0"
+text = "r15 = all(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fe 00"
+text = "r0 = all(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 0e 0f"
+text = "r0 = all(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "39 f5 fe ff"
+text = "r15 = all(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown4to7.ppp.v"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1110010100111010", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3a e5 04 00"
+text = "r1_r0 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 04 e0"
+text = "r15_r14 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 e4 00"
+text = "r1_r0 = any(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 04 0e"
+text = "r1_r0 = any(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 e4 ee"
+text = "r15_r14 = any(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown4to7.ppp.v.p"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3a f5 04 00"
+text = "r1_r0 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 04 e0"
+text = "r15_r14 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e4 00"
+text = "r1_r0 = any(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 04 0e"
+text = "r1_r0 = any(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 e4 ee"
+text = "r15_r14 = any(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown14to15.ppp.v"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1110010100111010", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3a e5 0e 00"
+text = "r1_r0 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 0e e0"
+text = "r15_r14 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 ee 00"
+text = "r1_r0 = any(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 0e 0e"
+text = "r1_r0 = any(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a e5 ee ee"
+text = "r15_r14 = any(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown14to15.ppp.v.p"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1111010100111010", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3a f5 0e 00"
+text = "r1_r0 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0e e0"
+text = "r15_r14 = any(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ee 00"
+text = "r1_r0 = any(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 0e 0e"
+text = "r1_r0 = any(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3a f5 ee ee"
+text = "r15_r14 = any(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown4to7.rrr.v"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1110010100111011", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3b e5 04 00"
+text = "r0 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 04 f0"
+text = "r15 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 f4 00"
+text = "r0 = any(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 04 0f"
+text = "r0 = any(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 f4 ff"
+text = "r15 = any(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown4to7.rrr.v.p"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3b f5 04 00"
+text = "r0 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 04 f0"
+text = "r15 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f4 00"
+text = "r0 = any(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 04 0f"
+text = "r0 = any(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 f4 ff"
+text = "r15 = any(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown14to15.rrr.v"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1110010100111011", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3b e5 0e 00"
+text = "r0 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 0e f0"
+text = "r15 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 fe 00"
+text = "r0 = any(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 0e 0f"
+text = "r0 = any(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b e5 fe ff"
+text = "r15 = any(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "any.unknown14to15.rrr.v.p"
+syntax = "{r} = any({s} ?? {t}) (v)"
+encoding = ["1111010100111011", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3b f5 0e 00"
+text = "r0 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0e f0"
+text = "r15 = any(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fe 00"
+text = "r0 = any(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 0e 0f"
+text = "r0 = any(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3b f5 fe ff"
+text = "r15 = any(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown4to7.ppp.v"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1110010100111100", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3c e5 04 00"
+text = "r1_r0 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 04 e0"
+text = "r15_r14 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 e4 00"
+text = "r1_r0 = cmp(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 04 0e"
+text = "r1_r0 = cmp(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 e4 ee"
+text = "r15_r14 = cmp(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown4to7.ppp.v.p"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-01--"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3c f5 04 00"
+text = "r1_r0 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 04 e0"
+text = "r15_r14 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e4 00"
+text = "r1_r0 = cmp(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 04 0e"
+text = "r1_r0 = cmp(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 e4 ee"
+text = "r15_r14 = cmp(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown14to15.ppp.v"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1110010100111100", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3c e5 0e 00"
+text = "r1_r0 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 0e e0"
+text = "r15_r14 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 ee 00"
+text = "r1_r0 = cmp(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 0e 0e"
+text = "r1_r0 = cmp(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c e5 ee ee"
+text = "r15_r14 = cmp(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown14to15.ppp.v.p"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1111010100111100", "rrr-ttt-sss-111-"]
+fields = { r = "pair", s = "pair", t = "pair" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3c f5 0e 00"
+text = "r1_r0 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0e e0"
+text = "r15_r14 = cmp(r1_r0 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ee 00"
+text = "r1_r0 = cmp(r15_r14 ?? r1_r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 0e 0e"
+text = "r1_r0 = cmp(r1_r0 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3c f5 ee ee"
+text = "r15_r14 = cmp(r15_r14 ?? r15_r14) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown4to7.rrr.v"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1110010100111101", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3d e5 04 00"
+text = "r0 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 04 f0"
+text = "r15 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 f4 00"
+text = "r0 = cmp(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 04 0f"
+text = "r0 = cmp(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 f4 ff"
+text = "r15 = cmp(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown4to7.rrr.v.p"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss01--"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3d f5 04 00"
+text = "r0 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 04 f0"
+text = "r15 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f4 00"
+text = "r0 = cmp(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 04 0f"
+text = "r0 = cmp(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 f4 ff"
+text = "r15 = cmp(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown14to15.rrr.v"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1110010100111101", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3d e5 0e 00"
+text = "r0 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 0e f0"
+text = "r15 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 fe 00"
+text = "r0 = cmp(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 0e 0f"
+text = "r0 = cmp(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d e5 fe ff"
+text = "r15 = cmp(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "cmp.unknown14to15.rrr.v.p"
+syntax = "{r} = cmp({s} ?? {t}) (v)"
+encoding = ["1111010100111101", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+asm_no_syntax = true
+
+[[insn.example]]
+bytes = "3d f5 0e 00"
+text = "r0 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0e f0"
+text = "r15 = cmp(r0 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fe 00"
+text = "r0 = cmp(r15 ?? r0) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 0e 0f"
+text = "r0 = cmp(r0 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "3d f5 fe ff"
+text = "r15 = cmp(r15 ?? r15) (v)"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.1"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss01------"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 40 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 40 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 40 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 40 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.2"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss001-----"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 20 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 20 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 20 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 20 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.3"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss0001----"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 10 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 10 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 10 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 10 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.4"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss00001---"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 08 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 08 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 08 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 08 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.5"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss000001--"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 04 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 04 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 04 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 04 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.6"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss0000001-"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 02 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 02 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 02 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 02 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "if.unknown.rr.7"
+syntax = "if ({r} ?? {s}) {{"
+encoding = ["111010100001rrrr", "----ssss00000001"]
+fields = { r = "gpr", s = "gpr" }
+group = "branches"
+summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+
+[[insn.example]]
+bytes = "10 ea 01 00"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 01 00"
+text = "if (r15 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 01 0f"
+text = "if (r0 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 01 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bunknown.ri.l.4to7.modimm"
+syntax = "if ({r} ?? {i}) goto {n}"
+encoding = ["11111111001001--", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "24 ff 00 00 00 00"
+text = "if (r0 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "24 ff ff 0f 00 00"
+text = "if (r0 ?? 510) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "24 ff 00 00 ff ff"
+text = "if (r0 ?? 0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "24 ff 00 f0 00 00"
+text = "if (r15 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "24 ff ff ff ff ff"
+text = "if (r15 ?? 510) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bunknown.ri.l.14to15.modimm"
+syntax = "if ({r} ?? {i}) goto {n}"
+encoding = ["111111110010111-", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
+asm_no_syntax = true
+notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax."
+status = "confirmed"
+sources = ["oracle"]
+
+[[insn.example]]
+bytes = "2e ff 00 00 00 00"
+text = "if (r0 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "2e ff ff 0f 00 00"
+text = "if (r0 ?? 510) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "2e ff 00 00 ff ff"
+text = "if (r0 ?? 0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "2e ff 00 f0 00 00"
+text = "if (r15 ?? 0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "2e ff ff ff ff ff"
+text = "if (r15 ?? 510) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "bfunknown.rr.l"
+syntax = "iff ({r} ?? {s}) goto {n}"
+encoding = ["111111110100111-", "rrrrssss10------", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Objdump prints a floating-point branch with an unnamed condition; hardware behavior is unknown."
+status = "confirmed"
+sources = ["oracle"]
+asm_no_syntax = true
+notes = "Oracle probes and the full second-word sweep at FF4E/FF4F show unnamed floating-point conditions. The assembler refuses the printed ?? spelling."
+
+[[insn.example]]
+bytes = "4e ff 80 00 00 00"
+text = "iff (r0 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 80 00 ff ff"
+text = "iff (r0 ?? r0) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 80 f0 00 00"
+text = "iff (r15 ?? r0) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 80 0f 00 00"
+text = "iff (r0 ?? r15) goto 0"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "4e ff 80 ff ff ff"
+text = "iff (r15 ?? r15) goto -2"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn]]
+id = "addsub.rhrhi.sat"
+syntax = "{r}{n} = {s}{m} {o} {p} {q}"
+encoding = ["11100100101ppppq", "rrrrppppssssnm1o"]
+fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, o = { kind = "enum", values = ["+", "-"] }, p = "uimm", q = { kind = "enum", values = ["(usat)", "(ssat)"] } }
+group = "dsp"
+summary = "Add or subtract an unsigned 8-bit immediate on register halves with a printed saturation mode; behavior is untested."
+status = "confirmed"
+sources = ["oracle"]
+notes = "The complete F4A0..F4BF second-word sweeps expose these forms only when second-word bit 1 is set. Black-box probes at E4A0/E4BF confirm the non-parallel counterpart; bit 0 selects add/subtract and first-word bit 0 selects usat/ssat."
+
+[[insn.example]]
+bytes = "a0 e4 02 00"
+text = "r0.l = r0.l + 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e4 06 00"
+text = "r0.l = r0.h + 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e4 0a 00"
+text = "r0.h = r0.l + 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e4 03 00"
+text = "r0.l = r0.l - 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "be e4 02 0f"
+text = "r0.l = r0.l + 255 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a1 e4 02 00"
+text = "r0.l = r0.l + 0 (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e4 02 f0"
+text = "r15.l = r0.l + 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e4 f2 00"
+text = "r0.l = r15.l + 0 (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf e4 ff ff"
+text = "r15.h = r15.h - 255 (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "addsub.rhrhi.sat.p"
+syntax = "{r}{n} = {s}{m} {o} {p} {q}  #"
+encoding = ["11110100101ppppq", "rrrrppppssssnm1o"]
+fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, o = { kind = "enum", values = ["+", "-"] }, p = "uimm", q = { kind = "enum", values = ["(usat)", "(ssat)"] } }
+group = "dsp"
+summary = "Add or subtract an unsigned 8-bit immediate on register halves with a printed saturation mode; behavior is untested."
+status = "confirmed"
+sources = ["oracle"]
+notes = "The complete F4A0..F4BF second-word sweeps expose these forms only when second-word bit 1 is set. Black-box probes at E4A0/E4BF confirm the non-parallel counterpart; bit 0 selects add/subtract and first-word bit 0 selects usat/ssat."
+
+[[insn.example]]
+bytes = "a0 f4 02 00"
+text = "r0.l = r0.l + 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 f4 06 00"
+text = "r0.l = r0.h + 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 f4 0a 00"
+text = "r0.h = r0.l + 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 f4 03 00"
+text = "r0.l = r0.l - 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "be f4 02 0f"
+text = "r0.l = r0.l + 255 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a1 f4 02 00"
+text = "r0.l = r0.l + 0 (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 f4 02 f0"
+text = "r15.l = r0.l + 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 f4 f2 00"
+text = "r0.l = r15.l + 0 (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf f4 ff ff"
+text = "r15.h = r15.h - 255 (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
