@@ -698,16 +698,15 @@ def objdumpcompare(oracle, path, options=(), table=None):
     from . import objdump
 
     code, theirs, err = oracle._run([oracle.objdump, *options, path])
-    if code:
-        raise OracleError(f"JieLi's objdump failed: {err.strip()}")
-    saved = sys.stdout
+    saved, saved_err = sys.stdout, sys.stderr
     sys.stdout = buf = io.StringIO()
+    sys.stderr = io.StringIO()
     try:
         status = objdump.main([*options, str(path)], tab=table)
     finally:
-        sys.stdout = saved
-    if status:
-        return ["ours failed"]
+        sys.stdout, sys.stderr = saved, saved_err
+    if code or status:
+        return [] if bool(code) == bool(status) else [f"exit status: JieLi {code}, ours {status}"]
     a, b = theirs.splitlines(), buf.getvalue().splitlines()
     if a == b:
         return []

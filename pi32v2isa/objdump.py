@@ -49,6 +49,13 @@ utof.rr.p
 R2_IDS = frozenset("copex.ppi copex.ppi.p shiftr.rpi.mode shiftr.rpi.mode.p shiftr.rpr.mode shiftr.rpr.mode.p".split())
 
 
+# Relocation type names objdump knows (docs/ELF.md lists the ones the assembler writes); others print "Unknown".
+RELOC_NAMES = dict(elf.RELOCS)
+RELOC_NAMES.update({9: "R_PI32V2_GOT", 10: "R_PI32V2_GOTFUNCDESC", 12: "R_PI32V2_FUNCDESCVALUE",
+                    13: "R_PI32V2_REL32", 14: "R_PI32V2_MOV_ABS16", 15: "R_PI32V2_GOT16",
+                    16: "R_PI32V2_GOTFUNCDESC16"})
+
+
 class ObjdumpError(Exception):
     pass
 
@@ -152,13 +159,31 @@ def header(f):
     return f"\n{f.path}:\tfile format {format_name(f)}\n\n"
 
 
-def section_headers(f):
+def section_headers(f, sections):
     out = ["Sections:", "Idx Name          Size      Address          Type"]
-    for s in f.sections:
+    for k, s in enumerate(sections):
         text, data, bss = section_kinds(s)
         kinds = ("TEXT " if text else "") + ("DATA " if data else "") + ("BSS" if bss else "")
-        out.append(f"{s.index:3d} {s.name:<13} {s.length:08x} {s.addr:016x} {kinds}")
+        out.append(f"{k:3d} {s.name:<13} {s.length:08x} {s.addr:016x} {kinds}")
     return "\n".join(out) + "\n"
+
+
+def section_contents(f, sections):
+    out = []
+    for s in sections:
+        if s.index == 0 or s.length == 0:
+            continue
+        out.append(f"Contents of section {s.name}:")
+        if s.type == elf.SHT_NOBITS and section_kinds(s)[2]:
+            out.append(f"<skipping contents of bss section at [{s.addr:04x}, {s.addr + s.length:04x})>")
+            continue
+        data = bytes(s.data) if s.type != elf.SHT_NOBITS else f.data[s.offset:s.offset + s.length]
+        for off in range(0, len(data), 16):
+            chunk = data[off:off + 16]
+            hexs = " ".join(chunk[i:i + 4].hex() for i in range(0, len(chunk), 4))
+            asc = "".join(chr(b) if 0x20 <= b < 0x7F else "." for b in chunk)
+            out.append(f" {s.addr + off:04x} {hexs:<35}  {asc}")
+    return "".join(x + "\n" for x in out)
 
 
 def symbol_line(f, sym):
@@ -167,33 +192,46 @@ def symbol_line(f, sym):
     weak = "w" if sym.bind == elf.STB_WEAK else " "
     debug = "d" if t in (elf.STT_SECTION, elf.STT_FILE) else " "
     kind = "f" if t == elf.STT_FILE else ("F" if t == elf.STT_FUNC else " ")
-    value, size = sym.value, sym.size
+    named = isinstance(sym.shndx, int) and 0 < sym.shndx < len(f.sections)
+    if isinstance(sym.shndx, int) and (len(f.sections) <= sym.shndx < 0xFF00 or sym.shndx == 0xFFFF):
+        raise ObjdumpError(f"'{f.path}': invalid section index")
     if sym.shndx == elf.SHN_UNDEF:
-        where = "*UND*"
-    elif sym.shndx == elf.SHN_ABS:
-        where = "*ABS*"
+        value, size = 0, (0 if t == elf.STT_COMMON else sym.size)
     elif sym.shndx == elf.SHN_COMMON:
-        where, value, size = "*COM*", sym.size, sym.value
-    elif isinstance(sym.shndx, int) and sym.shndx < len(f.sections):
+        value, size = sym.size, sym.value
+    elif t == elf.STT_COMMON:
+        value, size = sym.size, 0
+    else:
+        value, size = sym.value, sym.size
+    if sym.shndx == elf.SHN_ABS:
+        where = "*ABS*"
+    elif t == elf.STT_COMMON or sym.shndx == elf.SHN_COMMON:
+        where = "*COM*"
+    elif sym.shndx == elf.SHN_UNDEF:
+        where = "*UND*"
+    elif named:
         where = f.sections[sym.shndx].name
     else:
         where = "*UND*"
-    return f"{value:08x} {glob}{weak}   {debug}{kind} {where}\t\t {size:08x} {sym.name}"
+    name = f.sections[sym.shndx].name if t == elf.STT_SECTION and named else sym.name
+    if sym.other & 3 == 2:
+        name = ".hidden " + name
+    return f"{value:08x} {glob}{weak}   {debug}{kind} {where}\t\t {size:08x} {name}"
 
 
 def symbol_table(f):
     return "SYMBOL TABLE:\n" + "".join(symbol_line(f, s) + "\n" for s in f.symbols)
 
 
-def reloc_records(f):
+def reloc_records(f, sections):
     out = []
-    for s in f.sections:
+    for s in sections:
         if s.type != elf.SHT_RELA:
             continue
         out.append(f"RELOCATION RECORDS FOR [{s.name}]:")
         for k in range(len(s.data) // 12):
             off, info, _ = struct.unpack_from("<IIi", s.data, 12 * k)
-            name = elf.RELOCS.get(info & 0xFF, f"Unknown")
+            name = RELOC_NAMES.get(info & 0xFF, "Unknown")
             out.append(f"{off:08x} {name} Unknown")
         out.append("")
     return "\n".join(out) + "\n" if out else ""
@@ -218,6 +256,29 @@ bne.ri.l.modimm bne.rr bne.rr.l bnez bunknown.ri.l.14to15 bunknown.ri.l.14to15.m
 bunknown.ri.l.4to7.modimm bunknown.rr.l.14to15 bunknown.rr.l.4to7 call.l call.s call.xl dbnz.r goto.l goto.s
 gotoss.xl
 """.split())
+# Instructions that never close a block when they are the one that completes its body: the compare-and-branch
+# forms and the vector compares. The block then stays open for good (found by probing every table example).
+NO_CLOSE = frozenset("""
+beq.rr bfeq.rr bne.rr bfune.rr bge.rr bfuge.rr blt.rr bflt.rr bgt.rr bfugt.rr ble.rr bfle.rr bges.rr bfge.rr
+blts.rr bfult.rr bgts.rr bfgt.rr bles.rr bfule.rr all.eq.ppp.v all.ne.ppp.v all.ge.ppp.v all.lt.ppp.v
+all.gt.ppp.v all.le.ppp.v alls.ge.ppp.v alls.lt.ppp.v alls.gt.ppp.v alls.le.ppp.v all.eq.rrr.v all.ne.rrr.v
+all.ge.rrr.v all.lt.rrr.v all.gt.rrr.v all.le.rrr.v alls.ge.rrr.v alls.lt.rrr.v alls.gt.rrr.v alls.le.rrr.v
+any.eq.ppp.v any.ne.ppp.v any.ge.ppp.v any.lt.ppp.v any.gt.ppp.v any.le.ppp.v anys.ge.ppp.v anys.lt.ppp.v
+anys.gt.ppp.v anys.le.ppp.v any.eq.rrr.v any.ne.rrr.v any.ge.rrr.v any.lt.rrr.v any.gt.rrr.v any.le.rrr.v
+anys.ge.rrr.v anys.lt.rrr.v anys.gt.rrr.v anys.le.rrr.v cmp.eq.ppp.v cmp.ne.ppp.v cmp.ge.ppp.v cmp.lt.ppp.v
+cmp.gt.ppp.v cmp.le.ppp.v cmps.ge.ppp.v cmps.lt.ppp.v cmps.gt.ppp.v cmps.le.ppp.v cmp.eq.rrr.v cmp.ne.rrr.v
+cmp.ge.rrr.v cmp.lt.rrr.v cmp.gt.rrr.v cmp.le.rrr.v cmps.ge.rrr.v cmps.lt.rrr.v cmps.gt.rrr.v cmps.le.rrr.v
+beq.ri bne.ri bge.ri blt.ri bgt.ri ble.ri bges.ri blts.ri bgts.ri bles.ri beq.ri.l beq.ri.l.modimm bne.ri.l
+bne.ri.l.modimm bge.ri.l bge.ri.l.modimm blt.ri.l blt.ri.l.modimm bgt.ri.l bgt.ri.l.modimm ble.ri.l
+ble.ri.l.modimm bges.ri.l bges.ri.l.modimm blts.ri.l blts.ri.l.modimm bgts.ri.l bgts.ri.l.modimm bles.ri.l
+bles.ri.l.modimm beq.rr.l bne.rr.l bge.rr.l blt.rr.l bgt.rr.l ble.rr.l bges.rr.l blts.rr.l bgts.rr.l bles.rr.l
+bfeq.rr.l bfune.rr.l bfuge.rr.l bflt.rr.l bfugt.rr.l bfle.rr.l bfge.rr.l bfult.rr.l bfgt.rr.l bfule.rr.l
+bunknown.ri.l.4to7 bunknown.rr.l.4to7 bunknown.ri.l.14to15 bunknown.rr.l.14to15 bfne.rr.l bfueq.rr.l
+bfuno.rr.l bford.rr.l all.unknown4to7.ppp.v all.unknown14to15.ppp.v all.unknown4to7.rrr.v
+all.unknown14to15.rrr.v any.unknown4to7.ppp.v any.unknown14to15.ppp.v any.unknown4to7.rrr.v
+any.unknown14to15.rrr.v cmp.unknown4to7.ppp.v cmp.unknown14to15.ppp.v cmp.unknown4to7.rrr.v
+cmp.unknown14to15.rrr.v bunknown.ri.l.4to7.modimm bunknown.ri.l.14to15.modimm bfunknown.rr.l
+""".split())
 BRANCH_FIELD = re.compile(r"(?:goto|gotoss|call) \{(\w)\}")
 TRAILING_SPACE = frozenset(("ld.w", "ld.w.pi", "ld.w.pin"))   # `r1 = [r1+0] `: the text keeps a space after `]`
 HEX_BYTES = 18
@@ -227,10 +288,10 @@ BRACE_PAD = " " * 31
 
 class Block:
     """An open `rep` or `if` block: how much of its body is left (rep: bytes; if: instructions)."""
-    __slots__ = ("kind", "left", "else_left", "in_else")
+    __slots__ = ("kind", "left", "else_left", "in_else", "overdue")
 
     def __init__(self, kind, left, else_left=0):
-        self.kind, self.left, self.else_left, self.in_else = kind, left, else_left, False
+        self.kind, self.left, self.else_left, self.in_else, self.overdue = kind, left, else_left, False, False
 
 
 class Symbols:
@@ -280,6 +341,9 @@ class Disassembler:
         self.dec = dec
         self.opts = opts
         self.size = 1                 # the length the decoder last reported: it stays when a decode fails early
+        self.reps = []                # open blocks and the pair state go on across labels and sections
+        self.cond = None
+        self.second = False
         self.out = []
         self.syms = Symbols(f)
 
@@ -303,6 +367,7 @@ class Disassembler:
         data = bytes(s.data)
         size = s.length
         first = True
+        rel = list(s.relocs)
         for k, (addr, name, typ) in enumerate(pairs):
             lo = addr - s.addr
             hi = size if k + 1 == len(pairs) else pairs[k + 1][0] - s.addr
@@ -317,18 +382,20 @@ class Disassembler:
             else:
                 w(("" if first else "\n") + f"{name}:\n")
             first = False
+            self.reach = 0                         # relocation records below this offset belong to the block
             if table_entry:
                 self.table(s, lo, hi, table_entry)
             else:
                 if typ in (elf.STT_OBJECT, elf.STT_COMMON):
                     self.hexdump(s, data, lo, hi)
+                    self.reach = hi
                 else:
                     self.code(s, data, lo, hi)
                 w("\n")
-            if self.opts.get("r"):
-                for off, rtype, _, _ in sorted(s.relocs):
-                    if lo <= off < hi:
-                        w(f"\t\t\t{off:08x}:  {elf.RELOCS.get(rtype, 'Unknown')}\tUnknown\n")
+                if self.opts.get("r"):
+                    while rel and rel[0][0] < self.reach:
+                        off, rtype = rel.pop(0)[:2]
+                        w(f"\t\t\t{off:08x}:  {RELOC_NAMES.get(rtype, 'Unknown')}\tUnknown\n")
 
     def table(self, s, lo, hi, step):
         w = self.out.append
@@ -336,6 +403,7 @@ class Disassembler:
             raw = self.raw(s, a, step)
             v = int.from_bytes(raw, "little")
             w(f"{s.addr + a:8x}:    {' '.join(f'{b:02x}' for b in raw)}     < {v} : 0x{v:X} >\n")
+            self.size = step
 
     def hexdump(self, s, data, lo, hi):
         w = self.out.append
@@ -356,10 +424,9 @@ class Disassembler:
 
     def code(self, s, data, lo, hi):
         w = self.out.append
-        stack = []
         index = lo
-        second = False            # the previous line ended with `#`: this one issues in parallel with it
         while index < hi:
+            second = self.second
             addr = s.addr + index
             got = self.dec.decode(data, index)
             if got is None:
@@ -368,66 +435,82 @@ class Disassembler:
                 n = self.size
                 w(f"{addr:8x}:    {self.hexb(self.raw(s, index, n)):<{HEX_BYTES}} <unknown instruction>\n")
                 index += n
+                self.reach = index + n
                 continue
             insn, values, n = got
             self.size = n
+            word = data[index] | (data[index + 1] << 8)
             text = codec.format(insn, values)
             if insn.id in TRAILING_SPACE:
                 text += " "
-            depth = len(stack)
-            if second:
-                pad = "\t\t " if depth == 0 else "\t" * (depth + 1) + "  "
+            depth = len(self.reps) + (self.cond is not None)
+            if second:      # the second of a parallel pair: one more tab and a space, but two spaces in an if block
+                pad = "\t" * (depth + 1) + ("  " if self.cond is not None else "\t ")
             else:
                 pad = "\t" * (depth + 1)
-            closers = self.advance(stack, insn, values, n, second)
+            first_of_pair = 0xC000 <= word <= 0xDFFF or 0xF000 <= word <= 0xF7FF
+            closers = self.advance(insn, values, n, second, first_of_pair)
             ann = ""
             if insn.id in ANNOTATED_BRANCH:
                 m = BRANCH_FIELD.search(insn.syntax)
-                ann = self.syms.annotation(addr + n + codec.value(insn.fields[m.group(1)], values[m.group(1)],
-                                           len(insn.field_bits(m.group(1)))), s.index)
+                ann = self.syms.annotation((addr + n + codec.value(insn.fields[m.group(1)], values[m.group(1)],
+                                            len(insn.field_bits(m.group(1))))) & ~1, s.index)
             elif insn.id in ANNOTATED_IMM:
                 v = int(re.search(r"= (-?\d+)", text).group(1))
                 ann = self.syms.annotation(v & ~1, s.index)
             w(f"{addr:8x}:    {self.hexb(data[index:index + n]):<{HEX_BYTES}}{pad}{text}")
             for c in closers:
-                w(f"\n{BRACE_PAD}\t{c}")
+                w("\n" + (" " * 32 if second else BRACE_PAD + "\t") + c)
             w(ann + "\n")
-            second = text.rstrip().endswith("#")
+            self.second = first_of_pair
             index += n
+            self.reach = index + n
 
-    def advance(self, stack, insn, values, n, second):
-        """Account for one printed instruction in the open blocks; return the brace lines it closes."""
-        for b in stack:
-            if b.kind == "rep":
-                b.left -= n
-            elif not second:
-                if b.in_else:
-                    b.else_left -= 1
-                else:
-                    b.left -= 1
+    def advance(self, insn, values, n, second, first_of_pair):
+        """Account for one printed instruction in the open blocks; return the brace lines it closes. The first
+        instruction of a parallel pair leaves any closing to the second one. A `rep` nests (its body is counted
+        in bytes); an `if` is one block at a time: a new one replaces the open one, and it counts
+        instructions, a parallel pair as one. A compare-and-branch that completes an `if` body does not close
+        it; the block then stays open until a parallel pair starts, which closes it."""
+        reps, cond = self.reps, self.cond
         closers = []
-        while stack:
-            b = stack[-1]
-            if b.kind == "if" and not b.in_else and b.left <= 0:
-                if b.else_left > 0:
-                    b.in_else = True
-                    closers.append("} else {")
-                    break
-                stack.pop()
-                closers.append("}")
-            elif (b.kind == "if" and b.in_else and b.else_left <= 0) or (b.kind == "rep" and b.left <= 0):
-                stack.pop()
-                closers.append("}")
+
+        def finish_cond():
+            if not cond.in_else and cond.else_left > 0:
+                cond.in_else = True
+                closers.append("} else {")
             else:
-                break
+                self.cond = None
+                closers.append("}")
+
+        if cond is not None and cond.overdue and first_of_pair and not second and not cond.in_else:
+            finish_cond()
+            cond.overdue = False
+        for k in range(len(reps)):
+            reps[k] -= n
+        if cond is not None and not second:
+            if cond.in_else:
+                cond.else_left -= 1
+            else:
+                cond.left -= 1
+        if not first_of_pair and self.cond is not None:
+            done = cond.else_left == 0 if cond.in_else else cond.left == 0
+            if done and insn.id in NO_CLOSE:
+                cond.overdue = True
+            elif done:
+                finish_cond()
+        if not first_of_pair and insn.id not in NO_CLOSE:
+            while reps and reps[-1] <= 0:
+                reps.pop()
+                closers.append("}")
         if insn.body:
             f = insn.fields[insn.body]
-            stack.append(Block("rep", codec.value(f, values[insn.body], len(insn.field_bits(insn.body)))))
+            reps.append(codec.value(f, values[insn.body], len(insn.field_bits(insn.body))))
         elif insn.block:
             def cnt(key):
                 f = insn.fields[insn.block[key]]
                 return codec.value(f, values[insn.block[key]], len(insn.field_bits(insn.block[key])))
-            stack.append(Block("if", cnt("then"), cnt("else")))
+            self.cond = Block("if", cnt("then"), cnt("else"))
         return closers
 
 
@@ -440,9 +523,11 @@ def run_file(f, opts, tab):
         code = [s for s in secs if opts.get("D") or s.flags & elf.SHF_EXECINSTR]
         out.append(Disassembler(f, dec, opts).run(code))
     if opts.get("r") and not (opts.get("d") or opts.get("D")):
-        out.append(reloc_records(f))
+        out.append(reloc_records(f, secs))
     if opts.get("h"):
-        out.append(section_headers(f))
+        out.append(section_headers(f, secs))
+    if opts.get("s"):
+        out.append(section_contents(f, secs))
     if opts.get("t"):
         out.append(symbol_table(f))
     return "".join(out)
