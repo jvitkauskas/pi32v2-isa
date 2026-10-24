@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT-0
 """FM-1 float/divide models, hw/fm1-2026-10-24.
 
-Exact rational arithmetic avoids host rounding/NaN conventions. Unobserved
-exceptional cases remain predictions to check with hw/followup-s.json; see
-hw/report-s.md. In particular, no nonzero integer dividend / zero was measured.
+Exact rational arithmetic avoids host rounding/NaN conventions. Checked against
+results.jsonl and followup-s.jsonl; see hw/report-s.md for measured boundaries
+and the remaining NaN-classification probes in hw/followup-s2.json.
 """
 from fractions import Fraction
 import math
@@ -72,32 +72,23 @@ def arithmetic(a, b, operation, accumulator=None):
     inputs = (a, b) if accumulator is None else (a, b, accumulator)
     if any(kind(x) == 'nan' for x in inputs):
         return 0x7F800001
+    if accumulator is not None:
+        # The product rounds to binary32 before accumulation: both cancellation
+        # and intermediate-overflow/underflow witnesses distinguish this from FMA.
+        product = arithmetic(a, b, 'mul')
+        return arithmetic(accumulator, product, 'sub' if operation == 'msub' else 'add')
     if operation == 'sub':
         b ^= 0x80000000
         operation = 'add'
-    if operation == 'msub':
-        a ^= 0x80000000
-        operation = 'madd'
     ka, kb = kind(a), kind(b)
     sign = (a ^ b) >> 31
     inf = 0x7F800000 | (sign << 31)
-    if operation in ('mul', 'madd'):
+    if operation == 'mul':
         if (ka == 'inf' and not (b & 0x7FFFFFFF)) or (kb == 'inf' and not (a & 0x7FFFFFFF)):
             return 0x7F800001
         if ka == 'inf' or kb == 'inf':
-            if accumulator is None:
-                return inf
-            return arithmetic(inf, accumulator, 'add')
-        product = decode(a) * decode(b)
-        if accumulator is None:
-            return encode(product, sign)
-        if kind(accumulator) == 'inf':
-            return accumulator
-        addend = decode(accumulator)
-        signzero = sign if not product and not addend and sign == accumulator >> 31 else 0
-        # Fusion is a prediction: both fused and separately rounded arithmetic
-        # fit the initial cases. Follow-up cases distinguish them.
-        return encode(product + addend, signzero)
+            return inf
+        return encode(decode(a) * decode(b), sign)
     if operation == 'div':
         if (ka == 'inf' and kb == 'inf') or (not (a & 0x7FFFFFFF) and not (b & 0x7FFFFFFF)):
             return 0x7F800001
@@ -126,8 +117,13 @@ def minmax(maximum):
     def model(R, f, o):
         a, b = R[o['s']], R[o['t']]
         flags = compare(a, b)
-        # Equal/unordered selection is provisional: the initial run has no
-        # distinct equal bit patterns or NaN operands for these two forms.
+        if kind(a) == 'nan':
+            # One NaN loses to the number; two NaNs select t unchanged.
+            return {o['r']: b}, flags
+        if kind(b) == 'nan':
+            return {o['r']: a}, flags
+        if not (a & 0x7FFFFFFF) and not (b & 0x7FFFFFFF):
+            return {o['r']: (a & b) if maximum else (a | b)}, flags
         choose_a = flags == (2 if maximum else 8)
         return {o['r']: a if choose_a else b}, flags
     return model
@@ -147,7 +143,10 @@ def convert(operation, rounding='even'):
             if k == 'finite':
                 result = encode(decode(bits), sign, 5, 10)
             else:
-                result = (sign << 15) | (0x7E00 if k == 'nan' else 0x7C00)
+                # Measured qNaNs -> signed 0x7e00, negative sNaN -> 0xfc01.
+                # Positive sNaN class preservation is an S2 prediction.
+                result = (sign << 15) | (0x7C00 if k == 'inf' else
+                                         0x7E00 if bits & 0x400000 else 0x7C01)
             result |= R[o['r']] & 0xFFFF0000
         elif operation == 'full':
             bits &= 0xFFFF
@@ -155,7 +154,9 @@ def convert(operation, rounding='even'):
             if k == 'finite':
                 result = encode(decode(bits, 5, 10), bits >> 15)
             else:
-                result = ((bits >> 15) << 31) | (0x7FC00000 if k == 'nan' else 0x7F800000)
+                # As above, positive sNaNs still need the S2 measurement.
+                result = ((bits >> 15) << 31) | (0x7F800000 if k == 'inf' else
+                                                0x7FC00000 if bits & 0x200 else 0x7F800001)
         elif operation == 'ftof':
             if k == 'nan':
                 result = (bits & 0x80000000) | 0x7FC00000
@@ -181,7 +182,7 @@ def divide(pair, is_signed):
         if is_signed:
             numerator = signed(numerator, 64 if pair else 32)
             denominator = signed(denominator)
-        # Only 0/0 -> 0 is established; the nonzero/0 rule is provisional.
+        # All four forms return zero for zero divisors, including nonzero/0.
         quotient = abs(numerator) // abs(denominator) if denominator else 0
         if (numerator < 0) != (denominator < 0):
             quotient = -quotient

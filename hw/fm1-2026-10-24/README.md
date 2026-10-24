@@ -24,3 +24,11 @@ All 26 batches (4312 cases, 353 forms, seed 1) completed: none hung or trapped, 
 and the instruction-revision-3 forms. Every batch's `nop` cases gave back their inputs, with the registers in
 stack slots 0..15 in order r0..r15, and the self-test was 38/38 as expected. Upper `psr` bits (4..31) read 0
 after every case.
+
+`followup-s.jsonl` records analyst S's 400 targeted cases from `hw/followup-s.json`, plus 16 calibration
+`nop`s (416 records). It targets float rounding, NaNs/infinities/subnormals, multiply-accumulate fusion,
+conversion boundaries, and integer division by zero/overflow. The lead split the cases into 308 non-division
+float cases and 92 division cases (including 12 `div.f`), built both parts with `gen.py --cases`, and built
+the division part with `--batch 16`: two float batches and six division batches. Every batch calibrated;
+nothing hung or trapped, including every division by zero. Check it with
+`python3 tools/hwtest/check.py hw/fm1-2026-10-24/followup-s.jsonl`.
