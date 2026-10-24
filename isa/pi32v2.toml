@@ -1865,7 +1865,7 @@ group = "shifts"
 summary = "Logical shift left by a register: rd <<= rs (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Behaviour for counts of 32 or more not tested. [compiler] `a << b` (int or unsigned, both variable) compiles to `r0 <<= r1` at -O0/-O2/-Os. The compiler masks the count itself when C says `b & 31` (it emits `r1 = r1 & 0x1F` first), so what the hardware does with a count of 32 or more is not established."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] `a << b` (int or unsigned, both variable) compiles to `r0 <<= r1` at -O0/-O2/-Os. The compiler masks the count itself when C says `b & 31` (it emits `r1 = r1 & 0x1F` first), so what the hardware does with a count of 32 or more is not established."
 
 [[insn.example]]
 bytes = "00 1a"
@@ -2317,7 +2317,7 @@ group = "branches"
 summary = "Table branch on bytes: jump to (address after this instruction) + 2 * table[index], the byte table directly following the instruction; the index is in the register."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Name suggests a table branch; meaning unknown. [compiler] dense `switch` with 6..10 cases -> `bgt.ri` range check, `tbb [r4]`, then the byte table (`< 3 >`, `< 7 >`, ...), then the case bodies; the first entry 3 points at table start + 6. objdump labels the table `.GJTIS`/`.GJTIE`. The register holds the case number itself."
+notes = "Layout from oracle fit: register in bits 3..0. [compiler] dense `switch` with 6..10 cases -> `bgt.ri` range check, `tbb [r4]`, then the byte table (`< 3 >`, `< 7 >`, ...), then the case bodies; the first entry 3 points at table start + 6. objdump labels the table `.GJTIS`/`.GJTIE`. The register holds the case number itself."
 
 [[insn.example]]
 bytes = "00 01"
@@ -2338,7 +2338,7 @@ group = "branches"
 summary = "Table branch on halfwords: jump to (address after this instruction) + 2 * table[index/2]; the register holds twice the case number (a byte offset into the halfword table following the instruction)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Name suggests a table branch; meaning unknown. [compiler] only seen with `-mllvm -pi32v2-tbb-max-disp=0`, which makes a 6-case `switch` use `r0 = r4 << 1` then `tbh [r0]` and a halfword table (6, 10, 14 ...)."
+notes = "Layout from oracle fit: register in bits 3..0. [compiler] only seen with `-mllvm -pi32v2-tbb-max-disp=0`, which makes a 6-case `switch` use `r0 = r4 << 1` then `tbh [r0]` and a halfword table (6, 10, 14 ...)."
 
 [[insn.example]]
 bytes = "10 01"
@@ -2724,7 +2724,7 @@ syntax = "{x} = {y}  #"
 encoding = ["11010110yyyyxxxx"]
 fields = { x = "gpr", y = "gpr" }
 group = "moves"
-summary = "Copy one general register to another, issued in parallel with the next instruction (the # form)."
+summary = "Copy one general register to another. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of mov.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -2857,7 +2857,7 @@ syntax = "{d} = {a} + {b}  #"
 encoding = ["1101110xxaaayddd"]
 fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
 group = "arithmetic"
-summary = "Add three-register form: rd = ra + rb (r0..r7). Sets the carry flag, issued in parallel with the next instruction (the # form)."
+summary = "Add three-register form: rd = ra + rb (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of add.rrr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -2893,7 +2893,7 @@ syntax = "{d} = {a} - {b}  #"
 encoding = ["1101111xxaaayddd"]
 fields = { d = "gpr_lo", a = "gpr_lo", b = { kind = "gpr_lo", letters = "xy" } }
 group = "arithmetic"
-summary = "Subtract: rd = ra - rb (r0..r7), operand order as printed. Sets the carry flag (set = no borrow), issued in parallel with the next instruction (the # form)."
+summary = "Subtract: rd = ra - rb (r0..r7), operand order as printed. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of sub.rrr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -2929,7 +2929,7 @@ syntax = "{d} += {s}  #"
 encoding = ["11011000ssssdddd"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Add a register to another: rd += rs (r0..r7). Sets the carry flag, issued in parallel with the next instruction (the # form)."
+summary = "Add a register to another: rd += rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of add.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. Not confirmed, for the reason given in add.rr. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -2960,7 +2960,7 @@ syntax = "{d} *= {s}  #"
 encoding = ["11011011ssssdddd"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Multiply: rd *= rs, keeping the low 32 bits (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Multiply: rd *= rs, keeping the low 32 bits (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of mul.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -2991,7 +2991,7 @@ syntax = "{d} |= {s}  #"
 encoding = ["110110010sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "logic"
-summary = "OR a register into another: rd |= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "OR a register into another: rd |= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of or.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3022,7 +3022,7 @@ syntax = "{d} ^= {s}  #"
 encoding = ["110110010sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "logic"
-summary = "XOR a register into another: rd ^= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "XOR a register into another: rd ^= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of xor.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -3053,7 +3053,7 @@ syntax = "{d} &= {s}  #"
 encoding = ["110110011sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "logic"
-summary = "AND a register into another: rd &= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "AND a register into another: rd &= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of and.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -3084,7 +3084,7 @@ syntax = "{d} = ~{s}  #"
 encoding = ["110110011sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "logic"
-summary = "Bitwise complement: rd = ~rs, issued in parallel with the next instruction (the # form)."
+summary = "Bitwise complement: rd = ~rs. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of not.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -3115,7 +3115,7 @@ syntax = "{d} <<= {s}  #"
 encoding = ["110110100sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "shifts"
-summary = "Logical shift left by a register: rd <<= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Logical shift left by a register: rd <<= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of lsl.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3177,7 +3177,7 @@ syntax = "{d} >>= {s}  #"
 encoding = ["110110101sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "shifts"
-summary = "Logical shift right (zero fill) by a register: rd >>= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Logical shift right (zero fill) by a register: rd >>= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of lsr.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3208,7 +3208,7 @@ syntax = "{d} >>>= {s}  #"
 encoding = ["110110101sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "shifts"
-summary = "Arithmetic shift right (sign fill) by a register: rd >>>= rs (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Arithmetic shift right (sign fill) by a register: rd >>>= rs (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of shr3.rr: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3239,7 +3239,7 @@ syntax = "{d} = {s}.b0 (u)  #"
 encoding = ["110101110sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "arithmetic"
-summary = "Zero-extend the low byte of a register: rd = rs.b0 (u), issued in parallel with the next instruction (the # form)."
+summary = "Zero-extend the low byte of a register: rd = rs.b0 (u). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of ext.b0.u: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3270,7 +3270,7 @@ syntax = "{d} = {s}.b0 (s)  #"
 encoding = ["110101110sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "arithmetic"
-summary = "Sign-extend the low byte of a register: rd = rs.b0 (s), issued in parallel with the next instruction (the # form)."
+summary = "Sign-extend the low byte of a register: rd = rs.b0 (s). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of ext.b0.s: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3301,7 +3301,7 @@ syntax = "{d} = {s}.l (u)  #"
 encoding = ["110101111sss0ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "arithmetic"
-summary = "Zero-extend the low halfword of a register: rd = rs.l (u), issued in parallel with the next instruction (the # form)."
+summary = "Zero-extend the low halfword of a register: rd = rs.l (u). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of ext.l.u: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3332,7 +3332,7 @@ syntax = "{d} = {s}.l (s)  #"
 encoding = ["110101111sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "arithmetic"
-summary = "Sign-extend the low halfword of a register: rd = rs.l (s), issued in parallel with the next instruction (the # form)."
+summary = "Sign-extend the low halfword of a register: rd = rs.l (s). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of ext.l.s: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -3363,7 +3363,7 @@ syntax = "{d} = {s}  #"
 encoding = ["11010101sss0ddd0"]
 fields = { d = "pair", s = "pair" }
 group = "moves"
-summary = "Copy a 64-bit register pair to another (low register to low register), issued in parallel with the next instruction (the # form)."
+summary = "Copy a 64-bit register pair to another (low register to low register). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Twin of mov.pair: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -3394,7 +3394,7 @@ syntax = "{p} = 0  #"
 encoding = ["110101001000ppp0"]
 fields = { p = "pair" }
 group = "constants"
-summary = "Clear a 64-bit register pair, issued in parallel with the next instruction (the # form)."
+summary = "Clear a 64-bit register pair. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Twin of li.zero_pair: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
@@ -5521,7 +5521,7 @@ group = "shifts"
 summary = "Rotate right by a register: rd = rs rotated right by rt (32-bit)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. Proposed id: ror.rrr."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. Proposed id: ror.rrr. [compiler] also `(a >> n) | (a << (32 - n))` -> `r0 = r0 <> r1` directly, and `(a >> (n & 31)) | (a << (-n & 31))` -> `r1 = r1 & 0x1F` then `<>`."
 
 [[insn.example]]
 bytes = "cc e1 00 00"
@@ -5806,10 +5806,10 @@ syntax = "{r} <>= {n}"
 encoding = ["1110000111010100", "rrr000nn0000nnnn"]
 fields = { r = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "shifts"
-summary = "Operation printed `P <>= N`: meaning not known beyond the syntax."
+summary = "Rotate a 64-bit register pair right by an immediate: p rotated right by n (1..64)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "compiler"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a << 5) | (a >> 59)` on unsigned long long -> `r1_r0 <>= 59` (rotate left 5 = rotate right 59)."
 
 [[insn.example]]
 bytes = "d4 e1 00 00"
@@ -5992,10 +5992,10 @@ syntax = "{r} <>= {s}"
 encoding = ["1110000111011100", "rrr0ssss00000000"]
 fields = { r = "pair", s = "gpr" }
 group = "shifts"
-summary = "Operation printed `P <>= R`: meaning not known beyond the syntax."
+summary = "Rotate a 64-bit register pair right by a register: p rotated right by r."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "compiler"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> n) | (a << (64 - n))` on unsigned long long -> `r1_r0 <>= r2`."
 
 [[insn.example]]
 bytes = "dc e1 00 00"
@@ -12799,10 +12799,10 @@ encoding = ["111010110000rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { n = "rmask", r = "gpr" }
 group = "stack"
 asm_rejects = ["{} = [r0+]", "{} = [r1+]", "{} = [r10+]", "{} = [r11+]", "{} = [r12+]", "{} = [r13+]", "{} = [r14+]", "{} = [r15+]", "{} = [r2+]", "{} = [r3+]", "{} = [r4+]", "{} = [r5+]", "{} = [r6+]", "{} = [r7+]", "{} = [r8+]", "{} = [r9+]"]
-summary = "Load a set of general registers from memory addressed by a register (post1: increment style as printed)."
+summary = "Load the listed registers from consecutive words starting at the address in a register (lowest-numbered register from the lowest address); the base register is not changed."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. [compiler] two consecutive words: `{r2, r1} = [r0+]` loads r1 from [r0] and r2 from [r0+4] (lowest-numbered register from the lowest address), and r0 is left unchanged (the code after it uses [r0+8]); used for `p[0], p[1]` reads at -O2."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] two consecutive words: `{r2, r1} = [r0+]` loads r1 from [r0] and r2 from [r0+4] (lowest-numbered register from the lowest address), and r0 is left unchanged (the code after it uses [r0+8]); used for `p[0], p[1]` reads at -O2."
 
 [[insn.example]]
 bytes = "00 eb 00 00"
@@ -12863,10 +12863,10 @@ encoding = ["111010110010rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "rmask" }
 group = "stack"
 asm_rejects = ["[r0+] = {}", "[r1+] = {}", "[r10+] = {}", "[r11+] = {}", "[r12+] = {}", "[r13+] = {}", "[r14+] = {}", "[r15+] = {}", "[r2+] = {}", "[r3+] = {}", "[r4+] = {}", "[r5+] = {}", "[r6+] = {}", "[r7+] = {}", "[r8+] = {}", "[r9+] = {}"]
-summary = "Store a set of general registers to memory addressed by a register (post1: increment style as printed)."
+summary = "Store the listed registers to consecutive words starting at the address in a register (lowest-numbered register to the lowest address); the base register is not changed."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. [compiler] `p[0] = a; p[1] = b` -> `[r0+] = {r2, r1}`: r1 to [r0], r2 to [r0+4]; r0 is unchanged. Seen for two- and four-word stores at -O2."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[0] = a; p[1] = b` -> `[r0+] = {r2, r1}`: r1 to [r0], r2 to [r0+4]; r0 is unchanged. Seen for two- and four-word stores at -O2."
 
 [[insn.example]]
 bytes = "20 eb 00 00"
@@ -13255,7 +13255,7 @@ group = "branches"
 summary = "Branch on the condition flags (eq); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle", "ac79-sdk"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. The AC79 SDK's spin lock (include_lib/driver/cpu/wl82/asm/cpu.h, inline asm) is `1: testset b[%0]; ifeq goto 1b`, i.e. it retries while eq, so testset leaves eq set when it did not get the lock."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. The AC79 SDK's spin lock (include_lib/driver/cpu/wl82/asm/cpu.h, inline asm) is `1: testset b[%0]; ifeq goto 1b`, i.e. it retries while eq, so testset leaves eq set when it did not get the lock."
 
 [[insn.example]]
 bytes = "40 e8 00 00"
@@ -13586,7 +13586,7 @@ group = "branches"
 summary = "Branch on the condition flags (ne); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "c0 e8 00 00"
@@ -13803,7 +13803,7 @@ group = "branches"
 summary = "Branch on the condition flags (cs); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "40 e9 00 00"
@@ -14020,7 +14020,7 @@ group = "branches"
 summary = "Branch on the condition flags (cc); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "c0 e9 00 00"
@@ -14584,7 +14584,7 @@ group = "branches"
 summary = "Branch on the condition flags (hi); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "40 ec 00 00"
@@ -14801,7 +14801,7 @@ group = "branches"
 summary = "Branch on the condition flags (ls); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "c0 ec 00 00"
@@ -15018,7 +15018,7 @@ group = "branches"
 summary = "Branch on the condition flags (ge); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "40 ed 00 00"
@@ -15235,7 +15235,7 @@ group = "branches"
 summary = "Branch on the condition flags (lt); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "c0 ed 00 00"
@@ -15452,7 +15452,7 @@ group = "branches"
 summary = "Branch on the condition flags (gt); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "40 ee 00 00"
@@ -15669,7 +15669,7 @@ group = "branches"
 summary = "Branch on the condition flags (le); the target offset is -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Which instructions set the flags is not known. Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md."
 
 [[insn.example]]
 bytes = "c0 ee 00 00"
@@ -27394,7 +27394,7 @@ syntax = "{d} = {a} + {b} (f)  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0000"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Single-precision float add: rd = rs + rt, issued in parallel with the next instruction (the # form)."
+summary = "Single-precision float add: rd = rs + rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -27430,7 +27430,7 @@ syntax = "{d} = {a} - {b} (f)  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0001"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Single-precision float subtract: rd = rs - rt, issued in parallel with the next instruction (the # form)."
+summary = "Single-precision float subtract: rd = rs - rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
@@ -27466,7 +27466,7 @@ syntax = "{d} = {a} * {b} (f)  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0010"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Single-precision float multiply, issued in parallel with the next instruction (the # form)."
+summary = "Single-precision float multiply: rd = rs * rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] seen at -O0 paired with a stack store."
@@ -27502,7 +27502,7 @@ syntax = "{d} = {a} / {b} (f)  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0011"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Single-precision float divide: rd = rs / rt, issued in parallel with the next instruction (the # form)."
+summary = "Single-precision float divide: rd = rs / rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
@@ -27569,7 +27569,7 @@ syntax = "{d} = fmin({a}, {b})  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0101"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Floating-point minimum: rd = fmin(rs, rt), issued in parallel with the next instruction (the # form)."
+summary = "Floating-point minimum: rd = fmin(rs, rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
@@ -27605,7 +27605,7 @@ syntax = "{d} = fmax({a}, {b})  #"
 encoding = ["1111010100111111", "ddddbbbbaaaa0110"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "fpu"
-summary = "Floating-point maximum: rd = fmax(rs, rt), issued in parallel with the next instruction (the # form)."
+summary = "Floating-point maximum: rd = fmax(rs, rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. Floating-point format and exception behavior are unknown."
@@ -27744,7 +27744,7 @@ syntax = "{d} = ftoi({s}) (trunc)  #"
 encoding = ["1111010100111111", "ddddssss00011111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Convert float to signed 32-bit integer, rounding toward zero (the C cast), issued in parallel with the next instruction (the # form)."
+summary = "Convert float to signed 32-bit integer, rounding toward zero (the C cast). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -27868,7 +27868,7 @@ syntax = "{d} = ftou({s}) (trunc)  #"
 encoding = ["1111010100111111", "ddddssss01011111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Convert float to unsigned 32-bit integer, rounding toward zero (the C cast), issued in parallel with the next instruction (the # form)."
+summary = "Convert float to unsigned 32-bit integer, rounding toward zero (the C cast). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -27992,7 +27992,7 @@ syntax = "{d} = ftof({s}) (trunc)  #"
 encoding = ["1111010100111111", "ddddssss11011111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Round a float to an integer-valued float, toward zero, issued in parallel with the next instruction (the # form)."
+summary = "Round a float to an integer-valued float, toward zero. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28023,7 +28023,7 @@ syntax = "{d} = ftof({s}) (ceil)  #"
 encoding = ["1111010100111111", "ddddssss11101111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Round a float to an integer-valued float, toward plus infinity, issued in parallel with the next instruction (the # form)."
+summary = "Round a float to an integer-valued float, toward plus infinity. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28054,7 +28054,7 @@ syntax = "{d} = ftof({s}) (floor)  #"
 encoding = ["1111010100111111", "ddddssss11111111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Round a float to an integer-valued float, toward minus infinity, issued in parallel with the next instruction (the # form)."
+summary = "Round a float to an integer-valued float, toward minus infinity. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28085,7 +28085,7 @@ syntax = "{d} = itof({s})  #"
 encoding = ["1111010100111111", "ddddssss10001111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Convert a signed 32-bit integer to single-precision float, issued in parallel with the next instruction (the # form)."
+summary = "Convert a signed 32-bit integer to single-precision float. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28116,7 +28116,7 @@ syntax = "{d} = utof({s})  #"
 encoding = ["1111010100111111", "ddddssss10011111"]
 fields = { d = "gpr", s = "gpr" }
 group = "fpu"
-summary = "Convert an unsigned 32-bit integer to single-precision float, issued in parallel with the next instruction (the # form)."
+summary = "Convert an unsigned 32-bit integer to single-precision float. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f53f and vary probes. Decode and assembly agree both with and without fprev1. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28322,7 +28322,7 @@ syntax = "{d} = {n}  #"
 encoding = ["111100000100dddd", "nnnnnnnnnnnnnnnn"]
 fields = { d = "gpr", n = "simm" }
 group = "constants"
-summary = "Load a signed 16-bit constant (any register), issued in parallel with the next instruction (the # form)."
+summary = "Load a signed 16-bit constant (any register). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28353,7 +28353,7 @@ syntax = "{r} = {n}  #"
 encoding = ["1111000001100000", "rrrrnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "modimm" }
 group = "constants"
-summary = "Load a 32-bit constant given by a 12-bit modified immediate (any register), issued in parallel with the next instruction (the # form)."
+summary = "Load a 32-bit constant given by a 12-bit modified immediate (any register). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28384,7 +28384,7 @@ syntax = "{r} = {s}  #"
 encoding = ["1111000001100100", "rrrrssss00000000"]
 fields = { r = "gpr", s = "sr" }
 group = "moves"
-summary = "Copy a special register to a general register, issued in parallel with the next instruction (the # form)."
+summary = "Copy a special register to a general register. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
@@ -28479,7 +28479,7 @@ syntax = "{d} = rev8({s})  #"
 encoding = ["1111000001110000", "ddddssss00000000"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Reverse the byte order of a register (byte swap), issued in parallel with the next instruction (the # form)."
+summary = "Reverse the byte order of a register (byte swap). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep f070. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28572,7 +28572,7 @@ syntax = "{d} = popcnt({s})  #"
 encoding = ["1111000001110000", "ddddssss11000000"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Population count (number of set bits) of a register, issued in parallel with the next instruction (the # form)."
+summary = "Population count (number of set bits) of a register. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep f070. Meaning unknown beyond the printed operation name; # marks parallel issue."
@@ -28636,7 +28636,7 @@ syntax = "{d} = clz({s})  #"
 encoding = ["1111000110000000", "ddddssss00000000"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Count leading zeros of a register; the count for 0 is 32, issued in parallel with the next instruction (the # form)."
+summary = "Count leading zeros of a register; the count for 0 is 32. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep f180. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28667,7 +28667,7 @@ syntax = "{d} = cls({s})  #"
 encoding = ["1111000110000000", "ddddssss00000001"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Count leading sign bits: the number of leading bits equal to bit 31, counting bit 31 itself (clz of the value or its complement); cls(0) = 32, issued in parallel with the next instruction (the # form)."
+summary = "Count leading sign bits: the number of leading bits equal to bit 31, counting bit 31 itself (clz of the value or its complement); cls(0) = 32. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep f180. Meaning unknown beyond the printed operation name; # marks parallel issue."
@@ -28698,7 +28698,7 @@ syntax = "{d} = zcmp({s})  #"
 encoding = ["1111000110000000", "ddddssss00000010"]
 fields = { d = "gpr", s = "gpr" }
 group = "arithmetic"
-summary = "Three-way compare with zero: rd = 0 if rs is 0, 1 if rs > 0 (signed), -1 if rs < 0, issued in parallel with the next instruction (the # form)."
+summary = "Three-way compare with zero: rd = 0 if rs is 0, 1 if rs > 0 (signed), -1 if rs < 0. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep f180. Meaning unknown beyond the printed operation name; # marks parallel issue."
@@ -28765,7 +28765,7 @@ syntax = "{d} = {a} + {b} + c  #"
 encoding = ["1111000010111000", "ddddbbbbaaaa0000"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "arithmetic"
-summary = "Add with carry: rd = rs + rt + C, and the sum sets C again (psr bit 1), issued in parallel with the next instruction (the # form)."
+summary = "Add with carry: rd = rs + rt + C, and the sum sets C again (psr bit 1). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
@@ -28801,7 +28801,7 @@ syntax = "{d} = {a} - {b} - !c  #"
 encoding = ["1111000010111000", "ddddbbbbaaaa0010"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "arithmetic"
-summary = "Subtract with borrow: rd = rs - rt - !C, where C is the carry flag (set when the previous subtract did not borrow), issued in parallel with the next instruction (the # form)."
+summary = "Subtract with borrow: rd = rs - rt - !C, where C is the carry flag (set when the previous subtract did not borrow). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
@@ -28837,7 +28837,7 @@ syntax = "{d} = {a} & ~{b}  #"
 encoding = ["1111000110010000", "ddddbbbbaaaa0011"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "arithmetic"
-summary = "Bit clear: rd = ra & ~rb, issued in parallel with the next instruction (the # form)."
+summary = "Bit clear: rd = ra & ~rb. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue."
@@ -28873,7 +28873,7 @@ syntax = "{d} = {a} / {b} (u)  #"
 encoding = ["1111000111110100", "ddddbbbbaaaa0000"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "arithmetic"
-summary = "Unsigned divide: rd = rs / rt, quotient only, issued in parallel with the next instruction (the # form)."
+summary = "Unsigned divide: rd = rs / rt, quotient only. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28909,7 +28909,7 @@ syntax = "{d} = {a} / {b} (s)  #"
 encoding = ["1111000111110100", "ddddbbbbaaaa0001"]
 fields = { d = "gpr", a = "gpr", b = "gpr" }
 group = "arithmetic"
-summary = "Signed divide: rd = rs / rt, quotient only (the compiler uses it for C `/`, which truncates toward zero), issued in parallel with the next instruction (the # form)."
+summary = "Signed divide: rd = rs / rt, quotient only (the compiler uses it for C `/`, which truncates toward zero). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28945,7 +28945,7 @@ syntax = "{d} = {s} + {n}  #"
 encoding = ["1111000100nndddd", "ssssnnnnnnnnnnnn"]
 fields = { d = "gpr", s = "gpr", n = "simm" }
 group = "arithmetic"
-summary = "Add a signed 14-bit constant: rd = rs + n. Sets the carry flag, issued in parallel with the next instruction (the # form)."
+summary = "Add a signed 14-bit constant: rd = rs + n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit/vary probes. The # marks parallel issue. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -28981,7 +28981,7 @@ syntax = "{d} = {s} << {n}  #"
 encoding = ["1111000111000000", "dddd000nssssnnnn"]
 fields = { d = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "arithmetic"
-summary = "Logical shift left by an immediate 1..32: rd = rs << n (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Logical shift left by an immediate 1..32: rd = rs << n (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
@@ -29053,7 +29053,7 @@ syntax = "{d} = {s} >> {n}  #"
 encoding = ["1111000111000000", "dddd100nssssnnnn"]
 fields = { d = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "arithmetic"
-summary = "Logical shift right (zero fill) by an immediate 1..32: rd = rs >> n (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Logical shift right (zero fill) by an immediate 1..32: rd = rs >> n (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
@@ -29089,7 +29089,7 @@ syntax = "{d} = {s} >>> {n}  #"
 encoding = ["1111000111000000", "dddd110nssssnnnn"]
 fields = { d = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "arithmetic"
-summary = "Arithmetic shift right (sign fill) by an immediate 1..32: rd = rs >>> n (r0..r7), issued in parallel with the next instruction (the # form)."
+summary = "Arithmetic shift right (sign fill) by an immediate 1..32: rd = rs >>> n (r0..r7). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1c0 and vary probes. A zero count encodes 32. Meaning of the triple-angle shifts is unknown."
@@ -29125,7 +29125,7 @@ syntax = "{d} = {s} + {n}  #"
 encoding = ["111100001110dddd", "ssssnnnnnnnnnnnn"]
 fields = { d = "gpr", s = "gpr", n = "modimm" }
 group = "arithmetic"
-summary = "Add a modified immediate: rd = rs + n, issued in parallel with the next instruction (the # form)."
+summary = "Add a modified immediate: rd = rs + n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f0e0 and vary probes. The assembler can prefer the signed 14-bit immediate form, including for redundant modified-immediate zeros. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -29163,7 +29163,7 @@ syntax = "{p} <<= {n}  #"
 encoding = ["1111000111010000", "ppp000nn0000nnnn"]
 fields = { p = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "arithmetic"
-summary = "64-bit logical shift left of a register pair by 1..64: p <<= n, issued in parallel with the next instruction (the # form)."
+summary = "64-bit logical shift left of a register pair by 1..64: p <<= n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
@@ -29194,7 +29194,7 @@ syntax = "{p} <<= {r}  #"
 encoding = ["1111000111011000", "ppp0rrrr00000000"]
 fields = { p = "pair", r = "gpr" }
 group = "arithmetic"
-summary = "64-bit logical shift left of a register pair by a register: p <<= r, issued in parallel with the next instruction (the # form)."
+summary = "64-bit logical shift left of a register pair by a register: p <<= r. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
@@ -29287,7 +29287,7 @@ syntax = "{p} >>= {n}  #"
 encoding = ["1111000111010000", "ppp010nn0000nnnn"]
 fields = { p = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "arithmetic"
-summary = "64-bit logical shift right (zero fill) of a register pair by 1..64, issued in parallel with the next instruction (the # form)."
+summary = "64-bit logical shift right (zero fill) of a register pair by 1..64: p >>= n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown. [compiler] seen at -O0 paired with a stack store."
@@ -29318,7 +29318,7 @@ syntax = "{p} >>= {r}  #"
 encoding = ["1111000111011000", "ppp0rrrr00000010"]
 fields = { p = "pair", r = "gpr" }
 group = "arithmetic"
-summary = "64-bit logical shift right (zero fill) of a register pair by a register: p >>= r, issued in parallel with the next instruction (the # form)."
+summary = "64-bit logical shift right (zero fill) of a register pair by a register: p >>= r. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
@@ -29349,7 +29349,7 @@ syntax = "{p} >>>= {n}  #"
 encoding = ["1111000111010000", "ppp011nn0000nnnn"]
 fields = { p = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "arithmetic"
-summary = "64-bit arithmetic shift right (sign fill) of a register pair by 1..64: p >>>= n, issued in parallel with the next instruction (the # form)."
+summary = "64-bit arithmetic shift right (sign fill) of a register pair by 1..64: p >>>= n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1d0 and count vary probes. Raw count zero means 64. Meaning of the triple-angle shifts is unknown."
@@ -29380,7 +29380,7 @@ syntax = "{p} >>>= {r}  #"
 encoding = ["1111000111011000", "ppp0rrrr00000011"]
 fields = { p = "pair", r = "gpr" }
 group = "arithmetic"
-summary = "64-bit arithmetic shift right (sign fill) of a register pair by a register: p >>>= r, issued in parallel with the next instruction (the # form)."
+summary = "64-bit arithmetic shift right (sign fill) of a register pair by a register: p >>>= r. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from oracle sweep/fit f1d8. Meaning of the triple-angle shifts is unknown."
@@ -29490,7 +29490,7 @@ syntax = "{r} = {n} - {s}  #"
 encoding = ["111100001010rrrr", "ssssnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "modimm", s = "gpr" }
 group = "arithmetic"
-summary = "Reverse subtract: rd = constant - rs (modified immediate). Sets the carry flag, issued in parallel with the next instruction (the # form)."
+summary = "Reverse subtract: rd = constant - rs (modified immediate). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of rsub.modimm.rri: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -29526,7 +29526,7 @@ syntax = "{r} = {s} * {n}  #"
 encoding = ["111100011110rrrr", "ssssnnnnnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = "modimm" }
 group = "arithmetic"
-summary = "Multiply by a modified immediate: rd = rs * n, low 32 bits, issued in parallel with the next instruction (the # form)."
+summary = "Multiply by a modified immediate: rd = rs * n, low 32 bits. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of mul.modimm.rri: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -29634,7 +29634,7 @@ syntax = "{r} = {s} & {n}  #"
 encoding = ["111100010110rrrr", "ssssnnnnnnnnnnnn"]
 fields = { r = "gpr", s = "gpr", n = "modimm" }
 group = "logic"
-summary = "AND with a modified immediate: rd = rs & n, issued in parallel with the next instruction (the # form)."
+summary = "AND with a modified immediate: rd = rs & n. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of and.modimm.rri: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -29670,7 +29670,7 @@ syntax = "{r} = {s} | (1 << {t})  #"
 encoding = ["1111000110010100", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "logic"
-summary = "Set the bit whose number is in a register: rd = rs | (1 << rt), issued in parallel with the next instruction (the # form)."
+summary = "Set the bit whose number is in a register: rd = rs | (1 << rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of or.bit.rrr: first word with bit 12 set, printed with a trailing #."
@@ -29706,7 +29706,7 @@ syntax = "{r} = {s} ^ (1 << {t})  #"
 encoding = ["1111000110010100", "rrrrttttssss0001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "logic"
-summary = "Toggle the bit whose number is in a register: rd = rs ^ (1 << rt), issued in parallel with the next instruction (the # form)."
+summary = "Toggle the bit whose number is in a register: rd = rs ^ (1 << rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of xor.bit.rrr: first word with bit 12 set, printed with a trailing #."
@@ -29742,7 +29742,7 @@ syntax = "{r} = {s} & (1 << {t})  #"
 encoding = ["1111000110010100", "rrrrttttssss0010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "logic"
-summary = "Keep only the bit whose number is in a register: rd = rs & (1 << rt), issued in parallel with the next instruction (the # form)."
+summary = "Keep only the bit whose number is in a register: rd = rs & (1 << rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of and.bit.rrr: first word with bit 12 set, printed with a trailing #."
@@ -29778,7 +29778,7 @@ syntax = "{r} = {s} & ~(1 << {t})  #"
 encoding = ["1111000110010100", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "logic"
-summary = "Clear the bit whose number is in a register: rd = rs & ~(1 << rt), issued in parallel with the next instruction (the # form)."
+summary = "Clear the bit whose number is in a register: rd = rs & ~(1 << rt). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of and.invbit.rrr: first word with bit 12 set, printed with a trailing #."
@@ -29850,7 +29850,7 @@ syntax = "{r} = {s} <> {n}  #"
 encoding = ["1111000111000100", "rrrr000nssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "shifts"
-summary = "Rotate right by an immediate: rd = rs rotated right by n (32-bit), issued in parallel with the next instruction (the # form)."
+summary = "Rotate right by an immediate: rd = rs rotated right by n (32-bit). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of cyc.rri: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -29922,7 +29922,7 @@ syntax = "{r} = {s} <> {t}  #"
 encoding = ["1111000111001100", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "shifts"
-summary = "Rotate right by a register: rd = rs rotated right by rt (32-bit), issued in parallel with the next instruction (the # form)."
+summary = "Rotate right by a register: rd = rs rotated right by rt (32-bit). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of cyc.rrr: first word with bit 12 set, printed with a trailing #."
@@ -30086,7 +30086,7 @@ syntax = "{r} <>= {n}  #"
 encoding = ["1111000111010100", "rrr000nn0000nnnn"]
 fields = { r = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "shifts"
-summary = "Operation printed `P <>= N`: meaning not known beyond the syntax."
+summary = "Rotate a 64-bit register pair right by an immediate: p rotated right by n (1..64). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of cyc.pi: first word with bit 12 set, printed with a trailing #."
@@ -30148,7 +30148,7 @@ syntax = "{r} <>= {s}  #"
 encoding = ["1111000111011100", "rrr0ssss00000000"]
 fields = { r = "pair", s = "gpr" }
 group = "shifts"
-summary = "Operation printed `P <>= R`: meaning not known beyond the syntax."
+summary = "Rotate a 64-bit register pair right by a register: p rotated right by r. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of cyc.pr: first word with bit 12 set, printed with a trailing #."
@@ -30390,7 +30390,7 @@ syntax = "{r} <= insert({s}, p:{n}, l:{m})  #"
 encoding = ["111100011010rrrr", "ssssnnnnnmmmmm00"]
 fields = { r = "gpr", s = "gpr", n = "uimm", m = "uimm" }
 group = "bitops"
-summary = "Insert a bit field (as insert.rrii), issued in parallel with the next instruction (the # form)."
+summary = "Insert a bit field: the low l bits of rs go into bits p.. of rd, other bits of rd unchanged. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of insert.rrii: first word with bit 12 set, printed with a trailing #. [compiler] -O0 pairing with a store."
@@ -30431,7 +30431,7 @@ syntax = "{r} = uextra({s}, p:{n}, l:{m})  #"
 encoding = ["111100011011rrrr", "ssssnnnnnmmmmm00"]
 fields = { r = "gpr", s = "gpr", n = "uimm", m = "uimm" }
 group = "bitops"
-summary = "Extract an unsigned bit field: rd = (rs >> p) & ((1 << l) - 1), p the lowest bit (0..31) and l the width, issued in parallel with the next instruction (the # form)."
+summary = "Extract an unsigned bit field: rd = (rs >> p) & ((1 << l) - 1), p the lowest bit (0..31) and l the width. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of uextra.rrii: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -30472,7 +30472,7 @@ syntax = "{r} = sextra({s}, p:{n}, l:{m})  #"
 encoding = ["111100011011rrrr", "ssssnnnnnmmmmm01"]
 fields = { r = "gpr", s = "gpr", n = "uimm", m = "uimm" }
 group = "bitops"
-summary = "Extract a signed bit field: rd = the l bits of rs starting at bit p, sign-extended, issued in parallel with the next instruction (the # form)."
+summary = "Extract a signed bit field: rd = the l bits of rs starting at bit p, sign-extended. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of sextra.rrii: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -30513,7 +30513,7 @@ syntax = "{r} = {s} * {t} (u)  #"
 encoding = ["1111000111111000", "rrr0ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Unsigned 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both unsigned, issued in parallel with the next instruction (the # form)."
+summary = "Unsigned 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both unsigned. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of mul.u.prr: first word with bit 12 set, printed with a trailing #."
@@ -30549,7 +30549,7 @@ syntax = "{r} = {s} * {t} (s)  #"
 encoding = ["1111000111111000", "rrr1ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Signed 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both signed, issued in parallel with the next instruction (the # form)."
+summary = "Signed 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both signed. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Parallel twin of mul.s.prr: first word with bit 12 set, printed with a trailing #. [compiler] emitted as the first half of a pair: `X #` followed by a 16-bit load or store (the pair issues together; the second instruction reads the registers as they were before the first writes)."
@@ -30585,7 +30585,7 @@ syntax = "{r} += {s} * {t} (u)  #"
 encoding = ["1111000111111100", "rrr0ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Unsigned multiply-accumulate into a pair: p += rs * rt (64-bit sum of an unsigned 32 x 32 product), issued in parallel with the next instruction (the # form)."
+summary = "Unsigned multiply-accumulate into a pair: p += rs * rt (64-bit sum of an unsigned 32 x 32 product). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of madd.u.prr: first word with bit 12 set, printed with a trailing #."
@@ -30621,7 +30621,7 @@ syntax = "{r} += {s} * {t} (s)  #"
 encoding = ["1111000111111100", "rrr1ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Signed multiply-accumulate into a pair: p += rs * rt (64-bit sum of a signed 32 x 32 product), issued in parallel with the next instruction (the # form)."
+summary = "Signed multiply-accumulate into a pair: p += rs * rt (64-bit sum of a signed 32 x 32 product). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of madd.s.prr: first word with bit 12 set, printed with a trailing #."
@@ -30657,7 +30657,7 @@ syntax = "{r} -= {s} * {t} (u)  #"
 encoding = ["1111000111111110", "rrr0ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Unsigned multiply-subtract from a pair: p -= rs * rt, issued in parallel with the next instruction (the # form)."
+summary = "Unsigned multiply-subtract from a pair: p -= rs * rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of msub.u.prr: first word with bit 12 set, printed with a trailing #."
@@ -30693,7 +30693,7 @@ syntax = "{r} -= {s} * {t} (s)  #"
 encoding = ["1111000111111110", "rrr1ttttssss0000"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
-summary = "Signed multiply-subtract from a pair: p -= rs * rt, issued in parallel with the next instruction (the # form)."
+summary = "Signed multiply-subtract from a pair: p -= rs * rt. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of msub.s.prr: first word with bit 12 set, printed with a trailing #."
@@ -33070,7 +33070,7 @@ syntax = "{r} = abs({s})  #"
 encoding = ["111101000011000-", "rrrrssss--------"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
-summary = "Absolute value of a signed register: rd = abs(rs), issued in parallel with the next instruction (the # form)."
+summary = "Absolute value of a signed register: rd = abs(rs). Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of abs.rr: first word with bit 12 set, printed with a trailing #."
@@ -33132,7 +33132,7 @@ syntax = "{r} = umax({s}, {t})  #"
 encoding = ["11110100001101-0", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
-summary = "Unsigned maximum: rd = max(rs, rt) as unsigned numbers, issued in parallel with the next instruction (the # form)."
+summary = "Unsigned maximum: rd = max(rs, rt) as unsigned numbers. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of umax.rrr: first word with bit 12 set, printed with a trailing #."
@@ -33168,7 +33168,7 @@ syntax = "{r} = smax({s}, {t})  #"
 encoding = ["11110100001101-0", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
-summary = "Signed maximum: rd = max(rs, rt) as signed numbers, issued in parallel with the next instruction (the # form)."
+summary = "Signed maximum: rd = max(rs, rt) as signed numbers. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of smax.rrr: first word with bit 12 set, printed with a trailing #."
@@ -33204,7 +33204,7 @@ syntax = "{r} = umin({s}, {t})  #"
 encoding = ["11110100001101-1", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
-summary = "Unsigned minimum: rd = min(rs, rt) as unsigned numbers, issued in parallel with the next instruction (the # form)."
+summary = "Unsigned minimum: rd = min(rs, rt) as unsigned numbers. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of umin.rrr: first word with bit 12 set, printed with a trailing #."
@@ -33240,7 +33240,7 @@ syntax = "{r} = smin({s}, {t})  #"
 encoding = ["11110100001101-1", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
-summary = "Signed minimum: rd = min(rs, rt) as signed numbers, issued in parallel with the next instruction (the # form)."
+summary = "Signed minimum: rd = min(rs, rt) as signed numbers. Issued in parallel with the next instruction (the # form)."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Parallel twin of smin.rrr: first word with bit 12 set, printed with a trailing #."

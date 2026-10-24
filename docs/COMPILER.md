@@ -32,13 +32,14 @@ listing: it has switches `-pi32v2-enable-rep-memop` (inline `memcpy`/`memset` wi
 | `a >> b`, signed | `shr3.rr`, `shr3.rrr` (arithmetic) | `r0 >>>= r1`; `r0 = r2 >>> r1` |
 | `a << 5`, `a >> 5` (u), `a >> 5` (s) | `lsl.rri`, `lsr.rri`, `shr3.rri` (counts 1..32, r0..r7); `.l` forms for r8+ | `r0 = r0 >>> 5`; `r6 = r11 >>> 2` |
 | `(a >> 5) \| (a << 27)`, `(a >> 16) \| (a << 16)` | `cyc.rri`: rotate right by n | `r0 = r0 <> 5` |
-| `(a << b) \| (a >> (32 - b))` | `rsub.modimm.rri` (`r1 = 0x20 - r1`) then `cyc.rrr` | `r0 = r0 <> r1`: `<>` rotates right |
+| `(a << b) \| (a >> (32 - b))` | `rsub.modimm.rri` (`r1 = 0x20 - r1`) then `cyc.rrr` | `r0 = r0 <> r1`: `<>` rotates right; `(a >> n) \| (a << (32 - n))` is `cyc.rrr` directly |
 | `long long << n`, `>> n` (u/s) | `lsl.pair.i/.r`, `lsr.pair.i/.r`, `shr3.pair.i/.r` (counts 1..64) | `r1_r0 >>>= 40`, `r1_r0 <<= r2` |
+| `(a << 5) \| (a >> 59)`, `(a >> n) \| (a << (64 - n))` on 64-bit | `cyc.pi` (`r1_r0 <>= 59`), `cyc.pr` (`r1_r0 <>= r2`): rotate right | |
 | `(unsigned)(ll >> 5)` | `lsr.pair.i` then use r0 | low word of the pair is the even register |
 | `a >> 31` (s) sign mask, `(long long)a` | `shr3.rri` by 31 | `r1 = r0 >>> 31` |
 
 `>>>` is the arithmetic (sign-filling) right shift; `>>` is logical. The compiler never uses `<<<`
-(`shl3.*`), `<c>` (`cycc.*`) or the rotate on pairs (`cyc.pi`, `cyc.pr`), and no variable shift count above 31 is
+(`shl3.*`) or `<c>` (`cycc.*`), and no variable shift count above 31 is
 ever relied on: it masks (`b & 31` becomes `r1 = r1 & 0x1F` then the shift) or clamps (`ifs (r1 >= 31) { r1 = 31 }`)
 itself, and keeps its own `b < 32` test around `b >= 32 ? 0 : a << b`. The hardware result for counts of 32 and
 above is therefore not established.
@@ -205,6 +206,17 @@ ld.w       r4 = [r0+12]
 In assembly the pair is two lines, the first ending in `#` (`r1 += r3 #`). The first instruction is always one of
 the `.p` twin entries. No `if` block has a `#` form.
 
+What the assembler accepts as a pair (tried directly, not only what the compiler writes): the first line (A)
+may be any 16- or 32-bit ALU, move, shift, multiply, divide, float, bit-field, `clz`, `abs`, `smax`, pair
+shift or pair multiply instruction that has a `.p` twin, including r8..r15 forms and `r0 = 5`; it refuses a
+`#` after `nop`, `goto`, `call`, a load or a store, a 48-bit constant (`r0 = 0x12345678 #`, "invalid
+parallel-A instruction"), and a one-line `A # B`. The second line (B) must be one of the 16-bit loads and
+stores on r0..r7: `[r+off]` words/halfwords/bytes with the short offsets, `[sp+off]` with the short offset
+(`r2 = [sp+400]` is refused), the unsigned byte/halfword loads, and `[r++=±n]` post-increments; it refuses
+`nop`, ALU instructions, the 32-bit `.l` loads and stores, `d[...]` pair accesses, `[r+r<<2]` indexed forms,
+signed byte/halfword loads, `ldm`/`stm`, `push`, branches, and any base register r8 or above
+("invalid parallel-B instruction").
+
 ### Hardware loops
 
 `rep` is not used for ordinary loops at any level (counted loops are `dbnz.r`). With
@@ -268,7 +280,7 @@ In the tests (about 30 source files at -O0, -O2, -Os and -fPIC):
 
 - the DSP group: lane (`.l`/`.h`/`(v)`) arithmetic, saturating and averaging adds, `all`/`any`/`cmp`/`cmps`,
   the `mem1`/`mem2` multiply-accumulates, `sad4`, `sum`, ... even with `-mllvm -pi32v2-enable-simd`;
-- `shl3.*` (`<<<`), `cycc.*` (`<c>`), `cyc.pi`/`cyc.pr`, `shiftr.*`, `add.brev.rr`;
+- `shl3.*` (`<<<`), `cycc.*` (`<c>`), `shiftr.*`, `add.brev.rr`;
 - the flag branches `bc.*`, `cc.set`, `fcmp.rr`, `madd.f.rrr`, `msub.f.rrr`, the `ftoi/ftou` roundings other
   than trunc, `ftof.half/full/even`, `div.s.ppr`/`div.u.ppr`;
 - `popcnt.rr` (except through the builtin), the 64-bit `popcnt.r_pair`, `rev16.rr`, `revs.rr`, `cls.rr`,
