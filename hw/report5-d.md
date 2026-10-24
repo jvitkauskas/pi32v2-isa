@@ -1,15 +1,19 @@
 <!-- SPDX-FileCopyrightText: 2026 Julius Vitkauskas -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
-# Round 5 — analyst D
+# Round 5 — analyst D, final
 
 All **58 assigned forms match every one of their 701 hardware cases**, including flags, registers, scratch,
-sp, rets and exit. Models are in `tools/hwtest/semantics/d2.py`. Evidence is
-`hw/fm1-2026-10-24-v2/{results.jsonl,patterns.json,README.md}`. No hardware or SSH commands were run.
+sp, rets and exit. The completed follow-up also matches **336/336 arithmetic cases across all 54
+arithmetic forms**, plus **12/12 calibration nops** (55/55 modelled entries). Models are in
+`tools/hwtest/semantics/d2.py`. Evidence is `results.jsonl`, `patterns.json`, `followup5-d.jsonl`,
+`followup5-d.patterns.json` and `README.md` in `hw/fm1-2026-10-24-v2/`. No hardware or SSH commands
+were run by this analyst.
 
 ## Corrections and newly settled meanings
 
-Only `summary`, `notes` and `sources` changed in the table: 58 assigned entries and the six reset entries.
-Encodings, syntax, examples, requirements and status are unchanged.
+Round 1 changed only `summary`, `notes` and `sources` in 58 assigned entries and the six reset entries.
+This final round updates only `notes` in the 54 arithmetic entries. Encodings, syntax, examples,
+requirements and status are unchanged.
 
 - **24 `mul/madd/msub.mem1.{h,w}.{i,r}.{u,s}` forms:** previously “meaning not known beyond the syntax” →
   load at the original address, multiply the halfword or word by the full 32-bit register operand, and write
@@ -22,8 +26,8 @@ Encodings, syntax, examples, requirements and status are unchanged.
   halfword** updates the first pointer and its **signed low halfword** updates the second, both in bytes
   without access-size scaling. This includes observed first-pointer updates by -1 on word loads.
 - **Six `mul/madd/msub.mem2.hh.rh.{u,s}` forms:** previously unknown, printed as two halfword loads →
-  **execute as 16 × 32**, just like `.hw.rh`; the second load is a full word. All 72 cases match that model,
-  whereas every case fails a 16 × 16 model. For example, `batch-mem-037` has
+  **execute as 16 × 32**, just like `.hw.rh`; the second load is a full word. All 72 original cases and
+  36 follow-up cases match that model; all 72 original cases fail a 16 × 16 model. For example, `batch-mem-037` has
   `r1_r0 = h[r13 ++= r6.h]*h[r11 ++= r6.l] (u)`: the operands are `0x498c` and `0xbed31615`, and hardware
   returns `0x000036d28cbc107c`. Using only the second halfword would give `0x0658107c`.
 - **Six `mul/madd/msub.mem2.hh.i.{u,s}` forms:** previously unknown → reset the FM-1 in every tested case,
@@ -37,9 +41,11 @@ Encodings, syntax, examples, requirements and status are unchanged.
 
 Arithmetic is modulo 2^64, with no saturation. Original inputs supply both the product and accumulator even
 when operands overlap the destination. The pair write wins over a pointer update to the same register.
-Observed two-memory cases sharing a base retain the **first pointer's increment**, rather than adding both
-increments. Both multiplicands are loaded from the original address. Some overlap combinations are absent
-for individual forms; their model behavior remains a hypothesis to test with the follow-up set.
+Two-memory cases sharing a base retain the **first pointer's increment**, rather than adding both
+increments. Both multiplicands are loaded from the original address. The follow-up confirms these rules
+for every arithmetic form with shared bases where applicable, either pointer overlapping the destination,
+register multiplicand or increment overlaps with the destination where probed, and a pointer also serving
+as a multiplicand. The `.rh` increment/result overlap also uses the original increment value.
 
 ## Flags and other state
 
@@ -64,20 +70,30 @@ Every assigned case leaves sp, rets and observed scratch unchanged and falls thr
 - Six per `.rh` two-memory form (108): the preceding memory/overlap probes, independent high/low signed
   increments (`0x0010fff8` and `0xfff00008`), and the increment register overlapping the destination pair.
 
-These distinguish ordinary product/carry behavior from boundary or alias exceptions that random cases do
-not settle per form. The repeated `.hh.rh` cases also retest the surprising word-sized second operand.
+The lead ran these as **six batches without a reset**, with calibration passing throughout. Results in
+`hw/fm1-2026-10-24-v2/followup5-d.jsonl` contain 348 records including 12 nops, with scratch patterns in
+`followup5-d.patterns.json`. All 54 arithmetic forms match all 336 follow-up cases without model changes.
+The zero, -1 and sign-bit multiplicands and zero/all-ones accumulators confirm product extension,
+modulo-64 wrap and carry/no-borrow behavior. First loads at scratch + 0x102 confirm halfword alignment;
+independent positive/negative signed high/low-halfword increments confirm byte scaling, including when
+the increment register overlaps the result pair. Shared bases and destination overlaps confirm the
+original-input and write-precedence rules above. The repeated `.hh.rh` cases confirm the word-sized
+second operand. The affected table notes now cite this follow-up and drop the settled overlap hedge.
 No deliberate misalignment or reset form is included. Word loads start on word boundaries; halfword probes
 are halfword-aligned. All loads and surviving pointer updates stay inside the scratch. The existing harness
-cannot measure cache contents/timing, so no redundant cache probes are included. Follow-ups have been built
-but have **not** been run on hardware; their results are pending.
+cannot measure cache contents/timing, so no redundant cache probes are included. No further follow-ups
+are proposed. Exact cache effects and the reset forms remain outside the returned-state evidence;
+no follow-up result changes those limitations.
 
 ## Validation
 
 - `python3 -m pi32v2isa check`: **1165 entries, 0 problems**.
-- `python3 -m unittest discover -s tests`: **120 tests, OK (13 skipped)**, 151.216 seconds.
+- `python3 -m unittest discover -s tests`: **120 tests, OK (13 skipped)**.
 - Run 1 `check.py`: **352/352 modelled entries** match; one tested entry remains unmodelled, unchanged.
 - Run 2 `check.py`: **68/68 modelled entries** match, including **58/58 assigned forms (701/701 cases)**.
   The other 258 tested forms have no model in this analyst's checkout.
+- Follow-up `check.py`: **55/55 modelled entries**, **348/348 cases** (336 arithmetic, 12 nops).
 - `python3 tools/hwtest/gen.py /tmp/hw5-d --cases hw/followup5-d.json`: builds all **336 cases in six batches**.
   Offline model preflight validates scratch reads and surviving pointer bounds for every generated case.
-- A parsed TOML comparison verifies that all 64 changed entries alter only the three authorized fields.
+- A parsed TOML comparison against round 1 verifies that only `notes` changed in the 54 arithmetic entries.
+- The lead's `check.py` change loading adjacent `*.patterns.json` files is retained with the evidence.

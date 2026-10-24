@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT-0
 """Format-2 models for memory DSP multiplies and visible cache state (analyst D).
 
-All original run-2 cases agree. Followup5-d probes overlap combinations and arithmetic
-boundaries missing for individual forms; cache contents/timing are not modelled.
+All original run-2 and followup5-d cases agree, including operand overlaps and
+arithmetic boundaries; cache contents/timing are not modelled.
 """
 from semantics._r_util import sext
 
