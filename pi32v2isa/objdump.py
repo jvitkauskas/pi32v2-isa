@@ -20,14 +20,11 @@ OPTIONS_HELP = """usage: objdump [options] FILE...
   -D, -disassemble-all      disassemble every section
   -h, -section-headers      print the section headers
   -t                        print the symbol table
-  -r                        print the relocation records
+  -r                        print the relocation records (with -d: after each symbol's code)
   -s                        print the contents of the sections
   -j NAME, -section=NAME    only these sections (repeatable)
-  -mcpu=r3                  CPU (r3 and r4 enable the floating-point forms; default and r2 do not)
+  -mcpu=NAME                r3 and r4 enable the floating-point forms; none or r2 leave them out
   -mattr=+fprev1            enable the floating-point forms
-  -no-show-raw-insn         leave out the instruction bytes
-  -no-leading-addr          leave out the addresses
-  -start-address=A, -stop-address=A
 """
 
 # Instruction forms JieLi's objdump decodes only when told the CPU has them (found with `oracle` probes of every
@@ -131,13 +128,23 @@ def decoder_for(tab, mcpu=None, mattr=()):
 class File:
     def __init__(self, path):
         self.path = str(path)
-        self.data = Path(path).read_bytes()
+        try:
+            self.data = Path(path).read_bytes()
+        except OSError as e:
+            raise ObjdumpError(f"'{path}': {e.strerror}")
         if self.data[:4] != b"\x7fELF":
-            raise ObjdumpError(f"{path}: file format not recognized")
+            raise ObjdumpError(f"'{path}': The file was not recognized as a valid object file")
         self.obj = elf.read(self.data)
         self.sections = self.obj.sections
         self.symbols = self.obj.symbols
         self.machine = self.obj.e_machine
+
+
+def check_symbols(f):
+    """JieLi's objdump refuses a symbol table with a symbol in a section that does not exist (-t, -d, -D)."""
+    for sym in f.symbols:
+        if isinstance(sym.shndx, int) and (len(f.sections) <= sym.shndx < 0xFF00 or sym.shndx == 0xFFFF):
+            raise ObjdumpError(f"'{f.path}': invalid section index")
 
 
 def format_name(f):
@@ -193,8 +200,6 @@ def symbol_line(f, sym):
     debug = "d" if t in (elf.STT_SECTION, elf.STT_FILE) else " "
     kind = "f" if t == elf.STT_FILE else ("F" if t == elf.STT_FUNC else " ")
     named = isinstance(sym.shndx, int) and 0 < sym.shndx < len(f.sections)
-    if isinstance(sym.shndx, int) and (len(f.sections) <= sym.shndx < 0xFF00 or sym.shndx == 0xFFFF):
-        raise ObjdumpError(f"'{f.path}': invalid section index")
     if sym.shndx == elf.SHN_UNDEF:
         value, size = 0, (0 if t == elf.STT_COMMON else sym.size)
     elif sym.shndx == elf.SHN_COMMON:
@@ -316,9 +321,10 @@ class Symbols:
         self.rel = f.obj.e_type == 1
         pairs = []
         for x in f.symbols[1:]:
-            if not x.name or x.name.startswith(".L") or x.shndx == elf.SHN_UNDEF or x.shndx == elf.SHN_COMMON:
+            if (not x.name or x.shndx == elf.SHN_UNDEF or x.shndx == elf.SHN_COMMON or x.type == elf.STT_SECTION
+                    or x.name.startswith(".L")):
                 continue
-            pairs.append((x.value, x.name, x.shndx))
+            pairs.append((x.size if x.type == elf.STT_COMMON else x.value, x.name, x.shndx))
         self.all = sorted(pairs, key=lambda p: (p[0], p[1]))
         self.addrs = [p[0] for p in self.all]
         self.by_section = {}
@@ -375,8 +381,9 @@ class Disassembler:
             return
         w(f"Disassembly of section {s.name}:\n")
         exec_section = text
-        syms = [x for x in f.symbols if x.shndx == s.index and x.type != elf.STT_FILE and not x.name.startswith(".L")]
-        pairs = sorted(((x.value, x.name, x.type) for x in syms), key=lambda p: (p[0], p[1]))
+        syms = [(x.size if x.type == elf.STT_COMMON else x.value, x.name, x.type) for x in f.symbols
+                if x.shndx == s.index and x.type != elf.STT_SECTION and x.name and not x.name.startswith(".L")]
+        pairs = sorted(syms, key=lambda p: (p[0], p[1]))
         start = s.addr
         if not pairs or pairs[0][0] != start:
             pairs.insert(0, (start, s.name, elf.STT_NOTYPE))
@@ -389,7 +396,7 @@ class Disassembler:
             lo = addr - s.addr
             hi = size if k + 1 == len(pairs) else pairs[k + 1][0] - s.addr
             hi = min(hi, size)
-            if lo >= hi:
+            if lo < 0 or lo >= hi:                     # a symbol below the section, or an empty block
                 continue
             table_entry = 0                        # compiler jump tables: .GJTIS (bytes), .GJTIL.. (halfwords)
             if name.startswith(".GJTI") and len(name) > 5 and name[5] != "E":
@@ -406,9 +413,9 @@ class Disassembler:
             elif table_entry:
                 self.table(s, lo, hi, table_entry)
             else:
-                if typ in (elf.STT_OBJECT, elf.STT_COMMON) and not self.opts.get("D"):
+                if typ == elf.STT_OBJECT and not self.opts.get("D"):
                     self.hexdump(s, data, lo, hi)
-                    self.reach = hi
+                    self.reach = hi + 1
                 else:
                     self.code(s, data, lo, hi)
                 w("\n")
@@ -486,7 +493,7 @@ class Disassembler:
             closers = self.advance(insn, values, n, second, first_of_pair)
             if closers and insn.body:      # a `rep` that closes a block puts its `{` after the `}`
                 text = text[:-2]
-                closers[-1] = closers[-1].replace("\0", "") + " {\0"
+                closers[-1] = closers[-1].replace("\0", "") + " {"
             ann = ""
             if insn.id in ANNOTATED_BRANCH:
                 m = BRANCH_FIELD.search(insn.syntax)
@@ -555,6 +562,8 @@ def run_file(f, opts, tab):
     out = [header(f)]
     wanted = opts.get("sections")
     secs = [s for s in f.sections if not wanted or s.name in wanted]
+    if opts.get("d") or opts.get("D") or opts.get("t"):
+        check_symbols(f)
     if opts.get("d") or opts.get("D"):
         dec = decoder_for(tab, opts.get("mcpu"), opts.get("mattr", ()))
         code = [s for s in secs if opts.get("D") or s.flags & elf.SHF_EXECINSTR]
