@@ -41,6 +41,7 @@ class Section:
     data: bytearray = field(default_factory=bytearray)   # contents (NOBITS: only the size matters)
     size: int = 0                                        # NOBITS size
     addr: int = 0                                        # sh_addr (read from linked files)
+    offset: int = 0                                      # sh_offset (read from files)
     relocs: list = field(default_factory=list)           # (offset, type, symbol name, addend)
     index: int = 0
 
@@ -176,6 +177,8 @@ class Obj:
     e_flags: int
     sections: list      # Section, in file order (index 0 is the null section)
     symbols: list       # Symbol, symtab order (index 0 is the null symbol)
+    e_type: int = 1     # ET_REL (1), ET_EXEC (2)
+    entry: int = 0
 
 
 def read(data):
@@ -183,7 +186,7 @@ def read(data):
     section as (offset, type, symbol name, addend); REL entries get addend None."""
     if data[:4] != b"\x7fELF" or data[4] != 1 or data[5] != 1:
         raise ValueError("not a little-endian ELF32 file")
-    (_, machine, _, _, _, shoff, flags, _, _, _, shentsize, shnum, shstrndx) = struct.unpack_from("<HHIIIIIHHHHHH", data, 16)
+    (e_type, machine, _, entry, _, shoff, flags, _, _, _, shentsize, shnum, shstrndx) = struct.unpack_from("<HHIIIIIHHHHHH", data, 16)
     raw = [struct.unpack_from("<10I", data, shoff + k * shentsize) for k in range(shnum)]
 
     def cstr(off, base):
@@ -194,7 +197,7 @@ def read(data):
     sections = []
     for k, (name, typ, flg, addr, off, size, link, info, align, entsize) in enumerate(raw):
         s = Section(cstr(name, strbase) if k else "", typ, flg, align, entsize)
-        s.index, s.addr = k, addr
+        s.index, s.addr, s.offset = k, addr, off
         if typ == SHT_NOBITS:
             s.size = size
         elif typ != SHT_NULL:
@@ -216,4 +219,4 @@ def read(data):
                 else:
                     (o, i), a = struct.unpack_from("<II", data, off + 8 * n), None
                 sections[info].relocs.append((o, i & 0xFF, symbols[i >> 8].name, a))
-    return Obj(machine, flags, sections, symbols)
+    return Obj(machine, flags, sections, symbols, e_type, entry)
