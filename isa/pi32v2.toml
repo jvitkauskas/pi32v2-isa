@@ -2360,8 +2360,8 @@ fields = { x = "gpr" }
 group = "cache"
 summary = "Cache prefetch of the address in a register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested. [compiler] `__builtin_pi32v2_pfetch(addr)` -> `pfetch [r0]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; cache contents and timing were not measured. [compiler] `__builtin_pi32v2_pfetch(addr)` -> `pfetch [r0]`. Hardware (hw/fm1-2026-10-24-v2): registers, N/Z/C/V, sp, rets and observed scratch words unchanged; execution falls through. This does not establish the exact cache effect."
 
 [[insn.example]]
 bytes = "00 02"
@@ -2381,8 +2381,8 @@ fields = { x = "gpr" }
 group = "cache"
 summary = "Instruction-cache flush of the address in a register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested. [compiler] `__builtin_pi32v2_iflush(addr)` -> `iflush [r0]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; cache contents and timing were not measured. [compiler] `__builtin_pi32v2_iflush(addr)` -> `iflush [r0]`. Hardware (hw/fm1-2026-10-24-v2): registers, N/Z/C/V, sp, rets and observed scratch words unchanged; execution falls through. This does not establish the exact cache effect."
 
 [[insn.example]]
 bytes = "10 02"
@@ -2402,8 +2402,8 @@ fields = { x = "gpr" }
 group = "cache"
 summary = "Cache flush of the address in a register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested. [compiler] `__builtin_pi32v2_flush(addr)` -> `flush [r0]` (the argument is an int)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; cache contents and timing were not measured. [compiler] `__builtin_pi32v2_flush(addr)` -> `flush [r0]` (the argument is an int). Hardware (hw/fm1-2026-10-24-v2): registers, N/Z/C/V, sp, rets and observed scratch words unchanged; execution falls through. This does not establish the exact cache effect."
 
 [[insn.example]]
 bytes = "20 02"
@@ -2423,8 +2423,8 @@ fields = { x = "gpr" }
 group = "cache"
 summary = "Cache flush and invalidate of the address in a register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; exact effect not tested. [compiler] `__builtin_pi32v2_flushinv(addr)` -> `flushinv [r0]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. Cache operation named by objdump; cache contents and timing were not measured. [compiler] `__builtin_pi32v2_flushinv(addr)` -> `flushinv [r0]`. Hardware (hw/fm1-2026-10-24-v2): registers, N/Z/C/V, sp, rets and observed scratch words unchanged; execution falls through. This does not establish the exact cache effect."
 
 [[insn.example]]
 bytes = "30 02"
@@ -6907,10 +6907,10 @@ syntax = "{r} = [{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111010010110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P = [R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence."
 
 [[insn.example]]
 bytes = "60 e9 00 00"
@@ -6953,10 +6953,10 @@ syntax = "{r} = [{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111010010110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P = [R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence."
 
 [[insn.example]]
 bytes = "60 e9 00 10"
@@ -7000,10 +7000,10 @@ encoding = ["111010010111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P += h[R ++= N]*h[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "70 e9 00 00"
@@ -7047,10 +7047,10 @@ encoding = ["111010010111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P += h[R ++= N]*h[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "70 e9 00 10"
@@ -7093,10 +7093,10 @@ syntax = "{r} += [{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111010011110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P += [R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e0 e9 00 00"
@@ -7139,10 +7139,10 @@ syntax = "{r} += [{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111010011110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P += [R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e0 e9 00 10"
@@ -7186,10 +7186,10 @@ encoding = ["111010011111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P -= h[R ++= N]*h[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "f0 e9 00 00"
@@ -7233,10 +7233,10 @@ encoding = ["111010011111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P -= h[R ++= N]*h[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "f0 e9 00 10"
@@ -7279,10 +7279,10 @@ syntax = "{r} -= [{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111011000110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "60 ec 00 00"
@@ -7325,10 +7325,10 @@ syntax = "{r} -= [{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111011000110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "60 ec 00 10"
@@ -7372,10 +7372,10 @@ encoding = ["111011000111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P = h[R ++= N]*h[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "70 ec 00 00"
@@ -7419,10 +7419,10 @@ encoding = ["111011000111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
-summary = "Operation printed `P = h[R ++= N]*h[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax. Previously only the printed syntax was known. Hardware (hw/fm1-2026-10-24-v2/README.md): resets the FM-1 in every case, including both increments zero and aligned addresses; gen.py excludes it in RESETS. The hw.i, ww.i and .rh two-memory-operand forms run. Arithmetic and flags cannot be established from a reset."
 
 [[insn.example]]
 bytes = "70 ec 00 10"
@@ -7465,10 +7465,10 @@ syntax = "{r} = h[{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111011001110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e0 ec 00 00"
@@ -7511,10 +7511,10 @@ syntax = "{r} = h[{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111011001110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e0 ec 00 10"
@@ -7557,10 +7557,10 @@ syntax = "{r} += h[{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111011010110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "60 ed 00 00"
@@ -7603,10 +7603,10 @@ syntax = "{r} += h[{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111011010110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "60 ed 00 10"
@@ -7649,10 +7649,10 @@ syntax = "{r} -= h[{s} ++= {n}]*[{t} ++= {m}] (u)"
 encoding = ["111011011110mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= N]*[R ++= N] (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e0 ed 00 00"
@@ -7695,10 +7695,10 @@ syntax = "{r} -= h[{s} ++= {n}]*[{t} ++= {m}] (s)"
 encoding = ["111011011110mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 4 } }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= N]*[R ++= N] (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Immediate increments are signed byte displacements, scaled by each printed access size in the encoding. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e0 ed 00 10"
@@ -7741,10 +7741,10 @@ syntax = "{r} = [{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001100000", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = [R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand."
 
 [[insn.example]]
 bytes = "60 ee 00 00"
@@ -7782,10 +7782,10 @@ syntax = "{r} = [{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001100000", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = [R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand."
 
 [[insn.example]]
 bytes = "60 ee 00 10"
@@ -7823,10 +7823,10 @@ syntax = "{r} += [{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001100100", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += [R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "64 ee 00 00"
@@ -7864,10 +7864,10 @@ syntax = "{r} += [{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001100100", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += [R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "64 ee 00 10"
@@ -7905,10 +7905,10 @@ syntax = "{r} -= [{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001100110", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "66 ee 00 00"
@@ -7946,10 +7946,10 @@ syntax = "{r} -= [{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001100110", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "66 ee 00 10"
@@ -7987,10 +7987,10 @@ syntax = "{r} = h[{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001101000", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "68 ee 00 00"
@@ -8028,10 +8028,10 @@ syntax = "{r} = h[{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001101000", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "68 ee 00 10"
@@ -8069,10 +8069,10 @@ syntax = "{r} += h[{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001101100", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "6c ee 00 00"
@@ -8110,10 +8110,10 @@ syntax = "{r} += h[{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001101100", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "6c ee 00 10"
@@ -8151,10 +8151,10 @@ syntax = "{r} -= h[{s} ++= {t}]*{u}  (u)"
 encoding = ["1110111001101110", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= R]*R  (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "6e ee 00 00"
@@ -8192,10 +8192,10 @@ syntax = "{r} -= h[{s} ++= {t}]*{u}  (s)"
 encoding = ["1110111001101110", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= R]*R  (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The increment register is a byte displacement. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/increment-register overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "6e ee 00 10"
@@ -8233,10 +8233,10 @@ syntax = "{r} = [{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011100000", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = [R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand."
 
 [[insn.example]]
 bytes = "e0 ee 00 00"
@@ -8274,10 +8274,10 @@ syntax = "{r} = [{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011100000", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = [R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand."
 
 [[insn.example]]
 bytes = "e0 ee 00 10"
@@ -8315,10 +8315,10 @@ syntax = "{r} += [{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011100100", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += [R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e4 ee 00 00"
@@ -8356,10 +8356,10 @@ syntax = "{r} += [{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011100100", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += [R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e4 ee 00 10"
@@ -8397,10 +8397,10 @@ syntax = "{r} -= [{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011100110", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e6 ee 00 00"
@@ -8438,10 +8438,10 @@ syntax = "{r} -= [{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011100110", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= [R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e6 ee 00 10"
@@ -8479,10 +8479,10 @@ syntax = "{r} = h[{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011101000", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e8 ee 00 00"
@@ -8520,10 +8520,10 @@ syntax = "{r} = h[{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011101000", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P = h[R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e8 ee 00 10"
@@ -8561,10 +8561,10 @@ syntax = "{r} += h[{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011101100", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ec ee 00 00"
@@ -8602,10 +8602,10 @@ syntax = "{r} += h[{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011101100", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P += h[R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ec ee 00 10"
@@ -8643,10 +8643,10 @@ syntax = "{r} -= h[{s} ++= {n}]*{t} (u)"
 encoding = ["1110111011101110", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= N]*R (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ee ee 00 00"
@@ -8684,10 +8684,10 @@ syntax = "{r} -= h[{s} ++= {n}]*{t} (s)"
 encoding = ["1110111011101110", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr" }
 group = "multiply"
-summary = "Operation printed `P -= h[R ++= N]*R (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; the other multiplicand is the full 32-bit register. The immediate is a signed byte displacement (scaled by the access size in the encoding). Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): zero, -1 and sign-bit register multiplicands confirm product width and extension; original-value reads and pair-write precedence hold with destination/pointer overlaps, destination/multiplicand overlaps and the pointer also used as multiplicand. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ee ee 00 10"
@@ -26130,10 +26130,10 @@ syntax = "{r} = [{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011100000", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P = [R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair."
 
 [[insn.example]]
 bytes = "e0 e8 00 00"
@@ -26171,10 +26171,10 @@ syntax = "{r} = [{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011100000", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P = [R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 32 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair."
 
 [[insn.example]]
 bytes = "e0 e8 00 10"
@@ -26212,10 +26212,10 @@ syntax = "{r} += [{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011100100", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P += [R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e4 e8 00 00"
@@ -26253,10 +26253,10 @@ syntax = "{r} += [{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011100100", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P += [R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 32 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "e4 e8 00 10"
@@ -26294,10 +26294,10 @@ syntax = "{r} -= [{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011100110", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P -= [R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e6 e8 00 00"
@@ -26335,10 +26335,10 @@ syntax = "{r} -= [{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011100110", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P -= [R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 32 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a word at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "e6 e8 00 10"
@@ -26376,10 +26376,10 @@ syntax = "{r} = h[{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011101000", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P = h[R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e8 e8 00 00"
@@ -26417,10 +26417,10 @@ syntax = "{r} = h[{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011101000", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P = h[R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e8 e8 00 10"
@@ -26459,10 +26459,10 @@ encoding = ["1110100011101001", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P = h[R ++= Rh]*h[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e9 e8 00 00"
@@ -26501,10 +26501,10 @@ encoding = ["1110100011101001", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P = h[R ++= Rh]*h[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. N/Z/C/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices."
 
 [[insn.example]]
 bytes = "e9 e8 00 10"
@@ -26542,10 +26542,10 @@ syntax = "{r} += h[{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011101100", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P += h[R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ec e8 00 00"
@@ -26583,10 +26583,10 @@ syntax = "{r} += h[{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011101100", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P += h[R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ec e8 00 10"
@@ -26625,10 +26625,10 @@ encoding = ["1110100011101101", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P += h[R ++= Rh]*h[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ed e8 00 00"
@@ -26667,10 +26667,10 @@ encoding = ["1110100011101101", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P += h[R ++= Rh]*h[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: carry out of adding the 64-bit product bit pattern to the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 addition and unsigned carry."
 
 [[insn.example]]
 bytes = "ed e8 00 10"
@@ -26708,10 +26708,10 @@ syntax = "{r} -= h[{s} ++= {t}.h]*[{u} ++= {t}.l] (u)"
 encoding = ["1110100011101110", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P -= h[R ++= Rh]*[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ee e8 00 00"
@@ -26749,10 +26749,10 @@ syntax = "{r} -= h[{s} ++= {t}.h]*[{u} ++= {t}.l] (s)"
 encoding = ["1110100011101110", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
-summary = "Operation printed `P -= h[R ++= Rh]*[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ee e8 00 10"
@@ -26791,10 +26791,10 @@ encoding = ["1110100011101111", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P -= h[R ++= Rh]*h[R ++= Rh] (u)`: meaning not known beyond the syntax."
+summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Zero-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ef e8 00 00"
@@ -26833,10 +26833,10 @@ encoding = ["1110100011101111", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
-summary = "Operation printed `P -= h[R ++= Rh]*h[R ++= Rh] (s)`: meaning not known beyond the syntax."
+summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from oracle sweeps (docs/ORACLE.md). Previously the meaning was unknown beyond the syntax. Hardware (hw/fm1-2026-10-24-v2): load a halfword at the original first address; load a full word at the original second address. Despite the printed second h[...], this encoding behaves as hw.rh, not as a 16 x 16 multiply. Post-increment the first address by the signed high halfword and the second by the signed low halfword of the increment register, in bytes without scaling. Sign-extend each operand from its loaded/register width. The result wraps modulo 2^64; the even register holds the low word. All sources and the accumulator use their original values; the pair write wins over a coincident pointer update. Shared bases keep the first address update, not the sum of the increments. Only C changes: no borrow when subtracting the 64-bit product bit pattern from the old pair; N/Z/V unchanged. No scratch writes; sp and rets unchanged; execution falls through. Follow-up (hw/fm1-2026-10-24-v2/followup5-d.jsonl): shared-base and either-pointer/destination overlaps confirm original-address loads, first-pointer update precedence and pair-write precedence. Independent positive/negative signed halfword increments are unscaled bytes, also when the increment register overlaps the result pair. The second load remains 32 bits. A first load at scratch + 0x102 confirms halfword alignment suffices. Zero/all-ones accumulator cases confirm modulo-64 subtraction and no-borrow C."
 
 [[insn.example]]
 bytes = "ef e8 00 10"

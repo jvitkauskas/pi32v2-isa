@@ -41,3 +41,10 @@ back in download mode with `m-flasher download-mode`). Run case by case:
 
 The cases of those batches that do not reset were run again as `batch-memfix-*` (with 12 new `ld.w.npc` cases,
 offsets multiples of 4), and the single-case probes as `batch-bis-*`; both are in `results.jsonl`.
+
+`followup5-d.jsonl` records the 336 cases from `hw/followup5-d.json` for all 54 runnable memory
+DSP multiply forms, plus 12 calibration nops. It targeted arithmetic and carry/no-borrow boundaries,
+halfword-aligned loads, independent signed high/low-halfword increments, and operand/pointer/result
+overlaps, including shared bases and the `.hh.rh` second-load width. All six batches completed without
+a reset; calibration passed. All 55 modelled entries match every case. Scratch patterns are in
+`followup5-d.patterns.json`, read alongside `patterns.json` by `check.py`.
