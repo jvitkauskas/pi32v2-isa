@@ -74,14 +74,20 @@ def strip_comments(text):
     return "".join(out)
 
 
-def canon(text):
-    """Collapse white space; keep a single space only between two word characters."""
+def canon(text, info=None):
+    """Collapse white space; keep a single space only between two word characters. `info` maps a private-use
+    placeholder character to (starts with a word character, ends with one)."""
+    def word(c, end):
+        if info and c in info:
+            return info[c][1 if end else 0]
+        return bool(WORDCH.match(c))
+
     parts = text.split()
     if not parts:
         return ""
     res = parts[0]
     for p in parts[1:]:
-        res += (" " if WORDCH.match(res[-1]) and WORDCH.match(p[0]) else "") + p
+        res += (" " if word(res[-1], True) and word(p[0], False) else "") + p
     return res
 
 
@@ -202,10 +208,11 @@ def modimm_raw(value, invert=False):
 
 
 class Num:
-    """A numeric operand whose value is known only at layout time."""
+    """A numeric operand whose value is known only at layout time (`neg`: the text was written with the
+    sign of an `x - n` alias of an add form)."""
 
-    def __init__(self, node):
-        self.node = node
+    def __init__(self, node, neg=False):
+        self.node, self.neg = node, neg
 
 
 def fit_num(fld, width, v, kind=None):
@@ -240,7 +247,7 @@ def parse_reglist(text):
     regs, names = set(), set()
     text = text.strip()
     if not text:
-        return regs, names
+        return None
     for item in text.split(","):
         item = item.strip().replace(" ", "")
         m = re.fullmatch(r"r(\d+)(?:-r(\d+))?", item)
@@ -353,7 +360,7 @@ SENT = 0xE000
 
 def _template(insn, syntax):
     """Canonical text of a syntax with a private-use sentinel per placeholder, and the placeholder list."""
-    holders, out = [], []
+    holders, out, info = [], [], {}
     pos = 0
     for m in tbl.SYNTAX_TOKEN.finditer(syntax):
         out.append(syntax[pos:m.start()])
@@ -361,10 +368,15 @@ def _template(insn, syntax):
             out.append(m.group(0)[0])
         else:
             holders.append((m.group(2), bool(m.group(1))))
-            out.append(chr(SENT + len(holders) - 1))
+            ch = chr(SENT + len(holders) - 1)
+            fld = insn.fields[m.group(2)]
+            if fld.kind == "enum":
+                vals = [canon(v) for v in fld.values if v]
+                info[ch] = (any(WORDCH.match(v[0]) for v in vals), any(WORDCH.match(v[-1]) for v in vals))
+            out.append(ch)
         pos = m.end()
     out.append(syntax[pos:])
-    return canon("".join(out)), holders
+    return canon("".join(out), info), holders
 
 
 def _kind_regex(insn, name, group):
@@ -389,13 +401,19 @@ def _kind_regex(insn, name, group):
 class Matcher:
     """One way to write an entry: a compiled regular expression and how its groups map to fields."""
 
-    def __init__(self, insn, order, syntax, same=None, u_optional=False):
-        self.insn, self.order = insn, order
+    def __init__(self, insn, order, syntax, alias=None, u_optional=False):
+        self.insn, self.order, self.alias = insn, order, alias
+        self.negate = alias[1] if alias and alias[0] == "neg" else None
+        self.rejects = {canon(t) for t in insn.asm_rejects}
         text, holders = _template(insn, syntax)
         self.holders = holders
         seen, parts, groups = {}, [], {}
-        for ch in text:
+        skip_space = False
+        for pos, ch in enumerate(text):
             code = ord(ch)
+            if ch == " " and skip_space:
+                skip_space = False
+                continue
             if SENT <= code < SENT + 0x100:
                 name, plus = holders[code - SENT]
                 if name in seen:
@@ -404,6 +422,14 @@ class Matcher:
                 group = f"f_{name}"
                 seen[name] = group
                 body = _kind_regex(insn, name, group)
+                if insn.fields[name].kind in NUMERIC_KINDS:
+                    # a space in the template next to a number: optional when the number starts or ends
+                    # with a character that is not part of a word (`goto -2`, `rep (4) r1`)
+                    if pos and text[pos - 1] == " " and not plus:
+                        parts[-1] = r"(?: |(?![A-Za-z0-9_.$@]))"
+                    if pos + 1 < len(text) and text[pos + 1] == " ":
+                        skip_space = True
+                        body = body + r"(?: |(?<![A-Za-z0-9_.$@]))"
                 parts.append(rf"(?:\+{body})?" if plus else body)
                 groups[name] = group
             else:
@@ -411,22 +437,37 @@ class Matcher:
         pattern = "".join(parts)
         if u_optional and pattern.endswith(re.escape("(u)")):
             pattern = pattern[:-len(re.escape("(u)"))] + r"(?:\(u\))?"
+        self.template = text
         self.regex = re.compile(pattern + "$", re.S)
         self.groups = groups
         self.plus = {n for n, p in holders if p}
 
 
-def x_alias_syntax(syntax):
-    """`{d} += {s}` -> `{d} = {d} + {s}`: the long way to write a two-operand form, or None."""
+def alias_syntaxes(insn, syntax):
+    """Other ways to write an entry, as (syntax, negated numeric field or None): `{d} += {s}` is also
+    `{d} = {d} + {s}` (and `{d} = {s} + {d}` for the commutative operations); `{r} += {n}` and
+    `{d} = {s} + {n}` are also written with `-` and the opposite number."""
+    out = []
     m = re.fullmatch(r"\{(\w)\} (<<<|>>>|<<|>>|\+|-|\*|&|\||\^)= (.+)", syntax)
-    if not m:
-        return None
-    return f"{{{m.group(1)}}} = {{{m.group(1)}}} {m.group(2)} {m.group(3)}"
+    if m:
+        d, op, rest = m.groups()
+        out.append((f"{{{d}}} = {{{d}}} {op} {rest}", None))
+        if op in "+*&|^" and rest == "{" + rest[1:-1] + "}" and rest[1:-1] in insn.fields \
+                and insn.fields[rest[1:-1]].kind in ("gpr", "gpr_lo", "gpr_hi"):
+            out.append((f"{{{d}}} = {rest} {op} {{{d}}}", None))
+    m = re.fullmatch(r"\{(\w)\} = \{(\w)\} (<<<|>>>|<<|>>|\+|-|\*|&|\||\^) \{(\w)\}(\s+#)?", syntax)
+    if m and insn.fields[m.group(1)].kind == insn.fields[m.group(2)].kind:
+        d, a, op, b, par = m.groups()
+        out.append((f"{{{d}}} {op}= {{{b}}}{par or ''}", ("same", a, d)))
+    m = re.fullmatch(r"(.*) \+(=?) \{(\w)\}", syntax)
+    if m and insn.fields[m.group(3)].kind in NUMERIC_KINDS:
+        out.append((f"{m.group(1)} -{m.group(2)} {{{m.group(3)}}}", ("neg", m.group(3))))
+    return out
 
 
 class Candidate:
-    def __init__(self, insn, ops, order):
-        self.insn, self.ops, self.order = insn, ops, order
+    def __init__(self, insn, ops, order, alias=False):
+        self.insn, self.ops, self.order, self.alias = insn, ops, order, alias
         self.size = 2 * len(insn.words)
 
 
@@ -449,30 +490,57 @@ def abs32_field(insn):
 BRANCH_RELOC = {(2, 16): 1, (2, 22): 2, (3, 16): 3, (3, 31): 4}
 
 
+def synthetic_entries(tab):
+    """Forms JieLi's assembler writes that the table does not list yet (docs/ASSEMBLER.md, "table gaps"):
+    the modified-immediate flavour of the 48-bit compare-and-branch forms (bit 5 of the first word, which the
+    table marks as ignored, selects it: objdump prints the expanded number) and the 48-bit mask branches
+    (first words FF60 and FF61)."""
+    import copy
+
+    out = []
+    for insn in tab.insns:
+        if insn.id.endswith(".ri.l") and insn.words[0].startswith("1111111100-"):
+            e = copy.deepcopy(insn)
+            e.id += ".modimm"
+            e.words[0] = e.words[0][:10] + "1" + e.words[0][11:]
+            e.fields["i"] = tbl.Field(kind="modimm", letters="i")
+            e.notes = "synthetic: modified-immediate flavour of " + insn.id
+            e.examples, e.status = [], "guessed"
+            out.append(e)
+    for cond, opcode in (("==", "0"), ("!=", "1")):
+        out.append(tbl.Insn(
+            id="beq.and.rm.l" if cond == "==" else "bne.and.rm.l",
+            syntax="if (({r} & {n}) " + cond + " 0) goto {m}",
+            words=["11111111011000" + "0" + opcode, "rrrrnnnnnnnnnnnn", "mmmmmmmmmmmmmmmm"],
+            fields={"r": tbl.Field(kind="gpr", letters="r"), "n": tbl.Field(kind="modimm", letters="n"),
+                    "m": tbl.Field(kind="simm", letters="m", scale=2)},
+            summary="synthetic: mask test and branch with a 16-bit offset", status="guessed", sources=["oracle"],
+            notes="synthetic: layout read from JieLi's assembler output (GAPS.md: mask branches at FF60/FF61)"))
+    return out
+
+
 class Isa:
     """The matchers built from a table."""
 
     def __init__(self, tab):
         self.table = tab
+        self.insns = list(tab.insns) + synthetic_entries(tab)
         self.matchers = []
         self.by_key = {}
         self.cache = {}
-        self.branch = {i.id: branch_field(i) for i in tab.insns}
-        self.abs32 = {i.id: abs32_field(i) for i in tab.insns}
-        for order, insn in enumerate(tab.insns):
-            syntaxes = [insn.syntax]
-            if insn.asm_syntax:
-                syntaxes = [insn.asm_syntax]
-            for sx in list(syntaxes):
-                alias = x_alias_syntax(sx)
-                if alias:
-                    syntaxes.append(alias)
-            for sx in syntaxes:
-                self.matchers.append(Matcher(insn, order, sx, u_optional=True))
+        self.branch = {i.id: branch_field(i) for i in self.insns}
+        self.by_id = {i.id: i for i in self.insns}
+        self.ifblock = {i.id: i.syntax.endswith("{{") and not i.body and i.words[1].startswith("----")
+                        for i in self.insns if len(i.words) == 2}
+        self.abs32 = {i.id: abs32_field(i) for i in self.insns}
+        for order, insn in enumerate(self.insns):
+            main = insn.asm_syntax or insn.syntax
+            self.matchers.append(Matcher(insn, order, main, u_optional=True))
+            for sx, alias in alias_syntaxes(insn, main):
+                self.matchers.append(Matcher(insn, order, sx, alias=alias, u_optional=True))
         # index by the literal prefix before the first placeholder
         for m in self.matchers:
-            text = _template(m.insn, m.insn.asm_syntax or m.insn.syntax)[0]
-            self.by_key.setdefault(self._prefix(text), []).append(m)
+            self.by_key.setdefault(self._prefix(m.template), []).append(m)
         self.prefix_lengths = sorted({len(k) for k in self.by_key}, reverse=True)
 
     @staticmethod
@@ -482,7 +550,7 @@ class Isa:
             if SENT <= ord(ch) < SENT + 0x100:
                 break
             out.append(ch)
-        return "".join(out)
+        return "".join(out).rstrip(" ")
 
     def _skeleton(self, line):
         s = re.sub(r"(?<![A-Za-z0-9_.$@])(?:0[xX][0-9a-fA-F]+|\d+)(?![A-Za-z0-9_.$@])", "N", line)
@@ -491,13 +559,19 @@ class Isa:
     def candidates(self, line):
         """All (insn, operands) readings of a canonical instruction line; operand values are raw ints or Num."""
         out = []
-        for key_len in self.prefix_lengths:
-            for m in self.by_key.get(line[:key_len], ()):
-                got = m.regex.match(line)
-                if got:
-                    ops = self._operands(m, got)
-                    if ops is not None:
-                        out.append(Candidate(m.insn, ops, m.order))
+        plain = re.sub(r"(?<![A-Za-z0-9_.$@])(?:0[xX][0-9a-fA-F]+|0[bB][01]+|0[0-7]+)(?![A-Za-z0-9_.$@])",
+                       lambda m: str(int(m.group(0), 0) if m.group(0)[:2].lower() in ("0x", "0b") else int(m.group(0), 8)),
+                       line)
+        for text in dict.fromkeys((line, plain)):
+            for key_len in self.prefix_lengths:
+                for m in self.by_key.get(text[:key_len], ()):
+                    got = m.regex.match(text)
+                    if got and text not in m.rejects and not any(c.matcher is m for c in out):
+                        ops = self._operands(m, got)
+                        if ops is not None:
+                            c = Candidate(m.insn, ops, m.order, bool(m.negate))
+                            c.matcher = m
+                            out.append(c)
         return out
 
     def _operands(self, m, got):
@@ -511,12 +585,14 @@ class Isa:
                 return None
             fld = insn.fields[name]
             if fld.kind in NUMERIC_KINDS:
-                ops[name] = Num(text)
+                ops[name] = Num(text, name == m.negate)
             else:
                 raw = operand_raw(insn, name, text)
                 if raw is None:
                     return None
                 ops[name] = raw
+        if m.alias and m.alias[0] == "same":
+            ops[m.alias[1]] = ops[m.alias[2]]
         return ops
 
 
@@ -532,7 +608,8 @@ class Sym:
         self.value = 0
         self.node = None             # alias: the expression
         self.bind = elf.STB_LOCAL
-        self.declared = False        # .globl / .weak / .local seen
+        self.declared = False        # .globl / .weak seen
+        self.local_decl = False      # .local seen
         self.type = elf.STT_NOTYPE
         self.other = 0
         self.size_node = None
@@ -694,6 +771,7 @@ class Insn(Item):
         self.fixed_const = fixed_const
         self.body = body          # (start label, end label) for `rep`
         self.chosen = None
+        self.error = None
         self.cur = 0              # current size
         self.sec = None
         self.off = 0
@@ -740,6 +818,8 @@ STRING_ESC = {"n": 10, "t": 9, "r": 13, "b": 8, "f": 12, "\\": 92, '"': 34, "a":
 class Block:
     def __init__(self, kind, insn_item, end_label):
         self.kind, self.item, self.end_label = kind, insn_item, end_label
+        self.counts = [0, 0]        # instructions in the then and else parts (`if` blocks)
+        self.in_else = False
 
 
 class _Core:
@@ -757,6 +837,7 @@ class _Core:
         self.counter = 0             # \@ macro counter
         self.macros = {}
         self.blocks = []
+        self.pending_pair = False
         self.cond = []               # conditional assembly stack: (active, taken, parent_active)
         self.loc = "<input>"
         self.sizes = []
@@ -832,7 +913,7 @@ class _Core:
     def symref(self, name):
         if name == ".":
             return ("sym", self.here())
-        if name in REGISTER_WORDS:
+        if name in REGISTER_WORDS or re.fullmatch(r"(?:r\d+(?:_r\d+)?|sr\d+)(?:\.\w+)?", name):
             raise AsmError(f"register name {name} in an expression")
         s = self.sym(name)
         s.used = True
@@ -987,7 +1068,11 @@ class _Core:
             if not isinstance(op, Num):
                 values[name] = op
                 continue
-            sym, add = self.ev(op.node, item.loc)
+            try:
+                sym, add = self.ev(op.node, item.loc)
+            except AsmError as e:
+                item.error = item.error or e
+                return None
             fld = insn.fields[name]
             width = len(insn.field_bits(name))
             if name == isa.branch[insn.id]:
@@ -1031,7 +1116,14 @@ class _Core:
             if raw is None:
                 return None
             values[insn.body] = raw
-        return codec.encode(insn, values), reloc
+        data = bytearray(codec.encode(insn, values))
+        blk = getattr(item, "block", None)
+        if blk is not None and blk.kind == "if":
+            then, els = blk.counts
+            data[3] |= (max(then - 1, 0) << 6 | els << 4) & 0xFF      # bits 15..12 of the second word
+        if getattr(cand, "twin", False):
+            data[1] |= 0x10
+        return bytes(data), reloc
 
     def body_length(self, item):
         start, end = item.body
@@ -1045,26 +1137,38 @@ class _Core:
     def instruction(self, text):
         line = canon(text)
         opens = line.endswith("{")
-        cands = self.isa.candidates(line)
-        if not cands:
-            raise AsmError(f"{self.loc}: unrecognised instruction or operand: {text.strip()}")
-        good, err = [], None
-        for c in cands:
-            try:
-                c.ops = {k: (Num(self.parse_expr(v.node)) if isinstance(v, Num) else v) for k, v in c.ops.items()}
-            except AsmError as e:
-                err = err or e
-                continue
-            good.append(c)
+        par = line.endswith("#")
+        good, err = self.parsed_candidates(line)
+        if par:
+            # a parallel twin the table does not list: the 32-bit forms in E000..E7FF have one with bit 12 set
+            base, err2 = self.parsed_candidates(canon(line[:-1]))
+            have = {c.insn.id for c in good}
+            for c in base:
+                if len(c.insn.words) == 2 and (c.insn.value >> 16) & 0xF800 == 0xE000 \
+                        and c.insn.id + ".p" not in self.isa.by_id:
+                    c.twin = True
+                    good.append(c)
+            err = err or err2
         if not good:
-            raise AsmError(f"{self.loc}: {err}")
+            raise AsmError(f"{self.loc}: unrecognised instruction or operand: {text.strip()}"
+                           + (f" ({err})" if err else ""))
         cands = good
+        if self.pending_pair:
+            if not any(c.insn.id in PARALLEL_B for c in cands):
+                raise AsmError(f"{self.loc}: invalid parallel-B instruction")
+            cands = [c for c in cands if c.insn.id in PARALLEL_B]
         # parse-time constness of the numeric operands
         fixed = all(self.is_pure(op.node) for c in cands for op in c.ops.values() if isinstance(op, Num))
-        cands.sort(key=lambda c: (c.size, TIE.get(c.insn.id, 0), c.order))
+        cands.sort(key=lambda c: (c.size, c.alias, TIE.get(c.insn.id.removesuffix('.p'), 0), c.order))
         item = Insn(cands, self.loc, fixed)
         item.cur = cands[0].size
         item.chosen = cands[0]
+        counts_toward = self.blocks[-1] if self.blocks and self.blocks[-1].kind == "if" else None
+        if self.blocks and any(c.insn.syntax.endswith("{{") for c in cands) and self.blocks[-1].kind == "if":
+            raise AsmError(f"{self.loc}: invalid location of it block")
+        if counts_toward is not None and not self.pending_pair:
+            counts_toward.counts[counts_toward.in_else] += 1
+        self.pending_pair = par and not opens
         if opens:
             self.counter += 1
             start = self.syms[f".Lbody{self.counter}"] = Sym(f".Lbody{self.counter}")
@@ -1073,15 +1177,44 @@ class _Core:
             end.temp = True
             self.cur.items.append(item)
             self.define_label(start)
-            self.blocks.append(Block("insn", item, end))
+            kind = "if" if any(self.isa.ifblock.get(c.insn.id) for c in cands) else "rep"
+            blk = Block(kind, item, end)
+            self.blocks.append(blk)
             item.body = (start, end)
+            item.block = blk
             return
         self.cur.items.append(item)
+
+    def parsed_candidates(self, line):
+        """The readings of a canonical line whose numeric operands parse as expressions, and the first error."""
+        good, err = [], None
+        for c in self.isa.candidates(line):
+            try:
+                c.ops = {k: (Num(("un", "-", self.parse_expr(v.node)) if v.neg else self.parse_expr(v.node))
+                             if isinstance(v, Num) else v) for k, v in c.ops.items()}
+            except AsmError as e:
+                err = err or e
+                continue
+            good.append(c)
+        return good, err
+
+    def else_block(self):
+        if not self.blocks or self.blocks[-1].kind != "if" or self.blocks[-1].in_else:
+            raise AsmError(f"{self.loc}: else without if")
+        if self.blocks[-1].counts[0] == 0:
+            raise AsmError(f"{self.loc}: if-clause out of range")
+        self.blocks[-1].in_else = True
 
     def close_block(self):
         if not self.blocks:
             raise AsmError(f"{self.loc}: unmatched }}")
         b = self.blocks.pop()
+        if b.kind == "if":
+            then, els = b.counts
+            if not 1 <= then <= 4:
+                raise AsmError(f"{self.loc}: if-clause out of range")
+            if els > 3 or (b.in_else and els == 0):
+                raise AsmError(f"{self.loc}: else-clause out of range")
         self.define_label(b.end_label)
 
     def label(self, name):
@@ -1126,7 +1259,8 @@ class _Core:
                             pick = c
                             break
                     if pick is None:
-                        raise AsmError(f"{item.loc}: no encoding fits the operands of this instruction")
+                        raise AsmError(f"{item.loc}: no encoding fits the operands of this instruction"
+                                       + (f" ({item.error})" if item.error else ""))
                     item.chosen = pick
                     if pick.size != item.cur:
                         item.cur = pick.size
@@ -1177,6 +1311,10 @@ class _Core:
                 e.bind = elf.STB_GLOBAL
                 e.type = elf.STT_OBJECT
             elif s.kind in ("label", "alias"):
+                if s.kind == "alias" and s.type == elf.STT_NOTYPE:      # an alias takes its base symbol's type
+                    base = self.ev(s.node, None)[0]
+                    if base is not None:
+                        e.type = base.type
                 p = self.sym_pos(s)
                 if p is None:
                     raise AsmError(f"symbol {s.name} refers to an undefined symbol")
@@ -1202,7 +1340,26 @@ class _Core:
         return elf.write(sections, result)
 
 
-TIE = {}
+# When several entries encode a line in the same number of bytes, JieLi's assembler picks the lowest value here
+# (default 0, then table order). Found with `oracle encode`; see docs/ASSEMBLER.md.
+# The instructions that may follow a parallel-issue (`#`) instruction: JieLi's assembler refuses any other with
+# "invalid parallel-B instruction" (found by trying every entry's examples after `r0 += r7 #`).
+PARALLEL_B = {
+    "ld.bu", "ld.bu.l", "ld.bu.pi", "ld.bu.pi.l", "ld.bu.pin", "ld.bu.pin.l", "ld.hu", "ld.hu.l", "ld.hu.pi",
+    "ld.hu.pi.l", "ld.hu.pin", "ld.hu.pin.l", "ld.w", "ld.w.l", "ld.w.pi", "ld.w.pi.l", "ld.w.pin",
+    "ld.w.pin.l", "ld.w.sp", "ld.w.sp.l", "pop.pc", "st.b", "st.b.l", "st.b.pi", "st.b.pi.l", "st.b.pin",
+    "st.b.pin.l", "st.h", "st.h.l", "st.h.pi", "st.h.pi.l", "st.h.pin", "st.h.pin.l", "st.w", "st.w.l",
+    "st.w.pi", "st.w.pi.l", "st.w.pin", "st.w.pin.l", "st.w.sp", "st.w.sp.l",
+}
+
+TIE = {
+    "li.s16": -1,           # over li.modimm
+    "add.s14.rri": -1,      # over add.modimm.rri
+    "add.rr": 1,            # add.rrr is preferred for `r1 += r2`
+    "pop.pc_rmask": 1,      # `{pc} = [sp++]` is pop.srmask
+    "push.rets_rmask.c": 1,
+}
+TIE.update({f"{c}.ri.l.modimm": 1 for c in ("beq", "bne", "bge", "blt", "bgt", "ble", "bges", "blts", "bgts", "bles")})
 
 
 _ISA_CACHE = {}
@@ -1414,8 +1571,8 @@ class Assembler(_Core):
             return
         if text == "}":
             return self.close_block()
-        if text.startswith("}") and re.fullmatch(r"\}\s*else\s*\{", text):
-            raise AsmError(f"{self.loc}: else blocks are not supported")
+        if re.fullmatch(r"\}\s*else\s*\{", text):
+            return self.else_block()
         if word in self.macros:
             return self.expand_macro(word, rest)
         if word.startswith("."):
@@ -1555,7 +1712,7 @@ class Assembler(_Core):
 
     def d_local(self, rest):
         for s in self._each_name(rest):
-            s.bind = elf.STB_LOCAL
+            s.bind, s.local_decl = elf.STB_LOCAL, True
 
     def d_hidden(self, rest):
         for s in self._each_name(rest):
@@ -1620,6 +1777,17 @@ class Assembler(_Core):
         s = self.sym(a[0])
         size = self.const_expr(a[1], "size")
         align = self.const_expr(a[2], "alignment") if len(a) > 2 else 1
+        if s.local_decl:                # `.local x` then `.comm x,n,a` allocates in .bss
+            saved = self.cur
+            sec = self.switch(".bss")
+            sec.align = max(sec.align, align)
+            self.add(Align(align, 0, None, self.loc))
+            self.define_label(s)
+            s.type = elf.STT_OBJECT
+            s.size_node = ("num", size)
+            self.add(Space(("num", size), 1, None, self.loc))
+            self.cur = saved
+            return
         s.common = (size, align)
         s.bind, s.declared, s.kind = elf.STB_GLOBAL, True, "abs"
         s.kind = "undef"
@@ -1725,7 +1893,8 @@ class Assembler(_Core):
     d_skip = d_space
 
     def d_zero(self, rest):
-        self.add(Space(self.parse_expr(rest), 1, None, self.loc, True))
+        a = split_args(rest)
+        self.add(Space(self.parse_expr(a[0]), 1, self.parse_expr(a[1]) if len(a) > 1 else None, self.loc, True))
 
     def d_fill(self, rest):
         a = split_args(rest)
