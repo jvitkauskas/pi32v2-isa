@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: MIT-0
 """Read hardware test results: batch-NNN.out (from M-Flasher) with batch-NNN.json (from gen.py).
 
-    python3 tools/hwtest/analyze.py OUTDIR [--json RESULTS.jsonl]
+    python3 tools/hwtest/analyze.py OUTDIR [--json RESULTS.jsonl] [--ram RAM.bin@0x01C30000]
 
 For every batch with an .out file: finds the order in which the runner's push stored the registers (from the
 nop calibration cases, which must give back their inputs), then lists each case's inputs and outputs. Self-test
 cases are checked against the results their text says they must have. Prints a summary; --json writes every
 case, one JSON object per line (batch, entry id, encoding, text, field values, inputs, outputs, psr flags in
-and out), for the records.
+and out), for the records. --ram takes the results of batches without an .out file from a RAM dump instead (the
+test application's batches, gen.py --app).
 """
 import argparse
 import json
@@ -62,12 +63,16 @@ def expected(text, regs):
     return None
 
 
-def read_batch(manifest_path):
+def read_batch(manifest_path, ram=None):
+    """The manifest and the result words, from NAME.out, or else from a RAM dump (ram = (bytes, address))."""
     m = json.loads(Path(manifest_path).read_text())
     out = Path(manifest_path).with_suffix(".out")
-    if not out.exists():
+    if out.exists():
+        data = out.read_bytes()
+    elif ram and 0 <= m["results"] - ram[1] <= len(ram[0]) - m["length"]:
+        data = ram[0][m["results"] - ram[1]:m["results"] - ram[1] + m["length"]]
+    else:
         return m, None
-    data = out.read_bytes()
     n = m["out_words"]
     if len(data) != len(m["cases"]) * n * 4:
         raise ValueError(f"{out}: {len(data)} bytes, expected {len(m['cases']) * n * 4}")
@@ -89,10 +94,10 @@ def decode_extra(m, c, w):
             "scratch": m["scratch"]}
 
 
-def analyse(outdir):
+def analyse(outdir, ram=None):
     records, problems, summary = [], [], []
     for mp in sorted(Path(outdir).glob("batch-*.json")):
-        m, words = read_batch(mp)
+        m, words = read_batch(mp, ram)
         if words is None:
             summary.append(f"{mp.stem}: no results yet")
             continue
@@ -139,8 +144,14 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("outdir", type=Path)
     p.add_argument("--json", type=Path)
+    p.add_argument("--ram", help="FILE@ADDRESS: a RAM dump (m-flasher run-ram --read) to take the results from, "
+                                 "for batches without an .out file (the test application's, gen.py --app)")
     a = p.parse_args()
-    records, problems, summary = analyse(a.outdir)
+    ram = None
+    if a.ram:
+        f, at = a.ram.rsplit("@", 1)
+        ram = (Path(f).read_bytes(), int(at, 0))
+    records, problems, summary = analyse(a.outdir, ram)
     print("\n".join(summary))
     for x in problems:
         print("PROBLEM", x)

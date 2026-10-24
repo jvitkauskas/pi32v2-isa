@@ -65,6 +65,23 @@ installed `/opt/m-flasher/m-flasher`. It bounds flasher and USB checks, refuses 
 resuming; otherwise preserve it. A hang requires a power cycle and operator confirmation, even if USB
 still enumerates. Keep batches outside the desktop's `/tmp` if a reboot may be needed.
 
+### As an application
+
+The same batches can run as an FM-1 application instead ([APP.md](APP.md)): installed in flash, up to nine
+batches, each at its own RAM base, results read back from download mode. This writes the flash's application
+area; make a backup first and restore it afterwards.
+
+```sh
+python3 tools/hwtest/gen.py /tmp/app --wave 1 --per-entry 2 --batch 82 --app
+python3 tools/hwtest/fm1app.py /tmp/app/app.fwsc tools/hwtest/app/driver.S /tmp/app/app.S
+python3 tools/hwtest/fm1app.py /tmp/app/reset.bin tools/hwtest/app/reset.S --plugin 0x01C28000
+m-flasher firmware /tmp/app/app.fwsc --yes             # the unit in download mode
+m-flasher run-ram /tmp/app/reset.bin --addr 0x01C28000 # starts the application; it times out, as it should
+# the application runs its batches and comes back in download mode (a second or so)
+m-flasher run-ram RUNNER.bin --addr 0x01C20000 --read 0x01C30000:0x50000 -o ram.bin   # any runner image for that slot
+python3 tools/hwtest/analyze.py /tmp/app --ram ram.bin@0x01C30000 --json results.jsonl
+```
+
 ## Checking meanings
 
 `check.py RESULTS.jsonl` runs every case through an executable model of its form (`semantics/*.py`, interface

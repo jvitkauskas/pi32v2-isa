@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 from pi32v2isa import asm, codec, ld, table  # noqa: E402
 from pi32v2isa.oracle import read_exec  # noqa: E402
 
+APP_BASES = tuple(0x01C30000 + 0x8000 * k for k in range(9))  # --app: RAM the test application leaves alone
 SLOTS = (0x01C20000, 0x01C28000)   # the flash loader's two 32 KiB slots (m-bootloader SPEC §1)
 SLOT_SIZE = 0x8000
 BASE = SLOTS[1]                     # where a single batch goes; consecutive batches alternate between the slots
@@ -568,6 +569,9 @@ def main():
     p.add_argument("--first-slot", type=lambda v: int(v, 0), default=SLOTS[1], choices=SLOTS,
                    help="the slot of the first batch (default 0x01C28000); when running waves one after another "
                         "without a power cycle, start each wave in the other slot from the previous wave's last batch")
+    p.add_argument("--app", action="store_true",
+                   help="batches for the test application (tools/hwtest/APP.md): each at its own RAM base, at most "
+                        f"{len(APP_BASES)}, and app.S to build it with: fm1app.py OUT.fwsc app/driver.S OUTDIR/app.S")
     a = p.parse_args()
     tab = table.load()
     rng = random.Random(a.seed)
@@ -591,6 +595,11 @@ def main():
     a.outdir.mkdir(parents=True, exist_ok=True)
     run = ["#!/bin/sh", "# Run each batch on a unit in USB download mode; power-cycle it afterwards.", "set -e"]
     batches = [cases[k:k + a.batch] for k in range(0, len(cases), a.batch)]
+    if a.app and len(batches) > len(APP_BASES):
+        raise SystemExit(f"{len(batches)} batches; the application has room for {len(APP_BASES)}")
+    app = ["/* gen.py --app: the batches for app/driver.S */", "\t.section .rodata", "\t.p2align 2",
+           "\t.globl app_batches", f"app_batches:\t.4byte {len(batches)}"]
+    blobs = []
     for n, part in enumerate(batches):
         calib = make_cases(tab, [nop], 2, rng)          # every batch starts with two nop calibration cases
         part = calib + part
@@ -599,7 +608,7 @@ def main():
             pattern[k] = "hw_taken"
         with tempfile.TemporaryDirectory() as d:
             # alternate slots: an upload never lands on the runner that is answering the ROM's commands
-            base = SLOTS[(n + SLOTS.index(a.first_slot)) % 2]
+            base = APP_BASES[n] if a.app else SLOTS[(n + SLOTS.index(a.first_slot)) % 2]
             image, syms = build_batch(part, d, a.flag_mask, base, pattern)
         for k, c in enumerate(part):
             c["stub"] = syms[f"hw_stub_{k}"]
@@ -611,7 +620,10 @@ def main():
             if c.get("taken"):
                 c["tgt"] = syms[f"hw_tgt_{k}"]
         name = f"batch-{a.wave}-{n:03d}"
+        image += bytes(-len(image) % 4)
         (a.outdir / f"{name}.bin").write_bytes(image)
+        app.append(f"\t.4byte {name.replace('-', '_')}, {len(image)}, {base:#x}")
+        blobs += ["\t.p2align 2", f"{name.replace('-', '_')}:", f'\t.incbin "{name}.bin"']
         length = len(part) * OUT_WORDS * 4
         (a.outdir / f"{name}.json").write_text(json.dumps({
             "format": FORMAT, "wave": a.wave, "seed": a.seed, "flag_mask": a.flag_mask, "base": base,
@@ -621,6 +633,11 @@ def main():
         run.append(f'm-flasher run-ram "{name}.bin" --addr {base:#x} --call FC60 '
                    f'--read {syms["hw_results"]:#x}:{length} -o "{name}.out"')
         print(f"{name}: {len(part)} cases, image {len(image)} bytes, results at {syms['hw_results']:#x}, {length} bytes")
+    if a.app:
+        (a.outdir / "app.S").write_text("\n".join(app + blobs) + "\n")
+        print(f"application: python3 tools/hwtest/fm1app.py {a.outdir}/app.fwsc tools/hwtest/app/driver.S "
+              f"{a.outdir}/app.S; results: analyze.py {a.outdir} --ram RAM.bin@0x01C30000")
+        return
     (a.outdir / f"run-{a.wave}.sh").write_text("\n".join(run) + "\n")
     (a.outdir / f"run-{a.wave}.sh").chmod(0o755)
     print(f"{len(insns)} entries, {len(cases)} cases, {len(batches)} batches -> {a.outdir}; last batch in slot {base:#x}")

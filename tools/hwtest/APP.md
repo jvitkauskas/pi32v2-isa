@@ -1,6 +1,12 @@
 # Design: running test cases as an FM-1 application
 
-Status: proposal, nothing built or run yet.
+Status: steps 1 and 2 done (`hw/fm1-2026-10-24-app`): the build and install path works, RAM above the
+bootloader survives the return to download mode, and the runner gives the same results as an application as in
+download mode. Steps 3 and 4 are not started.
+
+Tools: `fm1app.py` (assemble, link at `0x02000120`, pack a `.fwsc`; `--plugin` for RAM images),
+`app/probe.S` (step 1), `app/driver.S` with `gen.py --app` (runs batches), `app/reset.S` (starts the installed
+application from download mode), `analyze.py --ram` (results from a RAM dump).
 
 Run 5 (`hw/fm1-2026-10-24-v5/README.md`) showed that the download-mode runner can install its own handlers in
 the RAM vector table, so `syscall`, `bkpt` and `hbkpt` are now captured there. What download mode still cannot do:
@@ -87,9 +93,10 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
 
 ## Open questions
 
-- Is the result area retained across the ROM's download-mode entry (step 1)?
+- ~~Is the result area retained across the ROM's download-mode entry (step 1)?~~ Yes: every sampled
+  area in `0x01C0C000..0x01C1FFFF` and `0x01C30000..0x01C7F7FF` kept all its words, and the ROM clears the marker.
 - The watchdog's timeout settings and how to arm it from an application (fm1-base `fm1_sys.h`; SPEC §3.1 lists
   the enable bit in the P33 bridge).
 - Whether the vector table can be written before m-bootloader's state is cleared, and whether any guard
   (fm1-base locks `0x01C7FD50..0x01C7FFFF` against writes after start-up) is active at entry.
-- The `.fwsc` packer: reuse fm1-base's `fm1pkg.py` (it needs three files from the SDK) or write one from SPEC §5.
+- ~~The `.fwsc` packer~~: `fm1app.py`, written from SPEC §5; M-Flasher accepts its packages.

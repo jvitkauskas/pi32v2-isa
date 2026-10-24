@@ -16,6 +16,7 @@ HW = Path(__file__).resolve().parent.parent / "tools" / "hwtest"
 sys.path.insert(0, str(HW))
 import analyze  # noqa: E402
 import check  # noqa: E402
+import fm1app  # noqa: E402
 import gen  # noqa: E402
 
 
@@ -200,3 +201,83 @@ class BatchSafety(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(shutil.which("cpp"), "needs GNU cpp")
+class Application(unittest.TestCase):
+    """The test application (tools/hwtest/APP.md): package format, batch table, results from a RAM dump."""
+
+    def unweave(self, raw):
+        image = b"".join(raw[i * 48:i * 48 + 47] for i in range(20)) + raw[20 * 48:]
+        identity = "".join(chr((raw[i * 48 + 47] - i - 1) & 0xFF) for i in range(20) if raw[i * 48 + 47] != 0x7D)
+        return identity, image
+
+    def test_enc_matches_the_spec_vectors(self):
+        # m-bootloader docs/SPEC.md 5.1: 32 zero bytes
+        self.assertEqual(fm1app.enc(bytes(32), 0xFFFF).hex(),
+                         "ffdf9f1f1f3e7cf8f0c1a367cebd5b970f1e3c78d183274e9c1913264c983060")
+        self.assertEqual(fm1app.enc(bytes(32), 0x980F).hex(),
+                         "0f3f7efcd9b264c8b162c48810012346ad5a950b162c79d3a66dfbf6ecf9d3a6")
+        self.assertEqual(fm1app.crc16(b"123456789"), 0x31C3)
+
+    def test_package_holds_a_valid_application_area(self):
+        d = Path(tempfile.mkdtemp())
+        out = d / "probe.fwsc"
+        subprocess.run([sys.executable, str(HW / "fm1app.py"), str(out), str(HW / "app" / "probe.S")],
+                       check=True, capture_output=True)
+        identity, image = self.unweave(out.read_bytes())
+        self.assertEqual(identity, "FM-1_901")
+        head = fm1app.enc(image[:64], 0xFFFF)
+        self.assertEqual(fm1app.crc16(head[2:]), struct.unpack_from("<H", head)[0])
+        lst_crc, total, count = struct.unpack_from("<HIH", head, 2)
+        self.assertEqual((total, count), (len(image), 1))
+        self.assertEqual(fm1app.crc16(image[64:144]), lst_crc)
+        entry = fm1app.enc(image[64:144], 0xFFFF)
+        _, _, dcrc, _, off, size = struct.unpack_from("<HHHHII", entry)
+        flash = image[off:off + size]
+        self.assertEqual(entry[64:73], b"flash.bin")
+        self.assertEqual(fm1app.crc16(flash), dcrc)
+        self.assertEqual(len(flash) % fm1app.SECTOR, 0)
+        self.assertEqual(set(flash[:fm1app.BOOT_AREA]), {0xFF})        # M-Flasher leaves the boot area alone
+        area = fm1app.area_crypt(flash[fm1app.BOOT_AREA:], 0x980F)
+        recs = []
+        for k in range(3):
+            r = area[32 * k:32 * k + 32]
+            recs.append((fm1app.crc16(r[2:]) == struct.unpack_from("<H", r)[0],) + struct.unpack_from("<HIIB", r, 2)
+                        + (r[16:].split(b"\0")[0],))
+        self.assertEqual((recs[0][2],) + recs[0][4:], (0x02000120, 0x83, b"app_area_head"))   # entry address
+        self.assertTrue(recs[0][0] and recs[1][0] and not recs[2][0])  # the table ends after app.bin
+        app = (d / "probe.bin").read_bytes()
+        self.assertEqual(recs[1][1:6], (fm1app.crc16(app), 0x120, len(app), 0x82, b"app.bin"))
+        self.assertEqual(area[0x120:0x120 + len(app)], app)
+
+    def test_app_batches_and_ram_results(self):
+        d = Path(tempfile.mkdtemp())
+        subprocess.run([sys.executable, str(HW / "gen.py"), str(d), "--wave", "selftest", "--batch", "10", "--app"],
+                       check=True, capture_output=True)
+        manifests = [json.loads(p.read_text()) for p in sorted(d.glob("batch-*.json"))]
+        self.assertGreater(len(manifests), 1)
+        self.assertEqual([m["base"] for m in manifests], list(gen.APP_BASES[:len(manifests)]))
+        self.assertFalse((d / "run-selftest.sh").exists())
+        out = d / "app.fwsc"
+        subprocess.run([sys.executable, str(HW / "fm1app.py"), str(out), str(HW / "app" / "driver.S"), str(d / "app.S")],
+                       check=True, capture_output=True)
+        app = (d / "app.bin").read_bytes()
+        exe = fm1app.read_exec((d / "app.elf").read_bytes())
+        at = {n: v for n, v, *_ in exe["symbols"] if n}["app_batches"] - 0x02000120
+        self.assertEqual(struct.unpack_from("<I", app, at)[0], len(manifests))
+        for k, m in enumerate(manifests):
+            src, length, base = struct.unpack_from("<III", app, at + 4 + 12 * k)
+            image = (d / f"batch-selftest-{k:03d}.bin").read_bytes()
+            self.assertEqual((length, base), (len(image), m["base"]))
+            self.assertEqual(app[src - 0x02000120:src - 0x02000120 + length], image)
+        # results taken from a RAM dump as from .out files: nop cases give back their inputs
+        ram = bytearray(0x48000)
+        for m in manifests:
+            words = []
+            for c in m["cases"]:
+                words += [*c["in_values"], c["flags"], c["sp_in"], 0, c["rets_in"], 0, *[0] * 32]
+            struct.pack_into(f"<{len(words)}I", ram, m["results"] - 0x01C30000, *words)
+        records, problems, summary = analyze.analyse(d, (bytes(ram), 0x01C30000))
+        self.assertEqual(len(summary), len(manifests))
+        self.assertEqual(sum(len(m["cases"]) for m in manifests), len(records))
