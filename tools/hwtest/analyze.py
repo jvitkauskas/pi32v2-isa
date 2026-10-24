@@ -107,6 +107,8 @@ def analyse(outdir):
                    "in": regs_in, "flags_in": c["flags"],
                    "out": out, "psr_out": w[16], "changed": [r for r in range(16) if out[r] != regs_in[r]]}
             rec.update(decode_extra(m, c, w))
+            if "pair_b" in c:                # the load or store that followed a parallel twin
+                rec["pair_b"] = c["pair_b"]
             records.append(rec)
             if c["id"] == "nop" and "exit" in rec:
                 if rec["exit"] != 0 or rec["sp_out"] != c["sp_in"] or rec["mem"] or (rec["psr_out"] & 0xF) != c["flags"]:

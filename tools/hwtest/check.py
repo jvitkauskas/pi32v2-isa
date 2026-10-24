@@ -83,6 +83,7 @@ class State:
         self.end = rec["stub"] + len(rec["bytes"]) // 2
         self.taken, self.scratch = rec["hw_taken"], rec["scratch"]
         self.batch = rec["batch"]
+        self.rec = rec                         # the whole record (e.g. pair_b, the second instruction of a pair)
         self.words = list(pattern)
         k = (self.sp - 4 - self.scratch) // 4
         if 0 <= k < len(self.words):

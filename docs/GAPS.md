@@ -41,19 +41,22 @@ the table). Both images now read the same with this repo's objdump as with JieLi
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
-source `compiler`) and from the FM-1 itself (source `hardware`): 676 of the 803 forms (parallel twins not
-counted) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
-stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md).
+source `compiler`) and from the FM-1 itself (source `hardware`): 730 of the 803 forms (parallel twins not
+counted, 282 of which ran too) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
+stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md), and the
+`if` blocks, `rep` loops, table branches and parallel twins in [run 3](../hw/fm1-2026-10-24-v3/README.md).
 Executable models of all of them but `copex.ppi` (`tools/hwtest/semantics/`) match every case, flags, memory,
 `sp`, `rets` and the path taken included. The `psr` flags (N, Z, C, V in bits 3..0, and which forms write which)
 are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in [ISA.md](ISA.md). Still open:
 
-- Not run on hardware: `if`/`iff`/`ifs` blocks and `rep` (they need their bodies laid out), the table branches
-  `tbb`/`tbh`, parallel twins (`#`), the returns `rti`/`rtx`/`rte`, `rtns`/`rtss`/`rthw`, `callns`, writes to
-  special registers (`mov.sr_r`, `li.sr_u32`, pops into special registers, the `usp`/`ssp`/`uspn`/`sspn` moves),
-  and the control forms `idle`, `cli`/`sti` (with and without a register), `swi`, `syscall`, `bkpt`, `hbkpt`,
+- Not run on hardware: the returns `rti`/`rtx`/`rte`, `rtns`/`rtss`/`rthw`, `callns`, writes to special
+  registers (`mov.sr_r`, `li.sr_u32`, pops into special registers, the `usp`/`ssp`/`uspn`/`sspn` moves), and the
+  control forms `idle`, `cli`/`sti` (with and without a register), `swi`, `syscall`, `bkpt`, `hbkpt`,
   `lockset`/`lockclr`, `sevl`/`sevg`, `wfe`, `ssync`, `btbclr`, `trigger`. Most change control state the runner
-  depends on (interrupts, stacks, events, the second core); they need the unit at hand to power-cycle.
+  depends on (interrupts, stacks, events, the second core); they need the unit at hand to power-cycle. Also not
+  tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks.
+- `iff.ne.rr.1`..`.6`: true for equal or unordered clean operands, but also for many ordered unequal random
+  words; no rule found ([run 3](../hw/fm1-2026-10-24-v3/README.md)).
 - `copex.ppi`: depends on something besides its operands (identical inputs gave different results in mode
   15); internal state or history is suspected ([report](../hw/report-q.md)).
 - Instruction revision 3 on this chip: it is not implemented as such. `popcnt.rr` does nothing, and the other

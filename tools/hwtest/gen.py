@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT-0
 """Generate hardware test batches: RAM images for tools/hwtest/runner.S with test cases from the table.
 
-    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|fpu|2|3|mem|stack|branch|misc] [--per-entry 12]
+    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|fpu|2|3|mem|stack|branch|misc|block|pair] [--per-entry 12]
                                  [--batch 60] [--seed 1] [--first-slot 0x01C28000]
 
 Each case runs one instruction (its exact encoding, as raw bytes) with all sixteen registers, the low four psr
@@ -228,17 +228,169 @@ def make_special_cases(tab, insns, per_entry, rng):
     return cases
 
 
+def enc(tab, id_, **values):
+    """The bytes of one table form with the given raw field values."""
+    return codec.encode(tab.by_id(id_), values)
+
+
+def byte_line(b):
+    return "\t.byte " + ", ".join(f"0x{x:02x}" for x in b)
+
+
+def marker(tab, reg, value):
+    """`reg = value` (li.s16, 4 bytes, any register): the body instruction that shows a part of a block ran."""
+    return enc(tab, "li.s16", r=reg, n=value & 0xFFFF)
+
+
+def low_regs(i, values, names, limit=8):
+    """True if every register the named fields stand for is below r<limit>."""
+    return all(r < limit for n in names for r in regs_of(i, n, values[n]))
+
+
+def block_lines(tab, i, values, data=None):
+    """An if-block stub: the opener, then-part markers r8.. = 0x100 + k, else-part markers r12.. = 0x200 + k."""
+    nthen, nelse = values[i.block["then"]] + 1, values[i.block["else"]]
+    lines = [byte_line(data or codec.encode(i, values))]
+    lines += [byte_line(marker(tab, 8 + k, 0x100 + k)) for k in range(nthen)]
+    lines += [byte_line(marker(tab, 12 + k, 0x200 + k)) for k in range(nelse)]
+    return lines + ["\tgoto hw_exit0"]
+
+
+def make_block_cases(tab, insns, per_entry, rng):
+    """if/iff/ifs blocks: the then-part writes r8.. (0x100 + k), the else-part r12.. (0x200 + k), so the registers
+    that changed show which part ran. rep / rep.i: a body of `r7 += 1`; r7 counts the iterations. tbb / tbh: a
+    jump table of three entries, each landing on `r8 = k + 1; goto hw_exit1`."""
+    cases = []
+    for i in insns:
+        widths = {f: len(i.field_bits(f)) for f in i.fields}
+        made = tries = 0
+        while made < per_entry and tries < per_entry * 100:
+            tries += 1
+            values = {f: rng.randrange(1 << w) for f, w in widths.items()}
+            regs = [rng.getrandbits(32) if rng.random() < 0.5 else rng.choice(EDGES) for _ in range(16)]
+            lines, extra = [], {}
+            if i.block:
+                tf, ef = i.block["then"], i.block["else"]
+                cond = [n for n in i.fields if n not in (tf, ef) and i.fields[n].kind in REG_KINDS]
+                if not low_regs(i, values, cond):
+                    continue
+                values[tf], values[ef] = rng.randrange(4), rng.randrange(4)
+                nthen, nelse = values[tf] + 1, values[ef]
+                if nelse > 3:
+                    continue
+                if made % 3 == 0:              # equal operands / register equal to the constant
+                    rf = [n for n in cond if i.fields[n].kind in ("gpr", "gpr_lo", "gpr_hi")]
+                    imm = [n for n in i.fields if n not in (tf, ef) and i.fields[n].kind in ("uimm", "simm", "modimm")]
+                    if len(rf) >= 2:
+                        regs[regs_of(i, rf[1], values[rf[1]])[0]] = regs[regs_of(i, rf[0], values[rf[0]])[0]]
+                    elif rf and imm:
+                        f = i.fields[imm[0]]
+                        op = codec.modimm(values[imm[0]]) if f.kind == "modimm" else codec.value(f, values[imm[0]], widths[imm[0]])
+                        regs[regs_of(i, rf[0], values[rf[0]])[0]] = op & 0xFFFFFFFF
+                data = codec.encode(i, values)
+                lines = block_lines(tab, i, values)
+            elif i.id in ("rep", "rep.i"):
+                body = rng.choice([1, 1, 2, 3])
+                bf = i.body
+                values[bf] = solve(i, bf, 2 * body)
+                if i.id == "rep":
+                    if values["r"] > 6:
+                        continue
+                    regs[values["r"]] = rng.choice([1, 2, 3, 5, 7])
+                data = codec.encode(i, values)
+                lines = [byte_line(data)] + [byte_line(enc(tab, "add.ri.u5", r=7, n=1))] * body + ["\tgoto hw_exit0"]
+                regs[7] = rng.randrange(0x100)
+            elif i.id in ("tbb", "tbh"):
+                if values["x"] > 7:
+                    continue
+                k = rng.randrange(3)
+                width = 1 if i.id == "tbb" else 2
+                regs[values["x"]] = k * width
+                data = codec.encode(i, values)
+                tsize = 3 * width + (3 * width) % 2      # the table, padded to a halfword
+                entries = [(tsize + 8 * n) // 2 for n in range(3)]
+                table_bytes = b"".join(e.to_bytes(width, "little") for e in entries) + bytes((3 * width) % 2)
+                lines = [byte_line(data), byte_line(table_bytes)]
+                for n in range(3):
+                    lines += [byte_line(marker(tab, 8, n + 1)), "\tgoto hw_exit1"]
+                extra["taken_any"] = True
+            else:
+                continue
+            cases.append({"id": i.id, "values": values, "bytes": data.hex(), "text": codec.format(i, values),
+                          "in": regs, "flags": rng.randrange(16), "lines": lines, **extra})
+            made += 1
+    return cases
+
+
+B_FORMS = ("st.w", "ld.w")        # the second instruction of a pair: a 16-bit store or load on r0..r7
+
+
+def plain_model(i):
+    """The register-only model of a twin's plain form (tools/hwtest/semantics), or None."""
+    sys.path.insert(0, str(HERE))
+    import check
+    return check.load_models().get(i.id[:-2])
+
+
+def make_pair_cases(tab, insns, per_entry, rng):
+    """`A #` then B: A a .p twin, B `[rb+n] = rd` (stores A's destination: old or new value?) or `rd = [rb+n]`
+    (loads into A's destination: which write wins?), with rb pointing into the scratch."""
+    sys.path.insert(0, str(HERE))
+    import check
+    cases = []
+    for i in insns:
+        plain = tab.by_id(i.id[:-2])
+        model = plain_model(i)
+        if model is None:
+            continue
+        widths = {f: len(i.field_bits(f)) for f in i.fields}
+        made = tries = 0
+        while made < per_entry and tries < per_entry * 100:
+            tries += 1
+            values = {f: rng.randrange(1 << w) for f, w in widths.items()}
+            regs = [rng.getrandbits(32) if rng.random() < 0.5 else rng.choice(EDGES) for _ in range(16)]
+            try:
+                writes, _ = model(list(regs), 0, check.operands(plain, values))
+            except Exception:
+                continue
+            dest = sorted(writes)
+            if not dest or dest[0] > 7:
+                continue
+            free = [r for r in range(8) if r not in writes]
+            if not free:
+                continue
+            rb = rng.choice(free)
+            rd = dest[0]
+            bform = B_FORMS[made % 2]
+            off = 4 * rng.randrange(-4, 8)
+            b = enc(tab, bform, d=rd, b=rb, n=solve(tab.by_id(bform), "n", off))
+            regs[rb] = f"hw_scratch+{DATA_BASES[0]:#x}"
+            data = codec.encode(i, values)
+            cases.append({"id": i.id, "values": values, "bytes": data.hex(), "text": codec.format(i, values),
+                          "in": regs, "flags": rng.randrange(16), "lines": [byte_line(data), byte_line(b), "\tgoto hw_exit0"],
+                          "pair_b": {"id": bform, "d": rd, "b": rb, "n": off}})
+            made += 1
+    return cases
+
+
 def select(tab, wave):
     """selftest: the runner's own check; 1: integer and DSP forms; fpu: the floating-point forms (the FPU may need
     enabling first); 2: forms that may trap or be missing (division, instruction revision 3); 3: register-only
     forms objdump prints but the assembler cannot write (unnamed `??` conditions); mem, stack, branch, misc:
-    forms that need memory, sp or an exit (kind_of)."""
+    forms that need memory, sp or an exit (kind_of); block: if/iff/ifs blocks, rep, rep.i, tbb, tbh; pair: the
+    parallel twins (`A #` then a 16-bit load or store)."""
     if wave == "selftest":
         return [tab.by_id(x) for x in ("nop", "mov.rr", "add.rrr", "li.u8", "lsl.rri", "sub.rrr")]
     if wave == "3":
         return [i for i in tab.insns if runnable(i, no_syntax=True)]
     if wave in ("mem", "stack", "branch", "misc"):
         return [i for i in tab.insns if kind_of(i) == wave]
+    if wave == "block":
+        return [i for i in tab.insns if i.status == "confirmed" and not i.id.endswith(".p") and not i.asm_no_syntax
+                and (i.block or i.id in ("rep", "rep.i", "tbb", "tbh"))]
+    if wave == "pair":
+        return [i for i in tab.insns if i.id.endswith(".p") and i.status == "confirmed"
+                and any(b.id == i.id[:-2] for b in tab.insns) and runnable(tab.by_id(i.id[:-2]))]
     pool = [i for i in tab.insns if runnable(i)]
     if wave == "2":
         return [i for i in pool if risky(i)]
@@ -273,7 +425,7 @@ def cases_from_file(tab, path):
     cases = []
     for c in json.loads(Path(path).read_text()):
         i = tab.by_id(c["id"])
-        if not (runnable(i) or runnable(i, no_syntax=True) or kind_of(i)):
+        if not (runnable(i) or runnable(i, no_syntax=True) or kind_of(i) or i.block):
             raise SystemExit(f"{i.id}: not a form the runner can execute")
         values = {f: c["values"][f] for f in i.fields}
         regs = [int(v, 0) if isinstance(v, str) and not v[0].isalpha() else v for v in c["in"]]
@@ -290,6 +442,8 @@ def cases_from_file(tab, path):
         for k in ("sp", "rets", "taken", "misalign"):
             if k in c:
                 case[k] = c[k]
+        if i.block:                     # the block's body: markers (block_lines)
+            case["lines"] = block_lines(tab, i, values, data)
         cases.append(case)
     return cases
 
@@ -317,7 +471,10 @@ def build_batch(cases, workdir, flag_mask=0xF, base=BASE, pattern=None):
         b = bytes.fromhex(c["bytes"])
         # every stub starts on a word boundary, or 2 bytes past one with "misalign" (a nop fills the gap)
         lines += ["\t.p2align 2"] + (["\tnop"] if c.get("misalign") else [])
-        lines += [f"hw_stub_{n}:", "\t.byte " + ", ".join(f"0x{x:02x}" for x in b), "\tgoto hw_exit0"]
+        if c.get("lines"):                    # a stub laid out by its generator (blocks, tables, pairs)
+            lines += [f"hw_stub_{n}:"] + c["lines"]
+        else:
+            lines += [f"hw_stub_{n}:", "\t.byte " + ", ".join(f"0x{x:02x}" for x in b), "\tgoto hw_exit0"]
         if c.get("taken"):
             lines += [f"hw_tgt_{n}:", "\tgoto hw_exit1"]
     lines += ["\t.data", "\t.p2align 2", "\t.globl hw_ncases, hw_cases, hw_flagmask, hw_nwords, hw_pattern",
@@ -377,7 +534,8 @@ SECTIONS {{
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("outdir", type=Path)
-    p.add_argument("--wave", default="1", choices=["selftest", "1", "fpu", "2", "3", "mem", "stack", "branch", "misc"])
+    p.add_argument("--wave", default="1", choices=["selftest", "1", "fpu", "2", "3", "mem", "stack", "branch", "misc",
+                                                         "block", "pair"])
     p.add_argument("--cases", type=Path, help="run these cases (JSON, see cases_from_file) instead of a wave; "
                                               "the batches are named after the file")
     p.add_argument("--flag-mask", type=lambda v: int(v, 0), default=0xF,
@@ -399,6 +557,10 @@ def main():
         insns = select(tab, a.wave)
         if a.wave in ("mem", "stack", "branch", "misc"):
             cases = make_special_cases(tab, insns, a.per_entry, rng)
+        elif a.wave == "block":
+            cases = make_block_cases(tab, insns, a.per_entry, rng)
+        elif a.wave == "pair":
+            cases = make_pair_cases(tab, insns, a.per_entry, rng)
         else:
             cases = make_cases(tab, insns, a.per_entry, rng)
     nop = tab.by_id("nop")

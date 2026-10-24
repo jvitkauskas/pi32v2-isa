@@ -232,6 +232,10 @@ add.rr.p   r1 += r3  #
 ld.w       r4 = [r0+12]
 ```
 
+On the FM-1 ([run 3](../hw/fm1-2026-10-24-v3/README.md)) this holds for every twin tried, with a store or load as B: B
+reads the registers as they were before A, and when B loads into a register A also writes, A's result stays (when A
+writes one half of it, the other half is B's loaded value).
+
 In assembly the pair is two lines, the first ending in `#` (`r1 += r3 #`). The first instruction is always one of
 the `.p` twin entries. No `if` block has a `#` form.
 
