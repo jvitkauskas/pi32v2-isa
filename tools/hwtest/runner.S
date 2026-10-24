@@ -6,7 +6,15 @@
    command block +15):
      FC60  run every test case in hw_cases; answer: FC 60, case count (BE u32), "HWT1"
      FD61  +2 address (BE u32), +6 length (BE u16): send that many bytes of RAM (the results)
-   Everything else goes back to the ROM (return 0). See tools/hwtest/README.md. */
+   Everything else goes back to the ROM (return 0). See tools/hwtest/README.md.
+
+   Record format 2. A case (hw_cases, 20 words): stub address, r0..r15, psr flags, sp, rets. Its result
+   (hw_results, 53 words): the 16 registers as pushed, psr, sp afterwards, the exit taken (0: the stub's end,
+   1: hw_taken or the stub's own taken label), rets afterwards, the number of scratch words that differ from
+   hw_pattern (leaving out the 16 words below the final sp, where the exit pushes the registers), then up to
+   16 (word index, value) pairs of them. Before each case the scratch (hw_nwords words)
+   is reset from hw_pattern; the case enters its stub by popping the stub address from [sp - 4], so that word
+   holds the stub address on entry. */
 
 	.section .entry,"ax"
 	.globl hw_entry
@@ -49,7 +57,7 @@ run_loop:
 	if (r11 == r8) goto run_done
 	r12 = hw_in
 	r14 = r9 + 4
-	r13 = 17
+	r13 = 19
 copy_in:
 	r0 = [r14+0]
 	[r12+0] = r0
@@ -60,7 +68,7 @@ copy_in:
 	r0 = [r9+0]
 	call hw_run
 	r12 = hw_out
-	r13 = 17
+	r13 = 53
 copy_out:
 	r0 = [r12+0]
 	[r10+0] = r0
@@ -68,7 +76,7 @@ copy_out:
 	r10 = r10 + 4
 	r13 = r13 + -1
 	if (r13 != 0) goto copy_out
-	r9 = r9 + 72
+	r9 = r9 + 80
 	r11 = r11 + 1
 	goto run_loop
 run_done:
@@ -160,14 +168,32 @@ send:
 	call r2
 	{pc} = [sp++]
 
-/* hw_run(r0 = stub): runs one case. Loads r0..r15 from hw_in[0..15] and the low four psr bits from hw_in[16],
-   then enters the stub through rets; the stub ends with `goto hw_exit`. */
+/* hw_run(r0 = stub): runs one case. Resets the scratch, sets rets, psr and sp from hw_in, puts the stub address
+   at [sp - 4], loads r0..r15 and pops the stub address into pc; the stub ends with `goto hw_exit0`. */
 	.globl hw_run
 hw_run:
 	[--sp] = {rets, r15-r4}
-	rets = r0
-	r1 = psr
+	r1 = sp
+	r2 = hw_savedsp
+	[r2+0] = r1
+	r1 = hw_scratch
+	r2 = hw_pattern
+	r3 = hw_nwords
+	r3 = [r3+0]
+reset:
+	r4 = [r2+0]
+	[r1+0] = r4
+	r1 = r1 + 4
+	r2 = r2 + 4
+	r3 = r3 + -1
+	if (r3 != 0) goto reset
 	r2 = hw_in
+	r3 = [r2+72]
+	rets = r3
+	r5 = [r2+68]
+	r5 = r5 + -4
+	[r5+0] = r0
+	r1 = psr
 	r3 = [r2+64]
 	r4 = hw_flagmask           /* which psr bits the case sets: 0xF (the condition flags), or 0 to leave psr */
 	r4 = [r4+0]
@@ -176,6 +202,7 @@ hw_run:
 	r1 = r1 & r4
 	r1 = r1 | r3
 	psr = r1
+	sp = r5
 	r15 = hw_in
 	r0 = [r15+0]
 	r1 = [r15+4]
@@ -193,54 +220,78 @@ hw_run:
 	r13 = [r15+52]
 	r14 = [r15+56]
 	r15 = [r15+60]
-	rts
+	{pc} = [sp++]
 
-/* hw_exit: stores the registers as pushed (their order on the stack is found by the nop cases) and psr into
-   hw_out, then returns from hw_run */
-	.globl hw_exit
-hw_exit:
+/* The exits: push the registers onto the case's stack, then record them, psr, sp, the exit, rets and the
+   scratch words that changed into hw_out, and return from hw_run on the runner's own stack. */
+	.globl hw_exit0, hw_exit1, hw_taken
+hw_exit0:
 	[--sp] = {r15-r0}
-	r0 = psr
-	r1 = hw_out
-	[r1+64] = r0
-	r2 = [sp+0]
-	[r1+0] = r2
-	r2 = [sp+4]
-	[r1+4] = r2
-	r2 = [sp+8]
-	[r1+8] = r2
-	r2 = [sp+12]
-	[r1+12] = r2
-	r2 = [sp+16]
-	[r1+16] = r2
-	r2 = [sp+20]
-	[r1+20] = r2
-	r2 = [sp+24]
-	[r1+24] = r2
-	r2 = [sp+28]
-	[r1+28] = r2
-	r2 = [sp+32]
-	[r1+32] = r2
-	r2 = [sp+36]
-	[r1+36] = r2
-	r2 = [sp+40]
-	[r1+40] = r2
-	r2 = [sp+44]
-	[r1+44] = r2
-	r2 = [sp+48]
-	[r1+48] = r2
-	r2 = [sp+52]
-	[r1+52] = r2
-	r2 = [sp+56]
-	[r1+56] = r2
-	r2 = [sp+60]
-	[r1+60] = r2
-	sp += 64
+	r1 = psr
+	r0 = 0
+	goto exit_common
+hw_taken:
+hw_exit1:
+	[--sp] = {r15-r0}
+	r1 = psr
+	r0 = 1
+exit_common:
+	r2 = hw_out
+	[r2+64] = r1
+	[r2+72] = r0
+	r1 = rets
+	[r2+76] = r1
+	r1 = sp
+	r3 = r1 + 64
+	[r2+68] = r3
+	r4 = 16
+save:
+	r3 = [r1+0]
+	[r2+0] = r3
+	r1 = r1 + 4
+	r2 = r2 + 4
+	r4 = r4 + -1
+	if (r4 != 0) goto save
+	r1 = hw_savedsp
+	r1 = [r1+0]
+	sp = r1
+	r2 = hw_out
+	r3 = hw_scratch
+	r4 = hw_pattern
+	r5 = 0                     /* word index */
+	r6 = 0                     /* words that differ */
+	r7 = r2 + 84               /* next (index, value) pair */
+	r8 = hw_nwords
+	r8 = [r8+0]
+	r11 = 16
+	r12 = [r2+68]              /* the exit's own push filled the 64 bytes below the case's final sp: skip them */
+	r13 = r12 + -64
+diff:
+	r9 = [r3+0]
+	r10 = [r4+0]
+	if (r9 == r10) goto same
+	if (r3 < r13) goto differs
+	if (r3 < r12) goto same
+differs:
+	if (r6 >= r11) goto counted
+	[r7+0] = r5
+	[r7+4] = r9
+	r7 = r7 + 8
+counted:
+	r6 = r6 + 1
+same:
+	r3 = r3 + 4
+	r4 = r4 + 4
+	r5 = r5 + 1
+	r8 = r8 + -1
+	if (r8 != 0) goto diff
+	[r2+80] = r6
 	{pc, r15-r4} = [sp++]
 
 	.data
 	.p2align 2
 hw_send:	.4byte 0
 	.globl hw_in, hw_out
-hw_in:		.space 68
-hw_out:		.space 68
+hw_savedsp:	.4byte 0
+hw_in:		.space 76
+hw_out:		.space 212

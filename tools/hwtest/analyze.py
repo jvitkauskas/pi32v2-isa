@@ -75,6 +75,20 @@ def read_batch(manifest_path):
     return m, words
 
 
+def decode_extra(m, c, w):
+    """The format-2 fields of a result: sp, exit, rets and the changed scratch words {address: value}."""
+    if m.get("format", 1) < 2:
+        return {}
+    count = w[20]
+    mem = {}
+    for k in range(min(count, (len(w) - 21) // 2)):
+        index, value = w[21 + 2 * k], w[22 + 2 * k]
+        mem[f"{m['scratch'] + 4 * index:#x}"] = value
+    return {"sp_in": c["sp_in"], "sp_out": w[17], "exit": w[18], "rets_in": c["rets_in"], "rets_out": w[19],
+            "mem": mem, "mem_count": count, "stub": c["stub"], "tgt": c.get("tgt"), "hw_taken": m["hw_taken"],
+            "scratch": m["scratch"]}
+
+
 def analyse(outdir):
     records, problems, summary = [], [], []
     for mp in sorted(Path(outdir).glob("batch-*.json")):
@@ -88,16 +102,21 @@ def analyse(outdir):
             out = [0] * 16
             for slot, reg in order.items():
                 out[reg] = w[slot]
+            regs_in = c.get("in_values", c["in"])
             rec = {"batch": mp.stem, "id": c["id"], "bytes": c["bytes"], "text": c["text"], "values": c["values"],
-                   "in": c["in"], "flags_in": c["flags"],
-                   "out": out, "psr_out": w[16], "changed": [r for r in range(16) if out[r] != c["in"][r]]}
+                   "in": regs_in, "flags_in": c["flags"],
+                   "out": out, "psr_out": w[16], "changed": [r for r in range(16) if out[r] != regs_in[r]]}
+            rec.update(decode_extra(m, c, w))
             records.append(rec)
+            if c["id"] == "nop" and "exit" in rec:
+                if rec["exit"] != 0 or rec["sp_out"] != c["sp_in"] or rec["mem"] or (rec["psr_out"] & 0xF) != c["flags"]:
+                    problems.append(f"{mp.stem}: a nop case changed sp, psr, the scratch or took the other exit")
             if m["wave"] == "selftest":
-                e = expected(c["text"], c["in"])
+                e = expected(c["text"], regs_in)
                 if e is None:
                     continue
                 checked += 1
-                want = list(c["in"])
+                want = list(regs_in)
                 if e != ("nop",):
                     want[e[0]] = e[1]
                 if out != want:

@@ -30,13 +30,14 @@ class Pipeline(unittest.TestCase):
         so the analysis has to find the order from the nop cases."""
         out = bytearray()
         for c in self.manifest["cases"]:
-            regs = list(c["in"])
-            e = analyze.expected(c["text"], c["in"])
+            regs = list(c["in_values"])
+            e = analyze.expected(c["text"], c["in_values"])
             if e and e != ("nop",):
                 regs[e[0]] = e[1]
             if corrupt and c["id"] == "add.rrr":
                 regs[0] ^= 1
-            out += struct.pack("<17I", *[regs[15 - slot] for slot in range(16)], c["flags"])
+            out += struct.pack("<53I", *[regs[15 - slot] for slot in range(16)], c["flags"], c["sp_in"], 0,
+                               c["rets_in"], 0, *[0] * 32)
         (self.d / "batch-selftest-000.out").write_bytes(bytes(out))
 
     def test_image_fits_and_starts_with_the_entry(self):
@@ -60,6 +61,20 @@ class Pipeline(unittest.TestCase):
         self.simulate(corrupt=True)
         _, problems, _ = analyze.analyse(self.d)
         self.assertTrue(problems)
+
+    def test_nop_cases_check_sp_and_scratch(self):
+        self.simulate()
+        records, _, _ = analyze.analyse(self.d)
+        nop = records[0]
+        self.assertEqual((nop["exit"], nop["sp_out"]), (0, nop["sp_in"]))
+        self.assertEqual(nop["mem"], {})
+
+    def test_special_waves_build(self):
+        d = Path(tempfile.mkdtemp())
+        for wave in ("mem", "stack", "branch", "misc"):
+            subprocess.run([sys.executable, str(HW / "gen.py"), str(d), "--wave", wave, "--per-entry", "1"],
+                           check=True, capture_output=True)
+        self.assertTrue(list(d.glob("batch-branch-*.json")))
 
     def test_wave_one_selection_is_register_only(self):
         from pi32v2isa import table

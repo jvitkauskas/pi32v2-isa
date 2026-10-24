@@ -28,13 +28,19 @@ for the table's meanings that JieLi's tools cannot give (docs/GAPS.md, "Meaning"
 | `1` | 306 register-only integer forms: arithmetic, logic, shifts, multiplies, bit operations, DSP, constants, register moves | none expected: no memory, stack, `sp`, special registers or control flow |
 | `fpu` | 24 floating-point forms | the FPU may need enabling before use (Felucca's start-up code may do it); if they hang, that is the finding |
 | `2` | 22 forms: integer division, `div.f`, and the instruction-revision-3 forms (`popcnt`, `sum`, `sat8`, `vsat16`, `unpack4`) | division by zero may trap; this chip may not implement revision 3 |
+| `misc` | `csync`, `mov.r_sr` (reading every special register), the bit-field forms with a register operand | none seen |
+| `stack` | pushes and pops (not pops into special registers), `sp += n`, `r = sp + n` | none seen |
+| `mem` | loads, stores, read-modify-write, the DSP multiplies with memory operands, cache operations | six `mem2.hh.i` forms and misaligned word loads reset the chip ([run 2](../../hw/fm1-2026-10-24-v2/README.md)) |
+| `branch` | pc-relative branches and calls, `goto r`, `call r`, `rts` | none seen |
 | `3` | 12 vector compares with unnamed (`??`) conditions, which JieLi's assembler cannot write | **reset the FM-1** (hw/fm1-2026-10-24): the unit drops off USB and boots its app; put it back with `m-flasher download-mode` |
 
 Each case sets the low four `psr` bits (the condition flags, [COMPILER.md](../../docs/COMPILER.md)) from its inputs.
 If the self-test hangs, try `--flag-mask 0`, which leaves `psr` alone.
 
-Not yet tested: memory forms, stack forms, parallel pairs (`#`), `rep` and `if` blocks, branches, special
-registers, interrupts, locks and events; they need a runner that sets up memory and control state.
+Since record format 2 each case also sets `sp` (inside a 1 KiB scratch that is reset to a known pattern before
+every case) and `rets`, and the runner records `sp`, `rets`, the exit the stub took and the scratch words that
+changed; that is what the `misc`, `stack`, `mem` and `branch` waves need. Not yet tested: parallel pairs (`#`),
+`rep` and `if` blocks, returns other than `rts`, writes to special registers, interrupts, locks and events.
 
 ## Running
 

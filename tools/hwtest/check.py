@@ -15,9 +15,18 @@ is called as f(R, flags, op) with
 and returns (writes, flags_out): {register number: value} for every register the form writes, and the low four
 psr bits afterwards, or None for "not modelled". A case matches when the written registers have those values,
 every other register is unchanged and (unless None) the flags agree.
+
+Results of record format 2 (hw/fm1-2026-10-24-v2: memory, stack, branches) also have sp, rets, the exit taken
+and the scratch words that changed. A model with a fourth parameter is called f(R, flags, op, st), where st is a
+State (sp, rets, stub, end = the address after the instruction, tgt = the stub's taken label, taken = hw_taken,
+scratch, and load(address, size) for the scratch as it was before the case), and returns a dict with any of
+"regs" ({register: value}), "flags", "sp", "rets", "exit" (0 fell through, 1 taken) and "mem" ({word address:
+value} for every scratch word it changes). Keys it leaves out must be unchanged (exit: 0); "flags": None means not
+modelled. A word stored over the 16 words below the final sp (where the runner's exit pushes) is not seen.
 """
 import argparse
 import importlib
+import inspect
 import json
 import sys
 from collections import defaultdict
@@ -66,7 +75,46 @@ def load_models():
     return models
 
 
-def check(records, tab, models, ids=None):
+class State:
+    """What a format-2 case started with, for models of memory, stack and branch forms."""
+
+    def __init__(self, rec, pattern):
+        self.sp, self.rets, self.stub, self.tgt = rec["sp_in"], rec["rets_in"], rec["stub"], rec.get("tgt")
+        self.end = rec["stub"] + len(rec["bytes"]) // 2
+        self.taken, self.scratch = rec["hw_taken"], rec["scratch"]
+        self.words = list(pattern)
+        k = (self.sp - 4 - self.scratch) // 4
+        if 0 <= k < len(self.words):
+            self.words[k] = self.stub          # the runner enters the stub by popping its address from [sp - 4]
+
+    def load(self, address, size=4):
+        """Little-endian load of `size` bytes from the scratch (as it was before the case)."""
+        off = address - self.scratch
+        if not 0 <= off <= len(self.words) * 4 - size:
+            raise ValueError(f"{address:#x} is outside the scratch")
+        data = b"".join(w.to_bytes(4, "little") for w in self.words)
+        return int.from_bytes(data[off:off + size], "little")
+
+
+def takes_state(fn):
+    """A model with four required parameters (R, flags, op, st) is a format-2 model."""
+    return sum(p.default is p.empty for p in inspect.signature(fn).parameters.values()) >= 4
+
+
+def patterns(results_path):
+    """{batch: pattern}: patterns.json next to a results file (format 2), or the batch manifests there."""
+    pj = Path(results_path).parent / "patterns.json"
+    if pj.exists():
+        return json.loads(pj.read_text())
+    out = {}
+    for mp in Path(results_path).parent.glob("batch-*.json"):
+        m = json.loads(mp.read_text())
+        if "pattern" in m:
+            out[mp.stem] = m["pattern"]
+    return out
+
+
+def check(records, tab, models, ids=None, pats=None):
     """{id: {"cases": n, "ok": n, "bad": [(record, why), ...]}} for the modelled ids."""
     out = defaultdict(lambda: {"cases": 0, "ok": 0, "bad": []})
     for rec in records:
@@ -74,17 +122,46 @@ def check(records, tab, models, ids=None):
         if i not in models or (ids and i not in ids):
             continue
         insn = tab.by_id(i)
-        writes, flags = models[i](list(rec["in"]), rec["flags_in"], operands(insn, rec["values"]))
+        fn = models[i]
+        op = operands(insn, rec["values"])
+        v2 = "exit" in rec
+        if takes_state(fn):
+            if not v2 or pats is None or rec["batch"] not in pats:
+                continue
+            res = fn(list(rec["in"]), rec["flags_in"], op, State(rec, pats[rec["batch"]]))
+        else:
+            writes, flags = fn(list(rec["in"]), rec["flags_in"], op)
+            res = {"regs": writes, "flags": flags}
         want = list(rec["in"])
-        for r, v in writes.items():
+        for r, v in res.get("regs", {}).items():
             want[r] = v & 0xFFFFFFFF
         why = []
         diff = [r for r in range(16) if want[r] != rec["out"][r]]
         if diff:
             why.append("registers " + ", ".join(f"r{r}: got {rec['out'][r]:#010x}, model {want[r]:#010x}"
                                                 for r in diff))
+        flags = res.get("flags")
         if flags is not None and (rec["psr_out"] & 0xF) != (flags & 0xF):
             why.append(f"flags: got {rec['psr_out'] & 0xF:04b}, model {flags & 0xF:04b}")
+        if v2:
+            for key, rkey, default in (("sp", "sp_out", rec["sp_in"]), ("rets", "rets_out", rec["rets_in"]),
+                                       ("exit", "exit", 0)):
+                w = res.get(key, default) & 0xFFFFFFFF
+                if rec[rkey] != w:
+                    why.append(f"{key}: got {rec[rkey]:#x}, model {w:#x}")
+            lo = rec["sp_out"] - 64
+            mem = {int(a, 16): v & 0xFFFFFFFF for a, v in res.get("mem", {}).items()} \
+                if any(isinstance(a, str) for a in res.get("mem", {})) else \
+                {a: v & 0xFFFFFFFF for a, v in res.get("mem", {}).items()}
+            mem = {a: v for a, v in mem.items() if not lo <= a < rec["sp_out"]}
+            got = {int(a, 16): v for a, v in rec["mem"].items()}
+            if rec["mem_count"] > len(got):
+                why.append(f"{rec['mem_count']} scratch words changed, only {len(got)} recorded")
+            if got != mem:
+                bad = sorted(set(got) | set(mem))
+                why.append("scratch " + ", ".join(f"{a:#x}: got {got.get(a, 'unchanged') if a not in got else hex(got[a])}, "
+                                                  f"model {hex(mem[a]) if a in mem else 'unchanged'}"
+                                                  for a in bad if got.get(a) != mem.get(a)))
         s = out[i]
         s["cases"] += 1
         if why:
@@ -105,7 +182,7 @@ def main():
     tab = table.load()
     records = [json.loads(line) for line in a.results.read_text().splitlines() if line.strip()]
     models = load_models()
-    res = check(records, tab, models, set(a.id) if a.id else None)
+    res = check(records, tab, models, set(a.id) if a.id else None, patterns(a.results))
     good = 0
     for i in sorted(res):
         s = res[i]
