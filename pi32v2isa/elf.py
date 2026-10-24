@@ -144,6 +144,9 @@ def write(sections, symbols, e_flags=0):
     for s in rela:
         data = bytearray()
         for offset, rtype, symname, addend in s.relocs:
+            # Compiler assembly can spell -1 as +4294967295; Elf32_Rela
+            # stores the same low 32 bits in its signed addend field.
+            addend = ((addend + (1 << 31)) & 0xFFFFFFFF) - (1 << 31)
             data += struct.pack("<IIi", offset, (symbol_number[symname] << 8) | rtype, addend)
         place(("rela", id(s)), bytes(data), 4)
     place("strtab", strtab, 1)

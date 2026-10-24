@@ -1144,6 +1144,10 @@ class _Core:
             if name == isa.abs32[insn.id] and not item.fixed_const:
                 values[name] = add & M32
                 continue
+            # A subtraction alias must not wrap its negated constant into a
+            # small addition: r3 = r0 - 0xFFFFFFFF keeps the subtract form.
+            if cand.alias and cand.size == 2 and not -(1 << 31) <= add < (1 << 31):
+                return None
             raw = numeric_raw(insn, name, add)
             if raw is None:
                 return None
@@ -1184,6 +1188,13 @@ class _Core:
         opens = line.endswith("{")
         par = line.endswith("#")
         good, err = self.parsed_candidates(line)
+        if not good:
+            # Memory operands may omit +0. Keep native bare-base syntax
+            # (for example flushinv [r2]) when it already matches.
+            normalized = re.sub(r"\[(r(?:1[0-5]|[0-9]))\]", r"[\1+0]", line)
+            if normalized != line:
+                line = normalized
+                good, err = self.parsed_candidates(line)
         if par:
             # a parallel twin the table does not list: the 32-bit forms in E000..E7FF have one with bit 12 set
             base, err2 = self.parsed_candidates(canon(line[:-1]))

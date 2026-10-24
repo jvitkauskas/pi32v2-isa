@@ -123,6 +123,19 @@ class Syntax(unittest.TestCase):
         self.check("goto -2", "goto .")
         self.check("{r3-r0} = [sp++]", "{r0, r1, r2, r3} = [sp++]", "{ r3 - r0 } = [sp++]")
 
+    def test_zero_offset_base_address(self):
+        self.assertIsNotNone(codec.decode(TABLE, text_of("flushinv [r2]\n")))
+        for lhs, rhs in (("[r0] = r2", "[r0+0] = r2"),
+                         ("r3 = [r10]", "r3 = [r10+0]"),
+                         ("b[r2] = r4", "b[r2+0] = r4"),
+                         ("r1 = h[r4] (s)", "r1 = h[r4+0] (s)")):
+            self.check(lhs, rhs)
+
+    def test_subtraction_alias_does_not_wrap_to_small_addition(self):
+        self.assertEqual(text_of("r3 = r0 - 0xFFFFFFFF\n").hex(" "), "f3 e0 ff 03")
+        self.assertEqual(text_of("r3 = r0 - 0xFFFFFFFE\n").hex(" "), "03 e1 02 00")
+        self.assertEqual(text_of("r3 = r0 - -3\n"), text_of("r3 = r0 + 3\n"))
+
     def test_expression_precedence_follows_llvm(self):
         """`*`, `/`, `%`, `<<`, `>>` bind tighter than `|`, `&`, `^`, which bind tighter than `+`, `-`."""
         self.assertEqual(text_of("r1 = 1+2*3\n"), text_of("r1 = 7\n"))
@@ -195,6 +208,12 @@ class Relocations(unittest.TestCase):
                          [(0, 5, "ext", 0), (6, 2, "ext", 0), (10, 1, "ext", 0), (14, 3, "ext", 0), (20, 4, "ext", 0)])
         d = self.relocs("\t.data\n\t.byte ext\n\t.short ext+3\n\t.long ext-4\n\t.long lab\nlab:\n", ".data")
         self.assertEqual(d, [(0, 6, "ext", 0), (1, 7, "ext", 3), (3, 8, "ext", -4), (7, 8, "lab", 0)])
+
+    def test_unsigned_spelling_of_signed_relocation_addends(self):
+        source = "r1 = (ext + 4294967295)\nr2 = (ext + 2147483648)\n"
+        self.assertEqual(self.relocs(source), [(0, 5, "ext", -1), (6, 5, "ext", -2147483648)])
+        self.assertEqual(asm.assemble_source(source, tab=TABLE),
+                         asm.assemble_source("r1 = ext-1\nr2 = ext-2147483648\n", tab=TABLE))
 
     def test_addends_and_registers(self):
         r = self.relocs("\t.text\n\tr1 = ext+4\n\tr1 = 4+ext\n\tcall (ext-8)\n\treti = ext\n")
