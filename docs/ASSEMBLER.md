@@ -181,7 +181,7 @@ fields, sections (type, flags, alignment, entry size, size, contents), relocatio
 compiled to assembly by JieLi's clang. On 2026-10-24 the 11 FM-1 sources (`m-bootloader/src/*.S`,
 `Felucca/firmware/crt0.S` and `hal/*.S`, `felucca-bsp/chip/*.S` and `loader/*.S`), 279 `clang -S` outputs (31 C files
 from the same repositories at `-O0`, `-O1`, `-O2`, `-O3`, `-Os`, `-Oz`, with `-ffunction-sections`, `-minstrev3` and
-`-fPIC` variants) and 29 snippets (`tests/asm/*.s`: each directive, section kind, relaxation boundary and macro feature)
+`-fPIC` variants) and 30 snippets (`tests/asm/*.s`: each directive, section kind, relaxation boundary and macro feature)
 were assembled by both. Objects are byte for byte identical in 307 cases; JieLi's assembler refuses 11 (`-fPIC` output with
 `r1 = sym@PI32V2GOT  #`) and so does this one; two snippets differ only by the late-`.equ` bug above. The sources
 linked with JieLi's `ld` give identical loaded sections.

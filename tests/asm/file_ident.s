@@ -1,4 +1,6 @@
-	.file "foo.c"
-	.ident "JieLi clang"
+	.ident "aa"
+	.ident "bbb"
 	.text
 	nop
+	.file "x.c"
+	.file "y.c"

@@ -692,8 +692,9 @@ class Data(Item):
 class Space(Item):
     """.space/.fill/.zero: `count` units of `unit` bytes filled with `value`."""
 
-    def __init__(self, count, unit, value, loc, strict=False):
+    def __init__(self, count, unit, value, loc, strict=False, fill=False):
         self.count, self.unit, self.value, self.loc, self.strict = count, unit, value, loc, strict
+        self.fill = fill                # .fill: in a NOBITS section its value must be 0 (.space's is ignored there)
         self.cache = 0
 
     def size(self, asm, sec, off):
@@ -867,7 +868,7 @@ class _Core:
         self.cur = None
         self.stack = []
         self.prev = None
-        self.file_name = None
+        self.file_names = []
         self.local = {}              # numeric label -> {"def": last definition, "pending": forward reference}
         self.tmp_id = 0              # .Ltmp<n> temporaries (anonymous labels)
         self.stmt_serial = 0
@@ -1359,11 +1360,17 @@ class _Core:
             for idx, item in enumerate(sec.items):
                 off = sec.offs[idx]
                 if sec.type == elf.SHT_NOBITS:
-                    if isinstance(item, Data) or isinstance(item, Raw):      # only zeros fit in a NOBITS section
-                        scratch = OutSec()
-                        item.emit(self, sec, off, scratch)
-                        if any(scratch.data) or scratch.relocs:
+                    if isinstance(item, (Space, Align, Org)):
+                        if isinstance(item, Space) and item.fill and self.ev(item.value, item.loc)[1] & M64:
                             raise AsmError(f"{item.loc}: can't put non-zero data in the NOBITS section {sec.name}")
+                        continue
+                    # a branch with several sizes is a relaxable fragment in JieLi's assembler, which no check looks at
+                    branch = isinstance(item, Insn) and len({c.size for c in item.cands
+                                                             if self.isa.branch.get(c.insn.id)}) > 1
+                    scratch = o if branch else OutSec()         # branches are relaxable fragments: not checked
+                    item.emit(self, sec, off, scratch)
+                    if not branch and (any(scratch.data) or scratch.relocs):
+                        raise AsmError(f"{item.loc}: can't put non-zero data in the NOBITS section {sec.name}")
                     continue
                 item.emit(self, sec, off, o)
             outs[sec.name] = o
@@ -1407,8 +1414,8 @@ class _Core:
             if sec.flags & elf.SHF_TLS and sec.name not in self.syms:
                 result.append(elf.Symbol(sec.name, type=elf.STT_TLS, shndx=sec.name))
         result.sort(key=lambda e: (e.bind != elf.STB_LOCAL, e.name.encode()))
-        if self.file_name is not None:
-            result.insert(0, elf.Symbol(self.file_name, bind=elf.STB_LOCAL, type=elf.STT_FILE, shndx=elf.SHN_ABS))
+        for name in reversed(self.file_names):
+            result.insert(0, elf.Symbol(name, bind=elf.STB_LOCAL, type=elf.STT_FILE, shndx=elf.SHN_ABS))
         sections = []
         for sec in self.order:
             o = outs[sec.name]
@@ -1422,8 +1429,6 @@ class _Core:
         return elf.write(sections, result)
 
 
-# When several entries encode a line in the same number of bytes, JieLi's assembler picks the lowest value here
-# (default 0, then table order). Found with `oracle encode`; see docs/ASSEMBLER.md.
 # `(u)` at the end of a line is optional (unsigned is the default) except for these entries (found by leaving it
 # off every entry's examples): JieLi's assembler refuses the line without it.
 U_REQUIRED = {
@@ -1442,6 +1447,8 @@ PARALLEL_B = {
     "st.w.pi", "st.w.pi.l", "st.w.pin", "st.w.pin.l", "st.w.sp", "st.w.sp.l",
 }
 
+# When several entries encode a line in the same number of bytes, JieLi's assembler picks the lowest value here
+# (default 0, then table order). Found with `oracle encode`; see docs/ASSEMBLER.md.
 TIE = {
     "li.s16": -1,           # over li.modimm
     "add.s14.rri": -1,      # over add.modimm.rri
@@ -1720,8 +1727,6 @@ class Assembler(_Core):
         fn(rest)
 
     def add(self, item):
-        if self.cur.type == elf.SHT_NOBITS and isinstance(item, (Insn, Leb)):
-            raise AsmError(f"{self.loc}: can't emit initialised data into the NOBITS section {self.cur.name}")
         item.loc = self.loc
         self.cur.items.append(item)
 
@@ -1829,8 +1834,7 @@ class Assembler(_Core):
 
     def d_file(self, rest):
         if rest.strip().startswith('"'):
-            if self.file_name is None:
-                self.file_name = parse_string(rest).decode()
+            self.file_names.append(parse_string(rest).decode())
 
     def d_ident(self, rest):
         sec = self.sections.get(".comment")
@@ -1875,6 +1879,8 @@ class Assembler(_Core):
             self.add(Space(("num", size), 1, None, self.loc))
             self.cur = saved
             return
+        if s.common and s.common != (size, align):
+            raise AsmError(f"{self.loc}: symbol {s.name} redeclared as different type")
         s.common = (size, align)
         s.bind, s.declared, s.kind = elf.STB_GLOBAL, True, "abs"
         s.kind = "undef"
@@ -1987,7 +1993,7 @@ class Assembler(_Core):
         a = split_args(rest)
         size = self.const_expr(a[1], "size") if len(a) > 1 else 1
         value = self.parse_expr(a[2]) if len(a) > 2 else ("num", 0)
-        self.add(Space(self.parse_expr(a[0]), min(size, 8) if size else 1, value, self.loc))
+        self.add(Space(self.parse_expr(a[0]), min(size, 8) if size else 1, value, self.loc, fill=True))
 
     def _align(self, rest, power):
         a = split_args(rest)

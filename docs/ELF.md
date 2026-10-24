@@ -68,8 +68,8 @@ descending order.)
 
 ## 4. Symbols
 
-- Entry 0 is the null symbol. If the source has `.file "name"`, the next entry is a `STT_FILE` symbol (local,
-  `SHN_ABS`, value 0) named by the argument as written.
+- Entry 0 is the null symbol. Each `.file "name"` in the source adds a `STT_FILE` symbol (local, `SHN_ABS`,
+  value 0) named by the argument as written, in order, before all other symbols.
 - Then the local symbols sorted by name (byte order), then the global and weak ones (together, also sorted by
   name). There are **no section symbols**.
 - Symbols not in the table: assembler temporaries (names starting `.L`) are dropped unless a relocation names
