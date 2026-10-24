@@ -18,6 +18,23 @@ images/packages are byte-identical because their C compilation and link-time
 code generation pass through unchanged; they do not demonstrate replacement
 of the LTO assembler.
 
+## Fully open after the compiler
+
+`create.py --open` makes an overlay whose `ld` and `objdump` are this repository's (`python3 -m pi32v2isa ld`
+and `objdump`), so JieLi's toolchain is used only to compile C to assembly (and for LTO). On 2026-10-24 three
+builds were made with the assembler-only overlay (JieLi's `ld` and `objdump`) and with the `--open` overlay,
+and every product and intermediate compared **[oracle]**:
+
+| Build | Files compared | Identical |
+| --- | --- | --- |
+| Felucca (`build.sh`) | 17 (`.o`, `.elf`, `.bin`, `.fwsc`) | 17 |
+| fm1-base template `--no-ble` | 16 | 16 |
+| fm1-base template `--open-ble` | 90 | 90 |
+
+With the comparisons above (the open assembler matches JieLi's on the same assembly), the repository's
+assembler, linker and objdump together produce the firmware JieLi's toolchain does from the same compiler
+output.
+
 ## Create the overlay
 
 From this repository's root, with Python 3.11+, GNU `cpp`, and GNU `objcopy` on
@@ -27,6 +44,7 @@ From this repository's root, with Python 3.11+, GNU `cpp`, and GNU `objcopy` on
 export PI32V2_TOOLCHAIN=/path/to/jieli-linux-toolchains-20260730.1
 python3 tools/overlay/create.py /tmp/open-pi32v2 \
     --toolchain "$PI32V2_TOOLCHAIN" --repo "$PWD"
+# add --open to use this repository's ld and objdump as well
 ```
 
 `/tmp/open-pi32v2` must not exist. This creates `common/bin/` and `pi32v2/bin/`.

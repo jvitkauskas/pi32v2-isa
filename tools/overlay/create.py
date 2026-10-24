@@ -20,6 +20,8 @@ def main():
     p.add_argument('--ld', help='replacement executable (default: JieLi)')
     p.add_argument('--lto-wrapper', help='replacement executable (default: JieLi)')
     p.add_argument('--llvmgold', type=Path, help='replacement LLVMgold.so')
+    p.add_argument('--open', action='store_true',
+                   help="use this repository's linker and objdump too (python3 -m pi32v2isa ld / objdump)")
     a = p.parse_args()
     if a.toolchain is None:
         p.error('--toolchain or PI32V2_TOOLCHAIN is required')
@@ -27,6 +29,17 @@ def main():
     if not (stock / 'common/bin/clang').is_file() or not (repo / 'pi32v2isa/asm.py').is_file():
         p.error('toolchain or repository path is invalid')
     commands = {'clang': str(stock / 'common/bin/clang')}
+    out.mkdir(parents=True, exist_ok=False)
+    if a.open:      # small wrappers that run the repository's own tools
+        tools = out / 'open'
+        tools.mkdir()
+        for name, sub in (('ld', 'ld'), ('objdump', 'objdump')):
+            if getattr(a, name):
+                p.error(f'--open and --{name} are exclusive')
+            w = tools / name
+            w.write_text(f'#!/bin/sh\nPYTHONPATH={repo} exec python3 -m pi32v2isa {sub} "$@"\n')
+            w.chmod(0o755)
+            setattr(a, name, str(w))
     for name, supplied, default in (
         ('objcopy', a.objcopy, 'objcopy'),
         ('objdump', a.objdump, str(stock / 'common/bin/objdump')),
@@ -40,7 +53,6 @@ def main():
     gold = (a.llvmgold or stock / 'pi32v2/bin/LLVMgold.so').resolve()
     if not gold.is_file():
         p.error(f'plugin not found: {gold}')
-    out.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(Path(__file__).with_name('dispatch.py'), out / 'dispatch.py')
     (out / 'dispatch.py').chmod(0o755)
     (out / 'overlay.json').write_text(json.dumps({'repo': str(repo), 'commands': commands}, indent=2) + '\n')

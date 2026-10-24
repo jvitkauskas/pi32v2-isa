@@ -30,12 +30,12 @@ linker and a compiler backend are later, separate projects that use this referen
 ## Status
 
 The table holds every instruction form JieLi's objdump decodes, all confirmed against JieLi's toolchain
-(encoding and syntax). The disassembler reads the FM-1 projects' assembly and JieLi's compiler output
-exactly as JieLi's objdump does. The assembler writes the objects JieLi's does (byte for byte on the FM-1
-sources and on JieLi's compiler output) and JieLi's linker accepts them ([docs/ASSEMBLER.md](docs/ASSEMBLER.md),
-[docs/ELF.md](docs/ELF.md)). The C ABI is in [docs/ABI.md](docs/ABI.md); what instructions do is documented
-as far as the syntax and the compiler show it ([docs/COMPILER.md](docs/COMPILER.md)).
-[docs/GAPS.md](docs/GAPS.md) lists what comes next.
+(encoding and syntax). The repository's assembler, linker and objdump write and read the files JieLi's do,
+byte for byte: the FM-1 firmwares (Felucca, fm1-base with open BLE or without BLE) build identically with them
+in place of JieLi's, which is then needed only to compile C to assembly
+([docs/BUILDING-OPEN.md](docs/BUILDING-OPEN.md)). The C ABI is in [docs/ABI.md](docs/ABI.md); what
+instructions do is documented as far as the syntax and the compiler show it
+([docs/COMPILER.md](docs/COMPILER.md)). [docs/GAPS.md](docs/GAPS.md) lists what comes next.
 
 ## Use
 
