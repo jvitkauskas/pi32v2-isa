@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Julius Vitkauskas
 # SPDX-License-Identifier: MIT-0
-"""Format-2 models of the stack, special-register and register-list forms, hw/fm1-2026-10-24-v2.
+"""Format-2 models of the stack, special-register and register-list forms, hw/fm1-2026-10-24-v2 (results.jsonl,
+followup5-k.jsonl, followup5-k-pc.jsonl).
 
-Stack pushes store the lowest-numbered register at the lowest address (the last one, rets or pc, highest);
-pops, loads and stores of register lists use the same order. A pop's words all held hw_taken in run 2, so the
-order of the popped words is the same assumption (hw/followup5-k.json tests it).
+Pushes store the lowest-numbered register at the lowest address (the last item, rets or pc, highest); pops, loads and
+stores of register lists use the same order (pop: rets/pc from the topmost word). rets keeps bits 26..1 of what is
+written to it. Every model also records the runner's stub-address word at [sp_in - 4], which stays a changed
+scratch word unless the exit's own push covers it.
 """
 from semantics.p import insert as _insert, uextra as _uextra, sextra as _sextra
 
@@ -13,18 +15,23 @@ SR = "reti rete retx rets sr4 psr cnum uspn sspn icfgn icfgs icfg usp ssp sp pc"
 N_ = {n: i for i, n in enumerate(SR)}
 
 # Special registers that read as constants or as state of the unit. reti and usp were the same for every case of a
-# batch but differed between batches (ROM interrupt state); every other register read the same all through.
+# batch but differed between batches (the ROM's state when the batch's command arrived, see hw/report5-k.md); every
+# other register read the same all through.
 CONST = {"cnum": 0, "uspn": 0, "sspn": 0, "icfgn": 0, "icfgs": 0, "icfg": 0x1090700, "ssp": 0x1c00e00,
          "rete": 0, "retx": 0, "sr4": 0}
-STATE = {"batch-stack-001": {"reti": 0x1e00368, "usp": 0x1c011a0}}
-STATE_DEFAULT = {"reti": 0x1e0168e, "usp": 0x1c01180}
+STATE = {"batch-stack-001": {"reti": 0x1e00368, "usp": 0x1c011a0},
+         "batch-followup5-k-main-000": {"reti": 0x1e01674},
+         "batch-followup5-k-main-001": {"reti": 0x1e00e72, "usp": 0x1c011a0},
+         "batch-followup5-k-main-002": {"reti": 0x1e01718, "usp": 0x1c0117c}}
+STATE_DEFAULT = {"reti": 0x1e0168e, "usp": 0x1c01180}      # batch-misc-000 and batch-stack-004
+RETS_MASK = 0x07FFFFFE      # rets holds bits 26..1 of what is written to it (a pop, or the runner's start-up)
 
 
 def sr_value(name, flags, st):
     if name == "psr":
         return flags & 0xF
     if name == "rets":
-        return st.rets
+        return st.rets & RETS_MASK
     if name == "sp":
         return st.sp
     if name == "pc":
@@ -43,10 +50,10 @@ def bits(mask):
     return [i for i in range(16) if mask >> i & 1]
 
 
-def fin(st, mem, sp_out):
-    """The runner's entry stub address at [sp_in - 4] stays visible once sp has moved down past it."""
-    if sp_out <= st.sp - 4:
-        mem.setdefault(st.sp - 4, st.stub)
+def fin(st, mem, sp_out=None):
+    """The runner's entry stub address at [sp_in - 4] is a changed scratch word unless the case overwrites it or the
+    exit's own push (the 16 words below the final sp, which check.py leaves out) covers it."""
+    mem.setdefault(st.sp - 4, st.stub)
     return mem
 
 
@@ -70,7 +77,7 @@ def pop(regs, special):
             out.setdefault("regs", {})[r] = st.load(a)
             a += 4
         if special == "rets":
-            out["rets"] = st.load(a)
+            out["rets"] = st.load(a) & RETS_MASK
             a += 4
         elif special == "pc":
             out["exit"] = int(st.load(a) == st.taken)
@@ -125,8 +132,7 @@ MODELS["csync"] = lambda R, fl, o, st: {"flags": fl}
 
 
 def add_sp(R, fl, o, st):
-    sp = (st.sp + o["n"]) & M
-    return {"sp": sp, "mem": fin(st, {}, sp), "flags": fl}
+    return {"sp": (st.sp + o["n"]) & M, "flags": fl}
 
 
 MODELS["add.sp_i"] = MODELS["add.sp_i.l"] = add_sp
@@ -172,3 +178,16 @@ MODELS_PLAIN = {"insert.rrriirii": _field(_insert), "uextra.rrriirii": _field(_u
                 "sextra.rrriirii": _field(_sextra)}
 for _k, _fn in MODELS_PLAIN.items():
     MODELS[_k] = (lambda fn: lambda R, fl, o, st: dict(zip(("regs", "flags"), fn(R, fl, o))))(_fn)
+
+
+def _with_stub(fn):
+    def f(R, fl, o, st):
+        out = fn(R, fl, o, st)
+        out["mem"] = fin(st, dict(out.get("mem", {})))
+        out.setdefault("rets", st.rets & RETS_MASK)       # the runner's own write of rets is cut the same way
+        return out
+    return f
+
+
+for _k in list(MODELS):
+    MODELS[_k] = _with_stub(MODELS[_k])

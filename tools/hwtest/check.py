@@ -104,9 +104,12 @@ def takes_state(fn):
 
 def patterns(results_path):
     """{batch: pattern}: patterns.json next to a results file (format 2), or the batch manifests there."""
-    pj = Path(results_path).parent / "patterns.json"
-    if pj.exists():
-        return json.loads(pj.read_text())
+    d = Path(results_path).parent
+    if (d / "patterns.json").exists():
+        out = json.loads((d / "patterns.json").read_text())
+        for extra in sorted(d.glob("*.patterns.json")):      # follow-up runs keep their own
+            out.update(json.loads(extra.read_text()))
+        return out
     out = {}
     for mp in Path(results_path).parent.glob("batch-*.json"):
         m = json.loads(mp.read_text())
@@ -157,8 +160,11 @@ def check(records, tab, models, ids=None, pats=None):
             mem = {a: v for a, v in mem.items() if not lo <= a < rec["sp_out"]}
             got = {int(a, 16): v for a, v in rec["mem"].items()}
             if rec["mem_count"] > len(got):
-                why.append(f"{rec['mem_count']} scratch words changed, only {len(got)} recorded")
-            if got != mem:
+                # the record keeps only the first 16 changed words: those must agree and the count must be right
+                if rec["mem_count"] != len(mem) or any(mem.get(a) != v for a, v in got.items()):
+                    why.append(f"{rec['mem_count']} scratch words changed (only {len(got)} recorded), "
+                               f"model changes {len(mem)}")
+            elif got != mem:
                 bad = sorted(set(got) | set(mem))
                 why.append("scratch " + ", ".join(f"{a:#x}: got {got.get(a, 'unchanged') if a not in got else hex(got[a])}, "
                                                   f"model {hex(mem[a]) if a in mem else 'unchanged'}"

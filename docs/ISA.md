@@ -26,29 +26,33 @@ results such as multiply-accumulate [kagaimiq-jielie].
 Sixteen special-register numbers `sr0`..`sr15` [kagaimiq-jielie]; the names are the ones JieLi's objdump
 prints, which its assembler also accepts as `sr<n>` [oracle]:
 
-| Number | Name | Purpose |
-| --- | --- | --- |
-| `sr0` | `reti` | return address from an interrupt |
-| `sr1` | `rete` | return address from emulation (debug) mode |
-| `sr2` | `retx` | return address from an exception |
-| `sr3` | `rets` | return address from a subroutine call |
-| `sr5` | `psr` | processor status |
-| `sr4` | (none) | not yet known; printed `sr4` |
-| `sr6` | `cnum` | not yet known |
-| `sr7` | `uspn` | not yet known [oracle] |
-| `sr8` | `sspn` | not yet known [oracle] |
-| `sr9` | `icfgn` | not yet known [oracle] |
-| `sr10` | `icfgs` | not yet known [oracle] |
-| `sr11` | `icfg` | interrupt configuration |
-| `sr12` | `usp` | user-mode stack pointer |
-| `sr13` | `ssp` | supervisor-mode stack pointer |
-| `sr14` | `sp` | the current stack pointer |
-| `sr15` | `pc` | program counter |
+| Number | Name | Purpose | Seen on the FM-1 (hw/fm1-2026-10-24-v2) |
+| --- | --- | --- | --- |
+| `sr0` | `reti` | return address from an interrupt | a ROM address that is constant within one batch of cases and differs between batches (`0x01E00368`, `0x01E00E72`, `0x01E0168E`, `0x01E01674`, `0x01E01718`) |
+| `sr1` | `rete` | return address from emulation (debug) mode | 0 |
+| `sr2` | `retx` | return address from an exception | 0 |
+| `sr3` | `rets` | return address from a subroutine call | what was written to it, cut to bits 26..1: bit 0 and bits 31..27 read back as 0 |
+| `sr4` | (none) | not yet known; printed `sr4` | 0 |
+| `sr5` | `psr` | processor status | the flags N Z C V in bits 3..0, the rest 0; pushing it (not reading it) clears the flags |
+| `sr6` | `cnum` | not yet known (core number?) | 0 |
+| `sr7` | `uspn` | not yet known [oracle] | 0 |
+| `sr8` | `sspn` | not yet known [oracle] | 0 |
+| `sr9` | `icfgn` | not yet known [oracle] | 0 |
+| `sr10` | `icfgs` | not yet known [oracle] | 0 |
+| `sr11` | `icfg` | interrupt configuration | `0x01090700`, always |
+| `sr12` | `usp` | user-mode stack pointer | a RAM address just above `ssp`, constant within a batch, differing between batches (`0x01C0117C`, `0x01C01180`, `0x01C011A0`) |
+| `sr13` | `ssp` | supervisor-mode stack pointer | `0x01C00E00`, always |
+| `sr14` | `sp` | the current stack pointer | the current sp (a push stores its value from before the decrement) |
+| `sr15` | `pc` | program counter | the address of the instruction reading it (a push of `pc` stores the push's own address) |
 
-The names of `sr7`..`sr10` suggest copies of `usp`, `ssp` and `icfg`; what they do is not known. Unlike
+None of the sixteen counts while a batch runs. `reti` and `usp` look like the state of the boot ROM's context when the
+batch's command arrived (the runner is called from the ROM's download handler); that is a reading of the data, not
+tested. The cut on `rets` was seen when popping (`pop.rets_rl`) and in the runner's own write; whether `pc`, `reti` and the
+others are cut the same way was not tested. The names of `sr7`..`sr10` suggest copies of `usp`, `ssp` and `icfg`; they
+read 0 whenever tried, and what they do is not known. Unlike
 pi32, `sp` is its own register and `r15` is a general register [kagaimiq-jielie]. Special registers are read
 and written with `mov.r_sr` and `mov.sr_r`, loaded with `li.sr_u32`, and pushed and popped with `push.srl`,
-`pop.srl` (`sr0`..`sr5`) and `push.srmask` (any).
+`pop.srl` (`sr0`..`sr5`) and `push.srmask` (any). A push stores the lowest-numbered register at the lowest address.
 
 Some loads address memory relative to `npc` (`r1 = [npc + r2]`, `ld.w.npc`) [oracle]; what `npc` holds is
 not yet known.

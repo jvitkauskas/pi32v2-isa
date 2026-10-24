@@ -3,86 +3,77 @@
 
 # Analyst K, round 5: stack, special-register and register-list forms
 
-Worktree `k`, branch `hw2/k`. Evidence: `hw/fm1-2026-10-24-v2/results.jsonl`, 12 cases per form. Models in
-`tools/hwtest/semantics/k2.py`. **All 34 assigned forms match on all 408 cases, flags included**
-(`check.py ... --id` over the list: 34/34). Nothing was run on the hardware. `check.py` gained one line: `State.batch`
-(the models of `reti` and `usp` need it, see below).
+Worktree `k`, branch `hw2/k`. Evidence: `hw/fm1-2026-10-24-v2/results.jsonl` (12 cases per form), `followup5-k.jsonl` (259 cases) and `followup5-k-pc.jsonl` (6), 673 cases of the 34 forms in all. Models in
+`tools/hwtest/semantics/k2.py`. **All 34 assigned forms match on every case of all three files, flags included** (`check.py ... --id` over the list: 34/34,
+28/28 and 2/2). Nothing was run by me on the hardware. `check.py` gained `State.batch` (the models of `reti` and `usp` need it) and
+now accepts a record whose 16 recorded scratch words are a truncation, as long as they agree with the model and the count is right
+(a 16-register push plus the stub word changes 17). The lead's `patterns()` change is committed with it.
 
-## Order of register lists
+## Order of register lists (settled)
 
-- **Push** (`push.rl`, `.rets_rl`, `.rmask`, `.rmask.c`, `.rets_rmask`, `.rets_rmask.c`, `.rets`, `.srl`, `.srmask`,
-  `.srmask.c`): sp drops 4 per item; the lowest-numbered register goes to the lowest address, the highest to
-  `[old sp - 4]`; `rets` is always the topmost word, above the general registers. Special registers go in number
-  order (reti lowest ... pc highest). A list is therefore stored as r4, r5, ... r15, rets going up the memory.
-- **Pop**: only the sp change (+4 per item) and the set of registers written were observable. Run 2's pop cases all read
-  words holding `hw_taken` (the pattern fills them), so which word reaches which register, and which word is pc, is
-  not shown. Models and notes assume the mirror of the push (ascending, pc/rets topmost); the compiler's prologue and
-  epilogue pairs (`{rets, r5, r4}` ... `{pc, r5, r4}`) need exactly that. `rets` popped by `pop.rets_*` equals its old
-  value in these cases, so a write to rets is not visible either. Follow-up below.
-- **ldm/stm**: `post1 [r+]` words at base, base kept; `post2 [r++]` same words, base += 4n; `pre1 [-r]` words at
-  base - 4n .. base - 4, base kept; `pre2 [--r]` same words, base -= 4n. Lowest-numbered register at the lowest
-  address in all four. With the base in the list: a load leaves the base holding the loaded word (it beats the
-  update); a store stores the old base value (and the update still happens). Before this run the three non-`post1`
-  styles were "assumed from the syntax"; they are now confirmed.
+- **Push:** sp drops 4 per item; the lowest-numbered register goes to the lowest address, the highest to `[old sp - 4]`; `rets` is
+  always the topmost word. Special registers go in number order (reti lowest ... pc highest). The `.c` forms store exactly the same
+  words, sp and flags as the plain forms, also for empty and full masks: what c does is still unknown.
+- **Pop:** with distinct words under sp (follow-up) the registers take consecutive words in ascending order of register number, lowest
+  from the lowest address; `rets` and `pc` come from the topmost word. The pc order was tested alone (6 cases, lower words not
+  addresses): execution continued at the topmost word every time. This is the exact mirror of the push, as the compiler's
+  prologue/epilogue pairs and the runner's own `{rets, r15-r4}` / `{pc, r15-r4}` already needed.
+- **ldm/stm:** `post1 [r+]` words at base, base kept; `post2 [r++]` same words, base += 4n; `pre1 [-r]` words at base - 4n .. base - 4,
+  base kept; `pre2 [--r]` same words, base -= 4n; lowest-numbered register at the lowest address. Base in the list: a load leaves the
+  loaded word in it (it beats the update); a store stores the old base value (the update still happens). Empty and full masks work.
+- **New finding, `rets` is 27 bits wide:** a word popped into `rets` comes back as `word & 0x07FFFFFE` (0x81355c53 -> 0x01355c52,
+  0x7c240d49 -> 0x04240d48, 0x5b569643 -> 0x03569642, 0x58989008 -> 0x00989008; 0x07295e42 unchanged). The runner's own write of
+  `rets` before a case is cut the same way (literal 0x12345678 reads back 0x02345678). Bit 0 and bits 31..27 are not stored. Not tested
+  for pc, reti, rete or retx.
 
-## Special registers (`mov.r_sr`, and the `push.srmask` stores, which give the same values)
+## Special registers (mov.r_sr, all sixteen read 4 times each; pushes give the same values)
 
-| sr | value in this context | kind |
+| sr | value | kind |
 | --- | --- | --- |
-| `sp` (sr14) | the current sp (before a push's decrement) | program state |
-| `pc` (sr15) | address of the instruction itself (push only; `mov.r_sr` not read) | program state |
-| `rets` (sr3) | the rets set before the case | program state |
-| `psr` (sr5) | the four flags in bits 3..0, everything else 0 (push only) | program state |
-| `icfg` (sr11) | `0x01090700`, always | constant |
-| `ssp` (sr13) | `0x01C00E00`, always (push only) | constant |
-| `usp` (sr12) | `0x01C01180` (misc batch, stack-004) or `0x01C011A0` (stack-001) | state of the ROM, not a counter |
-| `reti` (sr0) | `0x01E0168E` (misc, stack-004) or `0x01E00368` (stack-001) | state of the ROM, not a counter |
-| `rete`, `retx`, `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs` | 0 | zero in every case (cnum probably the core number, 0) |
+| `sp` | the current sp (a push stores the value before its decrement) | program state |
+| `pc` | the address of the reading instruction itself | program state |
+| `rets` | what was set, cut to bits 26..1 | program state |
+| `psr` | the flags in bits 3..0, the rest 0; reading does not change them | program state |
+| `icfg` | `0x01090700` | constant |
+| `ssp` | `0x01C00E00` | constant |
+| `reti` | one of `0x01E00368`, `0x01E00E72`, `0x01E0168E`, `0x01E01674`, `0x01E01718`: fixed within a batch, different between batches | ROM state, not a counter |
+| `usp` | `0x01C0117C`, `0x01C01180` or `0x01C011A0`, fixed within a batch | ROM state, not a counter |
+| `rete`, `retx`, `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs` | 0 in every read | zero |
 
-`reti` and `usp` were constant over every case of a batch (a dozen reads each) and differ between batches, so they are
-left-overs of the boot ROM's interrupt/stack state (reti looks like a ROM address, usp sits just above ssp), not
-counters that run during a batch. None of the sixteen looks like a free-running counter. `mov.r_sr` itself was only run for
-12 random registers (no psr, rete, rets, uspn, icfgs, ssp or pc read); `hw/followup5-k.json` reads all sixteen, four times each, plus
-repeated reads of the suspicious ones.
+Nothing counts during a batch (reti and usp were re-read up to 8 times per batch, and the batches' pushes agree). The simplest
+reading is that the runner runs inside the ROM's download-command handler and reti/usp are the interrupted ROM context's address
+and stack pointer at that time; this was not tested. The models carry a per-batch table of the observed reti/usp.
 
 ## Flags
 
-- Leave N Z C V alone: all push/pop/ldm/stm/sp-add/`r = sp + n`/`mov.r_sr`/`csync` cases.
-- Bit fields (`insert/uextra/sextra .rrriirii`): N and Z follow the result, C and V kept (as the rrii forms).
-- **Finding: a push that includes `psr` (`push.srl`, `push.srmask`, `.c`) leaves all four flags 0**, in all 19 such cases
-  (flags 0001..1111 in); pushes without psr leave them alone. The pushed value is the flags before the push. Looks like
-  "push and clear" (or a read side effect of psr); `mov.r_sr psr` was not run in run 2, so the follow-up asks whether reading
-  psr by `mov.r_sr` clears them as well.
+- Leave N Z C V alone: all push/pop/ldm/stm/sp-add/`r = sp + n`/`mov.r_sr` (psr included)/`csync` cases.
+- Bit fields (`insert/uextra/sextra .rrriirii`): N and Z follow the result, C and V kept. Bits of rt outside rt[12:8] and rt[4:0] are
+  ignored; edge p/l and aliasing of r, s, t behave as in the rrii forms.
+- **A push that includes `psr` leaves all four flags 0** (every such case, all 16 flag values; pushes without psr and reads of psr by
+  `mov.r_sr` leave them alone). The pushed value is the flags before the push.
 
 ## Corrections (old claim -> hardware)
 
-- `insert/uextra/sextra .rrriirii`: "meaning unknown beyond the syntax" -> same as the rrii forms with p = rt[12:8],
-  l = rt[4:0] (summaries rewritten; the junk bits of rt were 0 in all cases: follow-up).
-- `ldm.post2`, `ldm.pre1`, `ldm.pre2`, `stm.post2`, `stm.pre1`, `stm.pre2`: "increment style as printed" / "meaning assumed from
-  the syntax" -> settled as above.
-- `push.rmask.c`, `push.rets_rmask.c`, `push.srmask.c`: "meaning of c unknown" -> still unknown; words, sp and flags are
-  identical to the plain forms in all 12 cases each (no observable difference).
-- `push.srl`/`push.srmask`: gained the value table and the flag clearing; `mov.r_sr`: values; `csync`: no visible effect.
-- Everything else: hardware source added, notes extended.
+- `insert/uextra/sextra .rrriirii`: "meaning unknown beyond the syntax" -> the rrii operations with p = rt[12:8], l = rt[4:0].
+- `ldm.post2`, `ldm.pre1`, `ldm.pre2`, `stm.post2`, `stm.pre1`, `stm.pre2`: "assumed from the syntax" -> confirmed as above.
+- `push.rmask.c`, `push.rets_rmask.c`, `push.srmask.c`: "meaning of c unknown" -> still unknown; no observable difference.
+- `pop.*`: order was assumed in the first pass -> settled by the follow-up; `pop.rets_*` notes gain the 27-bit cut.
+- `push.srl`/`push.srmask`: value table, flag clearing; `mov.r_sr`: all values; `csync`: no visible effect. `docs/ISA.md`'s special-register
+  table now has a column of what was seen.
+- Hedge dropped from my first reading: reti/usp were "ROM state" in the first report; they are now documented as batch-constant, with
+  the interrupted-context idea marked as untested.
 
-## Follow-up (`hw/followup5-k.json`, 265 cases, builds with gen.py into 5 batches)
+## Follow-up
 
-1. Pop order: sp placed in the random part of the scratch (`hw_scratch+0x100`) so every popped word differs:
-   `pop.rl`, `pop.rets_rl`, `pop.rmask`, `pop.rets_rmask` (also empty and full masks), `pop.pc` at the normal sp.
-2. `mov.r_sr` of all sixteen special registers x four flag values, with other sp and rets values (including a literal
-   rets), then 24 repeat reads of reti, usp, cnum, icfg, uspn, icfgn.
-3. psr push: all 16 flag values through `push.srl {psr}`, the other forms, and empty and full masks of every push form.
-4. sp arithmetic at the ends of the scratch, `r = sp + n` with 0, 127, 128, 4094, 4095 and r15.
-5. ldm/stm of all four styles with an empty mask, full mask, base alone and r0 alone.
-6. Bit fields with edge p and l (0, 31, l = 0, p + l > 32) and junk in bits 13..31 and 7..5 of rt, and aliasing of r, s, t.
-7. Last (end of batch 004), 6 cases of `pop.pc_rl` / `pop.pc_rmask` with a window whose top word is `hw_taken` and whose lower
-   words are random. If pc were taken from the lowest word the unit would jump into a random word and probably hang; the
-   compiler's pairing makes that very unlikely, but run that batch last or split those six off.
-No misaligned access is requested.
+Done (none left). The follow-up of 265 cases (`hw/followup5-k.json`, run as `followup5-k-main.json` of 259 plus `followup5-k-pc.json` of 6)
+answered the open questions: pop order, all sixteen special registers, psr read versus push, junk bits of rt, empty/full masks, sp
+extremes. Remaining unknowns: what the (c) pushes change; whether pc/reti/rete/retx are cut like rets; why reti and usp differ between
+batches.
 
 ## Surprises
 
-- Pushing psr clears the flags.
+- Pushing psr clears the flags; reading it does not.
+- rets keeps only bits 26..1.
 - reti and usp differ between batches while constant within one.
-- `pc` pushed is the push instruction's own address, not the next one.
+- `pc` read or pushed is the instruction's own address.
 - (c) forms do nothing different that this setup can see.
