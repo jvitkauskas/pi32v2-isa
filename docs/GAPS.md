@@ -34,13 +34,6 @@ notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
 - Floating point: format (IEEE single assumed), rounding of the plain operations, exceptions.
 - All of this needs tests on hardware (an FM-1 running small test programs) or other evidence.
 
-## Table defects to fix
-
-- The `if`, `ifs` and `iff` block openers (about 50 entries) mark the block-shape bits (second word, bits
-  15..12) as ignored. objdump prints the same opener line whatever they hold, so `confirm` cannot see them,
-  but an assembler must set them from the block's body. The format needs a field that is implied by the
-  block rather than printed (like `body` for `rep`).
-
 ## ABI and object files
 
 - The C ABI is in [ABI.md](ABI.md); its §9 lists what it could not determine (alignment the linker

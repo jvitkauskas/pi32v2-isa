@@ -29,6 +29,7 @@ PAD = b"\x00\x00\x00\x00"   # two nops after each probe: a probe misread as long
 LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*(.*)$")
 ANNOTATION = re.compile(r"\s+<[^<>]*>$")      # objdump's "<symbol+offset : address >" after a branch target
 UNKNOWN = "<unknown instruction>"
+BRACE_LINE = re.compile(r"^\s*\}(\s*else\s*\{)?\s*$")   # `}` and `} else {` emit no bytes
 JUMP_TABLE = re.compile(r"^< -?\d+ : 0x[0-9A-F]+ >$")   # objdump's line for a tbb/tbh table entry
 
 
@@ -141,7 +142,7 @@ class Oracle:
         listing, err = self._assemble(source, features)
         if listing is not None:
             got = [b for _, (b, _) in sorted(self._lines(listing).items())]
-            counts = [sum(1 for ln in b if ln.strip() != "}") for b in blocks]
+            counts = [sum(1 for ln in b if not BRACE_LINE.match(ln)) for b in blocks]
             if len(got) == sum(counts):
                 out, k = [], 0
                 for c in counts:
@@ -289,7 +290,7 @@ def confirm(oracle, table, insn):
     problems = []
     # a block opener's body is the words after it: pad with more than the longest body (16 words), so the
     # next probe is never inside it
-    decoded = oracle.decode(encodings, insn.requires, pad=bytes(34) if insn.body else PAD)
+    decoded = oracle.decode(encodings, insn.requires, pad=bytes(34) if insn.body or insn.block else PAD)
     for data, text, got in zip(encodings, texts, decoded):
         if got is None:
             problems.append(f"decode {data.hex(' ')}: objdump printed nothing at this address")
@@ -302,6 +303,13 @@ def confirm(oracle, table, insn):
         field = insn.fields[insn.body]
         sizes = [codec.value(field, v[insn.body], len(insn.field_bits(insn.body))) for v in values_list]
         asm_texts = [t + "\n" + "nop\n" * (n // 2) + "}" for t, n in zip(asm_texts, sizes)]
+    if insn.block:                      # if-block opener: a then part and an else part of that many nops
+        def counts(v, part):
+            name = insn.block.get(part)
+            return codec.value(insn.fields[name], v[name], len(insn.field_bits(name))) if name else 0
+        asm_texts = [t + "\n" + "nop\n" * counts(v, "then")
+                     + ("} else {\n" + "nop\n" * counts(v, "else") if counts(v, "else") else "") + "}"
+                     for t, v in zip(asm_texts, values_list)]
     assembled = oracle.encode(asm_texts, insn.requires)
     preferred = collections.Counter()   # other entries the assembler chose for the same text
     out_of_range = []                   # probes with a value the assembler is known to refuse (asm_range)
@@ -506,7 +514,7 @@ def check_examples(oracle, table):
             if not isinstance(got, str):
                 problems.append(f"{i.id}: {x.text!r} now assembles despite asm_no_syntax: {got.hex(' ')}")
         plain = [(i, x) for i, x in items
-                 if not i.asm_no_syntax and not i.asm_syntax and not i.body
+                 if not i.asm_no_syntax and not i.asm_syntax and not i.body and not i.block
                  and x.text not in i.asm_rejects and x.text not in i.asm_wrong]
         for (i, x), got in zip(plain, oracle.encode([x.text for _, x in plain], features)):
             if isinstance(got, str):

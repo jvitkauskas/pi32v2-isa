@@ -22,6 +22,7 @@ asm_rejects = []                    # optional: texts objdump prints that JieLi'
 asm_wrong = []                      # optional: texts JieLi's assembler is known to mis-assemble
 asm_syntax = ""                     # optional: how the assembler wants the line, if not as objdump prints it
 body = ""                           # optional: a block opener's field that is the body length in bytes
+block = {}                          # optional: an if-block opener's fields implied by its body: { then = "t", else = "e" }
 
 [[insn.example]]                    # optional; zero or more
 bytes = "2d 31"                     # hex, in memory order
@@ -88,7 +89,10 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 - A block opener (`rep`, `if (...) {`) prints `{` at the end of its line; objdump then prints the body
   and a `}` line, which take no bytes of their own. When the assembler wants the line differently (`rep r1 {`
   where objdump prints `rep 4 r1 {`), `asm_syntax` gives its form, and `body` names the field the
-  assembler works out from the body's length.
+  assembler works out from the body's length. An `if (...) {` opener's shape (how many instructions the
+  then-part and the else-part hold) is in fields that objdump does not print on the opener's line;
+  `block = { then = "t", else = "e" }` names them (a field's value is the part's length in instructions),
+  and they need not appear in `syntax`.
 - The text follows JieLi's **objdump**. The assembler accepts more spellings (`[r1 + 0]`, `b[r4+4]` without
   `(u)`); an assembler written from this table must accept those too.
 

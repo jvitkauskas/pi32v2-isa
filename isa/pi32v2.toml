@@ -13126,13 +13126,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.eq.rr"
 syntax = "if ({r} == {s}) {{"
-encoding = ["111010000001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010000001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == b (equality compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a == b) return f(a); return 7` -> `if (r2 == r1) { r0 = r2; call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a == b) return f(a); return 7` -> `if (r2 == r1) { r0 = r2; call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 e8 00 00"
@@ -13154,16 +13155,32 @@ bytes = "1f e8 00 0f"
 text = "if (r15 == r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 e8 00 30"
+text = "if (r0 == r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 e8 00 c0"
+text = "if (r0 == r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f e8 00 ff"
+text = "if (r15 == r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.eq.rr"
 syntax = "iff ({r} == {s}) {{"
-encoding = ["111010000001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010000001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a == b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a != b` -> `r0 = 1; iff (r2 == r1) { r0 = 0 }`; `if (a == b) f()` -> `iff (r0 == r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a != b` -> `r0 = 1; iff (r2 == r1) { r0 = 0 }`; `if (a == b) f()` -> `iff (r0 == r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 e8 80 00"
@@ -13185,16 +13202,32 @@ bytes = "1f e8 80 0f"
 text = "iff (r15 == r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 e8 80 30"
+text = "iff (r0 == r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 e8 80 c0"
+text = "iff (r0 == r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f e8 80 ff"
+text = "iff (r15 == r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.eq.ri.modimm"
 syntax = "if ({r} == {n}) {{"
-encoding = ["111010000010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111010000010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == constant (equality compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 e8 00 00"
@@ -13216,16 +13249,32 @@ bytes = "2f e8 ff 0f"
 text = "if (r15 == 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 e8 00 30"
+text = "if (r0 == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e8 00 c0"
+text = "if (r0 == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f e8 ff ff"
+text = "if (r15 == 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.eq.ri.s12"
 syntax = "if ({r} == {n}) {{"
-encoding = ["111010000011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111010000011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == constant (equality compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a != 10` as `if (r0 == 10) { goto ... }`; unsigned `a == 0xffffffff` -> `if (r1 == -1) { ... }` (the constant is sign-extended to 32 bits). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a != 10` as `if (r0 == 10) { goto ... }`; unsigned `a == 0xffffffff` -> `if (r1 == -1) { ... }` (the constant is sign-extended to 32 bits). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 e8 00 00"
@@ -13244,6 +13293,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f e8 ff 0f"
+text = "if (r15 == -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 e8 00 30"
+text = "if (r0 == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 e8 00 c0"
+text = "if (r0 == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f e8 ff ff"
 text = "if (r15 == -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -13457,13 +13521,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.ne.rr"
 syntax = "if ({r} != {s}) {{"
-encoding = ["111010001001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010001001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != b (equality compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] `a == b` as `if (r0 != r1) { goto ... } else { ... }` (the branch is to the not-equal case). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] `a == b` as `if (r0 != r1) { goto ... } else { ... }` (the branch is to the not-equal case). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 e8 00 00"
@@ -13485,16 +13550,32 @@ bytes = "9f e8 00 0f"
 text = "if (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 e8 00 30"
+text = "if (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 e8 00 c0"
+text = "if (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f e8 00 ff"
+text = "if (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.une.rr"
 syntax = "iff ({r} u!= {s}) {{"
-encoding = ["111010001001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010001001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a != b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a == b` -> `r0 = 1; iff (r2 u!= r1) { r0 = 0 }`; `if (a != b) f()` -> `iff (r0 u!= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a == b` -> `r0 = 1; iff (r2 u!= r1) { r0 = 0 }`; `if (a != b) f()` -> `iff (r0 u!= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 e8 80 00"
@@ -13516,16 +13597,32 @@ bytes = "9f e8 80 0f"
 text = "iff (r15 u!= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 e8 80 30"
+text = "iff (r0 u!= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 e8 80 c0"
+text = "iff (r0 u!= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f e8 80 ff"
+text = "iff (r15 u!= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ne.ri.modimm"
 syntax = "if ({r} != {n}) {{"
-encoding = ["111010001010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111010001010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != constant (equality compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "a0 e8 00 00"
@@ -13547,16 +13644,32 @@ bytes = "af e8 ff 0f"
 text = "if (r15 != 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "a0 e8 00 30"
+text = "if (r0 != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e8 00 c0"
+text = "if (r0 != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af e8 ff ff"
+text = "if (r15 != 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ne.ri.s12"
 syntax = "if ({r} != {n}) {{"
-encoding = ["111010001011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111010001011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != constant (equality compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a == 10` as `if (r0 != 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a == 10` as `if (r0 != 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "b0 e8 00 00"
@@ -13575,6 +13688,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "bf e8 ff 0f"
+text = "if (r15 != -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 e8 00 30"
+text = "if (r0 != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 e8 00 c0"
+text = "if (r0 != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf e8 ff ff"
 text = "if (r15 != -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -13674,13 +13802,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.ge.rr"
 syntax = "if ({r} >= {s}) {{"
-encoding = ["111010010001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010010001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `(a + b) < a` (carry out) -> `r0 = 1; if (r2 >= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `(a + b) < a` (carry out) -> `r0 = 1; if (r2 >= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 e9 00 00"
@@ -13702,16 +13831,32 @@ bytes = "1f e9 00 0f"
 text = "if (r15 >= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 e9 00 30"
+text = "if (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 e9 00 c0"
+text = "if (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f e9 00 ff"
+text = "if (r15 >= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.uge.rr"
 syntax = "iff ({r} u>= {s}) {{"
-encoding = ["111010010001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010010001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a >= b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a < b ? a : b` -> `iff (r0 u>= r1) { r0 = r1 }`; `!(a < b)` -> `iff (r0 u>= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a < b ? a : b` -> `iff (r0 u>= r1) { r0 = r1 }`; `!(a < b)` -> `iff (r0 u>= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 e9 80 00"
@@ -13733,16 +13878,32 @@ bytes = "1f e9 80 0f"
 text = "iff (r15 u>= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 e9 80 30"
+text = "iff (r0 u>= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 e9 80 c0"
+text = "iff (r0 u>= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f e9 80 ff"
+text = "iff (r15 u>= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ge.ri.modimm"
 syntax = "if ({r} >= {n}) {{"
-encoding = ["111010010010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111010010010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 e9 00 00"
@@ -13764,16 +13925,32 @@ bytes = "2f e9 ff 0f"
 text = "if (r15 >= 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 e9 00 30"
+text = "if (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e9 00 c0"
+text = "if (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f e9 ff ff"
+text = "if (r15 >= 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ge.ri.s12"
 syntax = "if ({r} >= {n}) {{"
-encoding = ["111010010011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "uimm" }
+encoding = ["111010010011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "uimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 e9 00 00"
@@ -13792,6 +13969,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f e9 ff 0f"
+text = "if (r15 >= 4095) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 e9 00 30"
+text = "if (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 e9 00 c0"
+text = "if (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f e9 ff ff"
 text = "if (r15 >= 4095) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -13891,13 +14083,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.lt.rr"
 syntax = "if ({r} < {s}) {{"
-encoding = ["111010011001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010011001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a < b) a = f(a)` -> `if (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a < b) a = f(a)` -> `if (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 e9 00 00"
@@ -13919,16 +14112,32 @@ bytes = "9f e9 00 0f"
 text = "if (r15 < r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 e9 00 30"
+text = "if (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 e9 00 c0"
+text = "if (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f e9 00 ff"
+text = "if (r15 < r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.lt.rr"
 syntax = "iff ({r} < {s}) {{"
-encoding = ["111010011001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010011001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a < b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a < b) f()` -> `iff (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a < b) f()` -> `iff (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 e9 80 00"
@@ -13950,16 +14159,32 @@ bytes = "9f e9 80 0f"
 text = "iff (r15 < r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 e9 80 30"
+text = "iff (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 e9 80 c0"
+text = "iff (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f e9 80 ff"
+text = "iff (r15 < r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.lt.ri.modimm"
 syntax = "if ({r} < {n}) {{"
-encoding = ["111010011010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111010011010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "a0 e9 00 00"
@@ -13981,16 +14206,32 @@ bytes = "af e9 ff 0f"
 text = "if (r15 < 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "a0 e9 00 30"
+text = "if (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 e9 00 c0"
+text = "if (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af e9 ff ff"
+text = "if (r15 < 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.lt.ri.s12"
 syntax = "if ({r} < {n}) {{"
-encoding = ["111010011011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "uimm" }
+encoding = ["111010011011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "uimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a > 10` -> `if (r0 < 11) { goto else-case }`; `a >= 10` -> `if (r0 < 10)`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a > 10` -> `if (r0 < 11) { goto else-case }`; `a >= 10` -> `if (r0 < 10)`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "b0 e9 00 00"
@@ -14009,6 +14250,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "bf e9 ff 0f"
+text = "if (r15 < 4095) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 e9 00 30"
+text = "if (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 e9 00 c0"
+text = "if (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf e9 ff ff"
 text = "if (r15 < 4095) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -14067,13 +14323,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.eq.and.rr"
 syntax = "if (({r} & {s}) == 0) {{"
-encoding = ["111010100001rrrr", "----ssss00000000"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss00000000"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a register) is zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & b)` guarding a call -> `if ((r1 & r2) == 0) { r0 = r2; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & b)` guarding a call -> `if ((r1 & r2) == 0) { r0 = r2; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 00 00"
@@ -14095,16 +14352,32 @@ bytes = "1f ea 00 0f"
 text = "if ((r15 & r15) == 0) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 00 30"
+text = "if ((r0 & r0) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 00 c0"
+text = "if ((r0 & r0) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 00 ff"
+text = "if ((r15 & r15) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ne.and.rr"
 syntax = "if (({r} & {s}) != 0) {{"
-encoding = ["111010100001rrrr", "----ssss10000000"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss10000000"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a register) is non-zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & b` -> `if ((r1 & r0) != 0) { goto ... } else { r0 = 1 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & b` -> `if ((r1 & r0) != 0) { goto ... } else { r0 = 1 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 80 00"
@@ -14126,17 +14399,33 @@ bytes = "1f ea 80 0f"
 text = "if ((r15 & r15) != 0) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 80 30"
+text = "if ((r0 & r0) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 80 c0"
+text = "if ((r0 & r0) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 80 ff"
+text = "if ((r15 & r15) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.6"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss10000001"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss10000001"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 81 00"
@@ -14158,17 +14447,33 @@ bytes = "1f ea 81 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 81 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 81 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 81 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.5"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss1000001-"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss1000001-"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 82 00"
@@ -14190,17 +14495,33 @@ bytes = "1f ea 82 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 82 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 82 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 82 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.4"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss100001--"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss100001--"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 84 00"
@@ -14222,17 +14543,33 @@ bytes = "1f ea 84 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 84 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 84 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 84 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.3"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss10001---"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss10001---"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 88 00"
@@ -14254,17 +14591,33 @@ bytes = "1f ea 88 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 88 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 88 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 88 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.2"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss1001----"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss1001----"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 90 00"
@@ -14286,17 +14639,33 @@ bytes = "1f ea 90 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 90 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 90 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 90 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ne.rr.1"
 syntax = "iff ({r} != {s}) {{"
-encoding = ["111010100001rrrr", "----ssss101-----"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss101-----"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; meaning unknown (the compiler's float `!=` is iff.une.rr)."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md)."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea a0 00"
@@ -14318,16 +14687,32 @@ bytes = "1f ea a0 0f"
 text = "iff (r15 != r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea a0 30"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea a0 c0"
+text = "iff (r0 != r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea a0 ff"
+text = "iff (r15 != r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.eq.and.rm"
 syntax = "if (({r} & {n}) == 0) {{"
-encoding = ["111010100010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "modimm" }
+encoding = ["111010100010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "modimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a modified immediate) is zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & 4)` -> `if ((r1 & 0x4) == 0) { ... }`; with a 64-bit compare it tests a psr bit (`if ((r0 & 0x2) == 0)`). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & 4)` -> `if ((r1 & 0x4) == 0) { ... }`; with a 64-bit compare it tests a psr bit (`if ((r0 & 0x2) == 0)`). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 ea 00 00"
@@ -14349,16 +14734,32 @@ bytes = "2f ea ff 0f"
 text = "if ((r15 & 0x1FE) == 0) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 ea 00 30"
+text = "if ((r0 & 0x0) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ea 00 c0"
+text = "if ((r0 & 0x0) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f ea ff ff"
+text = "if ((r15 & 0x1FE) == 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.ne.and.rm"
 syntax = "if (({r} & {n}) != 0) {{"
-encoding = ["111010100011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "modimm" }
+encoding = ["111010100011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "modimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a modified immediate) is non-zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & 0x8000` -> `if ((r1 & 0x8000) != 0) { r0 = r1; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & 0x8000` -> `if ((r1 & 0x8000) != 0) { r0 = r1; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 ea 00 00"
@@ -14377,6 +14778,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f ea ff 0f"
+text = "if ((r15 & 0x1FE) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ea 00 30"
+text = "if ((r0 & 0x0) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ea 00 c0"
+text = "if ((r0 & 0x0) != 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f ea ff ff"
 text = "if ((r15 & 0x1FE) != 0) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -14455,13 +14871,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.gt.rr"
 syntax = "if ({r} > {s}) {{"
-encoding = ["111011000001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011000001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a <= b` -> `if (r0 > r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a <= b` -> `if (r0 > r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ec 00 00"
@@ -14483,16 +14900,32 @@ bytes = "1f ec 00 0f"
 text = "if (r15 > r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ec 00 30"
+text = "if (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ec 00 c0"
+text = "if (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ec 00 ff"
+text = "if (r15 > r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ugt.rr"
 syntax = "iff ({r} u> {s}) {{"
-encoding = ["111011000001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011000001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a > b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a <= b` -> `r0 = 1; iff (r2 u> r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a <= b` -> `r0 = 1; iff (r2 u> r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ec 80 00"
@@ -14514,16 +14947,32 @@ bytes = "1f ec 80 0f"
 text = "iff (r15 u> r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ec 80 30"
+text = "iff (r0 u> r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ec 80 c0"
+text = "iff (r0 u> r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ec 80 ff"
+text = "iff (r15 u> r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.gt.ri.modimm"
 syntax = "if ({r} > {n}) {{"
-encoding = ["111011000010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011000010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 ec 00 00"
@@ -14545,16 +14994,32 @@ bytes = "2f ec ff 0f"
 text = "if (r15 > 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 ec 00 30"
+text = "if (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ec 00 c0"
+text = "if (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f ec ff ff"
+text = "if (r15 > 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.gt.ri.s12"
 syntax = "if ({r} > {n}) {{"
-encoding = ["111011000011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "uimm" }
+encoding = ["111011000011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "uimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 10` -> `if (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 10` -> `if (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 ec 00 00"
@@ -14573,6 +15038,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f ec ff 0f"
+text = "if (r15 > 4095) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ec 00 30"
+text = "if (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ec 00 c0"
+text = "if (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f ec ff ff"
 text = "if (r15 > 4095) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -14672,13 +15152,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "if.le.rr"
 syntax = "if ({r} <= {s}) {{"
-encoding = ["111011001001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011001001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a > b ? a - b : 0` -> `if (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a > b ? a - b : 0` -> `if (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ec 00 00"
@@ -14700,16 +15181,32 @@ bytes = "9f ec 00 0f"
 text = "if (r15 <= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ec 00 30"
+text = "if (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ec 00 c0"
+text = "if (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ec 00 ff"
+text = "if (r15 <= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.le.rr"
 syntax = "iff ({r} <= {s}) {{"
-encoding = ["111011001001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011001001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a <= b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a <= b) f()` -> `iff (r0 <= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a <= b) f()` -> `iff (r0 <= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ec 80 00"
@@ -14731,16 +15228,32 @@ bytes = "9f ec 80 0f"
 text = "iff (r15 <= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ec 80 30"
+text = "iff (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ec 80 c0"
+text = "iff (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ec 80 ff"
+text = "iff (r15 <= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.le.ri.modimm"
 syntax = "if ({r} <= {n}) {{"
-encoding = ["111011001010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011001010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "a0 ec 00 00"
@@ -14762,16 +15275,32 @@ bytes = "af ec ff 0f"
 text = "if (r15 <= 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "a0 ec 00 30"
+text = "if (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 ec 00 c0"
+text = "if (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af ec ff ff"
+text = "if (r15 <= 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "if.le.ri.s12"
 syntax = "if ({r} <= {n}) {{"
-encoding = ["111011001011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "uimm" }
+encoding = ["111011001011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "uimm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 4095` -> `if (r1 <= 4094) { ... }`: the constant is unsigned 0..4095 here (the table's field is uimm). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 4095` -> `if (r1 <= 4094) { ... }`: the constant is unsigned 0..4095 here (the table's field is uimm). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "b0 ec 00 00"
@@ -14790,6 +15319,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "bf ec ff 0f"
+text = "if (r15 <= 4095) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ec 00 30"
+text = "if (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ec 00 c0"
+text = "if (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf ec ff ff"
 text = "if (r15 <= 4095) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -14889,13 +15433,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "ifs.ge.rr"
 syntax = "ifs ({r} >= {s}) {{"
-encoding = ["111011010001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011010001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a < b` -> `ifs (r0 >= r1) { goto else-case }`; `a < b ? c : d` -> `ifs (r0 >= r1) { r2 = r3 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a < b` -> `ifs (r0 >= r1) { goto else-case }`; `a < b ? c : d` -> `ifs (r0 >= r1) { r2 = r3 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ed 00 00"
@@ -14917,16 +15462,32 @@ bytes = "1f ed 00 0f"
 text = "ifs (r15 >= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ed 00 30"
+text = "ifs (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ed 00 c0"
+text = "ifs (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ed 00 ff"
+text = "ifs (r15 >= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ge.rr"
 syntax = "iff ({r} >= {s}) {{"
-encoding = ["111011010001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011010001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a >= b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a >= b) f()` -> `iff (r0 >= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a >= b) f()` -> `iff (r0 >= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ed 80 00"
@@ -14948,16 +15509,32 @@ bytes = "1f ed 80 0f"
 text = "iff (r15 >= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ed 80 30"
+text = "iff (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ed 80 c0"
+text = "iff (r0 >= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ed 80 ff"
+text = "iff (r15 >= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.ge.ri.modimm"
 syntax = "ifs ({r} >= {n}) {{"
-encoding = ["111011010010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011010010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `x > 65535` clamp -> `ifs (r1 >= 65536) { r0 = 65535 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `x > 65535` clamp -> `ifs (r1 >= 65536) { r0 = 65535 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 ed 00 00"
@@ -14979,16 +15556,32 @@ bytes = "2f ed ff 0f"
 text = "ifs (r15 >= 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 ed 00 30"
+text = "ifs (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ed 00 c0"
+text = "ifs (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f ed ff ff"
+text = "ifs (r15 >= 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.ge.ri.s12"
 syntax = "ifs ({r} >= {n}) {{"
-encoding = ["111011010011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111011010011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 >= 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 >= 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 ed 00 00"
@@ -15007,6 +15600,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f ed ff 0f"
+text = "ifs (r15 >= -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ed 00 30"
+text = "ifs (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ed 00 c0"
+text = "ifs (r0 >= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f ed ff ff"
 text = "ifs (r15 >= -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -15106,13 +15714,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "ifs.lt.rr"
 syntax = "ifs ({r} < {s}) {{"
-encoding = ["111011011001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011011001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a >= b` -> `ifs (r0 < r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a >= b` -> `ifs (r0 < r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ed 00 00"
@@ -15134,16 +15743,32 @@ bytes = "9f ed 00 0f"
 text = "ifs (r15 < r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ed 00 30"
+text = "ifs (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ed 00 c0"
+text = "ifs (r0 < r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ed 00 ff"
+text = "ifs (r15 < r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ult.rr"
 syntax = "iff ({r} u< {s}) {{"
-encoding = ["111011011001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011011001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a < b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a >= b` -> `r0 = 1; iff (r2 u< r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a >= b` -> `r0 = 1; iff (r2 u< r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ed 80 00"
@@ -15165,16 +15790,32 @@ bytes = "9f ed 80 0f"
 text = "iff (r15 u< r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ed 80 30"
+text = "iff (r0 u< r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ed 80 c0"
+text = "iff (r0 u< r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ed 80 ff"
+text = "iff (r15 u< r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.lt.ri.modimm"
 syntax = "ifs ({r} < {n}) {{"
-encoding = ["111011011010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011011010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 32768` -> `ifs (r1 < 32768) { ... }`; `a < 16384` -> `ifs (r1 < 16384)` (the constant is a modified immediate, printed in decimal). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 32768` -> `ifs (r1 < 32768) { ... }`; `a < 16384` -> `ifs (r1 < 16384)` (the constant is a modified immediate, printed in decimal). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "a0 ed 00 00"
@@ -15196,16 +15837,32 @@ bytes = "af ed ff 0f"
 text = "ifs (r15 < 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "a0 ed 00 30"
+text = "ifs (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 ed 00 c0"
+text = "ifs (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af ed ff ff"
+text = "ifs (r15 < 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.lt.ri.s12"
 syntax = "ifs ({r} < {n}) {{"
-encoding = ["111011011011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111011011011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a > 10` -> `ifs (r0 < 11) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a > 10` -> `ifs (r0 < 11) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "b0 ed 00 00"
@@ -15224,6 +15881,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "bf ed ff 0f"
+text = "ifs (r15 < -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ed 00 30"
+text = "ifs (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ed 00 c0"
+text = "ifs (r0 < 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf ed ff ff"
 text = "ifs (r15 < -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -15323,13 +15995,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "ifs.gt.rr"
 syntax = "ifs ({r} > {s}) {{"
-encoding = ["111011100001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011100001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a <= b` -> `ifs (r2 > r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a <= b` -> `ifs (r2 > r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ee 00 00"
@@ -15351,16 +16024,32 @@ bytes = "1f ee 00 0f"
 text = "ifs (r15 > r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ee 00 30"
+text = "ifs (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ee 00 c0"
+text = "ifs (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ee 00 ff"
+text = "ifs (r15 > r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.gt.rr"
 syntax = "iff ({r} > {s}) {{"
-encoding = ["111011100001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011100001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a > b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a > b) f()` -> `iff (r0 > r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a > b) f()` -> `iff (r0 > r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ee 80 00"
@@ -15382,16 +16071,32 @@ bytes = "1f ee 80 0f"
 text = "iff (r15 > r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "10 ee 80 30"
+text = "iff (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "10 ee 80 c0"
+text = "iff (r0 > r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "1f ee 80 ff"
+text = "iff (r15 > r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.gt.ri.modimm"
 syntax = "ifs ({r} > {n}) {{"
-encoding = ["111011100010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011100010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "20 ee 00 00"
@@ -15413,16 +16118,32 @@ bytes = "2f ee ff 0f"
 text = "ifs (r15 > 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "20 ee 00 30"
+text = "ifs (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ee 00 c0"
+text = "ifs (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2f ee ff ff"
+text = "ifs (r15 > 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.gt.ri.s12"
 syntax = "ifs ({r} > {n}) {{"
-encoding = ["111011100011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111011100011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "30 ee 00 00"
@@ -15441,6 +16162,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "3f ee ff 0f"
+text = "ifs (r15 > -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ee 00 30"
+text = "ifs (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "30 ee 00 c0"
+text = "ifs (r0 > 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "3f ee ff ff"
 text = "ifs (r15 > -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -15540,13 +16276,14 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "ifs.le.rr"
 syntax = "ifs ({r} <= {s}) {{"
-encoding = ["111011101001rrrr", "----ssss0-------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011101001rrrr", "tteessss0-------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a > b` -> `ifs (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a > b` -> `ifs (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ee 00 00"
@@ -15568,16 +16305,32 @@ bytes = "9f ee 00 0f"
 text = "ifs (r15 <= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ee 00 30"
+text = "ifs (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ee 00 c0"
+text = "ifs (r0 <= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ee 00 ff"
+text = "ifs (r15 <= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "iff.ule.rr"
 syntax = "iff ({r} u<= {s}) {{"
-encoding = ["111011101001rrrr", "----ssss10------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111011101001rrrr", "tteessss10------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block on a floating-point compare: runs when a <= b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a > b ? a : b` -> `iff (r0 u<= r1) { r0 = r1 }`; float `a > b` -> `r0 = 1; iff (r2 u<= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a > b ? a : b` -> `iff (r0 u<= r1) { r0 = r1 }`; float `a > b` -> `r0 = 1; iff (r2 u<= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "90 ee 80 00"
@@ -15599,16 +16352,32 @@ bytes = "9f ee 80 0f"
 text = "iff (r15 u<= r15) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "90 ee 80 30"
+text = "iff (r0 u<= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "90 ee 80 c0"
+text = "iff (r0 u<= r0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "9f ee 80 ff"
+text = "iff (r15 u<= r15) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.le.ri.modimm"
 syntax = "ifs ({r} <= {n}) {{"
-encoding = ["111011101010rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = { kind = "modimm", decimal = true } }
+encoding = ["111011101010rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = { kind = "modimm", decimal = true }, t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "a0 ee 00 00"
@@ -15630,16 +16399,32 @@ bytes = "af ee ff 0f"
 text = "ifs (r15 <= 510) {"
 origin = "oracle:objdump+clang:20260730.1"
 
+[[insn.example]]
+bytes = "a0 ee 00 30"
+text = "ifs (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "a0 ee 00 c0"
+text = "ifs (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "af ee ff ff"
+text = "ifs (r15 <= 510) {"
+origin = "oracle:objdump+clang:20260730.1"
+
 [[insn]]
 id = "ifs.le.ri.s12"
 syntax = "ifs ({r} <= {n}) {{"
-encoding = ["111011101011rrrr", "----nnnnnnnnnnnn"]
-fields = { r = "gpr", n = "simm" }
+encoding = ["111011101011rrrr", "tteennnnnnnnnnnn"]
+fields = { r = "gpr", n = "simm", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 2048` -> `ifs (r1 <= 2047) { ... }`; `a < -2000` -> `ifs (r1 <= -2001)`: the constant is signed -2048..2047. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 2048` -> `ifs (r1 <= 2047) { ... }`; `a < -2000` -> `ifs (r1 <= -2001)`: the constant is signed -2048..2047. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "b0 ee 00 00"
@@ -15658,6 +16443,21 @@ origin = "oracle:objdump+clang:20260730.1"
 
 [[insn.example]]
 bytes = "bf ee ff 0f"
+text = "ifs (r15 <= -1) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ee 00 30"
+text = "ifs (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "b0 ee 00 c0"
+text = "ifs (r0 <= 0) {"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "bf ee ff ff"
 text = "ifs (r15 <= -1) {"
 origin = "oracle:objdump+clang:20260730.1"
 
@@ -41600,14 +42400,15 @@ origin = "oracle:objdump+clang-reject:20260730.1"
 [[insn]]
 id = "if.unknown.rr.1"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss01------"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss01------"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 40 00"
@@ -41629,17 +42430,33 @@ bytes = "1f ea 40 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 40 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 40 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 40 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.2"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss001-----"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss001-----"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 20 00"
@@ -41661,17 +42478,33 @@ bytes = "1f ea 20 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 20 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 20 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 20 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.3"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss0001----"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss0001----"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 10 00"
@@ -41693,17 +42526,33 @@ bytes = "1f ea 10 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 10 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 10 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 10 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.4"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss00001---"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss00001---"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 08 00"
@@ -41725,17 +42574,33 @@ bytes = "1f ea 08 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 08 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 08 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 08 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.5"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss000001--"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss000001--"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 04 00"
@@ -41757,17 +42622,33 @@ bytes = "1f ea 04 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 04 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 04 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 04 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.6"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss0000001-"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss0000001-"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 02 00"
@@ -41789,17 +42670,33 @@ bytes = "1f ea 02 0f"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 
+[[insn.example]]
+bytes = "10 ea 02 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 02 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 02 ff"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
 [[insn]]
 id = "if.unknown.rr.7"
 syntax = "if ({r} ?? {s}) {{"
-encoding = ["111010100001rrrr", "----ssss00000001"]
-fields = { r = "gpr", s = "gpr" }
+encoding = ["111010100001rrrr", "tteessss00000001"]
+fields = { r = "gpr", s = "gpr", t = { kind = "uimm", add = 1 }, e = "uimm" }
+block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
 sources = ["oracle"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
 
 [[insn.example]]
 bytes = "10 ea 01 00"
@@ -41818,6 +42715,21 @@ origin = "oracle:objdump+clang-reject:20260730.1"
 
 [[insn.example]]
 bytes = "1f ea 01 0f"
+text = "if (r15 ?? r15) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 01 30"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "10 ea 01 c0"
+text = "if (r0 ?? r0) {"
+origin = "oracle:objdump+clang-reject:20260730.1"
+
+[[insn.example]]
+bytes = "1f ea 01 ff"
 text = "if (r15 ?? r15) {"
 origin = "oracle:objdump+clang-reject:20260730.1"
 

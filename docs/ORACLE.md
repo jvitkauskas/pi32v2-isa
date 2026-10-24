@@ -102,9 +102,11 @@ text = "r15 = r0"
 origin = "oracle:objdump+clang:20260730.1"
 ```
 
-Block openers (`if (...) {`, `rep`) are assembled with a body and a closing `}`: a single `nop`, or for an
-entry with `body` as many `nop`s as that field says, and their decode probes are padded past the longest
-body so the next probe never falls inside it.
+Block openers (`if (...) {`, `rep`) are assembled with a body and a closing `}`: a single `nop`; for an
+entry with `body`, as many `nop`s as that field says; for an entry with `block`, a then-part and an
+`} else {` part of as many `nop`s as its fields say. Their decode probes are padded past the longest body so
+the next probe never falls inside it. objdump prints an `if` opener the same whatever its shape, so for
+those fields only the assembler direction checks the bits.
 
 ## Regression tests
 

@@ -81,6 +81,7 @@ class Insn:
     asm_wrong: list[str] = field(default_factory=list)     # texts JieLi's assembler is known to mis-assemble
     asm_syntax: str = ""    # how the assembler wants the line, when it differs from objdump's syntax
     body: str = ""          # a block opener: the field whose value is the body's length in bytes
+    block: dict[str, str] = field(default_factory=dict)  # if-block opener: {"then": f, "else": f} implied fields
 
     @property
     def nbits(self):
@@ -156,6 +157,7 @@ def load(path=TABLE):
             asm_no_syntax=e.get("asm_no_syntax", False),
             asm_syntax=e.get("asm_syntax", ""),
             body=e.get("body", ""),
+            block=dict(e.get("block", {})),
         ))
     return Table(format=raw.get("format", 0), insns=insns)
 
@@ -265,8 +267,11 @@ def check(table, sources=None):
         names = placeholders(i.syntax)
         for name in set(names) - i.fields.keys():
             errors.append(f"{where}: syntax uses {{{name}}}, which is not a field")
-        for name in i.fields.keys() - set(names):
+        for name in i.fields.keys() - set(names) - set(i.block.values()):
             errors.append(f"{where}: field {name!r} never appears in syntax")
+        if i.block and (set(i.block) - {"then", "else"} or any(
+                f not in i.fields or i.fields[f].kind != "uimm" for f in i.block.values())):
+            errors.append(f"{where}: block is {{then = field, else = field}}, both uimm fields")
         if SYNTAX_TOKEN.sub("", i.syntax).count("{") or SYNTAX_TOKEN.sub("", i.syntax).count("}"):
             errors.append(f"{where}: syntax has a lone brace; write {{{{ or }}}} for a literal one")
         for name in set(placeholders(i.asm_syntax)) - i.fields.keys():
