@@ -4490,8 +4490,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "arithmetic"
 summary = "Unsigned divide: rd = rs / rt, quotient only."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a / b` (unsigned) -> `r0 = r0 / r1 (u)`; modulo as for div.s.rrr."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a / b` (unsigned) -> `r0 = r0 / r1 (u)`; modulo as for div.s.rrr. [hardware] hw/fm1-2026-10-24: Quotient is unsigned. Low psr bits 0..1 are preserved, bit 2 is quotient == 0, bit 3 is clear on all sampled quotients (none has bit 31 set). Whether bit 3 follows the quotient sign bit needs follow-up. 0/0 returned 0 without a trap; nonzero/0 needs follow-up."
 
 [[insn.example]]
 bytes = "f4 e1 00 00"
@@ -4526,8 +4526,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "arithmetic"
 summary = "Signed divide: rd = rs / rt, quotient only (the compiler uses it for C `/`, which truncates toward zero)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a / b` (int) -> `r0 = r0 / r1 (s)`. `a % b` is not an instruction: the compiler does `r2 = a / b; r1 *= r2; r0 = r0 - r1`. Constant divisors are loaded into a register and divided (a magic-number multiply only with -mllvm -pi32v2-div-expand). 64-bit `/` and `%` call `__divdi3`, `__udivdi3`, `__moddi3`, `__umoddi3`. Division by zero: the compiler keeps its own `b != 0` test, so the hardware result is not established."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a / b` (int) -> `r0 = r0 / r1 (s)`. `a % b` is not an instruction: the compiler does `r2 = a / b; r1 *= r2; r0 = r0 - r1`. Constant divisors are loaded into a register and divided (a magic-number multiply only with -mllvm -pi32v2-div-expand). 64-bit `/` and `%` call `__divdi3`, `__udivdi3`, `__moddi3`, `__umoddi3`. [hardware] hw/fm1-2026-10-24: Quotient truncates toward zero. Low psr bits 0..1 are preserved, bit 2 is quotient == 0, bit 3 its sign bit. The earlier division-by-zero unknown is narrowed only by div.u.rrr 0/0 -> 0, without a trap; this signed form has no zero-divisor or INT_MIN/-1 case."
 
 [[insn.example]]
 bytes = "f4 e1 01 00"
@@ -4560,10 +4560,10 @@ syntax = "{r} = {s} / {t} (u)"
 encoding = ["1110000111110110", "rrr0ttttsss00000"]
 fields = { r = "pair", s = "pair", t = "gpr" }
 group = "arithmetic"
-summary = "Operation printed `P = P / R (u)`: meaning not known beyond the syntax."
+summary = "Unsigned 64-bit dividend divided by an unsigned 32-bit divisor; 64-bit quotient in the destination pair."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Low word goes to the even register, high word to the odd; psr is preserved. Zero divisors need follow-up."
 
 [[insn.example]]
 bytes = "f6 e1 00 00"
@@ -4596,10 +4596,10 @@ syntax = "{r} = {s} / {t} (s)"
 encoding = ["1110000111110110", "rrr1ttttsss00000"]
 fields = { r = "pair", s = "pair", t = "gpr" }
 group = "arithmetic"
-summary = "Operation printed `P = P / R (s)`: meaning not known beyond the syntax."
+summary = "Signed 64-bit dividend divided by a signed 32-bit divisor; 64-bit quotient in the destination pair."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Signed quotient truncates toward zero. Low word goes to the even register, high word to the odd; psr is preserved. Zero divisors and signed quotient overflow need follow-up."
 
 [[insn.example]]
 bytes = "f6 e1 00 10"
@@ -16523,10 +16523,10 @@ encoding = ["1110010100111111", "----ssssrrrr0100"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Compare two floating-point registers; the result goes to a flag."
+summary = "Compare binary32 registers and replace the low four psr bits; no register is written."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Low psr is 8 for r < s, 6 for r == s, 2 for r > s, 3 for unordered (NaN). Includes positive subnormals, signed zero and NaNs; no registers changed. Earlier summary did not identify the flags."
 
 [[insn.example]]
 bytes = "3f e5 04 00"
@@ -16555,10 +16555,10 @@ encoding = ["1110010100111111", "rrrrssss00001111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftoi(R) E`: meaning not known beyond the syntax."
+summary = "Convert binary32 to signed 32-bit integer, rounding to nearest."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit rounding to nearest; half-integer tie handling needs follow-up. Observed positive NaN saturates to 0x7fffffff and negative overflow/NaN to 0x80000000. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 0f 00"
@@ -16589,8 +16589,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Convert float to signed 32-bit integer, rounding toward zero (the C cast)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(int)f` -> `r0 = ftoi(r0) (trunc)`. The other roundings (even, ceil, floor) are not used for C casts; `__builtin_lrintf` and `rintf` call the library."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(int)f` -> `r0 = ftoi(r0) (trunc)`. The other roundings (even, ceil, floor) are not used for C casts; `__builtin_lrintf` and `rintf` call the library. [hardware] hw/fm1-2026-10-24: Finite results fit toward zero rounding. Observed positive overflow/infinity saturates to 0x7fffffff. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 1f 00"
@@ -16619,10 +16619,10 @@ encoding = ["1110010100111111", "rrrrssss00101111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftoi(R) (ceil)`: meaning not known beyond the syntax."
+summary = "Convert binary32 to signed 32-bit integer, rounding toward plus infinity."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit toward plus infinity rounding. Observed positive overflow/infinity saturates to 0x7fffffff and negative overflow/NaN to 0x80000000. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 2f 00"
@@ -16651,10 +16651,10 @@ encoding = ["1110010100111111", "rrrrssss00111111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftoi(R) (floor)`: meaning not known beyond the syntax."
+summary = "Convert binary32 to signed 32-bit integer, rounding toward minus infinity."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit toward minus infinity rounding. Observed positive overflow/NaN saturates to 0x7fffffff and negative overflow to 0x80000000. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 3f 00"
@@ -16683,10 +16683,10 @@ encoding = ["1110010100111111", "rrrrssss01001111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftou(R) E`: meaning not known beyond the syntax."
+summary = "Convert binary32 to unsigned 32-bit integer, rounding to nearest."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit rounding to nearest; half-integer tie handling needs follow-up. Negative inputs clamp to 0 and positive overflow to 0xffffffff. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 4f 00"
@@ -16717,8 +16717,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Convert float to unsigned 32-bit integer, rounding toward zero (the C cast)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned)f` -> `r0 = ftou(r0) (trunc)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned)f` -> `r0 = ftou(r0) (trunc)`. [hardware] hw/fm1-2026-10-24: Finite results fit toward zero rounding. Negative inputs clamp to 0 and positive overflow to 0xffffffff. Negative NaN returned 0. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 5f 00"
@@ -16747,10 +16747,10 @@ encoding = ["1110010100111111", "rrrrssss01101111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftou(R) (ceil)`: meaning not known beyond the syntax."
+summary = "Convert binary32 to unsigned 32-bit integer, rounding toward plus infinity."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit toward plus infinity rounding. Negative inputs clamp to 0 and positive overflow to 0xffffffff. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 6f 00"
@@ -16779,10 +16779,10 @@ encoding = ["1110010100111111", "rrrrssss01111111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftou(R) (floor)`: meaning not known beyond the syntax."
+summary = "Convert binary32 to unsigned 32-bit integer, rounding toward minus infinity."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Finite results fit toward minus infinity rounding. Negative inputs clamp to 0 and positive overflow to 0xffffffff. Psr is preserved; unexercised NaN signs, infinities and range boundaries need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 7f 00"
@@ -16813,8 +16813,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Convert a signed 32-bit integer to single-precision float."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(float)int` -> `r0 = itof(r0)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(float)int` -> `r0 = itof(r0)`. [hardware] hw/fm1-2026-10-24: Binary32 conversion matches nearest-even rounding; psr is preserved. Input 0xfd7abe52 (-42287534), exactly halfway, rounded to 0xcc21506c (-42287536), the even significand. Chosen positive/negative midpoint and range-edge inputs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 8f 00"
@@ -16845,8 +16845,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Convert an unsigned 32-bit integer to single-precision float."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(float)unsigned` -> `r0 = utof(r0)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(float)unsigned` -> `r0 = utof(r0)`. [hardware] hw/fm1-2026-10-24: Binary32 conversion matches nearest-even rounding; psr is preserved. Chosen midpoint and range-edge inputs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 9f 00"
@@ -16875,10 +16875,10 @@ encoding = ["1110010100111111", "rrrrssss10101111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `Rh = ftof(R)`: meaning not known beyond the syntax."
+summary = "Convert binary32 to binary16 in the low half of rd, retaining its high half."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Tiny inputs become signed half zero, large finite inputs half infinity; NaNs 0x7fc00000/0xffffffff become 0x7e00/0xfe00. The high destination half and psr are preserved. Finite normal, subnormal and midpoint conversion cases need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 af 00"
@@ -16907,10 +16907,10 @@ encoding = ["1110010100111111", "rrrrssss10111111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftof(Rh)`: meaning not known beyond the syntax."
+summary = "Convert binary16 in the low source half to binary32."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. The source high half is ignored; binary16 subnormals are expanded. Low half 0xffff becomes canonical negative NaN 0xffc00000. Psr is preserved; normal/special values and signed zero need chosen follow-up cases."
 
 [[insn.example]]
 bytes = "3f e5 bf 00"
@@ -16939,10 +16939,10 @@ encoding = ["1110010100111111", "rrrrssss11001111"]
 fields = { r = "gpr", s = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R = ftof(R) E`: meaning not known beyond the syntax."
+summary = "Round a float to the nearest integer-valued float."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Rounds binary32 to an integer-valued binary32; retains the sign of a zero result and preserves psr. Half-integer ties, infinities and unexercised NaNs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 cf 00"
@@ -16973,8 +16973,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Round a float to an integer-valued float, toward zero."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_truncf(a)` -> `r0 = ftof(r0) (trunc)`; `__builtin_roundf` is `a + copysign(0.5, a)` (an insert of the sign bit, add.f) then this."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_truncf(a)` -> `r0 = ftof(r0) (trunc)`; `__builtin_roundf` is `a + copysign(0.5, a)` (an insert of the sign bit, add.f) then this. [hardware] hw/fm1-2026-10-24: Rounds binary32 to an integer-valued binary32; retains the sign of a zero result and preserves psr. Half-integer ties, infinities and unexercised NaNs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 df 00"
@@ -17005,8 +17005,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Round a float to an integer-valued float, toward plus infinity."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_ceilf(a)` -> `r0 = ftof(r0) (ceil)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_ceilf(a)` -> `r0 = ftof(r0) (ceil)`. [hardware] hw/fm1-2026-10-24: Rounds binary32 to an integer-valued binary32; retains the sign of a zero result and preserves psr. NaN 0x7fc00000 was retained. Half-integer ties, infinities and unexercised NaNs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 ef 00"
@@ -17037,8 +17037,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Round a float to an integer-valued float, toward minus infinity."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_floorf(a)` -> `r0 = ftof(r0) (floor)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_floorf(a)` -> `r0 = ftof(r0) (floor)`. [hardware] hw/fm1-2026-10-24: Rounds binary32 to an integer-valued binary32; retains the sign of a zero result and preserves psr. NaNs 0xffffffff and 0x7fc00000 returned 0xffc00000 and 0x7fc00000 (payload discarded, sign kept). Half-integer ties, infinities and unexercised NaNs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 ff 00"
@@ -17069,8 +17069,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Single-precision float add: rd = rs + rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a + b` -> `r0 = r0 + r1 (f)`; with -ffast-math the operands may be swapped (`r1 + r0`). Doubles are not hardware: `__adddf3` etc. are called. The `(f)` forms assemble without -mfprev1 in these tests."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a + b` -> `r0 = r0 + r1 (f)`; with -ffast-math the operands may be swapped (`r1 + r0`). Doubles are not hardware: `__adddf3` etc. are called. The `(f)` forms assemble without -mfprev1 in these tests. [hardware] hw/fm1-2026-10-24: Binary32 results match nearest-even arithmetic on these cases; psr is preserved. Subnormal inputs/results are retained. No arithmetic NaN or infinity operands were exercised; rounding ties need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 00 00"
@@ -17106,8 +17106,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Single-precision float subtract: rd = rs - rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a - b` -> `r0 = r0 - r1 (f)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a - b` -> `r0 = r0 - r1 (f)`. [hardware] hw/fm1-2026-10-24: Binary32 results match nearest-even arithmetic on these cases; psr is preserved. NaN inputs returned 0x7f800001, discarding payload/sign; equal operands, including -0, subtract to +0. Infinity operands and rounding ties need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 01 00"
@@ -17143,8 +17143,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Single-precision float multiply: rd = rs * rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a * b` -> `r0 = r0 * r1 (f)`; `a * b + c` is a multiply then an add (no fused multiply-add is emitted, not even with -ffp-contract=fast -ffast-math)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a * b` -> `r0 = r0 * r1 (f)`; `a * b + c` is a multiply then an add (no fused multiply-add is emitted, not even with -ffp-contract=fast -ffast-math). [hardware] hw/fm1-2026-10-24: Binary32 results match nearest-even arithmetic on these cases; psr is preserved. NaN input returned 0x7f800001, discarding payload; subnormal inputs/results are retained, and tiny products underflow to zero. Infinity times infinity stayed infinity. Rounding ties and other exceptional inputs need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 02 00"
@@ -17180,8 +17180,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Single-precision float divide: rd = rs / rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a / b` -> `r0 = r0 / r1 (f)`; `a / 2.0f` becomes a multiply by 0.5f only with a power-of-two constant (`r1 = 0x3F000000; r0 = r0 * r1`)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a / b` -> `r0 = r0 / r1 (f)`; `a / 2.0f` becomes a multiply by 0.5f only with a power-of-two constant (`r1 = 0x3F000000; r0 = r0 * r1`). [hardware] hw/fm1-2026-10-24: Binary32 results match nearest-even arithmetic on these cases; psr is preserved. Subnormal inputs/results are retained; finite/infinity gives signed zero, overflow gives signed infinity, and tiny results underflow to signed zero. NaNs, zero divisors and rounding ties need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 03 00"
@@ -17217,8 +17217,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Floating-point minimum: rd = fmin(rs, rt)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fminf(a, b)` -> `r0 = fmin(r0, r1)`; with -ffast-math plain `a < b ? a : b` also."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fminf(a, b)` -> `r0 = fmin(r0, r1)`; with -ffast-math plain `a < b ? a : b` also. [hardware] hw/fm1-2026-10-24: Selects the smaller binary32 operand, including subnormals; sets psr as fcmp of s against t (less 8, equal 6, greater 2). Earlier notes did not identify this flag write. NaN inputs and the choice between distinct signed zeros need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 05 00"
@@ -17254,8 +17254,8 @@ group = "fpu"
 decode_requires = ["fprev1"]
 summary = "Floating-point maximum: rd = fmax(rs, rt)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fmaxf(a, b)` -> `r0 = fmax(r0, r1)`; `a > 0.0f ? a : 0.0f` with -ffast-math. NaN handling not established."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fmaxf(a, b)` -> `r0 = fmax(r0, r1)`; `a > 0.0f ? a : 0.0f` with -ffast-math. [hardware] hw/fm1-2026-10-24: Selects the larger binary32 operand, including subnormals; sets psr as fcmp of s against t (less 8, equal 6, greater 2). Earlier notes did not identify this flag write. NaN inputs and the choice between distinct signed zeros need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 06 00"
@@ -17289,10 +17289,10 @@ encoding = ["1110010100111111", "rrrrttttssss0111"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R += R * R (f)`: meaning not known beyond the syntax."
+summary = "Binary32 multiply-add: rd = rd + rs * rt."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Results fit both fused and separately rounded multiply/add; the run cannot distinguish fusion. NaN operands/accumulators returned 0x7f800001; psr is preserved. Subnormal products contribute to a subnormal accumulator. Fusion, rounding ties and exceptional combinations need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 07 00"
@@ -17326,10 +17326,10 @@ encoding = ["1110010100111111", "rrrrttttssss1000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "fpu"
 decode_requires = ["fprev1"]
-summary = "Operation printed `R -= R * R (f)`: meaning not known beyond the syntax."
+summary = "Binary32 multiply-subtract: rd = rd - rs * rt."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24: Earlier meaning was unknown. Results fit both fused and separately rounded multiply/subtract; the run cannot distinguish fusion. NaN operands/accumulators returned 0x7f800001; psr is preserved. Fusion, rounding ties and exceptional combinations need follow-up."
 
 [[insn.example]]
 bytes = "3f e5 08 00"
