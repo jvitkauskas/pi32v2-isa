@@ -320,3 +320,44 @@ class AppExperiments(unittest.TestCase):
             self.assertEqual({r['batch'] for r in records},{'batch-probe-001'})
             with self.assertRaises(ValueError):
                 appcollect.collect(d,bytes(ram),99999)
+
+    def test_advanced_profile_builds_with_core_entry(self):
+        import appplan
+        with tempfile.TemporaryDirectory() as directory:
+            d=Path(directory)
+            cases=d/'probe.json'
+            cases.write_text(json.dumps([{'id':'wfe','values':{},'in':list(range(16)),'force':True}]))
+            subprocess.run([sys.executable,str(HW/'gen.py'),str(d),'--cases',str(cases),'--batch','1','--app'],
+                           check=True,capture_output=True)
+            (d/'plan.S').write_text(appplan.plan(d,0x3006,[3],3))
+            subprocess.run([sys.executable,str(HW/'fm1app.py'),str(d/'app.fwsc'),str(HW/'app/advanced.S'),
+                            str(d/'app.S'),str(d/'plan.S')],check=True,capture_output=True)
+            exe=fm1app.read_exec((d/'app.elf').read_bytes())
+            symbols={n:v for n,v,*_ in exe['symbols'] if n}
+            for name in ('app3_cpu1_entry','app3_cpu1_main','app3_soft','app3_trace'):
+                self.assertTrue(0x02000120<=symbols[name]<0x02000120+len((d/'app.bin').read_bytes()))
+
+    def test_temporal_verifier_rejects_wrong_nesting_and_ack(self):
+        import appverify
+        with tempfile.TemporaryDirectory() as directory:
+            d=Path(directory)
+            record=dict(batch='probe',id='swi',**{'in':[0]*16},out=[0xfffffff0,0x10,9]+[0]*13,
+                        psr_out=6,sp_in=100,sp_out=100,rets_in=200,rets_out=200,exit=0,mem_count=0)
+            journal=dict(batch='probe',status=2,handler_count=2,vector=121,emu=0,
+                         samples=[1,0,2,4,120,121,377,376]+[0]*12)
+            header=[0]*12
+            header[2]=1
+            (d/'observations.json').write_text(json.dumps([dict(header=header,batches=[journal])]))
+            exp={'probe':dict(handler_count=2,trace=[120,121,377,376],samples=[[2,2]],
+                              out_values=[[2,9]],delta=[[0,1,30,34]],flags=6,unchanged_frame=True)}
+            (d/'expectations.json').write_text(json.dumps(exp))
+            def save():
+                (d/'results.jsonl').write_text(json.dumps(record)+'\n')
+            save()
+            self.assertEqual(appverify.verify(d),(1,[]))
+            journal['samples'][4:8]=[120,376,121,377]
+            (d/'observations.json').write_text(json.dumps([dict(header=header,batches=[journal])]))
+            self.assertTrue(any('order' in e for e in appverify.verify(d)[1]))
+            record['out'][2]=8
+            save()
+            self.assertTrue(any('r2:' in e for e in appverify.verify(d)[1]))

@@ -66,19 +66,30 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
   (rete/rte works in both slots), and entry 1 for the delayed `btbclr` exception. Debug reti/rti handlers
   returned captures but following uploads hung; reaching the main instruction in those failed batches,
   including the earlier `swi 0` batch, is unproved. Fresh hooked `swi 0` completed without handler entry;
-  `idle` reset. Other modes, software-interrupt delivery/acknowledgement and the branch-buffer effect
-  of `btbclr` remain open.
+  `idle` reset. These download-mode observations did not configure delivery; the application runs below
+  establish software requests/acknowledgement and a working idle wakeup. Other privilege/power modes and
+  the branch-buffer effect of `btbclr` remain open.
 - Application [steps 3–4](../hw/fm1-2026-10-24-app2/README.md) establish TIMER5 delivery gates at icfg
   bits 8 and 9, pending retention across both masks, and delivery at priorities 0/3/7. All eight `swi`
   numbers reached vectors 120..127. `idle` woke through TIMER5 without resetting. `btbclr` reached the
   exception handler with EMU_MSG bit 1 (illegal instruction); its advertised buffer effect remains open.
-  Both application `wfe` cases, including sevl/wfe before the main wfe, returned without a handler entry;
-  blocking and event consumption remain unestablished. Software IRQ masking, interrupt nesting and
-  other event/power configurations remain open.
+  Application [run app3](../hw/fm1-2026-10-24-app3/README.md) adds software pending retention through both
+  global gates and priority nesting: a higher-priority software source preempts only when both gates are
+  opened in the outer handler; equal/lower priority defers. The tested pairs and independent entry/exit
+  traces are in the run report; other source/context combinations remain open.
+  Synchronized timing shows WFE is nonblocking in the tested masked/unmasked application contexts,
+  including 128 executions after SEVL or SEVG, while enabled IDLE waits for TIMER5. Masked IDLE reaches
+  watchdog recovery with no result. A verified second core executes event and WFE commands after one
+  startup, but no blocking WFE receiver was found, so event delivery/routing/consumption remains open.
+  Per-batch second-core restarts were unreliable (13 ready-poll timeouts); the successful sequence avoids
+  them. Other event-enable, power and interrupt configurations remain untested.
 - Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks.
 - `copex.ppi`: run 5 reproduces different mode-15 outputs after restoring all GPR inputs and flags,
   including the old destination, and inserting waits. Unobserved state/history remains unresolved
-  ([run 5](../hw/fm1-2026-10-24-v5/README.md), earlier [report](../hw/report-q.md)).
+  ([run 5](../hw/fm1-2026-10-24-v5/README.md), earlier [report](../hw/report-q.md)). Application
+  [run app3](../hw/fm1-2026-10-24-app3/README.md) repeats its entire eight-result sequence across two
+  software-reset launches, but still varies among equal target inputs within each launch. No numerical
+  model or hidden-state/reset rule follows from this reproducibility.
 - Instruction revision 3 on this chip: it is not implemented as such. `popcnt.rr` does nothing, and the other
   revision-3 forms (`popcnt.r_pair`, `sat8.rr`, `vsat16`, `unpack4`, `sum` with `usat`/`ssat`/`msat`) behave
   exactly as an older form whose encoding differs by one selector bit. What they do on a revision-3 core is

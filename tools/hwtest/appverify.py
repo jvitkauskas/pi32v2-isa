@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Julius Vitkauskas
 # SPDX-License-Identifier: MIT-0
-"""Check timer-count and trap-journal assertions recorded beside app2 results.
+"""Check timer-count and trap-journal assertions recorded beside application results.
 
-appverify.py OUTDIR: expectations.json names completed batches and comparisons over captured registers.
+appverify.py OUTDIR: expectations.json names attempted batches and comparisons over captured registers.
 This supplements numerical single-instruction models: counts depend on interrupt timing.
 """
 import argparse
@@ -28,7 +28,28 @@ def verify(directory):
             if k in e and j[k]!=e[k]:errors.append(f'{name}: {k}: {j[k]} != {e[k]}')
         if 'min_handlers' in e and j['handler_count']<e['min_handlers']:errors.append(f'{name}: no interrupt delivered')
         if j['status']!=2:continue
-        r=records[name]['out']
+        record=records[name]
+        r=record['out']
+        if 'same_as' in e:
+            other=records[e['same_as']]
+            fields=('bytes','values','in','flags_in','stub','sp_in','rets_in','before','after',
+                    'out','psr_out','sp_out','rets_out','exit','mem','mem_count')
+            if any(record.get(k)!=other.get(k) for k in fields):errors.append(f'{name}: repeated probe differs')
+        for a,want in e.get('out_values',[]):
+            if r[a]!=want:errors.append(f'{name}: r{a}: {r[a]} != {want}')
+        for a,want in e.get('samples',[]):
+            if j['samples'][a]!=want:errors.append(f'{name}: journal sample {a} differs')
+        if 'trace' in e:
+            n=j['samples'][3]
+            if j['samples'][4:4+n]!=e['trace']:errors.append(f'{name}: entry/exit order differs')
+        for start,end,lo,hi in e.get('delta',[]):
+            diff=(r[end]-r[start])&0xffffffff
+            if not lo<=diff<=hi:errors.append(f'{name}: counter delta {diff} outside [{lo},{hi}]')
+        for a in e.get('preserved',[]):
+            if r[a]!=record['in'][a]:errors.append(f'{name}: r{a} was not preserved')
+        if 'flags' in e and record['psr_out']&15!=e['flags']:errors.append(f'{name}: flags differ')
+        if e.get('unchanged_frame') and (record['sp_out']!=record['sp_in'] or record['rets_out']!=record['rets_in'] or record['exit'] or record['mem_count']):
+            errors.append(f'{name}: stack/return/scratch/exit changed')
         for a,b in e.get('equal',[]):
             if r[a]!=r[b]:errors.append(f'{name}: r{a} != r{b}')
         for a,b in e.get('greater',[]):

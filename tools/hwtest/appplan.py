@@ -5,6 +5,7 @@
 
 appplan.py DIR --run-id N [--modes 1,0,...] [--priority 3]
 Build with fm1app.py DIR/app.fwsc app/experiment.S DIR/app.S DIR/plan.S.
+Mode 3 requires app/advanced.S and starts CPU1 once for that batch; repeated core restarts are experimental.
 Retained header/journal layout is documented in app/platform.S and APP.md.
 """
 import argparse
@@ -17,8 +18,8 @@ def plan(directory, run_id, modes, priority):
     if len(modes) != len(manifests):
         raise ValueError('one mode per batch is required')
     priorities = [priority]*len(modes) if isinstance(priority,int) else priority
-    if len(priorities)!=len(modes) or any(not 0 <= p <= 7 for p in priorities) or any(m not in (0,1,2) for m in modes):
-        raise ValueError('priority must be 0..7 and modes 0, 1 or 2')
+    if len(priorities)!=len(modes) or any(not 0 <= p <= 7 for p in priorities) or any(m not in (0,1,2,3) for m in modes):
+        raise ValueError('priority must be 0..7 and modes 0, 1, 2 or 3')
     lines = ['/* Own generated vector stubs; no vendor assembly. */', '.section .rodata', '.p2align 2',
              '.globl app_plan, app_vectors', f'app_plan: .4byte {run_id}']
     for p, mode, priority in zip(manifests, modes, priorities):

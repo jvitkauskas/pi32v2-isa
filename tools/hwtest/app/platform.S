@@ -207,6 +207,9 @@ app_prepare:
 	r0 = 0x4019
 	[r1+0] = r0
 sources_ready:
+#ifdef HW_APP_ADVANCED
+	call app3_prepare
+#endif
 	r0 = 0x300
 	icfg = r0
 	csync
@@ -224,6 +227,9 @@ app_finish:
 	{pc} = [sp++]
 app_quiesce:
 	[--sp] = {rets}
+#ifdef HW_APP_ADVANCED
+	call app3_quiesce
+#endif
 	cli
 	r0 = 0
 	icfg = r0
@@ -279,7 +285,11 @@ save_trap_gprs:
 	r2 = 63
 	if (r0 == r2) goto timer_return
 	r2 = 120
+#ifdef HW_APP_ADVANCED
+	if (r0 >= r2) goto app3_soft
+#else
 	if (r0 >= r2) goto soft_return
+#endif
 	r2 = 0x01EEF0D4
 	r3 = -1
 	[r2+0] = r3

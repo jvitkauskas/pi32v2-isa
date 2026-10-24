@@ -2,8 +2,10 @@
 
 Status: steps 1–4 have run. Steps 1–2 (`hw/fm1-2026-10-24-app`) verified retention and the batch harness.
 Steps 3–4 (`hw/fm1-2026-10-24-app2`) verified watchdog skip/restart, recording handlers, software interrupts
-0..7, timer masking/pending retention through icfg bits 8/9, and timer priorities 0/3/7. Event blocking and
-consumption, other power modes, software IRQ masking and interrupt nesting remain open.
+0..7, timer masking/pending retention through icfg bits 8/9, and timer priorities 0/3/7. At that point event
+blocking/consumption and other power modes remained open. Application run app3 then verified software pending
+retention and selected priority-nesting combinations, and ran a single-start second-core sequence;
+blocked-event reception and reliable CPU1 restart remain open (details below).
 
 Tools: `fm1app.py` (assemble, link at `0x02000120`, pack a `.fwsc`; `--plugin` for RAM images),
 `app/probe.S` (step 1), `app/driver.S` with `gen.py --app` (runs batches), `app/reset.S` (starts the installed
@@ -126,9 +128,10 @@ rete/rte for debug entry 0. Other asynchronous handlers preserve their return PC
 exception probes explicitly resume at the planned instruction end. The exception can arrive after later
 runner instructions: the entry frame is not automatically the state at the tested opcode.
 
-The profile sets its own main/supervisor stacks at `0x01C0D000` / `0x01C0F000`. It leaves the bootloader
-and all flash beyond the installed application untouched. It does not start the second core, alter voltages,
-or configure unrelated peripherals. Interrupt-controller state is owned by the app, not borrowed from USB.
+The basic profile sets its own main/supervisor stacks at `0x01C0D000` / `0x01C0F000`. It leaves the bootloader
+and all flash beyond the installed application untouched. It does not start the second core or alter voltages;
+the optional advanced profile below explicitly adds CPU1 and an independent TIMER4 counter.
+Interrupt-controller state is owned by the app, not borrowed from USB.
 
 Retained header at `0x01C7C000`, twelve words: magic `0x32504148`, starts, next batch, active batch+1,
 boot argument, main sp after stack setup, psr/icfg after journal setup and before controller setup,
@@ -156,3 +159,49 @@ installed without --with-bootloader or --wipe-settings. A first package incorrec
 `0x93000` boundary and was refused before writing because this backup has larger application files.
 The complete package bounds allowed writes to `[0x4000,0xA9000)`; a generic full-backup restore command has broader permission and is not
 used by this workflow. Verify by reading the flash afterwards and comparing it to the requested backup.
+
+
+## Application run app3: event limits, nesting and CPU1
+
+[Run app3](../../hw/fm1-2026-10-24-app3/README.md) attempted 60 batches in eight applications: 59 completed,
+with one masked-IDLE case skipped after a watchdog restart. There were no USB hangs or manual recoveries.
+Synchronized independent-counter samples distinguish a nonblocking WFE sequence (128 executions, 3 ticks)
+from enabled IDLE (60034 ticks and TIMER5). Neither SEVL/SEVG prefixes nor the tested global masks create
+a blocking WFE receiver. The masked-IDLE case provides no instruction output. Event delivery/routing,
+consumption and other enabling/power configurations therefore remain open; no intrinsic nop/reset hw
+classification follows from these contexts.
+
+Software requests remain pending through either global gate in the tested number-0/number-7 cases.
+The advanced handlers preserve reti and entry icfg before opening gates, acknowledge their own source,
+record depth and entry/exit order, and restore state before rti. A higher numeric priority preempts only
+with both gates enabled: 3/7 and 0/7 nest, while 3/3, 7/3 and 7/0 defer. Opening only bit 8 or using sti
+alone defers 3/7. These tests use software sources 120/121; they are not an exhaustive controller model.
+
+Build the optional advanced profile with app/advanced.S instead of app/experiment.S. Modes 0/1/2 retain
+their meanings, while mode 3 attempts CPU1 startup with bounded ready polling and a watchdog already armed.
+It publishes the entry at 0x01C7FFF8, temporarily sets SYS_DIV bit 3, and controls C1_CON at 0x01EEE004.
+CPU1 uses owned stacks 0x01C12000/0x01C14000 with interrupts disabled and reports cnum. The source facts
+are fm1-base's MPL-2.0 fm1_cpu1.h/.S and fm1_time.h, and the Apache-2.0 AC79 SDK csfr.h/debug.c, read as
+facts only. The independently written assembly is not a copied core-start or interrupt implementation.
+
+**CPU1 restarts are not reliable in this harness.** Of 17 release attempts, four reached ready/cnum=1 and
+thirteen timed out; one failed-start batch also saw an untagged vector-1 frame outside the main probe.
+Do not interpret a completed main batch as a successful peer test. Use one mode-3 startup per application
+and require its ready marker before drawing peer conclusions. In the successful single-start sequence,
+CPU1 acknowledges eight commands, including SEVL, SEVG, one WFE and 128 WFE. Main WFE returns while the
+delayed peer-SEVG command is still unacknowledged. Since neither core was shown blocking on WFE, this does
+not distinguish delivered events from no event.
+
+Advanced nesting journals use +112 gate selection, +116 current depth, +120 maximum depth, +124 trace
+length, and +128..188 for up to sixteen entry/exit tokens (vector / vector+256). CPU1 uses a sixteen-word
+mailbox at 0x01C7CE00; after the stop controls are written it is copied to journal +112..175. Its fields and
+command protocol are in the run README. Failed startups have no peer snapshot; their main r8=0 is a
+missing ready marker, not a measured core number. The journal remains a last-entry frame plus these
+explicit samples, not a general interrupt trace.
+
+app3cases.py regenerates the committed case programs; attempts.json preserves exact plans, manifests,
+own profile revisions, binary hashes and all device logs. appverify.py now additionally checks entry/exit
+order, depth, bounded unsigned counter deltas, protocol acknowledgements, unaffected GPRs/flags and
+stack/scratch preservation. semantics/app3.py supplies a numerical model for the deterministic nesting
+programs. Timing-dependent programs and copex remain separate from ordinary opcode models. Copex repeats
+its eight-result sequence across two application launches, but its numerical/history rule remains unknown.

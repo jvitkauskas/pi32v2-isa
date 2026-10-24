@@ -1,0 +1,40 @@
+{
+  "table": {
+    "entries": 1165,
+    "problems": 0
+  },
+  "unittest": {
+    "tests": 138,
+    "skipped": 1,
+    "status": "passed"
+  },
+  "hardware_jsonl": {
+    "files": 22,
+    "status": "all modeled captures match"
+  },
+  "app_assertions": {
+    "app3": 60,
+    "app2": 32,
+    "problems": 0
+  },
+  "evidence_audit": {
+    "attempts": 60,
+    "completed": 59,
+    "unfinished": 1,
+    "records": 177,
+    "patterns": 59,
+    "calibration_nops": 118
+  },
+  "package_rebuild_audit": {
+    "applications": 8,
+    "status": "byte-for-byte matches"
+  },
+  "table_field_audit": {
+    "entries": 10,
+    "changed_fields": [
+      "notes",
+      "summary"
+    ],
+    "forbidden_changes": 0
+  }
+}

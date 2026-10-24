@@ -1,0 +1,1738 @@
+{
+  "batch-events-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-002": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-005": {
+    "status": 2,
+    "handler_count": 1,
+    "vector": 63,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5
+  },
+  "batch-events-007": {
+    "status": 2,
+    "handler_count": 1,
+    "vector": 120,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        10,
+        1
+      ]
+    ]
+  },
+  "batch-events-008": {
+    "status": 2,
+    "handler_count": 1,
+    "vector": 127,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        10,
+        1
+      ]
+    ]
+  },
+  "batch-nesting-000": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-001": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "trace": [
+      120,
+      121,
+      377,
+      376
+    ]
+  },
+  "batch-nesting-002": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-003": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-004": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-005": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-006": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "trace": [
+      120,
+      121,
+      377,
+      376
+    ]
+  },
+  "batch-nesting-007": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "trace": [
+      120,
+      376,
+      121,
+      377
+    ]
+  },
+  "batch-nesting-008": {
+    "status": 2,
+    "handler_count": 2,
+    "vector": 121,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        4
+      ]
+    ],
+    "samples": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "trace": [
+      120,
+      121,
+      377,
+      376
+    ]
+  },
+  "batch-cores-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        11,
+        1
+      ]
+    ]
+  },
+  "batch-cores-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-002": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-005": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-007": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-synchronized-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-002": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-005": {
+    "status": 2,
+    "handler_count": 1,
+    "vector": 63,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        50000,
+        70000
+      ]
+    ]
+  },
+  "batch-synchronized-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-007": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "unchanged_frame": true,
+    "flags": 5,
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        100
+      ]
+    ]
+  },
+  "batch-synchronized-008": {
+    "status": 3,
+    "handler_count": 0
+  },
+  "batch-cores-restart-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        11,
+        1
+      ]
+    ]
+  },
+  "batch-cores-restart-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-restart-002": {
+    "status": 2,
+    "handler_count": 1,
+    "vector": 1,
+    "emu": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-restart-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-restart-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        11,
+        5
+      ]
+    ]
+  },
+  "batch-cores-restart-005": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-restart-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-cores-restart-007": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        11,
+        0
+      ]
+    ]
+  },
+  "batch-core-sequence-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unchanged_frame": true,
+    "flags": 6,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        13,
+        6
+      ],
+      [
+        14,
+        8
+      ],
+      [
+        15,
+        9
+      ]
+    ],
+    "samples": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        2,
+        9
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        15,
+        3
+      ]
+    ]
+  },
+  "batch-copex-app-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-002": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-005": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-app-007": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true
+  },
+  "batch-copex-repeat-000": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-000"
+  },
+  "batch-copex-repeat-001": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-001"
+  },
+  "batch-copex-repeat-002": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-002"
+  },
+  "batch-copex-repeat-003": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-003"
+  },
+  "batch-copex-repeat-004": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-004"
+  },
+  "batch-copex-repeat-005": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-005"
+  },
+  "batch-copex-repeat-006": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-006"
+  },
+  "batch-copex-repeat-007": {
+    "status": 2,
+    "handler_count": 0,
+    "preserved": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 15,
+    "unchanged_frame": true,
+    "same_as": "batch-copex-app-007"
+  }
+}
