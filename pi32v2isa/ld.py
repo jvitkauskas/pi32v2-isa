@@ -315,6 +315,7 @@ class OutSection:
         self.noload = False
         self.emit = True
         self.has_syms = False
+        self.keep_empty = False
         self.alloc = True
         self.fill = b"\0"
         self.pieces = []                 # (offset, bytes) data statements
@@ -340,10 +341,22 @@ class RelSec:
 
 
 class Val:
-    __slots__ = ("v", "sec")
+    """A value in a linker script expression. `cls` says what kind of number it is, which decides how it combines
+    (see docs/LINKER.md): num (a plain number), size (SIZEOF and the like), abs (an absolute address: LOADADDR,
+    ABSOLUTE of an address), rel (an address in output section `sec`: a symbol, ADDR) and dot (derived from the location
+    counter, also relative to `sec`)."""
+    __slots__ = ("v", "sec", "cls")
 
-    def __init__(self, v, sec=None):
-        self.v, self.sec = v & MASK64, sec
+    def __init__(self, v, sec=None, cls="num"):
+        self.v, self.sec, self.cls = v & MASK64, sec, cls
+
+    @property
+    def relative(self):
+        return self.cls in ("rel", "dot")
+
+    def offset(self):
+        """For an address relative to a section: the offset from the section's start."""
+        return (self.v - self.sec.vma) & MASK64 if isinstance(self.sec, OutSection) else self.v
 
 
 class Options:
@@ -598,6 +611,10 @@ class Linker:
                 o.noload = st.type == "NOLOAD"
                 o.has_syms = any(isinstance(x, (S.DataStmt, S.FillStmt)) or (isinstance(x, S.Assign) and x.name != ".")
                                  for x in st.stmts)
+                # an empty section survives if it sets the location counter with ALIGN(number)
+                o.keep_empty = any(isinstance(x, S.Assign) and x.name == "." and x.op == "=" and x.expr[0] == "call"
+                                   and x.expr[1] == "ALIGN" and len(x.expr[2]) == 1 and x.expr[2][0][0] == "num"
+                                   for x in st.stmts)
                 self.outs.append(o)
 
     def match(self):
@@ -789,6 +806,14 @@ class Linker:
             for (flags, entsize, _), secs in groups.items():
                 self.merge_group(secs, entsize, bool(flags & SHF_STRINGS))
 
+    def matched_all(self, o):
+        """Every input section the script's statements matched for `o`, collected or not."""
+        out = []
+        for spec in o.spec.stmts:
+            if isinstance(spec, S.InputSpec):
+                out += [s for s in o.matched.get(id(spec), []) if not s.discarded]
+        return out
+
     def placed_inputs(self, o):
         seen = []
         for spec in o.spec.stmts:
@@ -820,7 +845,7 @@ class Linker:
             first.setdefault(b, k)
         # tail merging: a string that ends the next string in reversed-spelling order is stored inside it
         tail = {}                         # content -> (longer content, shift)
-        if strings:
+        if strings and secs[0].align <= es:      # strings are only stored inside others when the section is not aligned
             def units(b):
                 return [b[k:k + es] for k in range(0, len(b), es)]
             uniq = sorted(first, key=lambda b: units(b)[::-1])
@@ -850,8 +875,9 @@ class Linker:
             holder, off = where[b]
             maps[sec].append((pos, len(b), holder, off))
         for sec in secs:
-            sec.data = pieces[sec]
-            sec.size = len(pieces[sec])
+            # a merged string section's size is rounded up to its alignment (constants are not padded)
+            sec.data = pieces[sec] + (bytes(-len(pieces[sec]) % sec.align) if strings else b"")
+            sec.size = len(sec.data)
         for sec in secs:
             sec.mergemap = maps[sec]
         self._merge_orig = getattr(self, "_merge_orig", {})
@@ -903,20 +929,23 @@ class Linker:
         t = e[0]
         if t == "num":
             return Val(e[1])
+        if t == "val":
+            return e[1]
         if t == "dot":
-            return Val(st.dot, self.dot_sec(st))
+            return Val(st.dot, self.dot_sec(st), "dot")
         if t == "name":
             return self.ev_name(e[1], st)
         if t == "un":
             a = self.ev(e[2], st)
             op = e[1]
-            if op == "-":
-                return Val(-a.v)
             if op == "+":
                 return a
-            if op == "~":
-                return Val(~a.v)
-            return Val(0 if a.v else 1)
+            inside = st.sec is not None
+            x = a.offset() if (a.relative and (inside or a.cls == "rel")) else a.v
+            r = (-x if op == "-" else ~x if op == "~" else (0 if x else 1)) & MASK64
+            if op == "-" and a.relative:             # the negative of an address is relative to its section too
+                return Val(r + a.sec.vma if isinstance(a.sec, OutSection) else r, a.sec, a.cls)
+            return Val(r, None, a.cls if a.cls in ("size", "abs") else "num")
         if t == "cond":
             return self.ev(e[2], st) if self.ev(e[1], st).v else self.ev(e[3], st)
         if t == "bin":
@@ -925,6 +954,23 @@ class Linker:
             return self.ev_call(e, st)
         raise LinkError(f"bad expression {e!r}")
 
+    @staticmethod
+    def combine(a, b):
+        """(section, class) of a binary operation's result, from what JieLi's ld does with each pairing."""
+        ca, cb = a.cls, b.cls
+        flat = ("num", "size", "abs")
+        if ca in flat and cb in flat:
+            return None, ("size" if "size" in (ca, cb) else "abs" if "abs" in (ca, cb) else "num")
+        if ca == "dot" and (cb in flat or cb == "dot"):
+            return a.sec, "dot"
+        if cb == "dot" and ca in flat:
+            return b.sec, "dot"
+        if ca == "rel" and cb in ("size", "abs"):
+            return a.sec, "rel"
+        if cb == "rel" and ca in ("size", "abs"):
+            return b.sec, "rel"
+        return None, "num"          # rel with a plain number or with another address: a number
+
     def ev_bin(self, e, st):
         op = e[1]
         if op == "&&":
@@ -932,14 +978,32 @@ class Linker:
         if op == "||":
             return Val(1 if self.ev(e[2], st).v or self.ev(e[3], st).v else 0)
         a, b = self.ev(e[2], st), self.ev(e[3], st)
-        x, y = a.v, b.v
-        sec = None
-        if op == "+":
+        sec, cls = self.combine(a, b)
+        # which numbers the operation works on. Inside an output section addresses are offsets from the section's
+        # start; outside they are absolute, except that two addresses, or an address and a size, still work on offsets
+        ca, cb = a.cls, b.cls
+        if st is not None and st.sec is not None:
+            offs = True
+        else:
+            offs = (ca == "rel" and cb in ("rel", "size", "abs")) or (cb == "rel" and ca in ("size", "abs"))
+        x = a.offset() if offs and a.relative and (a.cls == "rel" or st.sec is not None) else a.v
+        y = b.offset() if offs and b.relative and (b.cls == "rel" or st.sec is not None) else b.v
+        if op == "==":
+            r = int(x == y)
+        elif op == "!=":
+            r = int(x != y)
+        elif op == "<":
+            r = int(x < y)
+        elif op == ">":
+            r = int(x > y)
+        elif op == "<=":
+            r = int(x <= y)
+        elif op == ">=":
+            r = int(x >= y)
+        elif op == "+":
             r = x + y
-            sec = a.sec if b.sec is None else b.sec if a.sec is None else None
         elif op == "-":
             r = x - y
-            sec = a.sec if b.sec is None else None
         elif op == "*":
             r = x * y
         elif op in ("/", "%"):
@@ -952,26 +1016,17 @@ class Linker:
             r = x >> y if y < 64 else 0
         elif op == "&":
             r = x & y
-            sec = a.sec if b.sec is None and False else None
         elif op == "|":
             r = x | y
         elif op == "^":
             r = x ^ y
-        elif op == "==":
-            r = int(x == y)
-        elif op == "!=":
-            r = int(x != y)
-        elif op == "<":
-            r = int(x < y)
-        elif op == ">":
-            r = int(x > y)
-        elif op == "<=":
-            r = int(x <= y)
-        elif op == ">=":
-            r = int(x >= y)
         else:
             raise LinkError(f"bad operator {op}")
-        return Val(r, sec)
+        if op in ("==", "!=", "<", ">", "<=", ">="):
+            return Val(r)
+        if cls in ("rel", "dot") and offs and isinstance(sec, OutSection):
+            r += sec.vma                  # an offset-based result that is an address again
+        return Val(r, sec, cls)
 
     def find_out(self, name):
         o = self.outs_by_name.get(name)
@@ -982,17 +1037,23 @@ class Linker:
     def ev_call(self, e, st):
         f, args = e[1], e[2]
         if f == "ABSOLUTE":
-            return Val(self.ev(args[0], st).v)
+            v = self.ev(args[0], st)
+            return Val(v.v, None, "abs" if v.relative else v.cls)
         if f in ("ADDR", "LOADADDR", "SIZEOF", "ALIGNOF"):
             o = self.find_out(args[0][1])
-            return Val({"ADDR": o.vma, "LOADADDR": o.lma, "SIZEOF": o.size, "ALIGNOF": o.align}[f],
-                       o if f == "ADDR" else None)
+            if st is None or st.sec is None:
+                self.invalid = True      # outside a section the sections are not laid out yet the first time through
+            if f == "ADDR":
+                return Val(o.vma, o, "rel")
+            if f == "LOADADDR":
+                return Val(o.lma, None, "abs")
+            return Val(o.size if f == "SIZEOF" else o.align, None, "size")
         if f in ("ALIGN", "BLOCK", "NEXT"):
             if len(args) == 1:
                 a = self.ev(args[0], st).v
-                return Val(align_up(st.dot, a), self.dot_sec(st))
+                return Val(align_up(st.dot, a), self.dot_sec(st), "dot")
             x, a = self.ev(args[0], st), self.ev(args[1], st).v
-            return Val(align_up(x.v, a), x.sec)
+            return Val(align_up(x.v, a), x.sec, x.cls)
         if f == "DEFINED":
             n = args[0][1]
             g = self.globals.get(n)
@@ -1012,12 +1073,12 @@ class Linker:
         if f == "SEGMENT_START":
             return self.ev(args[1], st)
         if f == "SIZEOF_HEADERS":
-            return Val(self.hdr_size)
+            return Val(self.hdr_size, None, "size")
         if f == "CONSTANT":
             return Val(PAGE)
         if f == "DATA_SEGMENT_ALIGN":
             m = self.ev(args[0], st).v
-            return Val(align_up(st.dot, m) + (st.dot & (m - 1)), self.dot_sec(st))
+            return Val(align_up(st.dot, m) + (st.dot & (m - 1)), self.dot_sec(st), "dot")
         if f in ("DATA_SEGMENT_END", "DATA_SEGMENT_RELRO_END"):
             return self.ev(args[-1], st)
         if f == "ASSERT":
@@ -1030,14 +1091,14 @@ class Linker:
         g = self.globals.get(name)
         if g is not None and self.in_top:
             g.top_ref = True
-        if g is None:
+        if g is None or g.kind == "undef":
             self.undef_expr.add(name)
-            return Val(0)
-        if g.kind in ("undef",):
-            self.undef_expr.add(name)
+            self.invalid = True
             return Val(0)
         v, sec = self.gaddr(g)
-        return Val(v, sec)
+        if sec is None:
+            return Val(v, None, "num")
+        return Val(v, sec, "rel")
 
     def dot_sec(self, st):
         if st.sec is not None:
@@ -1056,12 +1117,17 @@ class Linker:
                 cand = list(range(min(s.idx, n - 1), -1, -1)) + list(range(s.idx + 1, n))
             else:
                 cand = list(range(max(s.idx, 0), n)) + list(range(min(s.idx, n) - 1, -1, -1))
-            for want_alloc in (True, False):
+            for test in (lambda o: o.alloc and o.size > 0, lambda o: o.alloc, lambda o: True):
                 for i in cand:
-                    if self.order[i].emit and (self.order[i].alloc or not want_alloc):
+                    if self.order[i].emit and test(self.order[i]):
                         return self.order[i]
             return None
-        return s if s.emit else None
+        if s.emit:
+            return s
+        try:
+            return self.resolve_sec(RelSec("prev", self.order.index(s)))     # a dropped section: its neighbour
+        except ValueError:
+            return None
 
     # -- assignments
     def assign(self, a, st):
@@ -1069,17 +1135,14 @@ class Linker:
         if name == ".":
             val = self.ev(a.expr, st)
             if a.op != "=":
-                cur = Val(st.dot, self.dot_sec(st))
-                val = self.compound(a.op, cur, val)
-            if st.sec is not None and val.sec is None:
-                new = st.sec.vma + val.v          # inside a section an absolute value is an offset from its start
+                val = self.compound(a.op, Val(st.dot, self.dot_sec(st), "dot"), val, st)
+            if st.sec is not None and val.cls in ("num", "size"):
+                new = st.sec.vma + val.v          # inside a section a plain number is an offset from its start
             else:
                 new = val.v
             if new < st.dot and st.sec is not None:
                 self.error(f"ld: cannot move location counter backwards (from {st.dot:#x} to {new:#x})")
-                return
-            if st.sec is None and st.dot_set and new < st.dot and False:
-                pass
+                return True
             st.dot = new & MASK64
             st.dot_set = True
             return True
@@ -1089,27 +1152,30 @@ class Linker:
                 return False
             if g.kind in ("def", "common") or (g.kind == "script" and name in self.defined_now):
                 return False
+        self.invalid = False
         val = self.ev(a.expr, st)
+        if self.pass_no == 1 and self.invalid:
+            return False                 # not computable yet: the symbol is created on a later pass, after the others
         if a.op != "=":
             cur = self.gaddr(g) if g is not None and g.kind != "undef" else (0, None)
-            val = self.compound(a.op, Val(cur[0], cur[1]), val)
+            val = self.compound(a.op, Val(cur[0], cur[1], "rel" if cur[1] is not None else "abs"), val, st)
         if g is None:
             g = self.gsym(name)
-        sec = val.sec
-        if sec is None and False:
-            pass
-        g.kind, g.script, g.hidden = "script", (val.v, sec), a.hidden
+        v, sec = val.v, None
+        if st.sec is not None and val.cls in ("num", "size"):
+            v, sec = (val.v + st.sec.vma) & MASK64, st.sec      # a plain number inside a section is relative to it
+        elif val.relative:
+            sec = val.sec
+        g.kind, g.script, g.hidden = "script", (v, sec), a.hidden
         g.in_sec = st.sec is not None
         g.sym = None
         self.defined_now.add(name)
         self.script_defined.add(name)
         return True
 
-    def compound(self, op, cur, val):
+    def compound(self, op, cur, val, st=None):
         base = op[:-1]
-        return self.ev_bin(("bin", base, ("num", cur.v), ("num", val.v)), None) if cur.sec is None and val.sec is None \
-            else Val({"+": cur.v + val.v, "-": cur.v - val.v}.get(base, self.ev_bin(
-                ("bin", base, ("num", cur.v), ("num", val.v)), None).v), cur.sec)
+        return self.ev_bin(("bin", base, ("val", cur), ("val", val)), st)
 
     # -- layout of one pass
     class State:
@@ -1141,6 +1207,7 @@ class Linker:
         st = Linker.State()
         self.defined_now = set()
         self.undef_expr = set()
+        self.invalid = False
         self.in_top = True
         for r in self.script.regions:
             reg = self.regions[r.name]
@@ -1203,7 +1270,8 @@ class Linker:
         else:
             dot = st.dot
         dot0 = dot
-        dot = align_up(dot, al)
+        if spec.addr is None:
+            dot = align_up(dot, al)          # an address given in the script is used as it is
         o.region = region
         o.vma = dot
         # load address
@@ -1260,49 +1328,53 @@ class Linker:
         o.size = st.dot - o.vma
         st.sec = None
         st.k += 1
-        st.dot_set = False
         if not na:
             st.last = o
-        # section properties: .text, .data and .bss start with the flags and type of the standard sections of those
-        # names (which is why an empty .data is still WA); every other name starts with nothing
+        # section properties. Flags and type come from the input sections that are linked, ORed. A .text, .data or .bss that starts with an assignment begins
+        # from the flags of the standard section of that name; .text is never writable
         has_data = any(not s.nobits and s.size for s in ins) or bool(o.pieces)
+        matched = ins
         flags, types = 0, set()
-        for sec in ins:
+        for sec in matched:
             flags |= sec.flags & (SHF_ALLOC | SHF_WRITE | SHF_EXEC)
             types.add(sec.type)
+        merge_only = bool(matched) and all(sec.flags & SHF_MERGE for sec in matched)
         std = {".text": (SHF_ALLOC | SHF_EXEC, SHT_PROGBITS), ".data": (SHF_ALLOC | SHF_WRITE, SHT_PROGBITS),
                ".bss": (SHF_ALLOC | SHF_WRITE, SHT_NOBITS)}.get(o.name)
-        if not ins and std is None:
+        lead = bool(spec.stmts) and isinstance(spec.stmts[0], S.Assign)
+        if not matched and std is None:
             flags = (SHF_ALLOC | SHF_WRITE) if o.size > 0 else SHF_WRITE     # it only moved the location counter
-        if std is not None:
+        elif std is not None and (lead or not matched):
             flags |= std[0]
-            if o.name == ".text":
-                flags &= ~SHF_WRITE
-                if o.size:
-                    o.align = max(o.align, 2)
+        if o.name == ".text":
+            flags &= ~SHF_WRITE
         # a section made only of mergeable sections stays mergeable (the header says so)
         o.entsize = 0
-        placed = [sec for sec in ins]
-        if placed and all(sec.flags & SHF_MERGE for sec in placed):
-            flags |= SHF_MERGE | (SHF_STRINGS if all(sec.flags & SHF_STRINGS for sec in placed) else 0)
-            if len({sec.entsize for sec in placed}) == 1:
-                o.entsize = placed[0].entsize
+        if merge_only and len({(sec.entsize, bool(sec.flags & SHF_STRINGS)) for sec in matched}) == 1:
+            flags |= SHF_MERGE | (SHF_STRINGS if matched[0].flags & SHF_STRINGS else 0)
+            o.entsize = matched[0].entsize
         o.flags = flags
         o.alloc = bool(flags & SHF_ALLOC)
         if o.noload:
             o.nobits = True
-        elif not ins and o.size > 0 and not o.pieces:
+        elif not matched and o.size > 0 and not o.pieces:
             o.nobits = True                   # it only moved the location counter
-        elif std is not None:
-            o.nobits = std[1] == SHT_NOBITS and not has_data
+        elif std is not None and not matched:
+            o.nobits = std[1] == SHT_NOBITS
         else:
-            o.nobits = bool(ins) and all(sec.nobits for sec in ins)
+            o.nobits = bool(matched) and all(sec.nobits for sec in matched)
         if o.alloc and o.nobits:
             o.type = SHT_NOBITS
         else:
             rest = types - {SHT_NOBITS}
             o.type = next(iter(rest)) if len(rest) == 1 else SHT_PROGBITS
-        o.emit = o.size > 0 or (not ins and defined_syms)
+        o.emit = o.size > 0 or o.keep_empty
+        if o.size == 0 and not na:
+            st.dot = saved_dot                  # an empty section leaves the location counter alone
+            if not o.emit:
+                return
+        if o.emit and not na:
+            st.dot_set = False
         if na:
             st.dot = saved_dot
         # advance memory regions
@@ -1383,6 +1455,8 @@ class Linker:
         for o in self.outs:
             if not o.emit or o.spec.name == "/DISCARD/":
                 continue
+            if o.nobits and o.alloc:
+                continue                      # nothing is written for it
             for sec in o.inputs:
                 if sec.nobits:
                     continue
@@ -1502,26 +1576,37 @@ class Linker:
             o.data = buf
 
     def segments(self):
-        """Program headers and file offsets of the alloc sections, laid out the way JieLi's ld does."""
+        """Group the allocated sections into program segments the way JieLi's ld does: sorted by load address; a
+        section starts a new segment when its load address minus its run address differs from the previous one's, when
+        it begins more than a (mask-computed) page after the previous one's end, or when the first writable section
+        of a segment would sit on another page than the end of the read-only ones before it."""
         alloc = [o for o in self.emitted if o.alloc and o.size > 0]
         order = sorted(alloc, key=lambda o: o.lma)         # stable: script order for equal addresses
         segs = []
+        writable = False
         for o in order:
-            cur = segs[-1] if segs else None
-            if cur is not None:
-                last = cur[-1]
-                same_delta = (o.vma - o.lma) & 0xFFFFFFFF == (last.vma - last.lma) & 0xFFFFFFFF
-                if not same_delta or (last.nobits is False and o.nobits is False and False):
-                    cur = None
-                elif not o.nobits and last.nobits:
-                    cur = None
-                elif self.page(last.lma + last.size - 1) != self.page(o.lma):
-                    cur = None
-            if cur is None:
+            new = not segs
+            if segs:
+                last = segs[-1][-1]
+                last_end = last.lma + last.size
+                if (o.vma - o.lma) & 0xFFFFFFFF != (last.vma - last.lma) & 0xFFFFFFFF:
+                    new = True
+                elif self.page_up(last_end) < self.page(o.lma):
+                    new = True
+                elif (not writable and o.flags & SHF_WRITE or last.type == SHT_NOBITS and o.type != SHT_NOBITS) \
+                        and self.page(last_end - 1) != self.page(o.lma):
+                    new = True
+            if new:
                 segs.append([o])
+                writable = bool(o.flags & SHF_WRITE)
             else:
-                cur.append(o)
+                segs[-1].append(o)
+                writable = writable or bool(o.flags & SHF_WRITE)
         return segs
+
+    @staticmethod
+    def page_up(a):
+        return (a + PAGE - 1) & ~(PAGE - 1)
 
     @staticmethod
     def page(a):
@@ -1536,8 +1621,8 @@ class Linker:
         phdrs = []
         for k, seg in enumerate(segs):
             first = seg[0]
-            off = pos + ((first.vma - pos) % PAGE)
-            include_hdr = k == 0 and off < PAGE
+            off = pos + (((first.vma - pos) & 0xFFFFFFFF) % PAGE)      # a negative distance wraps around first
+            include_hdr = k == 0 and off < PAGE and first.vma >= off
             first.offset = off
             cur_end = off
             last = first
@@ -1546,7 +1631,7 @@ class Linker:
                     if o.nobits:
                         o.offset = cur_end
                     else:
-                        o.offset = last.offset + (o.vma - last.vma)
+                        o.offset = first.offset + (o.vma - first.vma)     # file bytes follow the run addresses
                 if not o.nobits:
                     cur_end = o.offset + o.size
                 last = o
@@ -1683,6 +1768,17 @@ class Linker:
         else:
             self.entry_value = text.vma if text else 0
 
+    def check_overlaps(self):
+        """Allocated sections must not share addresses (two that start at the same address are fine if one of them
+        takes no file space), nor may the load addresses of the ones that are loaded."""
+        for what, pick, key in (("VMA", lambda o: o.alloc and o.size > 0, lambda o: o.vma),
+                                ("LMA", lambda o: o.alloc and o.size > 0 and o.type != SHT_NOBITS, lambda o: o.lma)):
+            secs = sorted((o for o in self.emitted if pick(o)), key=key)
+            for a, b in zip(secs, secs[1:]):
+                if key(b) < key(a) + a.size and not (key(b) == key(a) and SHT_NOBITS in (a.type, b.type)):
+                    self.error(f"ld: section {b.name} {what} [{key(b):016x},{key(b) + b.size - 1:016x}] overlaps section "
+                               f"{a.name} {what} [{key(a):016x},{key(a) + a.size - 1:016x}]")
+
     def write(self):
         self.emitted = [o for o in self.outs if o.emit and o.spec.name != "/DISCARD/"]
         for k, o in enumerate(self.emitted):
@@ -1784,6 +1880,7 @@ class Linker:
         self.layout()
         self.emitted = [o for o in self.outs if o.emit and o.spec.name != "/DISCARD/"]
         self.check_undefined()
+        self.check_overlaps()
         self.set_entry()
         for o in self.emitted:
             o.data = bytearray(o.size)

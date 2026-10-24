@@ -146,6 +146,8 @@ class Lexer:
             if end < 0:
                 self.error("unterminated string")
             return ("str", t[p + 1:end], end + 1)
+        if t.startswith("/DISCARD/", p):
+            return ("word", "/DISCARD/", p + 9)
         if wild:
             m = WILD.match(t, p)
             if m:
