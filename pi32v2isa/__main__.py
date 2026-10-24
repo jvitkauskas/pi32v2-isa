@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Julius Vitkauskas
 # SPDX-License-Identifier: MIT-0
-"""Command line: python3 -m pi32v2isa check | disasm HEX... | stats"""
+"""Command line: python3 -m pi32v2isa check | disasm HEX... | stats | as | ld | oracle"""
 
 import argparse
 from pathlib import Path
@@ -163,6 +163,11 @@ def cmd_oracle(args):
 
 def main(argv=None):
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)     # quiet when piped into head
+    raw = sys.argv[1:] if argv is None else list(argv)
+    if raw and raw[0] == "ld":                        # the linker takes ld's own options: argparse must not see them
+        from . import ld
+
+        return ld.main(argparse.Namespace(argv=raw[1:]))
     p = argparse.ArgumentParser(prog="pi32v2isa")
     p.add_argument("--table", default=table.TABLE, help="instruction table (default: isa/pi32v2.toml)")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -172,6 +177,7 @@ def main(argv=None):
     d.add_argument("--base", type=lambda s: int(s, 0), default=0, help="address of the first byte")
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
+    sub.add_parser("ld", help="link pi32v2 objects with a linker script (docs/LINKER.md); options as GNU ld's")
     a = sub.add_parser("as", help="assemble a pi32v2 source file into an ELF object (docs/ASSEMBLER.md)")
     a.add_argument("input", help="assembly source (- for stdin); .S files go through cpp")
     a.add_argument("-o", "--output", help="object file to write (default: the input's name with .o)")

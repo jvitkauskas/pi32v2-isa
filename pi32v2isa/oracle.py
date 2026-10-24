@@ -687,3 +687,165 @@ def linkcompare(oracle, path, flags=(), include=(), define=(), table=None, featu
         if sa.get(name) != sb.get(name):
             diffs.append(f"linked section {name}: JieLi {sa.get(name, ('-',))[0]} vs ours {sb.get(name, ('-',))[0]}, contents differ")
     return diffs
+
+
+# --- comparing the repo's linker with JieLi's ---------------------------------------------------------------
+
+def read_exec(data):
+    """Parse a linked ELF32 executable: header, program headers, sections (with contents) and symbols."""
+    import struct
+
+    (etype, machine, _, entry, phoff, shoff, flags, _, phentsize, phnum, shentsize, shnum,
+     shstrndx) = struct.unpack_from("<HHIIIIIHHHHHH", data, 16)
+    phdrs = [struct.unpack_from("<8I", data, phoff + k * phentsize) for k in range(phnum)]
+    raw = [struct.unpack_from("<10I", data, shoff + k * shentsize) for k in range(shnum)]
+    strbase = raw[shstrndx][4]
+
+    def cstr(base, off):
+        return data[base + off:data.index(b"\0", base + off)].decode()
+
+    sections = []
+    for k, (name, typ, flg, addr, off, size, link, info, align, entsize) in enumerate(raw):
+        body = b"" if typ in (0, 8) else data[off:off + size]
+        sections.append({"index": k, "name": cstr(strbase, name) if k else "", "type": typ, "flags": flg, "addr": addr,
+                         "offset": off, "size": size, "link": link, "info": info, "align": align, "entsize": entsize,
+                         "data": body})
+    symbols, strtab = [], b""
+    for s in sections:
+        if s["type"] == 2:
+            sb = raw[s["link"]][4]
+            strtab = data[sb:sb + raw[s["link"]][5]]
+            for n in range(s["size"] // 16):
+                nm, value, sz, info, other, shndx = struct.unpack_from("<IIIBBH", data, s["offset"] + 16 * n)
+                symbols.append((cstr(sb, nm), value, sz, info >> 4, info & 15, other, shndx))
+    return {"type": etype, "machine": machine, "entry": entry, "flags": flags, "phdrs": phdrs, "sections": sections,
+            "symbols": symbols, "strtab": strtab, "size": len(data)}
+
+
+def diff_executables(ref, mine):
+    """Differences between two read_exec() results (ref = JieLi's, mine = this repo's) as (category, text) pairs.
+    Categories: contents (loaded section contents and addresses), symbols (names and values), entry, phdrs,
+    layout (section header fields, file offsets, symbol table order, string table, file size)."""
+    out = []
+    if ref["entry"] != mine["entry"]:
+        out.append(("entry", f"entry point JieLi {ref['entry']:#x} vs ours {mine['entry']:#x}"))
+    if (ref["type"], ref["machine"], ref["flags"]) != (mine["type"], mine["machine"], mine["flags"]):
+        out.append(("layout", f"header type/machine/flags {ref['type']}/{ref['machine']:#x}/{ref['flags']:#x} vs "
+                              f"{mine['type']}/{mine['machine']:#x}/{mine['flags']:#x}"))
+    names_a = [s["name"] for s in ref["sections"]]
+    names_b = [s["name"] for s in mine["sections"]]
+    alloc_a = {s["name"]: s for s in ref["sections"] if s["flags"] & 2}
+    alloc_b = {s["name"]: s for s in mine["sections"] if s["flags"] & 2}
+    for name in sorted(set(alloc_a) | set(alloc_b)):
+        a, b = alloc_a.get(name), alloc_b.get(name)
+        if a is None or b is None:
+            out.append(("contents", f"section {name}: only in {'JieLi' if b is None else 'ours'}"))
+            continue
+        if a["addr"] != b["addr"] or a["size"] != b["size"]:
+            out.append(("contents", f"section {name}: JieLi {a['addr']:#x}+{a['size']:#x} vs ours {b['addr']:#x}+{b['size']:#x}"))
+        if a["type"] != b["type"]:
+            out.append(("contents", f"section {name}: type {a['type']} vs {b['type']}"))
+        if a["data"] != b["data"]:
+            at = next((i for i in range(min(len(a["data"]), len(b["data"]))) if a["data"][i] != b["data"][i]),
+                      min(len(a["data"]), len(b["data"])))
+            n = sum(1 for x, y in zip(a["data"], b["data"]) if x != y)
+            out.append(("contents", f"section {name}: {n} bytes differ, first at {a['addr'] + at:#x}: JieLi "
+                                    f"{a['data'][at:at + 8].hex(' ')} vs ours {b['data'][at:at + 8].hex(' ')}"))
+    # symbols: by name
+    sa = {}
+    sb = {}
+    for tbl, src in ((sa, ref["symbols"]), (sb, mine["symbols"])):
+        for k, (nm, value, size, bind, typ, other, shndx) in enumerate(src):
+            if typ in (3,):                     # section symbols: compared with the section headers
+                continue
+            tbl.setdefault((nm, bind == 0, typ == 4), []).append((value, size, bind, typ, other, shndx, k))
+    for key in sorted(set(sa) | set(sb)):
+        a, b = sa.get(key), sb.get(key)
+        if key[2]:
+            continue                            # FILE symbols: compared as part of the order below
+        if a is None or b is None:
+            out.append(("symbols", f"symbol {key[0]}: only in {'JieLi' if b is None else 'ours'}"))
+        elif [x[:5] for x in a] != [x[:5] for x in b]:
+            out.append(("symbols", f"symbol {key[0]}: JieLi value/size/bind/type/other {a[0][:5]} vs ours {b[0][:5]}"))
+        elif [x[5] for x in a] != [x[5] for x in b]:
+            out.append(("layout", f"symbol {key[0]}: section index {a[0][5]} vs {b[0][5]}"))
+    if ref["symbols"] != mine["symbols"] and not any(c == "symbols" for c, _ in out):
+        # same symbols: the order or the section indices differ
+        for k, (x, y) in enumerate(zip(ref["symbols"], mine["symbols"])):
+            if x != y:
+                out.append(("layout", f"symbol table entry {k}: JieLi {x} vs ours {y}"))
+                break
+    elif len(ref["symbols"]) != len(mine["symbols"]):
+        out.append(("layout", f"symbol table has {len(ref['symbols'])} entries (JieLi) vs {len(mine['symbols'])} (ours)"))
+    if ref["strtab"] != mine["strtab"]:
+        out.append(("layout", f"string table differs ({len(ref['strtab'])} vs {len(mine['strtab'])} bytes)"))
+    if ref["phdrs"] != mine["phdrs"]:
+        names = ("type", "offset", "vaddr", "paddr", "filesz", "memsz", "flags", "align")
+        for k in range(max(len(ref["phdrs"]), len(mine["phdrs"]))):
+            a = ref["phdrs"][k] if k < len(ref["phdrs"]) else None
+            b = mine["phdrs"][k] if k < len(mine["phdrs"]) else None
+            if a != b:
+                diff = "" if a is None or b is None else " (" + ", ".join(
+                    f"{n} {x:#x} vs {y:#x}" for n, x, y in zip(names, a, b) if x != y) + ")"
+                out.append(("phdrs", f"program header {k}: JieLi {a and [hex(v) for v in a]} vs ours {b and [hex(v) for v in b]}{diff}"))
+    if names_a != names_b:
+        out.append(("layout", f"section names/order {names_a} vs {names_b}"))
+    else:
+        for a, b in zip(ref["sections"], mine["sections"]):
+            for key in ("type", "flags", "addr", "offset", "size", "link", "info", "align", "entsize"):
+                if a[key] != b[key]:
+                    out.append(("layout", f"section header {a['name'] or a['index']}: {key} {a[key]:#x} vs {b[key]:#x}"))
+    return out
+
+
+def ldcompare(oracle, args, cwd=None, expect_fail=False):
+    """Link `args` (ld command-line words: objects, -T script, --gc-sections, ...) with JieLi's ld and with this
+    repo's linker (pi32v2isa.ld) and compare the results. Returns (differences, ref bytes, mine bytes); the
+    differences are (category, text) pairs (see diff_executables). If both linkers fail, `differences` is empty
+    and the bytes are None; if only one fails that is a difference."""
+    import io
+    import contextlib
+    from . import ld as myld
+
+    ldexe = oracle.path / "pi32v2" / "bin" / "ld"
+    with tempfile.TemporaryDirectory() as d:
+        ref_out, my_out = Path(d) / "ref.elf", Path(d) / "mine.elf"
+        words = [str(a) for a in args]
+        r = subprocess.run([str(ldexe), *words, "-o", str(ref_out)], capture_output=True, text=True, cwd=cwd)
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            rc = myld.main(type("A", (), {"argv": [*words, "-o", str(my_out)]})) if cwd is None else _in_dir(
+                cwd, lambda: myld.main(type("A", (), {"argv": [*words, "-o", str(my_out)]})))
+        if r.returncode and rc:
+            return [], None, None
+        if r.returncode:
+            return [("contents", f"JieLi's ld fails ({(r.stderr or r.stdout).strip().splitlines()[0]}) but ours links")], None, None
+        if rc:
+            return [("contents", f"ours fails ({err.getvalue().strip().splitlines()[0] if err.getvalue().strip() else '?'}) "
+                                 f"but JieLi's ld links")], None, None
+        a, b = ref_out.read_bytes(), my_out.read_bytes()
+        diffs = diff_executables(read_exec(a), read_exec(b))
+        if a != b and not diffs:
+            diffs.append(("layout", "files differ in bytes JieLi's ld leaves unspecified (padding)"))
+        return diffs, a, b
+
+
+def _in_dir(cwd, fn):
+    old = os.getcwd()
+    os.chdir(cwd)
+    try:
+        return fn()
+    finally:
+        os.chdir(old)
+
+
+def objcopy_text(oracle, elf_bytes, section=".text"):
+    """`objcopy -O binary -j SECTION` (GNU objcopy -I elf32-little, as the FM-1 builds use) of an executable."""
+    with tempfile.TemporaryDirectory() as d:
+        src, dst = Path(d) / "in.elf", Path(d) / "out.bin"
+        src.write_bytes(elf_bytes)
+        r = subprocess.run(["objcopy", "-I", "elf32-little", "-O", "binary", "-j", section, str(src), str(dst)],
+                           capture_output=True, text=True)
+        if r.returncode:
+            raise OracleError(f"objcopy: {r.stderr.strip()}")
+        return dst.read_bytes()
