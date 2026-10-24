@@ -169,10 +169,11 @@ def uextra(R, fl, o):
 
 @model("sextra.rrii")
 def sextra(R, fl, o):
-    w = _fieldw(o["n"], o["m"])
-    r = (R[o["s"]] >> o["n"]) & ((1 << w) - 1)
-    if w:
-        r = (r ^ (1 << (w - 1))) - (1 << (w - 1))
+    # the field is l bits wide and its sign is bit l-1 of it, even when p+l passes bit 31 (the missing bits read 0)
+    l = o["m"]
+    r = (R[o["s"]] >> o["n"]) & ((1 << l) - 1)
+    if l:
+        r = (r ^ (1 << (l - 1))) - (1 << (l - 1))
     r &= M
     return {o["r"]: r}, (fl & (C_ | V_)) | nz(r)
 

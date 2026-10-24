@@ -1681,7 +1681,7 @@ group = "arithmetic"
 summary = "Add a register to another: rd += rs (r0..r7). Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: destination in bits 3..0, source in bits 7..4. Not confirmed: when both registers are r0..r7 the assembler writes r1 += r2 as add.rrr (r1 = r1 + r2) instead, which confirm does not treat as the same meaning; the other 192 combinations agree both ways. [compiler] the common `+=`; carry used by addc.rrr (`r0 += r4` then `r1 = r1 + r5 + c`). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout from oracle fit: destination in bits 3..0, source in bits 7..4. Not confirmed: when both registers are r0..r7 the assembler writes r1 += r2 as add.rrr (r1 = r1 + r2) instead, which confirm does not treat as the same meaning; the other 192 combinations agree both ways. [compiler] the common `+=`; carry used by addc.rrr (`r0 += r4` then `r1 = r1 + r5 + c`). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "00 18"
@@ -1867,7 +1867,7 @@ group = "shifts"
 summary = "Logical shift left by a register: rd <<= rs (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] `a << b` (int or unsigned, both variable) compiles to `r0 <<= r1` at -O0/-O2/-Os. The compiler masks the count itself when C says `b & 31` (it emits `r1 = r1 & 0x1F` first). hw/fm1-2026-10-24: rd << rs; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] `a << b` (int or unsigned, both variable) compiles to `r0 <<= r1` at -O0/-O2/-Os. The compiler masks the count itself when C says `b & 31` (it emits `r1 = r1 & 0x1F` first). hw/fm1-2026-10-24: rd << rs; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "00 1a"
@@ -1898,7 +1898,7 @@ group = "shifts"
 summary = "Shift left with signed saturation by a register: rd <<<= rs."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). hw/fm1-2026-10-24: signed saturating shift left: the result is rs shifted left with signed overflow clamped to 0x7FFFFFFF (rs >= 0) or 0x80000000 (rs < 0) (before: meaning unknown). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). hw/fm1-2026-10-24: signed saturating shift left: the result is rs shifted left with signed overflow clamped to 0x7FFFFFFF (rs >= 0) or 0x80000000 (rs < 0) (before: meaning unknown). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "08 1a"
@@ -1929,7 +1929,7 @@ group = "shifts"
 summary = "Logical shift right (zero fill) by a register: rd >>= rs (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] unsigned `a >> b` with a variable count compiles to `r0 >>= r1`. hw/fm1-2026-10-24: rd >> rs, zero fill; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] unsigned `a >> b` with a variable count compiles to `r0 >>= r1`. hw/fm1-2026-10-24: rd >> rs, zero fill; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "80 1a"
@@ -1960,7 +1960,7 @@ group = "shifts"
 summary = "Arithmetic shift right (sign fill) by a register: rd >>>= rs (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] signed `a >> b` with a variable count compiles to `r0 >>>= r1`; the compiler also clamps the count to 31 first (`ifs (r1 >= 31) { r1 = 31 }`) for `b >= 32 ? a >> 31 : a >> b`. hw/fm1-2026-10-24: rd >>> rs, sign fill; the sign mask for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] signed `a >> b` with a variable count compiles to `r0 >>>= r1`; the compiler also clamps the count to 31 first (`ifs (r1 >= 31) { r1 = 31 }`) for `b >= 32 ? a >> 31 : a >> b`. hw/fm1-2026-10-24: rd >>> rs, sign fill; the sign mask for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "88 1a"
@@ -3484,7 +3484,7 @@ group = "arithmetic"
 summary = "Add -128..-1 to r0..r7. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. [compiler] decrement: `r1 += -1`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, an overflow (hw/followup-p.json)."
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. [compiler] decrement: `r1 += -1`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "e0 20"
@@ -3515,7 +3515,7 @@ group = "arithmetic"
 summary = "Add 32..63 to r0..r7. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, a carry (hw/followup-p.json)."
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "c8 20"
@@ -3546,7 +3546,7 @@ group = "arithmetic"
 summary = "Add 64..127 to r0..r7. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, a carry (hw/followup-p.json)."
+notes = "Layout from oracle fit over the 16-bit sweep, split by bits 5..3. The full opcode also decodes additions of 0..31, but clang assembles those as add.rri with identical source and destination; the checker does not equate the two printed spellings. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "d0 20"
@@ -3577,7 +3577,7 @@ group = "arithmetic"
 summary = "Add an immediate 0..31: rd = rs + n (r0..r7). Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `a + 5` -> `r2 = r0 + 5` then `r3 = r1 + r4 + c` for a 64-bit add. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, a carry, an overflow (hw/followup-p.json)."
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `a + 5` -> `r2 = r0 + 5` then `r3 = r1 + r4 + c` for a 64-bit add. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "08 80"
@@ -4101,7 +4101,7 @@ group = "arithmetic"
 summary = "Reverse subtract: rd = constant - rs (modified immediate). Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `-a` -> `r0 = 0x0 - r0`; 64-bit negate -> `r2 = 0x0 - r0` then `r3 = r4 - r1 - !c`; rotate-left helper `r1 = 0x20 - r1`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `-a` -> `r0 = 0x0 - r0`; 64-bit negate -> `r2 = 0x0 - r0` then `r3 = r4 - r1 - !c`; rotate-left helper `r1 = 0x20 - r1`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written; a zero result, a borrow and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "a0 e0 00 00"
@@ -4137,7 +4137,7 @@ group = "arithmetic"
 summary = "Add with carries running from bit 31 down to bit 0: rd = rev(rd) + rev(rs), reversed again (rev is a 32-bit bit reversal). Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: all 12 cases fit rev(rev(a) + rev(b)), e.g. 0x40000000 + itself = 0x20000000 (before: exact meaning unknown). N and Z come from the real result, C is the carry out of the reversed addition, V (seen once) its signed overflow. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: all 12 cases fit rev(rev(a) + rev(b)), e.g. 0x40000000 + itself = 0x20000000 (before: exact meaning unknown). N and Z come from the real result, C is the carry out of the reversed addition, V its signed overflow (the follow-up added zero, carry and overflow cases: all fit)."
 
 [[insn.example]]
 bytes = "b0 e0 00 00"
@@ -4168,7 +4168,7 @@ group = "arithmetic"
 summary = "Three-register add: rd = ra + rb, 32-bit encoding that reaches r0..r15. Sets the carry flag like add.rrr. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: when destination and first source are the same register (and the registers fit), the assembler emits the 16-bit add.rr (`r0 += r8`), and the checker does not equate that spelling with `r0 = r0 + r8`. [compiler] with register pressure: `r1 = r6 + r11`, `r3 = r8 + r5`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: when destination and first source are the same register (and the registers fit), the assembler emits the 16-bit add.rr (`r0 += r8`), and the checker does not equate that spelling with `r0 = r0 + r8`. [compiler] with register pressure: `r1 = r6 + r11`, `r3 = r8 + r5`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "b4 e0 00 00"
@@ -4204,7 +4204,7 @@ group = "arithmetic"
 summary = "Three-register subtract: rd = ra - rb, 32-bit encoding that reaches r0..r15. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit sub.rrr instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r1 = r10 - r14` (as a parallel `#` form). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit sub.rrr instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r1 = r10 - r14` (as a parallel `#` form). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written; a zero result, a borrow and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "b4 e0 02 00"
@@ -4240,7 +4240,7 @@ group = "arithmetic"
 summary = "Add with carry: rd = rs + rt + C, where C is psr bit 1 before; writes N, Z, C and V from this sum."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] 64-bit add: `r4 = r2 + r0` (add.rrr) then `r5 = r3 + r1 + c`; with a constant `r2 = r0 + 5` then `r3 = r1 + r4 + c` (r4 = 0 for the sign/zero-extended high part). hw/fm1-2026-10-24: result as stated, the carry in being psr bit 1. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] 64-bit add: `r4 = r2 + r0` (add.rrr) then `r5 = r3 + r1 + c`; with a constant `r2 = r0 + 5` then `r3 = r1 + r4 + c` (r4 = 0 for the sign/zero-extended high part). hw/fm1-2026-10-24: result as stated, the carry in being psr bit 1. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "b8 e0 00 00"
@@ -4276,7 +4276,7 @@ group = "arithmetic"
 summary = "Subtract with borrow: rd = rs - rt - !C, C being psr bit 1 before; writes N, Z, C and V from this difference."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] 64-bit sub: `r4 = r0 - r2` (sub.rrr) then `r5 = r1 - r3 - !c`; 64-bit compare `a < b` is `sub; subc; r1 = psr` then tests psr bits (bit 1 = carry gives unsigned <, bit 3 xor bit 0 gives signed <). hw/fm1-2026-10-24: result as stated, the borrow in being the complement of psr bit 1. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] 64-bit sub: `r4 = r0 - r2` (sub.rrr) then `r5 = r1 - r3 - !c`; 64-bit compare `a < b` is `sub; subc; r1 = psr` then tests psr bits (bit 1 = carry gives unsigned <, bit 3 xor bit 0 gives signed <). hw/fm1-2026-10-24: result as stated, the borrow in being the complement of psr bit 1. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written; a zero result, a borrow and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "b8 e0 02 00"
@@ -4312,7 +4312,7 @@ group = "arithmetic"
 summary = "Add a modified immediate: rd = rs + n. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for 0x20 and 0x40 with destination equal to source the assembler emits the 16-bit add.ri.u5_hi / add.ri.u6_hi (`r0 += 32`), which the checker does not equate with `r0 = r0 + 0x20`. [compiler] -O0: `r3 = r1 + 0x7F800000` (float bit pattern arithmetic). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, a carry, an overflow (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for 0x20 and 0x40 with destination equal to source the assembler emits the 16-bit add.ri.u5_hi / add.ri.u6_hi (`r0 += 32`), which the checker does not equate with `r0 = r0 + 0x20`. [compiler] -O0: `r3 = r1 + 0x7F800000` (float bit pattern arithmetic). hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "e0 e0 00 00"
@@ -4348,7 +4348,7 @@ group = "arithmetic"
 summary = "Subtract a modified immediate: rd = rs - n. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: subtracting small constants the assembler emits the 16-bit add.rri / add.ri.neg7 forms (`r0 = r0 + 0`, `r0 += -7`), which the checker does not equate with the subtraction text. [compiler] saturating-add helper `r1 = r2 - 0x80000000`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, an overflow (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: subtracting small constants the assembler emits the 16-bit add.rri / add.ri.neg7 forms (`r0 = r0 + 0`, `r0 += -7`), which the checker does not equate with the subtraction text. [compiler] saturating-add helper `r1 = r2 - 0x80000000`. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (1 = no borrow) and V (signed overflow) are all written; a zero result, a borrow and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "f0 e0 00 00"
@@ -4384,7 +4384,7 @@ group = "arithmetic"
 summary = "Add a signed 14-bit constant: rd = rs + n. Writes N, Z, C and V."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for 32, 64 and negative 7-bit constants with destination equal to source the assembler emits the 16-bit add.ri.* forms (`r0 += 32`), which the checker does not equate with `r0 = r0 + 32`. [compiler] `a - 1` -> `r2 = r0 + -1` then addc for the high word. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, an overflow (hw/followup-p.json)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for 32, 64 and negative 7-bit constants with destination equal to source the assembler emits the 16-bit add.ri.* forms (`r0 += 32`), which the checker does not equate with `r0 = r0 + 32`. [compiler] `a - 1` -> `r2 = r0 + -1` then addc for the high word. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 
 [[insn.example]]
 bytes = "00 e1 00 00"
@@ -5125,7 +5125,7 @@ group = "logic"
 summary = "Shift by a signed count: rd = rs shifted left by the low 6 bits of rt read as a signed number; a negative count shifts right (zero fill)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: counts (low 6 bits) 21 and 13 shifted left; 0x36, 0x35, 0x39 and 0x20 (-10, -11, -7, -32 as signed 6-bit numbers) shifted right; bits 6 and 7 never mattered; count 0 leaves the value (before: meaning unknown, printed ><). Flags: N and Z follow the result, C is the last bit shifted out (kept for 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24, hw/fm1-2026-10-24/followup-p.jsonl: counts (low 6 bits) 21 and 13 shifted left; 0x36, 0x35, 0x39 and 0x20 (-10, -11, -7, -32 as signed 6-bit numbers) shifted right; bits 6 and up never mattered (0x40, 0x80, 0x100 shifted by 0; 0x41, 0xC1, 0x101 left by 1; 0x3F right by 1; 0x1F left by 31); count 0 leaves the value (before: meaning unknown, printed ><). Flags: N and Z follow the result, C is the last bit shifted out (kept for 0), V is kept."
 
 [[insn.example]]
 bytes = "cc e1 02 00"
@@ -5379,7 +5379,7 @@ group = "shifts"
 summary = "Logical shift left, three registers: rd = rs << rt (r0..r15)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit lsl.rr (`r0 <<= r1`), which the checker does not equate with `r0 = r0 << r1`. [compiler] `r2 = r0 << r1` when the result goes to a different register (32-bit encoding, any register). hw/fm1-2026-10-24: rs << rt; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit lsl.rr (`r0 <<= r1`), which the checker does not equate with `r0 = r0 << r1`. [compiler] `r2 = r0 << r1` when the result goes to a different register (32-bit encoding, any register). hw/fm1-2026-10-24: rs << rt; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "c8 e1 00 00"
@@ -5415,7 +5415,7 @@ group = "shifts"
 summary = "Shift left with signed saturation by a register: rd = rs <<< rt."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit shl3.rr, which the checker does not equate with `r0 = r0 <<< r1`. hw/fm1-2026-10-24: signed saturating shift left: the result is rs shifted left with signed overflow clamped to 0x7FFFFFFF (rs >= 0) or 0x80000000 (rs < 0) (before: meaning unknown). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit shl3.rr, which the checker does not equate with `r0 = r0 <<< r1`. hw/fm1-2026-10-24: signed saturating shift left: the result is rs shifted left with signed overflow clamped to 0x7FFFFFFF (rs >= 0) or 0x80000000 (rs < 0) (before: meaning unknown). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "c8 e1 01 00"
@@ -5451,7 +5451,7 @@ group = "shifts"
 summary = "Logical shift right (zero fill), three registers: rd = rs >> rt (r0..r15)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit lsr.rr, which the checker does not equate with `r0 = r0 >> r1`. [compiler] unsigned `b >= 32 ? 0 : a >> b` -> `r2 = r0 >> r1`, with the compiler's own `if (r1 <= 31)` test kept around the result. hw/fm1-2026-10-24: rs >> rt, zero fill; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit lsr.rr, which the checker does not equate with `r0 = r0 >> r1`. [compiler] unsigned `b >= 32 ? 0 : a >> b` -> `r2 = r0 >> r1`, with the compiler's own `if (r1 <= 31)` test kept around the result. hw/fm1-2026-10-24: rs >> rt, zero fill; 0 for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "c8 e1 02 00"
@@ -5487,7 +5487,7 @@ group = "shifts"
 summary = "Arithmetic shift right (sign fill), three registers: rd = rs >>> rt (r0..r15)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit asr.rr, which the checker does not equate with `r0 = r0 >>> r1`. [compiler] `b >= 0 ? a >> b : a << -b` -> `r0 = r2 >>> r1`. hw/fm1-2026-10-24: rs >>> rt, sign fill; the sign mask for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit asr.rr, which the checker does not equate with `r0 = r0 >>> r1`. [compiler] `b >= 0 ? a >> b : a << -b` -> `r0 = r2 >>> r1`. hw/fm1-2026-10-24: rs >>> rt, sign fill; the sign mask for a count of 32 or more (before: counts of 32 or more not established). A register count is its low 8 bits (0x3F800000 and 0x00008000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0 and 0x105 as 5, so bits 8 and up never count); a count above 32 acts as 32; a count of 0 leaves the value and C alone. Flags: N and Z follow the result, C is the last bit shifted out (kept when the count is 0), V is kept."
 
 [[insn.example]]
 bytes = "c8 e1 03 00"
@@ -5523,7 +5523,7 @@ group = "shifts"
 summary = "Rotate right by a register: rd = rs rotated right by rt (32-bit)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. [compiler] also `(a >> n) | (a << (32 - n))` -> `r0 = r0 <> r1` directly, and `(a >> (n & 31)) | (a << (-n & 31))` -> `r1 = r1 & 0x1F` then `<>`. hw/fm1-2026-10-24: result as stated; the count is taken modulo 32 (0x7F rotated by 31). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. [compiler] also `(a >> n) | (a << (32 - n))` -> `r0 = r0 <> r1` directly, and `(a >> (n & 31)) | (a << (-n & 31))` -> `r1 = r1 & 0x1F` then `<>`. hw/fm1-2026-10-24, hw/fm1-2026-10-24/followup-p.jsonl: result as stated; the count is taken modulo 32 (0x7F rotated by 31; 0x100 by 0, 0x105 by 5, 0x20 by 0). Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "cc e1 00 00"
@@ -5559,7 +5559,7 @@ group = "shifts"
 summary = "Rotate right through the carry flag by a register: the 33 bits (C, rs) rotate right by the count; rd gets the low 32, C the top bit."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as cycc.rri; the count is the register's low 8 bits, a count above 32 acts as 32 (so a rotate left by 1). Count 0 was not reached in the 12 cases (hw/followup-p.json). Flags: N and Z follow the result, C is the new carry, V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as cycc.rri; the count is the register's low 8 bits, a count above 32 acts as 32 (so a rotate left by 1). hw/fm1-2026-10-24/followup-p.jsonl: 0x100 (count 0) changed nothing and 0x105 rotated by 5. Flags: N and Z follow the result, C is the new carry, V is kept."
 
 [[insn.example]]
 bytes = "cc e1 01 00"
@@ -5595,7 +5595,7 @@ group = "shifts"
 summary = "64-bit logical shift left of a register pair by 1..64: p <<= n."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long << 7` -> `r1_r0 <<= 7`; `<< 32` prints 32 and `<< 33` prints 33 (the raw field 0 means 64). hw/fm1-2026-10-24: p << n; n = 64 gives 0. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long << 7` -> `r1_r0 <<= 7`; `<< 32` prints 32 and `<< 33` prints 33 (the raw field 0 means 64). hw/fm1-2026-10-24: p << n; n = 64 gives 0. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d0 e1 00 00"
@@ -5626,7 +5626,7 @@ group = "shifts"
 summary = "Shift a register pair left with signed saturation by 1..64: p <<<= n (clamps to 0x7FFFFFFFFFFFFFFF or 0x8000000000000000)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 64-bit signed saturating shift left (before: meaning unknown). Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 64-bit signed saturating shift left (before: meaning unknown). Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d0 e1 00 04"
@@ -5657,7 +5657,7 @@ group = "shifts"
 summary = "64-bit logical shift right (zero fill) of a register pair by 1..64: p >>= n."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `unsigned long long >> 7` -> `r1_r0 >>= 7`; `(unsigned)(a >> 5)` of a long long -> `r1_r0 >>= 5` (the low word of the result is r0). hw/fm1-2026-10-24: p >> n, zero fill; n = 64 gives 0. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `unsigned long long >> 7` -> `r1_r0 >>= 7`; `(unsigned)(a >> 5)` of a long long -> `r1_r0 >>= 5` (the low word of the result is r0). hw/fm1-2026-10-24: p >> n, zero fill; n = 64 gives 0. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d0 e1 00 08"
@@ -5688,7 +5688,7 @@ group = "shifts"
 summary = "64-bit arithmetic shift right (sign fill) of a register pair by 1..64: p >>>= n."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> 7` -> `r1_r0 >>>= 7`, `>> 40` -> `>>>= 40`, `>> 63` -> `>>>= 63`. hw/fm1-2026-10-24: p >>> n, sign fill; n = 64 gives the sign mask. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> 7` -> `r1_r0 >>>= 7`, `>> 40` -> `>>>= 40`, `>> 63` -> `>>>= 63`. hw/fm1-2026-10-24: p >>> n, sign fill; n = 64 gives the sign mask. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d0 e1 00 0c"
@@ -5720,7 +5720,7 @@ absent_on = ["generic"]
 summary = "Shift a register pair right by 0..63 (logical for >>, arithmetic for >>>), round to the nearest integer, and saturate to 32 bits (unsigned for >>, signed for >>>); the mode picks how an exact tie rounds."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit shift, round to nearest, saturate (before: exact semantics unknown). Rounding never showed in a tie, so what up/even/round/zero do with an exact half is assumed (up: toward +inf, even: to even, round: away from zero, zero: toward zero) and tested by hw/followup-p.json. Flags: N and Z come from the 32-bit result, C is bit n-1 of the source (the rounding bit; 0 for n = 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit shift, round to nearest, saturate (before: exact semantics unknown). Ties (an exact half) are settled by hw/fm1-2026-10-24/followup-p.jsonl: up rounds toward +inf, even to the even neighbour, round away from zero, zero toward zero, for >> and >>> and for both signs; saturation is applied after rounding. Flags: N and Z come from the 32-bit result, C is bit n-1 of the source (the rounding bit; 0 for n = 0), V is kept."
 
 [[insn.example]]
 bytes = "d2 e1 00 00"
@@ -5767,7 +5767,7 @@ absent_on = ["generic"]
 summary = "As shiftr.rpi.mode with the shift amount in a register: the low 8 bits, a count above 64 acting as 64."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as shiftr.rpi.mode, 12 of 12 cases (count 255 behaved as 64: 0xA5E8EBF4FD5BEB7C rounded to 1). Tie rounding assumed, see hw/followup-p.json. Flags: N and Z from the 32-bit result, C = bit count-1 of the source (0 for count 0), V is kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as shiftr.rpi.mode, 12 of 12 cases (count 255 behaved as 64: 0xA5E8EBF4FD5BEB7C rounded to 1). Ties as in shiftr.rpi.mode (hw/fm1-2026-10-24/followup-p.jsonl; count 64 included). Flags: N and Z from the 32-bit result, C = bit count-1 of the source (0 for count 0), V is kept."
 
 [[insn.example]]
 bytes = "d3 e1 00 00"
@@ -5844,7 +5844,7 @@ group = "shifts"
 summary = "Rotate a register pair right through the carry flag by 1..64: the 65 bits (C, p) rotate right by n."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit a 65-bit rotate right (before: meaning unknown). Flags: Only C is written (the new carry); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit a 65-bit rotate right (before: meaning unknown). Flags: only C is written (the new carry); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d4 e1 00 08"
@@ -5875,7 +5875,7 @@ group = "shifts"
 summary = "64-bit logical shift left of a register pair by a register: p <<= r."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long << int` -> `r1_r0 <<= r2`. hw/fm1-2026-10-24: p << rs. A register count is its low 8 bits (0x00800000 shifted by 0); a count above 64 acts as 64; a count of 0 changes nothing. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long << int` -> `r1_r0 <<= r2`. hw/fm1-2026-10-24: p << rs. A register count is its low 8 bits (0x00800000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0, 0x105 as 5, 0x41 as 64); a count above 64 acts as 64; a count of 0 changes nothing. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d8 e1 00 00"
@@ -5906,7 +5906,7 @@ group = "shifts"
 summary = "Shift a register pair left with signed saturation by a register: p <<<= r."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 64-bit signed saturating shift left (before: meaning unknown). A register count is its low 8 bits (0x00800000 shifted by 0); a count above 64 acts as 64; a count of 0 changes nothing. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 64-bit signed saturating shift left (before: meaning unknown). A register count is its low 8 bits (0x00800000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0, 0x105 as 5, 0x41 as 64); a count above 64 acts as 64; a count of 0 changes nothing. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d8 e1 01 00"
@@ -5937,7 +5937,7 @@ group = "shifts"
 summary = "64-bit logical shift right (zero fill) of a register pair by a register: p >>= r."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `unsigned long long >> int` -> `r1_r0 >>= r2`. hw/fm1-2026-10-24: p >> rs, zero fill. A register count is its low 8 bits (0x00800000 shifted by 0); a count above 64 acts as 64; a count of 0 changes nothing. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `unsigned long long >> int` -> `r1_r0 >>= r2`. hw/fm1-2026-10-24: p >> rs, zero fill. A register count is its low 8 bits (0x00800000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0, 0x105 as 5, 0x41 as 64); a count above 64 acts as 64; a count of 0 changes nothing. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d8 e1 02 00"
@@ -5968,7 +5968,7 @@ group = "shifts"
 summary = "64-bit arithmetic shift right (sign fill) of a register pair by a register: p >>>= r."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> int` -> `r1_r0 >>>= r2` (also for `(int)(a >> n)`). hw/fm1-2026-10-24: p >>> rs, sign fill. A register count is its low 8 bits (0x00800000 shifted by 0); a count above 64 acts as 64; a count of 0 changes nothing. Flags: Only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> int` -> `r1_r0 >>>= r2` (also for `(int)(a >> n)`). hw/fm1-2026-10-24: p >>> rs, sign fill. A register count is its low 8 bits (0x00800000 shifted by 0; hw/fm1-2026-10-24/followup-p.jsonl: 0x100 acted as 0, 0x105 as 5, 0x41 as 64); a count above 64 acts as 64; a count of 0 changes nothing. Flags: only C is written (the last bit shifted out; kept when the count is 0); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "d8 e1 03 00"
@@ -5999,7 +5999,7 @@ group = "shifts"
 summary = "Rotate a 64-bit register pair right by a register: p rotated right by r."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> n) | (a << (64 - n))` on unsigned long long -> `r1_r0 <>= r2`. hw/fm1-2026-10-24: result as stated; the count is taken modulo 64 from the register's low bits. Flags: none are written (C included)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> n) | (a << (64 - n))` on unsigned long long -> `r1_r0 <>= r2`. hw/fm1-2026-10-24: result as stated; the count is taken modulo 64 from the register's low 8 bits (hw/fm1-2026-10-24/followup-p.jsonl: 0x100 by 0, 0x105 by 5, 0x40 by 0, 0x41 by 1). Flags: none are written (C included)."
 
 [[insn.example]]
 bytes = "dc e1 00 00"
@@ -6030,7 +6030,7 @@ group = "shifts"
 summary = "Rotate a register pair right through the carry flag by a register: the 65 bits (C, p) rotate right by the count."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as cycc.pi; the count is the register's low 8 bits, above 64 acts as 64, 0 changes nothing. Flags: Only C is written (the new carry); N, Z and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: as cycc.pi; the count is the register's low 8 bits, above 64 acts as 64, 0 changes nothing. Flags: only C is written (the new carry); N, Z and V are kept."
 
 [[insn.example]]
 bytes = "dc e1 01 00"
@@ -6062,7 +6062,7 @@ absent_on = ["r1", "r5"]
 summary = "Shift each of the four halfwords of a register pair right (sign fill) by 0..7, rounding to the nearest value."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: per halfword: 0x2A17 >>> 7 = 0x54, 0xD551 >>> 7 = 0xFFAB (-85.4 rounds to -85, where truncation would give -86); n = 0 copies (before: meaning unknown beyond the syntax). 'rnd' is the rounding to nearest; how an exact tie rounds is assumed upward and tested by hw/followup-p.json. Flags: none are written."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: per halfword: 0x2A17 >>> 7 = 0x54, 0xD551 >>> 7 = 0xFFAB (-85.4 rounds to -85, where truncation would give -86); n = 0 copies (before: meaning unknown beyond the syntax). 'rnd' is the rounding to nearest; an exact tie rounds toward +inf (hw/fm1-2026-10-24/followup-p.jsonl: 0.5 -> 1, -0.5 -> 0, 1.5 -> 2, -1.5 -> -1 in every halfword, n = 1..7). Flags: none are written."
 
 [[insn.example]]
 bytes = "11 e4 08 00"
@@ -6138,7 +6138,7 @@ requires = ["instrev3"]
 summary = "Population count of a register pair, as the syntax says; the FM-1's chip instead copies the low halfword of the pair's low register into the low halfword of rd."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit mov.half 'rd.l = r(2s).l': the high half of rd stays, the pair's high register is ignored, and no flag changes. The word is mov.half's with bit 2 of the first word set, which this chip apparently does not look at. Not a bit count."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24: 12 of 12 cases fit mov.half 'rd.l = r(2s).l': the high half of rd stays, the pair's high register is ignored, and no flag changes. hw/fm1-2026-10-24/followup-p.jsonl: five more cases (rd = r5, r2, r3, r9, r4) fit as well. The word is mov.half's with bit 2 of the first word set, which this chip apparently does not look at. Not a bit count."
 
 [[insn.example]]
 bytes = "6c e0 00 00"
@@ -6260,10 +6260,10 @@ encoding = ["1110000001110000", "rrrrssss11000000"]
 fields = { r = "gpr", s = "gpr" }
 group = "bitops"
 requires = ["instrev3"]
-summary = "Population count of a register, as the syntax says; the FM-1's chip does not execute it: it changed no register and no flag in 12 cases."
+summary = "Population count of a register, as the syntax says; the FM-1's chip does not execute it: it changed no register and no flag in 19 cases."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] only through `__builtin_pi32v2_popcount` (accepted without -minstrev3). `__builtin_popcount` is expanded in software (shift/mask/multiply by 0x1010101) even with --feature instrev3, and `__builtin_popcountll` and `__builtin_parity` likewise. hw/fm1-2026-10-24: in none of the 12 cases (rs included 0, 0x80000000 and 0xFFFFFFFF; rd was sometimes rs) did any register or any psr bit change, so on this chip the word acts as a nop (no trap). Probably an instruction-revision-3 form the AC791N lacks; hw/followup-p.json repeats it with simple inputs."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] only through `__builtin_pi32v2_popcount` (accepted without -minstrev3). `__builtin_popcount` is expanded in software (shift/mask/multiply by 0x1010101) even with --feature instrev3, and `__builtin_popcountll` and `__builtin_parity` likewise. hw/fm1-2026-10-24: in none of the 12 cases (rs included 0, 0x80000000 and 0xFFFFFFFF; rd was sometimes rs) did any register or any psr bit change (nor in the 7 follow-up cases), so on this chip the word acts as a nop (no trap). Probably an instruction-revision-3 form the AC791N lacks; hw/fm1-2026-10-24/followup-p.jsonl repeats it with simple inputs (0, 1, 0x80000000, 0xFFFFFFFF, 0x0F0F0F0F, in place and not): still nothing changed."
 
 [[insn.example]]
 bytes = "70 e0 c0 00"
@@ -6294,7 +6294,7 @@ group = "bitops"
 summary = "Count leading zeros of a register; the count for 0 is 32."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_clz` and `__builtin_pi32v2_clz` -> `r0 = clz(r0)`; constant folding gives clz(1) = 31 and clz(0) = 32 (the builtin is defined for 0 here); `__builtin_clzll` is two clz plus a test for a zero high word (`if (r1 != 32)`), which also shows clz(0) = 32. hw/fm1-2026-10-24: result as stated (clz of 0x00000000 and 0xFFFFFFFF seen). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_clz` and `__builtin_pi32v2_clz` -> `r0 = clz(r0)`; constant folding gives clz(1) = 31 and clz(0) = 32 (the builtin is defined for 0 here); `__builtin_clzll` is two clz plus a test for a zero high word (`if (r1 != 32)`), which also shows clz(0) = 32. hw/fm1-2026-10-24: result as stated (clz(0) = 32, clz(0xFFFFFFFF) = 0, and in the follow-up clz(1) = 31, clz(0x80000000) = 0). Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "80 e1 00 00"
@@ -6325,7 +6325,7 @@ group = "bitops"
 summary = "Count leading sign bits: the number of leading bits equal to bit 31, counting bit 31 itself (clz of the value or its complement); cls(0) = 32."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] only through `__builtin_pi32v2_cls`; constant folding gives cls(5) = 29, cls(-6) = 29, cls(0) = 32. `__builtin_clrsb` does not exist in this clang. hw/fm1-2026-10-24: result as stated (cls(0) = 32, cls(0x20) = 26, cls(0xDAF3A178) = 2). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] only through `__builtin_pi32v2_cls`; constant folding gives cls(5) = 29, cls(-6) = 29, cls(0) = 32. `__builtin_clrsb` does not exist in this clang. hw/fm1-2026-10-24: result as stated (cls(0) = 32, cls(0x20) = 26, cls(0xDAF3A178) = 2; hw/fm1-2026-10-24/followup-p.jsonl: cls(0xFFFFFFFF) = 32, cls(0xFFFFFFFE) = 31, cls(0x80000000) = 1, cls(0x7FFFFFFF) = 1, cls(1) = 31). Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "80 e1 01 00"
@@ -6495,7 +6495,7 @@ group = "bitops"
 summary = "Insert a bit field: the low l bits of rs go into bits p.. of rd, other bits of rd unchanged."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a & ~0xff00) | ((b & 0xff) << 8)` -> `r0 <= insert(r1, p:8, l:8)`; `(a & 0xffff) | (b << 16)` -> `r0 = r0.l (u)` then `r0 <= insert(r1, p:16, l:16)`. The destination is also the field's background (read-modify-write of rd). hw/fm1-2026-10-24: result as stated. A field that would run past bit 31 is cut off there (p:31, l:31 changed only bit 31). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a & ~0xff00) | ((b & 0xff) << 8)` -> `r0 <= insert(r1, p:8, l:8)`; `(a & 0xffff) | (b << 16)` -> `r0 = r0.l (u)` then `r0 <= insert(r1, p:16, l:16)`. The destination is also the field's background (read-modify-write of rd). hw/fm1-2026-10-24: result as stated. Bits of the field that would lie past bit 31 are dropped (p:31, l:31 changed only bit 31; hw/fm1-2026-10-24/followup-p.jsonl: p:28, l:8 changed bits 28..31 to the low 4 bits of rs, p:31, l:2 only bit 31); l:0 changes nothing. Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "a0 e1 00 00"
@@ -6536,7 +6536,7 @@ group = "bitops"
 summary = "Extract an unsigned bit field: rd = (rs >> p) & ((1 << l) - 1), p the lowest bit (0..31) and l the width."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> 8) & 0xf` -> `uextra(r0, p:8, l:4)`; `(a >> 5) & 1` -> `p:5, l:1`; `(a >> 24) & 1` -> `p:24, l:1`; `__builtin_pi32v2_uextra(a, 4, 8)` -> `p:4, l:8` (arguments are value, p, l). hw/fm1-2026-10-24: result as stated; l:0 gives 0; a field past bit 31 is cut off there. Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> 8) & 0xf` -> `uextra(r0, p:8, l:4)`; `(a >> 5) & 1` -> `p:5, l:1`; `(a >> 24) & 1` -> `p:24, l:1`; `__builtin_pi32v2_uextra(a, 4, 8)` -> `p:4, l:8` (arguments are value, p, l). hw/fm1-2026-10-24: result as stated; l:0 gives 0. hw/fm1-2026-10-24/followup-p.jsonl: a field that runs past bit 31 reads the missing bits as 0 (p:30, l:31 of 0xC0000000 gave 3). Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "b0 e1 00 00"
@@ -6577,7 +6577,7 @@ group = "bitops"
 summary = "Extract a signed bit field: rd = the l bits of rs starting at bit p, sign-extended."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a << 26) >> 26` -> `sextra(r0, p:0, l:6)`; `(a << 20) >> 28` -> `p:8, l:4`; `__builtin_pi32v2_sextra(a, 4, 8)` -> `p:4, l:8`. hw/fm1-2026-10-24: result as stated; l:0 gives 0; a field past bit 31 is cut off there (for p+l > 32 only sources with bit 31 clear were seen; see hw/followup-p.json). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a << 26) >> 26` -> `sextra(r0, p:0, l:6)`; `(a << 20) >> 28` -> `p:8, l:4`; `__builtin_pi32v2_sextra(a, 4, 8)` -> `p:4, l:8`. hw/fm1-2026-10-24: result as stated; l:0 gives 0. hw/fm1-2026-10-24/followup-p.jsonl when p+l passes bit 31 the field is still l bits wide with the missing top bits reading 0, so its sign bit (bit l-1 of the field) is 0 and the result is not sign-extended from bit 31 (0x8ABCDEF1 with p:28, l:8 gave 8, 0x80000000 with p:31, l:5 gave 1, 0x87654321 with p:20, l:20 gave 0x876); a field that ends exactly at bit 31 extends normally (p:16, l:16 of 0x80001234 gave 0xFFFF8000). Flags: N and Z follow the result; C and V are kept."
 
 [[insn.example]]
 bytes = "b0 e1 01 00"
@@ -41594,7 +41594,7 @@ encoding = ["001nnnnn11000rrr"]
 fields = { r = "gpr_lo", n = "uimm" }
 group = "arithmetic"
 summary = "Add 0..31 to r0..r7. Writes N, Z, C and V."
-notes = "Layout inferred from the 16-bit oracle sweep. The assembler always selects add.rri with the same source and destination; equivalent assignment spellings confirm this decoding alias. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written. Not reached in the 12 cases: a zero result, a carry (hw/followup-p.json)."
+notes = "Layout inferred from the 16-bit oracle sweep. The assembler always selects add.rri with the same source and destination; equivalent assignment spellings confirm this decoding alias. hw/fm1-2026-10-24: result as stated. Flags: N, Z, C (carry out) and V (signed overflow) are all written; a zero result, a carry and an overflow were each reached and fit (hw/fm1-2026-10-24/followup-p.jsonl)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
 

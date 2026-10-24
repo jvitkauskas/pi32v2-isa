@@ -24,3 +24,12 @@ All 26 batches (4312 cases, 353 forms, seed 1) completed: none hung or trapped, 
 and the instruction-revision-3 forms. Every batch's `nop` cases gave back their inputs, with the registers in
 stack slots 0..15 in order r0..r15, and the self-test was 38/38 as expected. Upper `psr` bits (4..31) read 0
 after every case.
+
+## Follow-up for analyst P's forms
+
+`followup-p.jsonl` (same record format, 308 records including the `nop` calibration cases) ran the 304 cases of
+`hw/followup-p.json` on the same unit afterwards, in 2 batches, with no hang or trap and the calibration cases
+returning their inputs. It targeted what the 12 random cases per form had not reached: zero, carry and overflow
+results of the add and subtract forms, N and Z results of other forms, register shift counts with bits 8 and up set
+and at the 32/64 boundaries, exact rounding ties of `shiftr.*` and `asr.ppi.rnd.vh`, bit fields running past bit 31,
+`cls`/`clz` edge values and simple inputs for `popcnt.*`.

@@ -119,7 +119,8 @@ ALU forms: `add.rri` (0..31), `add.ri.neg7` (-128..-1, destination = source), `a
 
 What the flags are. The compiler's own 64-bit compares (all via `psr`, special register 5) showed the carry; the
 first hardware run (`hw/fm1-2026-10-24`: every ALU form with all four low `psr` bits set to random values before and
-read after) settled the rest. The low four bits of `psr`:
+read after) settled the rest, and a second run of edge cases (`hw/fm1-2026-10-24/followup-p.jsonl`: zero, carry and
+overflow results of every add/subtract form, shift counts, exact rounding ties) confirmed it. The low four bits of `psr`:
 
 | Bit | Flag | Meaning |
 | --- | --- | --- |
@@ -150,9 +151,11 @@ read after) settled the rest. The low four bits of `psr`:
 - The AC79 SDK's spin lock is inline asm `testset b[%0]` then `ifeq goto 1b` (retry while eq) [ac79-sdk]. The flag
   branches `ifeq`..`ifle` (`bc.*`), `cc = 0/1` and `fcmp` are never emitted by the compiler, and the branches have
   not been run on hardware.
-- Not yet established: whether Z of the add and subtract family really follows a zero result (no zero result came up in
-  the first run; `hw/followup-p.json` asks), and the flags of the memory, multiply-accumulate, DSP and floating-point
-  forms other analysts own.
+- Settled by the second run: Z of the add and subtract family follows a zero result, and C and V were each reached
+  in every form (add/sub/rsub/addc/subc/`add.brev.rr`, all shapes); counts with bits 8 and up set (0x100, 0x105) use
+  only the low 8 bits; `shiftr` ties round as `up`/`even`/`round`/`zero` say (toward +inf, to even, away from zero,
+  toward zero) and `asr.ppi.rnd.vh` ties round toward +inf. Still unknown: the flags of the memory, multiply-accumulate,
+  DSP and floating-point forms that other analysts own.
 
 ### Comparisons and branches
 
