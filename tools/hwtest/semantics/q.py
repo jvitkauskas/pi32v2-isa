@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT-0
 """DSP models inferred from hw/fm1-2026-10-24; see hw/report-q.md.
 
-Inputs are read before writes, including overlapping register pairs. Unprobed
-minimum-integer abs/negs and overflowing sad4 cases remain hypotheses pending
-followup-q.json.
+Inputs are read before writes, including overlapping register pairs. The original
+results and followup-q.jsonl establish saturating abs/negs at signed minima and
+independent unsigned saturation of overflowing sad4 accumulator lanes.
 """
 import operator
 
@@ -55,7 +55,7 @@ def unary(kind, shape):
         bits = 32 if shape == 'rr' else 16
         x = half(R, o['s'], o['m']) if shape == 'rhrh' else R[o['s']]
         xs = lanes(x, bits)
-        ys = [abs(signed(v, bits)) if kind == 'abs' else -signed(v, bits) for v in xs]
+        ys = [clip(abs(signed(v, bits)) if kind == 'abs' else -signed(v, bits), bits, True) for v in xs]
         y = join(ys, bits)
         return (write_half(R, o['r'], o['n'], y) if shape == 'rhrh' else {o['r']: y}), f
     return model
@@ -133,7 +133,7 @@ def mts(bits):
 
 
 def sad(R, f, o):
-    # usat suggests clipping; no original case overflowed a lane.
+    # followup-q.jsonl overflowed each lane independently: clamp, without carry.
     acc = lanes(pair(R, o['r']), 16, 64)
     xs = [min(65535, c + abs(a - b)) for c, a, b in zip(acc, lanes(R[o['s']], 8), lanes(R[o['t']], 8))]
     return writes_pair(o['r'], join(xs, 16)), f
