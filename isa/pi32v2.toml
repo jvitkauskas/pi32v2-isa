@@ -16526,7 +16526,7 @@ decode_requires = ["fprev1"]
 summary = "Compare binary32 registers and replace the low four psr bits; no register is written."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Low psr is 8 for r < s, 6 for r == s, 2 for r > s, 3 for unordered (NaN); all registers survive. Each outcome replaces incoming flags 0 and 15. Both signed zeros compare equal; positive/negative subnormals are not flushed, infinities order normally, either NaN source is unordered. Earlier summary did not identify these flags."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Low psr is 8 for r < s, 6 for r == s, 2 for r > s, 3 for unordered (NaN); all registers survive. Each outcome replaces incoming flags 0 and 15. Both signed zeros compare equal; positive/negative subnormals are not flushed, infinities order normally, either NaN source is unordered. Earlier summary did not identify these flags. S2 confirms unordered flags 3 for both NaN signs/classes and varied payloads in either source."
 
 [[insn.example]]
 bytes = "3f e5 04 00"
@@ -16558,7 +16558,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to signed 32-bit integer, rounding to nearest with ties to even."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding to nearest with ties to even on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Minimum subnormals of both signs round/clamp to 0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding to nearest with ties to even on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Minimum subnormals of both signs round/clamp to 0. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 0f 00"
@@ -16590,7 +16590,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to signed 32-bit integer, rounding toward zero."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(int)f` -> `r0 = ftoi(r0) (trunc)`. The other roundings (even, ceil, floor) are not used for C casts; `__builtin_lrintf` and `rintf` call the library. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward zero on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Minimum subnormals of both signs round/clamp to 0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(int)f` -> `r0 = ftoi(r0) (trunc)`. The other roundings (even, ceil, floor) are not used for C casts; `__builtin_lrintf` and `rintf` call the library. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward zero on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Minimum subnormals of both signs round/clamp to 0. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 1f 00"
@@ -16622,7 +16622,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to signed 32-bit integer, rounding toward plus infinity."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward plus infinity on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Positive minimum subnormal rounds to 1. This distinguishes rounding from input flushing."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward plus infinity on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Positive minimum subnormal rounds to 1. This distinguishes rounding from input flushing. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 2f 00"
@@ -16654,7 +16654,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to signed 32-bit integer, rounding toward minus infinity."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward minus infinity on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Negative minimum subnormal rounds to -1. This distinguishes rounding from input flushing."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward minus infinity on half-integers. Range clamps to [-2147483648, 2147483647]; positive NaN/infinity gives 0x7fffffff, negative NaN/infinity gives 0x80000000. Negative minimum subnormal rounds to -1. This distinguishes rounding from input flushing. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 3f 00"
@@ -16686,7 +16686,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to unsigned 32-bit integer, rounding to nearest with ties to even."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding to nearest with ties to even on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding to nearest with ties to even on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 4f 00"
@@ -16718,7 +16718,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to unsigned 32-bit integer, rounding toward zero."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned)f` -> `r0 = ftou(r0) (trunc)`. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward zero on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned)f` -> `r0 = ftou(r0) (trunc)`. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward zero on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 5f 00"
@@ -16750,7 +16750,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to unsigned 32-bit integer, rounding toward plus infinity."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward plus infinity on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Positive minimum subnormal rounds to 1. This distinguishes rounding from input flushing."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward plus infinity on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Positive minimum subnormal rounds to 1. This distinguishes rounding from input flushing. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 6f 00"
@@ -16782,7 +16782,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to unsigned 32-bit integer, rounding toward minus infinity."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward minus infinity on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles earlier exceptional-input/range uncertainty and confirms rounding toward minus infinity on half-integers. Negative inputs, including negative NaN/infinity, give 0; positive overflow/NaN/infinity gives 0xffffffff. Minimum subnormals of both signs round/clamp to 0. S2 separates sign from quiet/signalling class: NaN saturation depends only on sign, not class/payload."
 
 [[insn.example]]
 bytes = "3f e5 7f 00"
@@ -16878,7 +16878,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary32 to binary16 in the low half of rd, rounding to nearest with ties to even; retain the high half."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr and the high destination half survive. Follow-up settles finite conversion: 1 -> 0x3c00, 65504 -> 0x7bff, overflow midpoint 65520 -> infinity; 2^-24 -> subnormal 0x0001, 2^-25 -> 0, and both normal midpoint parities round to even. Signed zero/infinity retain sign. Earlier all-NaN quiet-canonical prediction was incomplete: quiet NaNs give signed 0x7e00, but negative signalling 0xff812345 gives 0xfc01, discarding payload while retaining signalling class. Positive signalling NaNs need follow-up."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr and the high destination half survive. Follow-up settles finite conversion: 1 -> 0x3c00, 65504 -> 0x7bff, overflow midpoint 65520 -> infinity; 2^-24 -> subnormal 0x0001, 2^-25 -> 0, and both normal midpoint parities round to even. Signed zero/infinity retain sign. Earlier all-NaN quiet-canonical prediction was incomplete: both signs and quiet/signalling classes retain sign/class but discard payload. Quiet NaNs give signed 0x7e00; signalling NaNs give signed 0x7c01. S2 confirms this at minimal/maximal payloads, including positive signalling inputs."
 
 [[insn.example]]
 bytes = "3f e5 af 00"
@@ -16910,7 +16910,7 @@ decode_requires = ["fprev1"]
 summary = "Convert binary16 in the low source half exactly to binary32."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: The source high half is ignored; psr survives. Follow-up confirms finite normals, subnormals (0x0001 -> 0x33800000), signed zeros and infinities. Earlier all-NaN quiet-canonical prediction was incomplete: quiet NaNs give signed 0x7fc00000, but negative signalling half 0xfc55 gives 0xff800001. Payload is discarded while signalling class survives in that case; positive signalling NaNs need follow-up."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: The source high half is ignored; psr survives. Follow-up confirms finite normals, subnormals (0x0001 -> 0x33800000), signed zeros and infinities. Earlier all-NaN quiet-canonical prediction was incomplete: both signs and quiet/signalling classes retain sign/class but discard payload. Quiet NaNs give signed 0x7fc00000; signalling NaNs give signed 0x7f800001. S2 confirms this at minimal/maximal payloads, including positive signalling inputs."
 
 [[insn.example]]
 bytes = "3f e5 bf 00"
@@ -16942,7 +16942,7 @@ decode_requires = ["fprev1"]
 summary = "Round binary32 to an integer-valued binary32, to nearest with ties to even."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds to nearest with ties to even, signed infinities survive, and NaNs of either measured sign/class become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds to nearest with ties to even, signed infinities survive, and NaNs of both signs and quiet/signalling classes become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -0. S2 confirms sign retention and quiet canonicalization independently of input class/payload."
 
 [[insn.example]]
 bytes = "3f e5 cf 00"
@@ -16974,7 +16974,7 @@ decode_requires = ["fprev1"]
 summary = "Round binary32 to an integer-valued binary32, toward zero."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_truncf(a)` -> `r0 = ftof(r0) (trunc)`; `__builtin_roundf` is `a + copysign(0.5, a)` (an insert of the sign bit, add.f) then this. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward zero, signed infinities survive, and NaNs of either measured sign/class become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_truncf(a)` -> `r0 = ftof(r0) (trunc)`; `__builtin_roundf` is `a + copysign(0.5, a)` (an insert of the sign bit, add.f) then this. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward zero, signed infinities survive, and NaNs of both signs and quiet/signalling classes become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -0. S2 confirms sign retention and quiet canonicalization independently of input class/payload."
 
 [[insn.example]]
 bytes = "3f e5 df 00"
@@ -17006,7 +17006,7 @@ decode_requires = ["fprev1"]
 summary = "Round binary32 to an integer-valued binary32, toward plus infinity."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_ceilf(a)` -> `r0 = ftof(r0) (ceil)`. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward plus infinity, signed infinities survive, and NaNs of either measured sign/class become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives 1, negative minimum subnormal gives -0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_ceilf(a)` -> `r0 = ftof(r0) (ceil)`. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward plus infinity, signed infinities survive, and NaNs of both signs and quiet/signalling classes become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives 1, negative minimum subnormal gives -0. S2 confirms sign retention and quiet canonicalization independently of input class/payload."
 
 [[insn.example]]
 bytes = "3f e5 ef 00"
@@ -17038,7 +17038,7 @@ decode_requires = ["fprev1"]
 summary = "Round binary32 to an integer-valued binary32, toward minus infinity."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_floorf(a)` -> `r0 = ftof(r0) (floor)`. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward minus infinity, signed infinities survive, and NaNs of either measured sign/class become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -1."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_floorf(a)` -> `r0 = ftof(r0) (floor)`. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives and zero results retain the input sign. Follow-up settles earlier special-value/tie uncertainty: rounds toward minus infinity, signed infinities survive, and NaNs of both signs and quiet/signalling classes become sign-preserving quiet 0x7fc00000 with payload discarded. Positive minimum subnormal gives +0, negative minimum subnormal gives -1. S2 confirms sign retention and quiet canonicalization independently of input class/payload."
 
 [[insn.example]]
 bytes = "3f e5 ff 00"
@@ -17070,7 +17070,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 add, rounding to nearest with ties to even: rd = rs + rt."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a + b` -> `r0 = r0 + r1 (f)`; with -ffast-math the operands may be swapped (`r1 + r0`). Doubles are not hardware: `__adddf3` etc. are called. The `(f)` forms assemble without -mfprev1 in these tests. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles both midpoint parities and signs; subnormal inputs/results are retained (0x00000001 + 0x00000001 -> 0x00000002). NaN in either operand or opposite infinities returns 0x7f800001, discarding sign/payload. Like-signed infinities retain their sign; -0 + -0 gives -0, mixed zeros give +0. Earlier rounding/special-value uncertainty is resolved for these cases."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a + b` -> `r0 = r0 + r1 (f)`; with -ffast-math the operands may be swapped (`r1 + r0`). Doubles are not hardware: `__adddf3` etc. are called. The `(f)` forms assemble without -mfprev1 in these tests. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles both midpoint parities and signs; subnormal inputs/results are retained (0x00000001 + 0x00000001 -> 0x00000002). NaN in either operand or opposite infinities returns 0x7f800001, discarding sign/payload. Like-signed infinities retain their sign; -0 + -0 gives -0, mixed zeros give +0. Earlier rounding/special-value uncertainty is resolved for these cases. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source."
 
 [[insn.example]]
 bytes = "3f e5 00 00"
@@ -17107,7 +17107,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 subtract, rounding to nearest with ties to even: rd = rs - rt."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a - b` -> `r0 = r0 - r1 (f)`. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles both midpoint parities and signs; subnormal inputs/results are retained (0x00800000 - 0x00000001 -> 0x007fffff). NaN in either operand or like-signed infinity subtraction returns 0x7f800001, discarding sign/payload. -infinity - infinity gives -infinity. Equal finite operands give +0; -0 - +0 gives -0. Earlier rounding/infinity uncertainty is resolved for these cases."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a - b` -> `r0 = r0 - r1 (f)`. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles both midpoint parities and signs; subnormal inputs/results are retained (0x00800000 - 0x00000001 -> 0x007fffff). NaN in either operand or like-signed infinity subtraction returns 0x7f800001, discarding sign/payload. -infinity - infinity gives -infinity. Equal finite operands give +0; -0 - +0 gives -0. Earlier rounding/infinity uncertainty is resolved for these cases. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source."
 
 [[insn.example]]
 bytes = "3f e5 01 00"
@@ -17144,7 +17144,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 multiply, rounding to nearest with ties to even: rd = rs * rt."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a * b` -> `r0 = r0 * r1 (f)`; `a * b + c` is a multiply then an add (no fused multiply-add is emitted, not even with -ffp-contract=fast -ffast-math). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Follow-up settles normal and underflow midpoint parities: 0x00000001 * 0.5 -> 0, 0x00000003 * 0.5 -> 0x00000002. Subnormal inputs/results are retained. NaN in either operand or zero * infinity returns 0x7f800001, discarding sign/payload; finite overflow gives signed infinity, zero products retain the XOR sign. Earlier rounding/invalid-input uncertainties are resolved for these cases."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a * b` -> `r0 = r0 * r1 (f)`; `a * b + c` is a multiply then an add (no fused multiply-add is emitted, not even with -ffp-contract=fast -ffast-math). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Follow-up settles normal and underflow midpoint parities: 0x00000001 * 0.5 -> 0, 0x00000003 * 0.5 -> 0x00000002. Subnormal inputs/results are retained. NaN in either operand or zero * infinity returns 0x7f800001, discarding sign/payload; finite overflow gives signed infinity, zero products retain the XOR sign. Earlier rounding/invalid-input uncertainties are resolved for these cases. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source."
 
 [[insn.example]]
 bytes = "3f e5 02 00"
@@ -17181,7 +17181,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 divide, rounding to nearest with ties to even: rd = rs / rt."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a / b` -> `r0 = r0 / r1 (f)`; `a / 2.0f` becomes a multiply by 0.5f only with a power-of-two constant (`r1 = 0x3F000000; r0 = r0 * r1`). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Subnormal inputs/results are retained; follow-up settles underflow midpoint parity (0x00000001 / 2 -> 0, 0x00000003 / 2 -> 0x00000002). NaN in either operand, 0/0 and infinity/infinity return 0x7f800001, discarding sign/payload. Nonzero finite / signed zero gives XOR-signed infinity without trapping; finite/infinity gives signed zero, overflow signed infinity. Earlier zero-divisor/NaN/rounding uncertainties are resolved for these cases."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] float `a / b` -> `r0 = r0 / r1 (f)`; `a / 2.0f` becomes a multiply by 0.5f only with a power-of-two constant (`r1 = 0x3F000000; r0 = r0 * r1`). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Subnormal inputs/results are retained; follow-up settles underflow midpoint parity (0x00000001 / 2 -> 0, 0x00000003 / 2 -> 0x00000002). NaN in either operand, 0/0 and infinity/infinity return 0x7f800001, discarding sign/payload. Nonzero finite / signed zero gives XOR-signed infinity without trapping; finite/infinity gives signed zero, overflow signed infinity. Earlier zero-divisor/NaN/rounding uncertainties are resolved for these cases. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source."
 
 [[insn.example]]
 bytes = "3f e5 03 00"
@@ -17218,7 +17218,7 @@ decode_requires = ["fprev1"]
 summary = "Select the smaller binary32 operand, preferring a number to NaN; set comparison flags."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fminf(a, b)` -> `r0 = fmin(r0, r1)`; with -ffast-math plain `a < b ? a : b` also. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Sets psr as fcmp s,t: less 8, equal 6, greater 2, unordered 3. Subnormals are retained; infinities order normally. Earlier NaN/signed-zero uncertainties are settled: one NaN selects the numeric operand in either order; two NaNs select t unchanged, including its sign/payload/class. Opposite signed zeros select -0 in either order while flags report equal. Earlier notes did not identify the flag write."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fminf(a, b)` -> `r0 = fmin(r0, r1)`; with -ffast-math plain `a < b ? a : b` also. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Sets psr as fcmp s,t: less 8, equal 6, greater 2, unordered 3. Subnormals are retained; infinities order normally. Earlier NaN/signed-zero uncertainties are settled: one NaN selects the numeric operand in either order; two NaNs select t unchanged, including its sign/payload/class. Opposite signed zeros select -0 in either order while flags report equal. Earlier notes did not identify the flag write. S2 confirms both signs/classes in either position and raw t selection for every two-NaN sign/class pair, including differing payloads within one class."
 
 [[insn.example]]
 bytes = "3f e5 05 00"
@@ -17255,7 +17255,7 @@ decode_requires = ["fprev1"]
 summary = "Select the larger binary32 operand, preferring a number to NaN; set comparison flags."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fmaxf(a, b)` -> `r0 = fmax(r0, r1)`; `a > 0.0f ? a : 0.0f` with -ffast-math. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Sets psr as fcmp s,t: less 8, equal 6, greater 2, unordered 3. Subnormals are retained; infinities order normally. Earlier NaN/signed-zero uncertainties are settled: one NaN selects the numeric operand in either order; two NaNs select t unchanged, including its sign/payload/class. Opposite signed zeros select +0 in either order while flags report equal. Earlier notes did not identify the flag write."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `__builtin_fmaxf(a, b)` -> `r0 = fmax(r0, r1)`; `a > 0.0f ? a : 0.0f` with -ffast-math. [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Sets psr as fcmp s,t: less 8, equal 6, greater 2, unordered 3. Subnormals are retained; infinities order normally. Earlier NaN/signed-zero uncertainties are settled: one NaN selects the numeric operand in either order; two NaNs select t unchanged, including its sign/payload/class. Opposite signed zeros select +0 in either order while flags report equal. Earlier notes did not identify the flag write. S2 confirms both signs/classes in either position and raw t selection for every two-NaN sign/class pair, including differing payloads within one class."
 
 [[insn.example]]
 bytes = "3f e5 06 00"
@@ -17292,7 +17292,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 multiply-add with separate product rounding: rd = rd + round32(rs * rt)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Earlier fused and separate-rounding ambiguity is settled: (1+2^-23)*(1-2^-23) with accumulator -1 returns +0, not fused -2^-46; max-finite * 2 with accumulator -max-finite returns +infinity. Product is rounded to nearest-even binary32 before a nearest-even add; a half-min-subnormal product rounds to zero before accumulation. Subnormal inputs/results are retained. NaN in either source/accumulator, zero * infinity or cancelling infinities gives 0x7f800001; -0 accumulated with -0 stays -0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Earlier fused and separate-rounding ambiguity is settled: (1+2^-23)*(1-2^-23) with accumulator -1 returns +0, not fused -2^-46; max-finite * 2 with accumulator -max-finite returns +infinity. Product is rounded to nearest-even binary32 before a nearest-even add; a half-min-subnormal product rounds to zero before accumulation. Subnormal inputs/results are retained. NaN in either source/accumulator, zero * infinity or cancelling infinities gives 0x7f800001; -0 accumulated with -0 stays -0. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source/accumulator. Invalid products followed by either infinite accumulator still give 0x7f800001; overflowed products and signed/tie underflow cases agree with separate product rounding."
 
 [[insn.example]]
 bytes = "3f e5 07 00"
@@ -17329,7 +17329,7 @@ decode_requires = ["fprev1"]
 summary = "Binary32 multiply-subtract with separate product rounding: rd = rd - round32(rs * rt)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-s.jsonl: Psr survives. Earlier fused and separate-rounding ambiguity is settled: (1+2^-23)*(1-2^-23) with accumulator +1 returns +0, not fused +2^-46; max-finite * 2 with accumulator +max-finite returns -infinity. Product is rounded to nearest-even binary32 before a nearest-even subtraction; a half-min-subnormal product rounds to zero before accumulation. Subnormal inputs/results are retained. NaN in either source/accumulator, zero * infinity or same-signed infinity subtraction gives 0x7f800001; -0 minus -0 gives +0."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24/results.jsonl, hw/fm1-2026-10-24/followup-s.jsonl and hw/fm1-2026-10-24/followup-s2.jsonl: Psr survives. Earlier fused and separate-rounding ambiguity is settled: (1+2^-23)*(1-2^-23) with accumulator +1 returns +0, not fused +2^-46; max-finite * 2 with accumulator +max-finite returns -infinity. Product is rounded to nearest-even binary32 before a nearest-even subtraction; a half-min-subnormal product rounds to zero before accumulation. Subnormal inputs/results are retained. NaN in either source/accumulator, zero * infinity or same-signed infinity subtraction gives 0x7f800001; -0 minus -0 gives +0. S2 confirms positive 0x7f800001 for both NaN signs/classes and varied payloads in either source/accumulator. Invalid products followed by either infinite accumulator still give 0x7f800001; overflowed products and signed/tie underflow cases agree with separate product rounding."
 
 [[insn.example]]
 bytes = "3f e5 08 00"

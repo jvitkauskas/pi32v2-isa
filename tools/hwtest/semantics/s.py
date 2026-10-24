@@ -3,8 +3,8 @@
 """FM-1 float/divide models, hw/fm1-2026-10-24.
 
 Exact rational arithmetic avoids host rounding/NaN conventions. Checked against
-results.jsonl and followup-s.jsonl; see hw/report-s.md for measured boundaries
-and the remaining NaN-classification probes in hw/followup-s2.json.
+results.jsonl, followup-s.jsonl and followup-s2.jsonl; see hw/report-s.md
+for measured rounding, NaN-classification and flag behavior.
 """
 from fractions import Fraction
 import math
@@ -68,7 +68,7 @@ def compare(a, b):
 
 
 def arithmetic(a, b, operation, accumulator=None):
-    """IEEE finite arithmetic; observed arithmetic NaN is 0x7f800001."""
+    """Nearest-even finite arithmetic; either NaN class gives 0x7f800001."""
     inputs = (a, b) if accumulator is None else (a, b, accumulator)
     if any(kind(x) == 'nan' for x in inputs):
         return 0x7F800001
@@ -143,8 +143,7 @@ def convert(operation, rounding='even'):
             if k == 'finite':
                 result = encode(decode(bits), sign, 5, 10)
             else:
-                # Measured qNaNs -> signed 0x7e00, negative sNaN -> 0xfc01.
-                # Positive sNaN class preservation is an S2 prediction.
+                # Both NaN signs/classes measured: retain sign/class, discard payload.
                 result = (sign << 15) | (0x7C00 if k == 'inf' else
                                          0x7E00 if bits & 0x400000 else 0x7C01)
             result |= R[o['r']] & 0xFFFF0000
@@ -154,7 +153,7 @@ def convert(operation, rounding='even'):
             if k == 'finite':
                 result = encode(decode(bits, 5, 10), bits >> 15)
             else:
-                # As above, positive sNaNs still need the S2 measurement.
+                # As above, retain NaN sign/class and discard payload.
                 result = ((bits >> 15) << 31) | (0x7F800000 if k == 'inf' else
                                                 0x7FC00000 if bits & 0x200 else 0x7F800001)
         elif operation == 'ftof':

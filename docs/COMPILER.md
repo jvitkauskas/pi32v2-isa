@@ -251,6 +251,18 @@ for `memset`. Larger sizes call the library. The register-count `rep` was never 
 
 The `(f)` instructions assemble with or without `-mfprev1`; the compiler did not add anything on seeing it.
 
+#### Floating point on the FM-1
+
+Hardware runs in [hw/fm1-2026-10-24](../hw/fm1-2026-10-24) show nearest-even binary32 arithmetic,
+gradual underflow and no flushing of subnormal inputs. `madd.f`/`msub.f` round the product before the
+add/subtract. Arithmetic NaNs and invalid operations return positive `0x7f800001`, discarding sign/class/
+payload. Integer-valued `ftof` keeps NaN sign but makes it quiet with zero payload; half/full conversion
+keeps sign and quiet/signalling class, using canonical fractions `0x200`/`1` (half), `0x400000`/`1` (full).
+`ftoi`/`ftou` saturate; NaNs choose the endpoint by sign. Min/max prefer a number to NaN; two NaNs copy the
+second source unchanged. Opposite signed zeros give -0 for min, +0 for max. `fcmp` and min/max replace low
+psr with less 8, equal 6, greater 2, unordered 3; other tested float forms preserve it. None of these cases
+trapped; FPU control modes and exception-status registers were not varied or measured.
+
 ### Calls, stack and ABI (observed in passing)
 
 - Argument words go in `r0`..`r3`, then on the stack with the fifth word at `[sp]` (read as `[sp+k]` after the

@@ -32,3 +32,9 @@ float cases and 92 division cases (including 12 `div.f`), built both parts with 
 the division part with `--batch 16`: two float batches and six division batches. Every batch calibrated;
 nothing hung or trapped, including every division by zero. Check it with
 `python3 tools/hwtest/check.py hw/fm1-2026-10-24/followup-s.jsonl`.
+
+`followup-s2.jsonl` records all 208 cases from `hw/followup-s2.json`, plus four calibration `nop`s
+(212 records, two batches). It separates NaN sign, quiet/signalling class and payload in arithmetic,
+conversions, min/max and comparisons, and checks invalid/overflowed products before accumulation.
+Both batches calibrated; nothing hung or trapped. Check it with
+`python3 tools/hwtest/check.py hw/fm1-2026-10-24/followup-s2.jsonl`.

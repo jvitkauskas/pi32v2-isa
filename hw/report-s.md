@@ -1,23 +1,27 @@
 <!-- SPDX-FileCopyrightText: 2026 Julius Vitkauskas -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 
-# Analyst S, round 2: floating point and division
+# Analyst S, round 3 (final): floating point and division
 
-Worktree `s`, branch `hw/s`. All **29 assigned forms match 748/748 measured
+Worktree `s`, branch `hw/s`. All **29 assigned forms match 956/956 measured
 cases, including all low four psr bits**: 348 in
 `hw/fm1-2026-10-24/results.jsonl`, 400 in
-`hw/fm1-2026-10-24/followup-s.jsonl`. The latter contains exactly the original
-`hw/followup-s.json` cases, reordered by the split run, plus 16 calibration
-nops. There are no unexplained register or flag changes. No hardware or ssh
+`hw/fm1-2026-10-24/followup-s.jsonl`, 208 in
+`hw/fm1-2026-10-24/followup-s2.jsonl`. The follow-ups contain exactly their
+requested input multisets plus 16 and four calibration nops respectively.
+There are no unexplained register or flag changes. No hardware or ssh
 commands were run from this worktree.
 
 Round 1 (`e54bab1`) matched the original 348 cases but left midpoint rounding,
 fusion, most special values and integer division edges provisional. Round 2
-changes six executable models: `fmin`, `fmax`, `ftof.half`, `ftof.full`,
-`madd.f`, `msub.f`. The other 23 models already predict all new measurements.
-All 29 entries' summary/notes now cite the follow-up evidence and remove the
-settled uncertainties. Only summary/notes/sources of assigned entries may
-change; encodings, syntax, fields, examples and status are untouched.
+(`9256722`) changed six executable models: `fmin`, `fmax`, `ftof.half`, `ftof.full`,
+`madd.f`, `msub.f`. The other 23 models already predicted the S1 measurements.
+Round 3 confirms the remaining NaN predictions without changing model outputs;
+the model comments now identify all three evidence files and remove the S2
+prediction caveats. It updates notes in the 23 S2-tested entries; all already
+have the hardware source. Summaries remain accurate. Encodings, syntax, fields,
+examples, status and all unassigned entries are untouched. A short shared FPU
+subsection was added to `docs/COMPILER.md`; the run README records S2.
 
 ## Rounding, infinities and subnormals
 
@@ -70,27 +74,30 @@ change; encodings, syntax, fields, examples and status are untouched.
 
 ## NaNs, signed zeros and comparisons
 
-Arithmetic NaN inputs in either source, and in the multiply-accumulate
-accumulator, give **positive `0x7f800001`**, discarding payload/sign. Invalid
+Arithmetic NaN inputs of both signs and quiet/signalling classes in either
+source, and in the multiply-accumulate accumulator, give **positive
+`0x7f800001`**, discarding payload/sign/class. Invalid
 combinations give that same value: opposite infinities added, like infinities
 subtracted, zero * infinity, 0/0, infinity/infinity, and the tested invalid
 multiply-accumulate combinations. This bit pattern conventionally represents
 a signalling NaN; none of these cases trapped. It is a measured result, not
 evidence of a general exception-status mechanism.
 
-The four integer-valued `ftof` modes instead canonicalize measured NaNs to
-**sign-preserving quiet `0x7fc00000`**. Integer conversions use the
-sign-selected saturation endpoints above. Half/full conversion discards
-payload but distinguishes measured quiet/signalling classes: quiet NaNs give
-signed half `0x7e00` / full `0x7fc00000`, while negative signalling sources
-`0xff812345` / half `0xfc55` give **`0xfc01` / `0xff800001`**. The round-1
-all-quiet-canonical prediction for these two forms was wrong. The model
-generalizes class preservation to positive signalling NaNs, which have not
-yet been measured; follow-up S2 tests that exact remaining gap.
+The four integer-valued `ftof` modes instead canonicalize NaNs of both signs
+and quiet/signalling classes to **sign-preserving quiet `0x7fc00000`**. Integer conversions use the
+sign-selected saturation endpoints above, independently of class/payload.
+Half/full conversion discards payload but preserves sign and quiet/signalling
+class: quiet NaNs give signed half `0x7e00` / full `0x7fc00000`; signalling
+NaNs give signed **`0x7c01` / `0x7f800001`**. S2 confirms both signs/classes
+at minimal/maximal payloads, including the previously unmeasured positive
+signalling sources. The round-1 all-quiet-canonical prediction for these two
+forms was wrong; the round-2 class-preserving model is now fully supported
+by the requested sign/class probes.
 
 `fmin`/`fmax` choose the numeric operand if exactly one source is NaN,
-regardless of operand order or the two measured NaN classes/signs. With two
-NaNs they copy the second source **unchanged**, including payload/sign/class.
+regardless of operand order, sign or quiet/signalling class. With two NaNs
+they copy the second source **unchanged**, including payload/sign/class. S2
+checks every sign/class pair and differing payloads within the same class.
 Opposite signed zeros select **-0 for min, +0 for max**, in either order.
 These replace the provisional second-source-on-every-tie/unordered model.
 Infinities order normally and signed subnormals compare without flushing.
@@ -101,7 +108,7 @@ numeric operand is selected from an unordered pair. Both signed zeros compare
 equal. `fcmp` now exercises each outcome with incoming flags 0 and 15, proving
 replacement rather than partial preservation, and writes no register. All
 other assigned float forms preserve all four low bits. Upper psr bits read
-zero in both files; upper input bits were not set by this experiment.
+zero in all three files; upper input bits were not set by this experiment.
 
 ## Integer division and flags
 
@@ -126,42 +133,43 @@ the odd pair destination is the high quotient word, not a remainder. The
 compiler's separate multiply/subtract remainder sequence remains a separate
 operation, not an additional output of these forms.
 
-## Remaining hardware request
+## Final S2 findings
 
-`hw/followup-s2.json` contains **208 cases on 23 float forms**, not yet run.
-No additional integer division cases are needed for the questions in this
-round. S2 targets residual NaN coverage gaps:
+All 208 requested cases completed in two batches (212 records including four
+nops); calibration passed and nothing hung or trapped. No further follow-ups
+are requested. S2 confirms the round-2 models and removes these uncertainties:
 
-- Cases 1..16: half/full conversion, both signs and quiet/signalling classes
-  at minimal/maximal payloads. Positive signalling NaNs are the main missing
-  evidence for the revised canonical-class model.
-- 17..64: all twelve integer/float rounding forms, positive signalling and
-  negative quiet NaNs with different payloads. Existing follow-ups pair
-  positive quiet with negative signalling, so sign/class effects are partly
-  confounded for exceptional conversion endpoints.
-- 65..120: all six arithmetic forms, the same missing NaN sign/classes in
-  each operand and the accumulator where applicable.
-- 121..176: min/max with both signs/classes in either position and all
-  two-NaN combinations, plus differing payloads within the same class/sign.
-  This tests raw second-source preservation beyond existing mixed-class pairs.
-- 177..196: comparisons across those NaN classes/signs.
-- 197..208: invalid/overflowed products followed by infinite accumulators,
-  and negative/tie underflow accumulation for the separate-rounding model.
+- Half/full positive signalling NaNs preserve sign/class just as negative
+  signalling NaNs do; payload is canonicalized, not propagated.
+- Integer-valued `ftof` quiets either NaN class while preserving sign. `ftoi`
+  and `ftou` saturation depends on NaN sign, independently of class/payload.
+- Every arithmetic form canonicalizes both signs/classes to `0x7f800001`,
+  including NaNs in the multiply-accumulate accumulator.
+- Min/max copy raw t for all two-NaN sign/class combinations; a numeric source
+  wins against either NaN class/sign in either position. Comparisons always
+  give unordered flags 3 for the tested NaNs.
+- Zero * infinity followed by either infinite accumulator remains invalid.
+  Maximum finite * 2 followed by an infinite accumulator agrees with product
+  overflow before accumulation: `madd` with +infinity -> +infinity, with
+  -infinity -> NaN; `msub` with +infinity -> NaN, with -infinity -> -infinity.
+  Negative/tie underflow accumulation also matches separate product rounding.
+
+These are measured behavior for the tested FM-1 state. No FPU control modes
+or exception-status registers were varied or measured; the preserved psr bits
+do not establish a general exception-status mechanism.
 
 ## Validation
 
-- Both semantic checks pass: original file **35/35 available modelled forms**
-  (318 other forms unmodelled here); follow-up **30/30**, including nop.
-  Assigned-only counts: **29/29, 348/348** and **29/29, 400/400**.
-- Follow-up input multiset equals all 400 requested cases exactly; the 16
-  extra records are calibration nops across eight batches. The run README
-  records the split/build/batch method supplied by the lead.
-- `python3 tools/hwtest/gen.py /tmp/hw-s2 --cases hw/followup-s2.json`:
-  passed, 208 cases, 23 forms, two batches (182/30 including nops), last
-  slot `0x01c20000`. Built only; no unit access.
+- All three semantic checks pass: original **35/35 available modelled forms**
+  (318 other forms unmodelled here); S1 **30/30**, S2 **24/24**, including nop.
+  Assigned-only counts: **29/29, 348/348**; **29/29, 400/400**;
+  **23/23, 208/208**, totaling **29 forms, 956/956 cases**.
+- Both follow-up input multisets equal their requested cases exactly after
+  parsing the request's hex register strings. Calibration nops account for all
+  extra records. Upper psr bits read zero in every result file.
 - `python3 -m pi32v2isa check`: passed, 1165 entries, 0 problems.
 - `python3 -m unittest discover -s tests`: passed, 118 tests, 13 skipped.
-- Parsed-table comparison against round-1 HEAD: exactly the 29 assigned
-  entries changed, restricted to summary/notes. Existing hardware sources
-  remain; every entry cites both result files. All other table content is
-  identical. `git diff --check` passed.
+- Parsed-table comparison against round-2 HEAD: exactly 23 assigned entries
+  changed, restricted to notes. All retain `hardware` sources and cite S2;
+  the other six assigned entries had no S2 cases and remain unchanged.
+  All other table content is identical. `git diff --check` passed.
