@@ -35,8 +35,8 @@ followed by zero words): 0000-1FFF 7200/7200, 2000-BFFF 37632/37888, C000-DFFF 2
 
 ## ABI and object files
 
-- The calling convention: the compiler passes the first four arguments in `r0`..`r3` and the rest on the
-  stack; callee-saved registers, stack alignment, 64-bit, float, struct and variadic passing are open.
+- The C ABI is in [ABI.md](ABI.md); its §9 lists what it could not determine (alignment the linker
+  guarantees, some bitfield combinations, other interrupt conventions).
 - ELF: relocation types beyond `MOV_ABS32` and `LONG_JUMP_23M2`, their numbers and fields, `e_flags`,
   section and symbol conventions.
 
@@ -46,6 +46,7 @@ followed by zero words): 0000-1FFF 7200/7200, 2000-BFFF 37632/37888, C000-DFFF 2
   bit 0 (`asm_wrong` on `or.modimm.rri`, `xor.modimm.rri`, `and.nmodimm.rri`).
 - It accepts `d[r++=n]` offsets only from -512 to 508, while objdump decodes -1024..1020 (`ld.d.pin.l`).
 - objdump prints an empty register list as `{}`, which the assembler refuses.
+- The compiler crashes on `__builtin_frame_address(0)` at -O0, -O2 and -Os ([ABI.md](ABI.md) §9).
 
 ## Known to exist, not needed yet
 

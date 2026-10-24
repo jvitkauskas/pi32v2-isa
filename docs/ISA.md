@@ -178,9 +178,12 @@ assemble and decode without `-mfprev1`; whether the hardware needs `fprev1` for 
 
 ## 9. Calling convention
 
-The first two argument words are passed in `r0` and `r1` and the result is returned in `r0`; a call saves
-its return address in `rets` [m-bootloader-spec]. **Pending:** the remaining argument registers, which
-registers a function must preserve, stack alignment, 64-bit and floating-point values.
+[ABI.md](ABI.md) documents the C ABI JieLi's compiler implements, from compiled examples [compiler]. In
+short: the first four argument words go in `r0`..`r3` (64-bit values in a register pair or split between
+`r3` and the stack), the rest on the stack; results in `r0` (`r1_r0` for 64-bit); structs are passed by
+pointer to a copy and returned through a hidden pointer; `r4`..`r15` are preserved by the callee; the stack
+is 4-byte aligned; a call saves its return address in `rets` [m-bootloader-spec]. `double` arithmetic goes
+through helper functions (software); `float` uses the FPU instructions.
 
 ## 10. ELF object files
 
