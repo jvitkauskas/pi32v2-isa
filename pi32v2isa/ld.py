@@ -1134,26 +1134,31 @@ class Linker:
         st.sec = None
         if not na:
             st.last = o
-        # section properties
+        # section properties: .text, .data and .bss start with the flags and type of the standard sections of those
+        # names (which is why an empty .data is still WA); every other name starts with nothing
         has_data = any(not s.nobits and s.size for s in ins) or bool(o.pieces)
-        o.nobits = o.noload or not has_data
-        flags = 0
-        types = set()
+        flags, types = 0, set()
         for sec in ins:
             flags |= sec.flags & (SHF_ALLOC | SHF_WRITE | SHF_EXEC)
             types.add(sec.type)
-        if not ins:
-            # no inputs: a section only moved the location counter (or defined symbols)
-            if o.size > 0:
-                flags = SHF_ALLOC | SHF_WRITE
-            else:
-                flags = SHF_WRITE
-        o.alloc = bool(flags & SHF_ALLOC)
-        if o.name == ".text":                 # the one section name with fixed properties: AX, aligned to 2 at least
-            flags = (flags | SHF_ALLOC | SHF_EXEC) & ~SHF_WRITE
-            o.align = max(o.align, 2)
-            o.alloc = True
+        std = {".text": (SHF_ALLOC | SHF_EXEC, SHT_PROGBITS), ".data": (SHF_ALLOC | SHF_WRITE, SHT_PROGBITS),
+               ".bss": (SHF_ALLOC | SHF_WRITE, SHT_NOBITS)}.get(o.name)
+        if not ins and std is None:
+            flags = (SHF_ALLOC | SHF_WRITE) if o.size > 0 else SHF_WRITE     # it only moved the location counter
+        if std is not None:
+            flags |= std[0]
+            if o.name == ".text":
+                flags &= ~SHF_WRITE
+                if o.size:
+                    o.align = max(o.align, 2)
         o.flags = flags
+        o.alloc = bool(flags & SHF_ALLOC)
+        if o.noload:
+            o.nobits = True
+        elif std is not None:
+            o.nobits = std[1] == SHT_NOBITS and not has_data
+        else:
+            o.nobits = bool(ins) and all(sec.nobits for sec in ins)
         if o.alloc and o.nobits:
             o.type = SHT_NOBITS
         else:
@@ -1358,7 +1363,7 @@ class Linker:
 
     def segments(self):
         """Program headers and file offsets of the alloc sections, laid out the way JieLi's ld does."""
-        alloc = [o for o in self.emitted if o.alloc]
+        alloc = [o for o in self.emitted if o.alloc and o.size > 0]
         order = sorted(alloc, key=lambda o: o.lma)         # stable: script order for equal addresses
         segs = []
         for o in order:
@@ -1474,7 +1479,7 @@ class Linker:
         # code) refers to is written as a local symbol
         loc = [g for g in gl if self.o.gc and g.kind == "script" and g.in_sec and not g.live_ref and (g.top_ref or g.refs)]
         gl = loc + [g for g in gl if g not in loc]
-        if loc:                          # they follow a file symbol with no name (the script's own "file")
+        if loc and any(e[3] & 15 == elf.STT_FILE for e in ents):   # they follow a file symbol with no name
             ents.append(("", 0, 0, (elf.STB_LOCAL << 4) | elf.STT_FILE, 0, elf.SHN_ABS))
         nlocal = len(ents) + len(loc) + 1
         for g in gl:
@@ -1533,9 +1538,13 @@ class Linker:
             o.index = k + 1
         segs = self.segments()
         pos = self.assign_offsets(segs)
-        # non-alloc sections follow the loaded contents
+        # sections outside every segment (non-alloc ones, empty ones) follow the loaded contents
+        in_seg = {id(o) for seg in segs for o in seg}
         for o in self.emitted:
-            if not o.alloc:
+            if id(o) not in in_seg:
+                if o.type == SHT_NOBITS and o.size == 0:
+                    o.offset = 0
+                    continue
                 pos = align_up(pos, o.align)
                 o.offset = pos
                 pos += o.size
@@ -1556,8 +1565,8 @@ class Linker:
         for k, ph in enumerate(self.phdrs):
             struct.pack_into("<8I", out, 52 + 32 * k, *ph)
         ident = b"\x7fELF" + bytes([1, 1, 1, 0]) + bytes(8)
-        hdr = ident + struct.pack("<HHIIIIIHHHHHH", 2, elf.EM_PI32V2, 1, self.entry_value, 52, shoff, 0, 52, 32,
-                                  len(self.phdrs), 40, nsec, len(self.emitted) + 1)
+        hdr = ident + struct.pack("<HHIIIIIHHHHHH", 2, elf.EM_PI32V2, 1, self.entry_value, 52 if self.phdrs else 0, shoff, 0,
+                                  52, 32 if self.phdrs else 0, len(self.phdrs), 40, nsec, len(self.emitted) + 1)
         out[:52] = hdr
         sh = shoff + 40
         for o in self.emitted:
@@ -1622,10 +1631,9 @@ class Linker:
             lx = S.Lexer(text)
             self.script.top.insert(0, S.Assign(name, "=", S.parse_expr(lx)))
         self.layout()
-        self.check_undefined()
-        self.finish_commons()
-        self.set_entry()
         self.emitted = [o for o in self.outs if o.emit and o.spec.name != "/DISCARD/"]
+        self.check_undefined()
+        self.set_entry()
         for o in self.emitted:
             o.data = bytearray(o.size)
         self.build_data()
@@ -1633,9 +1641,6 @@ class Linker:
         if self.errors and not self.o.noinhibit:
             return None
         return self.write()
-
-    def finish_commons(self):
-        pass
 
 
 def link(opts):

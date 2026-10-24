@@ -120,6 +120,29 @@ def cmd_oracle(args):
                 print(f"  {d}")
             bad += bool(diffs)
         return 1 if bad else 0
+    if args.action == "ldcompare":
+        diffs, ref, mine = oracle.ldcompare(o, args.items, cwd=args.cwd)
+        if ref is None and not diffs:
+            print("both linkers fail")
+            return 0
+        extra = []
+        if ref is not None and mine is not None:
+            for name in sorted({s["name"] for s in oracle.read_exec(ref)["sections"] if s["flags"] & 2 and s["type"] == 1}):
+                if oracle.objcopy_text(o, ref, name) != oracle.objcopy_text(o, mine, name):
+                    extra.append(("contents", f"objcopy -O binary -j {name} differs"))
+        diffs = diffs + extra
+        if not diffs:
+            print("identical" if ref == mine else "loaded contents, symbols, program headers and layout identical")
+            return 0
+        cats = {}
+        for cat, text in diffs:
+            cats.setdefault(cat, []).append(text)
+        for cat in ("contents", "symbols", "entry", "phdrs", "layout"):
+            if cat in cats:
+                print(f"{cat}: {len(cats[cat])} differences")
+                for t in cats[cat][:args.show * 4]:
+                    print(f"  {t}")
+        return 1
     if args.action == "asmcompare":
         t = table.load(args.table)
         bad = 0
@@ -188,8 +211,8 @@ def main(argv=None):
                    help="CPU feature the code may use (instrev3, fprev1); without any -m every instruction is allowed")
     a.set_defaults(func=cmd_as)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare", "linkcompare"])
-    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids; asmcompare: FILE.S (or .s, .c) [more files]")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare", "linkcompare", "ldcompare"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids; asmcompare: FILE.S (or .s, .c) [more files]; ldcompare: -- followed by ld's arguments (objects, -T script, options)")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
     o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
@@ -197,6 +220,7 @@ def main(argv=None):
     o.add_argument("--flag", action="append", default=[], help="cc: extra clang flag, e.g. --flag=-O2")
     o.add_argument("-I", dest="include", action="append", default=[], help="asmcompare: include directory")
     o.add_argument("-D", dest="define", action="append", default=[], help="asmcompare: cpp macro definition")
+    o.add_argument("--cwd", default=None, help="ldcompare: directory to link in (relative object and script paths)")
     o.add_argument("--split", type=lambda v: int(v, 0), default=0, help="fit: bits to group the words by")
     o.set_defaults(func=cmd_oracle)
     args = p.parse_args(argv)

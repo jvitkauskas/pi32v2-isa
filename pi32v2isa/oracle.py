@@ -826,7 +826,9 @@ def ldcompare(oracle, args, cwd=None, expect_fail=False):
         a, b = ref_out.read_bytes(), my_out.read_bytes()
         diffs = diff_executables(read_exec(a), read_exec(b))
         if a != b and not diffs:
-            diffs.append(("layout", "files differ in bytes JieLi's ld leaves unspecified (padding)"))
+            at = [i for i in range(min(len(a), len(b))) if a[i] != b[i]]
+            diffs.append(("layout", f"files differ ({len(a)} vs {len(b)} bytes) outside every section and table: "
+                                    f"{len(at)} bytes, first at {at[0] if at else min(len(a), len(b)):#x}"))
         return diffs, a, b
 
 
@@ -840,11 +842,13 @@ def _in_dir(cwd, fn):
 
 
 def objcopy_text(oracle, elf_bytes, section=".text"):
-    """`objcopy -O binary -j SECTION` (GNU objcopy -I elf32-little, as the FM-1 builds use) of an executable."""
+    """`objcopy -O binary -j SECTION` of an executable, as the FM-1 builds run it, with JieLi's objcopy (stock GNU
+    objcopy refuses these files: their program headers are aligned to 0x500, not a power of two)."""
+    objcopy = oracle.path / "common" / "bin" / "objcopy"
     with tempfile.TemporaryDirectory() as d:
         src, dst = Path(d) / "in.elf", Path(d) / "out.bin"
         src.write_bytes(elf_bytes)
-        r = subprocess.run(["objcopy", "-I", "elf32-little", "-O", "binary", "-j", section, str(src), str(dst)],
+        r = subprocess.run([str(objcopy), "-O", "binary", "-j", section, str(src), str(dst)],
                            capture_output=True, text=True)
         if r.returncode:
             raise OracleError(f"objcopy: {r.stderr.strip()}")
