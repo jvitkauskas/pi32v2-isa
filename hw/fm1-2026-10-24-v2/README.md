@@ -65,3 +65,14 @@ register equal to the base register in every pre/post-increment load and store (
 and as the odd register), and post-increment loads whose increment register is the destination or the base.
 `followup5-m-npc.jsonl` is `hw/followup5-m-npc.json`, one `ld.w.npc` with the stub at 2 mod 4, run alone: it did not
 reset and read the word at the stub address + 6. Findings: `hw/report5-m.md`; models: `tools/hwtest/semantics/m2.py`.
+
+## Follow-up for analyst K: stack, special registers, register lists
+
+`followup5-k.jsonl` (259 cases in 5 batches, `batch-followup5-k-main-*`, cases in `hw/followup5-k-main.json`) and
+`followup5-k-pc.jsonl` (6 cases, `hw/followup5-k-pc.json`: `pop.pc_rl` and `pop.pc_rmask` with a window whose top word is
+`hw_taken` and whose other words are not addresses, run alone in case pc came from the wrong word) were run on the same unit
+with the same runner. Each has its patterns in `NAME.patterns.json`. No reset or hang. They show the order of popped words
+(ascending registers, rets and pc from the topmost word), that `rets` keeps only bits 26..1 of what is written to it, all sixteen
+special-register values (`reti` and `usp` vary between batches but not within one), that pushing `psr` clears the flags while
+`mov.r_sr psr` does not, and empty/full masks of the list forms. The models of these forms are `tools/hwtest/semantics/k2.py`; see
+`hw/report5-k.md`.

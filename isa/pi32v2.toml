@@ -44,8 +44,8 @@ encoding = ["0000000000100000"]
 group = "control"
 summary = "Core synchronisation barrier."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler"]
-notes = "Exact ordering guarantees unknown. [compiler] `__builtin_pi32v2_csync()` -> `csync`. The AC79 SDK's inline asm issues it in groups of five and around its spin lock and critical sections (include_lib/driver/cpu/wl82/asm/cpu.h)."
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler", "hardware"]
+notes = "Exact ordering guarantees unknown. [compiler] `__builtin_pi32v2_csync()` -> `csync`. The AC79 SDK's inline asm issues it in groups of five and around its spin lock and critical sections (include_lib/driver/cpu/wl82/asm/cpu.h). hw/fm1-2026-10-24-v2 (12 cases): no visible effect on registers, flags, sp, rets or memory."
 
 [[insn.example]]
 bytes = "20 00"
@@ -305,8 +305,8 @@ fields = { r = "gpr", s = "sr" }
 group = "moves"
 summary = "Copy a special register to a general register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout found by varying operands with the oracle (docs/ORACLE.md); setting any of the low 7 bits makes objdump reject the word. [compiler] `r0 = psr` after a `sub`/`subc` pair, to test the flags: psr bit 1 is the carry (1 = no borrow), and bits 0 and 3 (their xor is 1 for signed less-than) are the other flags."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout found by varying operands with the oracle (docs/ORACLE.md); setting any of the low 7 bits makes objdump reject the word. [compiler] `r0 = psr` after a `sub`/`subc` pair, to test the flags: psr bit 1 is the carry (1 = no borrow), and bits 0 and 3 (their xor is 1 for signed less-than) are the other flags. hw/fm1-2026-10-24-v2 (100 cases: all sixteen registers, four flag values each, other sp and rets values): flags and every other register unchanged, psr included (reading psr does not clear the flags, unlike pushing it). Values: sp = the current sp; pc = the address of the instruction itself; rets = rets (bits 26..1, see pop.rets_rl); psr = the four flags in bits 3..0, the rest 0; icfg 0x01090700 and ssp 0x01C00E00 always; cnum, rete, retx, sr4, uspn, sspn, icfgn, icfgs 0 always; reti and usp constant within one batch but different between batches (see push.srl), the ROM's context at the time the batch's command arrived rather than counters."
 
 [[insn.example]]
 bytes = "64 e0 00 00"
@@ -980,7 +980,8 @@ fields = { l = { kind = "rlist4", letters = "k" } }
 group = "stack"
 summary = "Pop a range of general registers ending at r3 or starting at r4."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "%s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "40 04"
@@ -1000,8 +1001,8 @@ fields = { l = { kind = "rlist4", letters = "k" } }
 group = "stack"
 summary = "Pop a range of general registers, then pop pc (return)."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle", "compiler"]
-notes = "[compiler] epilogue: `{pc, r5, r4} = [sp++]` restores and returns."
+sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
+notes = "[compiler] epilogue: `{pc, r5, r4} = [sp++]` restores and returns. %s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; the topmost word is pc (hw/fm1-2026-10-24-v2/followup5-k-pc.jsonl: 6 cases whose lower words were not addresses all continued at the topmost word), which fits the compiler's prologue and epilogue pairs and the runner's own `[--sp] = {rets, r15-r4}` and `{pc, r15-r4} = [sp++]`; execution continues at the popped address; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "50 04"
@@ -1021,8 +1022,8 @@ fields = { l = { kind = "rlist4", letters = "k" } }
 group = "stack"
 summary = "Pop a range of general registers, then pop rets (no return)."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle", "compiler"]
-notes = "[compiler] epilogue before a tail call in -fPIC code: `{rets, r4} = [sp++]` then `goto`."
+sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
+notes = "[compiler] epilogue before a tail call in -fPIC code: `{rets, r4} = [sp++]` then `goto`. %s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; the next word, the topmost, goes to rets, and rets keeps only bits 26..1 of it (0x81355c53 gives 0x01355c52, 0x7c240d49 gives 0x04240d48, 0x07295e42 stays): bits 31..27 and bit 0 read back as 0, the same cut applies to the value the runner puts in rets before a case; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "30 04"
@@ -1042,7 +1043,8 @@ fields = { l = { kind = "rlist4", letters = "k" } }
 group = "stack"
 summary = "Push a range of general registers ending at r3 or starting at r4."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "hardware"]
+notes = "hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged."
 
 [[insn.example]]
 bytes = "60 04"
@@ -1062,8 +1064,8 @@ fields = { l = { kind = "rlist4", letters = "k" } }
 group = "stack"
 summary = "Push rets, then a range of general registers."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle", "compiler"]
-notes = "[compiler] prologue saving rets and callee-saved registers, e.g. `{rets, r5, r4}`, `{rets, r15-r4}`."
+sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
+notes = "[compiler] prologue saving rets and callee-saved registers, e.g. `{rets, r5, r4}`, `{rets, r15-r4}`. hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered (rets, the topmost word, above the general registers) at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged."
 
 [[insn.example]]
 bytes = "70 04"
@@ -1106,7 +1108,8 @@ asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wa
 group = "stack"
 summary = "Push any of reti, rete, retx, rets, sr4 and psr (one mask bit each, sr0 first)."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "hardware"]
+notes = "hw/fm1-2026-10-24-v2 and its followup5-k.jsonl: sp drops by 4 per register; the lowest-numbered special register goes to the lowest address (reti lowest, pc highest); an empty mask pushes nothing. Values: sp = its value before the push; pc = the address of the push instruction itself; rets = rets (bits 26..1, see pop.rets_rl); psr = the four flags in bits 3..0, everything else 0; icfg 0x01090700 and ssp 0x01C00E00 always; cnum, rete, retx, sr4, uspn, sspn, icfgn and icfgs 0 always; reti and usp constant within one batch of cases but different from batch to batch (reti 0x01E00368, 0x01E00E72, 0x01E0168E, 0x01E01674 or 0x01E01718; usp 0x01C0117C, 0x01C01180 or 0x01C011A0), so they are neither constants nor counters running during a batch; they look like the state of the boot ROM's context when the batch's command arrived. Pushing psr leaves N, Z, C and V cleared (every case that included it, all 16 flag values; pushes without psr leave the flags alone)."
 
 [[insn.example]]
 bytes = "c0 04"
@@ -1127,8 +1130,8 @@ asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wa
 group = "stack"
 summary = "Push any set of general registers (one mask bit per register)."
 status = "confirmed"
-sources = ["oracle", "sources-in-use"]
-notes = "objdump writes runs of three or more registers as a range."
+sources = ["oracle", "sources-in-use", "hardware"]
+notes = "objdump writes runs of three or more registers as a range. hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged."
 
 [[insn.example]]
 bytes = "d8 e8 00 00"
@@ -1149,8 +1152,8 @@ asm_rejects = ["[--sp] = {}"]   # objdump prints an empty list; the assembler wa
 group = "stack"
 summary = "Push any set of special registers (one mask bit per register number)."
 status = "confirmed"
-sources = ["oracle", "sources-in-use"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+sources = ["oracle", "sources-in-use", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). hw/fm1-2026-10-24-v2 and its followup5-k.jsonl: sp drops by 4 per register; the lowest-numbered special register goes to the lowest address (reti lowest, pc highest); an empty mask pushes nothing. Values: sp = its value before the push; pc = the address of the push instruction itself; rets = rets (bits 26..1, see pop.rets_rl); psr = the four flags in bits 3..0, everything else 0; icfg 0x01090700 and ssp 0x01C00E00 always; cnum, rete, retx, sr4, uspn, sspn, icfgn and icfgs 0 always; reti and usp constant within one batch of cases but different from batch to batch (reti 0x01E00368, 0x01E00E72, 0x01E0168E, 0x01E01674 or 0x01E01718; usp 0x01C0117C, 0x01C01180 or 0x01C011A0), so they are neither constants nor counters running during a batch; they look like the state of the boot ROM's context when the batch's command arrived. Pushing psr leaves N, Z, C and V cleared (every case that included it, all 16 flag values; pushes without psr leave the flags alone)."
 
 [[insn.example]]
 bytes = "58 e9 00 00"
@@ -2664,8 +2667,8 @@ encoding = ["0000010000000000"]
 group = "stack"
 summary = "Pop the program counter from the stack (return)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Found by the oracle sweep. [compiler] epilogue: `pc = [sp++]` returns directly (no rts needed)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Found by the oracle sweep. [compiler] epilogue: `pc = [sp++]` returns directly (no rts needed). hw/fm1-2026-10-24-v2: sp rises by 4 and execution continues at the popped word (rets, registers and flags unchanged)."
 
 [[insn.example]]
 bytes = "00 04"
@@ -2679,8 +2682,8 @@ encoding = ["0000010000010000"]
 group = "stack"
 summary = "Push rets on the stack."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Found by the oracle sweep. [compiler] prologue of a leaf-calling function."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Found by the oracle sweep. [compiler] prologue of a leaf-calling function. hw/fm1-2026-10-24-v2: stores rets at [sp - 4] and drops sp by 4; flags unchanged. The value stored is rets as the chip holds it, see pop.rets_rl (bits 26..1 only)."
 
 [[insn.example]]
 bytes = "10 04"
@@ -3612,8 +3615,8 @@ fields = { r = "gpr_lo", n = { kind = "uimm", letters = "po" } }
 group = "arithmetic"
 summary = "Write sp plus 0..127 to r0..r7."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The immediate is unscaled; 88 81 prints r0 = sp + 1. [compiler] -O0 address of a local: `r1 = sp + 4`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The immediate is unscaled; 88 81 prints r0 = sp + 1. [compiler] -O0 address of a local: `r1 = sp + 4`. hw/fm1-2026-10-24-v2 (14 cases, n 0..127): r = sp + n with n unscaled; sp and flags unchanged."
 
 [[insn.example]]
 bytes = "88 80"
@@ -3643,8 +3646,8 @@ fields = { n = { kind = "simm", letters = "po", scale = 4 } }
 group = "arithmetic"
 summary = "Add a multiple of four from -512..508 to sp."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] -O0 frame: `sp += -12` ... `sp += 12`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] -O0 frame: `sp += -12` ... `sp += 12`. hw/fm1-2026-10-24-v2 (15 cases, -512 to 508 including the end of the scratch): sp += n exactly (n a multiple of 4); registers, rets and flags unchanged."
 
 [[insn.example]]
 bytes = "02 80"
@@ -4635,8 +4638,8 @@ fields = { n = { kind = "simm", scale = 4 } }
 group = "arithmetic"
 summary = "Add a constant to the stack pointer."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (15 cases, up to +-960 as the scratch allows): sp += n exactly; registers, rets and flags unchanged. Cases where the 16-bit form would do were run with the long encoding forced."
 
 [[insn.example]]
 bytes = "f0 e8 00 00"
@@ -4656,8 +4659,8 @@ fields = { r = "gpr", n = "uimm" }
 group = "arithmetic"
 summary = "Add a constant to the stack pointer into a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.r_sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit add.r_sp_i instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (16 cases, n 0 to 4095 including 128 and r15): r = sp + n with n unscaled; sp and flags unchanged."
 
 [[insn.example]]
 bytes = "f8 e8 00 00"
@@ -6384,10 +6387,10 @@ syntax = "{r} <= insert({s}, p:{t}[12:8], l:{t}[4:0])"
 encoding = ["1110000110011000", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "bitops"
-summary = "Operation printed `R <= insert(R, p:R[N:N], l:R[N:N])`: meaning not known beyond the syntax."
+summary = "Insert a bit field with its position and width in a register: the low l bits of rs go into bits p.. of rd, other bits of rd unchanged; p = rt[12:8], l = rt[4:0]."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form. hw/fm1-2026-10-24-v2, followup5-k.jsonl (32 cases): the same operation as the rrii form with p = rt[12:8] and l = rt[4:0]; bits of rt outside those two fields (bits 31..13, 7..5) are ignored; edge cases (l = 0, p + l past 32, p = 31) behave as in the rrii form; the destination, source and rt may be the same register. N and Z follow the result, C and V are kept. Before run 2 the meaning was not known beyond the printed syntax."
 
 [[insn.example]]
 bytes = "98 e1 00 00"
@@ -6420,10 +6423,10 @@ syntax = "{r} = uextra({s}, p:{t}[12:8], l:{t}[4:0])"
 encoding = ["1110000110011100", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "bitops"
-summary = "Operation printed `R = uextra(R, p:R[N:N], l:R[N:N])`: meaning not known beyond the syntax."
+summary = "Extract an unsigned bit field: rd = (rs >> p) & ((1 << l) - 1), with p = rt[12:8] and l = rt[4:0]."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form. hw/fm1-2026-10-24-v2, followup5-k.jsonl (32 cases): the same operation as the rrii form with p = rt[12:8] and l = rt[4:0]; bits of rt outside those two fields (bits 31..13, 7..5) are ignored; edge cases (l = 0, p + l past 32, p = 31) behave as in the rrii form; the destination, source and rt may be the same register. N and Z follow the result, C and V are kept. Before run 2 the meaning was not known beyond the printed syntax."
 
 [[insn.example]]
 bytes = "9c e1 00 00"
@@ -6456,10 +6459,10 @@ syntax = "{r} = sextra({s}, p:{t}[12:8], l:{t}[4:0])"
 encoding = ["1110000110011100", "rrrrttttssss0001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "bitops"
-summary = "Operation printed `R = sextra(R, p:R[N:N], l:R[N:N])`: meaning not known beyond the syntax."
+summary = "Extract a signed bit field: rd = the l-bit field of rs starting at bit p, sign-extended from its top bit, with p = rt[12:8] and l = rt[4:0]."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form. hw/fm1-2026-10-24-v2, followup5-k.jsonl (32 cases): the same operation as the rrii form with p = rt[12:8] and l = rt[4:0]; bits of rt outside those two fields (bits 31..13, 7..5) are ignored; edge cases (l = 0, p + l past 32, p = 31) behave as in the rrii form; the destination, source and rt may be the same register. N and Z follow the result, C and V are kept. Before run 2 the meaning was not known beyond the printed syntax."
 
 [[insn.example]]
 bytes = "9c e1 01 00"
@@ -12636,8 +12639,8 @@ fields = { n = { kind = "rmask", lead = "rets" } }
 group = "stack"
 summary = "Pop the return address (rets) and a set of general registers from the stack."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). %s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; the next word, the topmost, goes to rets, and rets keeps only bits 26..1 of it (0x81355c53 gives 0x01355c52, 0x7c240d49 gives 0x04240d48, 0x07295e42 stays): bits 31..27 and bit 0 read back as 0, the same cut applies to the value the runner puts in rets before a case; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "d1 e8 00 00"
@@ -12658,8 +12661,8 @@ group = "stack"
 asm_rejects = ["{} = [sp++]"]
 summary = "Pop a set of general registers from the stack."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). %s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "d4 e8 00 00"
@@ -12679,8 +12682,8 @@ fields = { n = { kind = "rmask", lead = "pc" } }
 group = "stack"
 summary = "Pop the return address (pc) and a set of general registers from the stack."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). %s, followup5-k.jsonl (words all different there): the registers take consecutive words in ascending order of register number, the lowest-numbered from the lowest address; the topmost word is pc (hw/fm1-2026-10-24-v2/followup5-k-pc.jsonl: 6 cases whose lower words were not addresses all continued at the topmost word), which fits the compiler's prologue and epilogue pairs and the runner's own `[--sp] = {rets, r15-r4}` and `{pc, r15-r4} = [sp++]`; execution continues at the popped address; sp rises by 4 per item; flags and the other registers unchanged. Empty and full masks included."
 
 [[insn.example]]
 bytes = "d5 e8 00 00"
@@ -12700,8 +12703,8 @@ fields = { n = { kind = "rmask", lead = "rets" } }
 group = "stack"
 summary = "Push the return address (rets) and a set of general registers on the stack."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered (rets, the topmost word) at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged."
 
 [[insn.example]]
 bytes = "d9 e8 00 00"
@@ -12720,10 +12723,10 @@ encoding = ["1110100011011100", "nnnnnnnnnnnnnnnn"]
 fields = { n = "rmask" }
 group = "stack"
 asm_rejects = ["[--sp] = {} (c)"]
-summary = "Push a set of general registers on the stack (the (c) form: meaning of c unknown)."
+summary = "Push a set of general registers on the stack (the (c) form: same words and sp as push.rmask on the FM-1; what c changes is unknown)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged. The (c) form stores the same words and leaves the same sp and flags as the plain form in every case (14 cases each, empty and full masks included); what c changes is not visible to these tests."
 
 [[insn.example]]
 bytes = "dc e8 00 00"
@@ -12741,10 +12744,10 @@ syntax = "[--sp] = {{{n}}} (c)"
 encoding = ["1110100011011101", "nnnnnnnnnnnnnnnn"]
 fields = { n = { kind = "rmask", lead = "rets" } }
 group = "stack"
-summary = "Push the return address (rets) and a set of general registers on the stack (the (c) form: meaning of c unknown)."
+summary = "Push the return address (rets) and a set of general registers on the stack (the (c) form: same words and sp as push.rets_rmask on the FM-1; what c changes is unknown)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2, followup5-k (all cases match): sp drops by 4 per register and the words go in ascending order of register number: the lowest-numbered register at the lowest address, the highest-numbered (rets, the topmost word) at [old sp - 4]. Empty and full (16-register) masks included. Flags, other registers and rets are unchanged. The (c) form stores the same words and leaves the same sp and flags as the plain form in every case (14 cases each, empty and full masks included); what c changes is not visible to these tests."
 
 [[insn.example]]
 bytes = "dd e8 00 00"
@@ -12785,10 +12788,10 @@ encoding = ["1110100101011100", "nnnnnnnnnnnnnnnn"]
 fields = { n = "srmask" }
 group = "stack"
 asm_rejects = ["[--sp] = {} (c)"]
-summary = "Push a set of special registers on the stack (the (c) form: meaning of c unknown)."
+summary = "Push a set of special registers on the stack (the (c) form: same words and sp as push.srmask on the FM-1; what c changes is unknown)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 and its followup5-k.jsonl: sp drops by 4 per register; the lowest-numbered special register goes to the lowest address (reti lowest, pc highest); an empty mask pushes nothing. Values: sp = its value before the push; pc = the address of the push instruction itself; rets = rets (bits 26..1, see pop.rets_rl); psr = the four flags in bits 3..0, everything else 0; icfg 0x01090700 and ssp 0x01C00E00 always; cnum, rete, retx, sr4, uspn, sspn, icfgn and icfgs 0 always; reti and usp constant within one batch of cases but different from batch to batch (reti 0x01E00368, 0x01E00E72, 0x01E0168E, 0x01E01674 or 0x01E01718; usp 0x01C0117C, 0x01C01180 or 0x01C011A0), so they are neither constants nor counters running during a batch; they look like the state of the boot ROM's context when the batch's command arrived. Pushing psr leaves N, Z, C and V cleared (every case that included it, all 16 flag values; pushes without psr leave the flags alone). The (c) form stores the same words and leaves the same sp and flags as the plain form in every case (16 cases each, empty and full masks included); what c changes is not visible to these tests."
 
 [[insn.example]]
 bytes = "5c e9 00 00"
@@ -12809,8 +12812,8 @@ group = "stack"
 asm_rejects = ["{} = [r0+]", "{} = [r1+]", "{} = [r10+]", "{} = [r11+]", "{} = [r12+]", "{} = [r13+]", "{} = [r14+]", "{} = [r15+]", "{} = [r2+]", "{} = [r3+]", "{} = [r4+]", "{} = [r5+]", "{} = [r6+]", "{} = [r7+]", "{} = [r8+]", "{} = [r9+]"]
 summary = "Load the listed registers from consecutive words starting at the address in a register (lowest-numbered register from the lowest address); the base register is not changed."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] two consecutive words: `{r2, r1} = [r0+]` loads r1 from [r0] and r2 from [r0+4] (lowest-numbered register from the lowest address), and r0 is left unchanged (the code after it uses [r0+8]); used for `p[0], p[1]` reads at -O2."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] two consecutive words: `{r2, r1} = [r0+]` loads r1 from [r0] and r2 from [r0+4] (lowest-numbered register from the lowest address), and r0 is left unchanged (the code after it uses [r0+8]); used for `p[0], p[1]` reads at -O2. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. When the base register is listed it ends with the loaded word."
 
 [[insn.example]]
 bytes = "00 eb 00 00"
@@ -12839,10 +12842,10 @@ encoding = ["111010110001rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { n = "rmask", r = "gpr" }
 group = "stack"
 asm_rejects = ["{} = [r0++]", "{} = [r1++]", "{} = [r10++]", "{} = [r11++]", "{} = [r12++]", "{} = [r13++]", "{} = [r14++]", "{} = [r15++]", "{} = [r2++]", "{} = [r3++]", "{} = [r4++]", "{} = [r5++]", "{} = [r6++]", "{} = [r7++]", "{} = [r8++]", "{} = [r9++]"]
-summary = "Load a set of general registers from memory addressed by a register (post2: increment style as printed)."
+summary = "Load the listed registers from consecutive words starting at the address in a register (lowest-numbered register from the lowest address), then advance the base register by 4 per register; a base register that is itself listed keeps the loaded word."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the meaning of this and the other three styles was assumed from the syntax; the base is advanced by 4n after the load, except that a listed base keeps the loaded word."
 
 [[insn.example]]
 bytes = "10 eb 00 00"
@@ -12873,8 +12876,8 @@ group = "stack"
 asm_rejects = ["[r0+] = {}", "[r1+] = {}", "[r10+] = {}", "[r11+] = {}", "[r12+] = {}", "[r13+] = {}", "[r14+] = {}", "[r15+] = {}", "[r2+] = {}", "[r3+] = {}", "[r4+] = {}", "[r5+] = {}", "[r6+] = {}", "[r7+] = {}", "[r8+] = {}", "[r9+] = {}"]
 summary = "Store the listed registers to consecutive words starting at the address in a register (lowest-numbered register to the lowest address); the base register is not changed."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[0] = a; p[1] = b` -> `[r0+] = {r2, r1}`: r1 to [r0], r2 to [r0+4]; r0 is unchanged. Seen for two- and four-word stores at -O2."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[0] = a; p[1] = b` -> `[r0+] = {r2, r1}`: r1 to [r0], r2 to [r0+4]; r0 is unchanged. Seen for two- and four-word stores at -O2. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. A listed base is stored with its own value."
 
 [[insn.example]]
 bytes = "20 eb 00 00"
@@ -12903,10 +12906,10 @@ encoding = ["111010110011rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "rmask" }
 group = "stack"
 asm_rejects = ["[r0++] = {}", "[r1++] = {}", "[r10++] = {}", "[r11++] = {}", "[r12++] = {}", "[r13++] = {}", "[r14++] = {}", "[r15++] = {}", "[r2++] = {}", "[r3++] = {}", "[r4++] = {}", "[r5++] = {}", "[r6++] = {}", "[r7++] = {}", "[r8++] = {}", "[r9++] = {}"]
-summary = "Store a set of general registers to memory addressed by a register (post2: increment style as printed)."
+summary = "Store the listed registers to consecutive words starting at the address in a register (lowest-numbered register to the lowest address), then advance the base register by 4 per register; a listed base register is stored with its old value."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the meaning was assumed from the syntax; confirmed. A listed base is stored with its old value and still advances."
 
 [[insn.example]]
 bytes = "30 eb 00 00"
@@ -12935,10 +12938,10 @@ encoding = ["111010110100rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { n = "rmask", r = "gpr" }
 group = "stack"
 asm_rejects = ["{} = [-r0]", "{} = [-r10]", "{} = [-r11]", "{} = [-r12]", "{} = [-r13]", "{} = [-r14]", "{} = [-r15]", "{} = [-r1]", "{} = [-r2]", "{} = [-r3]", "{} = [-r4]", "{} = [-r5]", "{} = [-r6]", "{} = [-r7]", "{} = [-r8]", "{} = [-r9]"]
-summary = "Load a set of general registers from memory addressed by a register (pre1: increment style as printed)."
+summary = "Load the listed registers from the words just below the address in a register (lowest-numbered register from base - 4n upward); the base register is not changed unless it is itself listed, when it gets the loaded word."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the addressing was assumed from the syntax; the words are base - 4n .. base - 4 and the base is unchanged unless listed (then the loaded word)."
 
 [[insn.example]]
 bytes = "40 eb 00 00"
@@ -12967,10 +12970,10 @@ encoding = ["111010110101rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { n = "rmask", r = "gpr" }
 group = "stack"
 asm_rejects = ["{} = [--r0]", "{} = [--r10]", "{} = [--r11]", "{} = [--r12]", "{} = [--r13]", "{} = [--r14]", "{} = [--r15]", "{} = [--r1]", "{} = [--r2]", "{} = [--r3]", "{} = [--r4]", "{} = [--r5]", "{} = [--r6]", "{} = [--r7]", "{} = [--r8]", "{} = [--r9]"]
-summary = "Load a set of general registers from memory addressed by a register (pre2: increment style as printed)."
+summary = "Load the listed registers from the words just below the address in a register (lowest-numbered register from base - 4n upward), and lower the base register by 4n first; a base register that is itself listed keeps the loaded word."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the addressing was assumed from the syntax; the words are base - 4n .. base - 4 and the base ends at base - 4n, except that a listed base keeps the loaded word."
 
 [[insn.example]]
 bytes = "50 eb 00 00"
@@ -12999,10 +13002,10 @@ encoding = ["111010110110rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "rmask" }
 group = "stack"
 asm_rejects = ["[-r0] = {}", "[-r10] = {}", "[-r11] = {}", "[-r12] = {}", "[-r13] = {}", "[-r14] = {}", "[-r15] = {}", "[-r1] = {}", "[-r2] = {}", "[-r3] = {}", "[-r4] = {}", "[-r5] = {}", "[-r6] = {}", "[-r7] = {}", "[-r8] = {}", "[-r9] = {}"]
-summary = "Store a set of general registers to memory addressed by a register (pre1: increment style as printed)."
+summary = "Store the listed registers to the words just below the address in a register (lowest-numbered register at base - 4n, the highest at base - 4); the base register is not changed."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the addressing was assumed from the syntax; confirmed. A listed base is stored with its own value."
 
 [[insn.example]]
 bytes = "60 eb 00 00"
@@ -13031,10 +13034,10 @@ encoding = ["111010110111rrrr", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", n = "rmask" }
 group = "stack"
 asm_rejects = ["[--r0] = {}", "[--r10] = {}", "[--r11] = {}", "[--r12] = {}", "[--r13] = {}", "[--r14] = {}", "[--r15] = {}", "[--r1] = {}", "[--r2] = {}", "[--r3] = {}", "[--r4] = {}", "[--r5] = {}", "[--r6] = {}", "[--r7] = {}", "[--r8] = {}", "[--r9] = {}"]
-summary = "Store a set of general registers to memory addressed by a register (pre2: increment style as printed)."
+summary = "Store the listed registers to the words just below the address in a register (lowest-numbered register at base - 4n, the highest at base - 4), and lower the base register by 4n; a listed base register is stored with its old value."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the +/++/-/-- variants assumed from the syntax. hw/fm1-2026-10-24-v2, followup5-k.jsonl (18 cases each, empty and full masks, base alone and with the base listed): the lowest-numbered register uses the lowest address; flags unchanged. Before run 2 the addressing was assumed from the syntax; confirmed. A listed base is stored with its old value and still lowers."
 
 [[insn.example]]
 bytes = "70 eb 00 00"
