@@ -103,9 +103,12 @@ def takes_state(fn):
 
 def patterns(results_path):
     """{batch: pattern}: patterns.json next to a results file (format 2), or the batch manifests there."""
-    pj = Path(results_path).parent / "patterns.json"
-    if pj.exists():
-        return json.loads(pj.read_text())
+    d = Path(results_path).parent
+    if (d / "patterns.json").exists():
+        out = json.loads((d / "patterns.json").read_text())
+        for extra in sorted(d.glob("*.patterns.json")):      # follow-up runs keep their own
+            out.update(json.loads(extra.read_text()))
+        return out
     out = {}
     for mp in Path(results_path).parent.glob("batch-*.json"):
         m = json.loads(mp.read_text())

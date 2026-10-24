@@ -97,8 +97,9 @@ def memop(i):
         w = Writes(st)
         if size == 8:
             w.put(addr, 4, R[d])
-            # post-increment: the second word is read after the base register was updated
-            w.put(addr + 4, 4, regs.get(d + 1, R[d + 1]) if mode in ("pi", "pin") else R[d + 1])
+            # the odd register of the pair is read after the base register was updated (all four modes, the even
+            # register before it); hw/fm1-2026-10-24-v2/followup5-m.jsonl
+            w.put(addr + 4, 4, regs.get(d + 1, R[d + 1]))
         else:
             w.put(addr, size, R[d] >> 16 if hi else R[d])
         return {"regs": regs, "mem": w.result(), "flags": fl}
@@ -245,9 +246,11 @@ def _dest(rec):
 
 
 def npc(stub):
-    """What npc holds in an instruction at `stub`: the address of the word 4 bytes on. For a stub on a word
-    boundary every reading (pc + 4, (pc + 4) & ~3, the end of the instruction rounded down) agrees."""
-    return stub + 4
+    """What npc holds in an instruction at `stub`: pc + 4 rounded up to a word boundary. On a word boundary that
+    is the address 4 bytes on (run 2); at 2 mod 4 the 6-byte ld.w.npc read pc + 6, not the misaligned pc + 4
+    (followup5-m-npc.jsonl). Equivalent for that instruction: its end, rounded down. For the 4-byte ld.w.npc.r
+    the two readings differ at 2 mod 4 (pc + 6 or pc + 2); only word-aligned stubs were run."""
+    return (stub + 4 + 3) & ~3
 
 
 def ld_w_npc(R, fl, o, st):

@@ -4,12 +4,15 @@
 # Analyst M, round 5: memory forms (hardware run 2)
 
 Worktree `m`, branch `hw2/m`. Models: `tools/hwtest/semantics/m2.py`. Evidence: `hw/fm1-2026-10-24-v2/results.jsonl`.
-Follow-up: `hw/followup5-m.json` (110 cases, builds with `gen.py`). Nothing was run on hardware.
+Follow-up: `hw/followup5-m.json` (110 cases), run by the lead as `followup5-m-main.json` (109 cases) and
+`followup5-m-npc.json` (the misaligned probe, alone); results `hw/fm1-2026-10-24-v2/followup5-m.jsonl` and
+`followup5-m-npc.jsonl`. I ran nothing on hardware.
 
 ## Result
 
-**All 130 forms match on every case** (1564 cases), flags included; with `ld.w` and `st.w` (basic2 models, untouched)
-`check.py ... --id` gives 132/132. `check.py` on run 1 still gives 352/352.
+**All 130 forms match on every case** (1564 cases of run 2 plus 109 + 1 of the follow-up), flags included; with `ld.w`
+and `st.w` (basic2 models, untouched) `check.py ... --id` gives 132/132 on `results.jsonl`, 57/57 on `followup5-m.jsonl`
+and 1/1 on `followup5-m-npc.jsonl`. `check.py` on run 1 still gives 352/352.
 
 - Loads and stores of every size and mode, the read-modify-write forms and `st.w.modimm` need no more than the
   obvious reading. They never touch the flags N Z C V (random flags in every case, all kept), also not the
@@ -22,10 +25,13 @@ Follow-up: `hw/followup5-m.json` (110 cases, builds with `gen.py`). Nothing was 
   the load reads the word at (address of the instruction + 4) + offset. For the 6-byte `ld.w.npc` that address is
   inside the instruction (`[npc + 0]` = its third halfword and the next one); for the 4-byte `ld.w.npc.r` it is the
   next instruction. The summary said "even signed 32-bit offset": the sum must be word-aligned (offsets 2 and 6,
-  probed alone, reset the chip), so in practice multiples of 4. Not told apart yet: `pc + 4` vs `(pc + 4) & ~3` vs
-  "end of the instruction rounded down" (all stubs were aligned): see the follow-up.
+  probed alone, reset the chip), so in practice multiples of 4. **Settled by the probe**: with the 6-byte `ld.w.npc` at 2 mod 4, `[npc + 0]` did not reset and read the word at
+  address + 6 (the goto after it). So npc = pc + 4 rounded up to a word boundary (here also the instruction's end
+  rounded down); not `pc + 4` (misaligned, would reset) and not `pc + 2`. For the 4-byte `ld.w.npc.r` at 2 mod 4 the
+  two readings differ (address + 6 or + 2) and were not run.
 - `testset.b`: "atomicity and result flag not tested" -> the byte becomes 0xFF and psr bits 3..0 (N Z C V) become
-  bits 3..0 of the *old* byte; the flags before do not matter (12/12, old bytes 0x13..0xE5). Summary rewritten. This
+  bits 3..0 of the *old* byte; the flags before do not matter (12/12, old bytes 0x13..0xE5; the follow-up's 32 cases
+  add old 0x00 -> no flags, 0xFF -> all four and unchanged, and every low nibble). Summary rewritten. This
   fits the AC79 SDK lock (`testset` then `ifeq goto` retry): a held lock is 0xFF so Z is set, a free 0x00 clears it.
 - `ld.{bu,hu,w}.pi`, `st.{b,h,w}.pi` (and the other `.pi`/`.pin`): "what happens to the base register is read from the
   syntax (meaning not tested)" -> confirmed: access at the old base, then the base register gets the sum.
@@ -37,12 +43,14 @@ Follow-up: `hw/followup5-m.json` (110 cases, builds with `gen.py`). Nothing was 
 
 ## Surprises
 
-- `st.d.pi.l`, `st.d.pin.l` (post-increment 64-bit store): when the base register is the odd register of the stored
-  pair, the *high word stored is the already updated base* (3 cases: `d[r9++=r5] = r9_r8` stored r9 + r5 as the high
-  word). Every scalar store with source = base stored the value from before the update (also pre-increment, and
-  `d[++r2=-4] = r3_r2` with the base as even register). Reads as two beats with the update in between. Modelled; the
-  other combinations are in the follow-up.
-- Loads whose destination is the base register keep the loaded value (the update is lost) in every case seen.
+- Every 64-bit store (`st.d.pi.l`, `st.d.pin.l`, `st.d.pre`, `st.d.prer`): the pair's **odd register is read after the
+  base update, the even one before**. Base = odd register: the high word stored is the updated base (run 2: 3 cases,
+  follow-up: all four modes); base = even register: the low word stored is the old base. Scalar stores with
+  source = base store the old value. Reads as two beats with the update in between. (Run 2's pre-increment cases
+  only had the even register as base, which is why the first model assumed "post-increment only".)
+- Loads whose destination is the base register keep the loaded value (the update is lost): all `ld.*` post/pre forms,
+  follow-up included. Post-increment loads whose increment register is the destination add the *old* value
+  (`r4 = [r9++=r4]`: base + old r4); with increment = base the base doubles.
 - `ld.d`/`st.d` ran at addresses 4 mod 8 (96 cases): 4-byte alignment is enough.
 - Halfword and word accesses were only ever run aligned; no misaligned access other than the `npc` ones was tried.
 
@@ -54,29 +62,19 @@ registers in the results files under `hw/*/`. 22 of the 28 reads fall inside it 
 8, 60, 68, 92, 100, 116, from stubs at the end of a batch) read past the last stub into the batch's data; there the
 model returns the recorded value, so only the address is unchecked.
 
-## Follow-up (`hw/followup5-m.json`, 110 cases, 2 batches with the default `--batch 60`, `--seed 1`)
+## What the follow-up settled (`followup5-m.jsonl`, `followup5-m-npc.jsonl`)
 
-1. **Data register = base register** (run 2 reached it only for some forms): every post/pre-increment load and store
-   (`ld.*.{pi,pin,pre,prer}`, `st.*`, `.l` and 16-bit), 64-bit forms with the base as the even and as the odd register
-   of the pair, alternating the sign of the increment. Settles which value a store keeps / a load leaves in the
-   register in every form and the 64-bit store question above. (`st.h.hi.pi.l` uses an increment of 0x10000 so that the
-   stored high half changes; for the other `st.h.hi` modes old and new base have the same high half, so they cannot
-   tell.)
-2. **Increment register = destination or base** (`ld.{w,bu,hs,bs,hu,d}.pi.l` with the increment register as the
-   destination, for `d` also the odd one; `ld.w/ld.d/st.w/st.d/st.b/st.h.hi.pi.l` with increment = base): whether the
-   addition uses the old or the loaded/updated value.
-3. **`testset.b`, 32 cases** first in the file: addresses picked from batch 0's pattern so that the old byte is 0x00,
-   0xFF and every low nibble 0..15 (with the flags before 0 or 0xF alternately). Confirms "psr = old & 15" for all
-   16 values and that 0x00 and 0xFF behave. The picks depend on the batch's pattern, i.e. on running with the
-   default `--batch 60` and `--seed 1` (otherwise they are still arbitrary old bytes, just not directed).
-4. **One deliberate reset, last in the file**: `r5 = [npc + 0]` with `"misalign": true` (instruction at 2 mod 4). If npc
-   is `pc + 4` the address is misaligned and the chip resets (run it last or alone: it kills the rest of its batch).
-   If it does not reset, npc is word-aligned and the value tells which: the word at pc + 2 (`(pc + 4) & ~3`) or at
-   pc + 6 (end of the 6-byte instruction rounded down). One case decides; no `[npc + 2]` is needed. After it, change
-   `npc()` in `m2.py` accordingly.
+All 109 + 1 cases match the models once the 64-bit store rule above and the new `npc()` are in.
+1. Data register = base register, every pre/post-increment form: loads keep the loaded value, scalar stores store the
+   old value, 64-bit stores as above. `st.h.hi` with `pre`/`prer`/`pin` cannot tell old from new (the update leaves the
+   high half alone); `st.h.hi.pi.l` with an increment of 0x10000 stores the old high half.
+2. Increment register = destination or base (post-increment loads and stores): the add uses the register's value
+   from before the instruction.
+3. `testset.b`: psr bits 3..0 = old byte bits 3..0 for all 16 nibbles; old 0x00 and 0xFF as above.
+4. npc at 2 mod 4: see the correction above.
 
 ## Not covered
 
-Misaligned halfword/word accesses; `npc` offsets beyond the batch's code; atomicity of `testset.b` and the read-modify-write
-forms; the docs (`ISA.md` "npc not yet known", `COMPILER.md` "flags of the memory forms unknown", `GAPS.md`) still carry the
-old statements and are left to the merge.
+Misaligned halfword/word accesses (other than the `npc` ones); `npc` offsets beyond the batch's code; atomicity of
+`testset.b` and the read-modify-write forms; `ld.w.npc.r` at 2 mod 4. `docs/GAPS.md` and `docs/COMPILER.md` still carry
+the old statements (flags of the memory forms unknown, memory forms untested) and are left to the lead.

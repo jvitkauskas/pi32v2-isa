@@ -1175,7 +1175,7 @@ group = "memory"
 summary = "Load a word, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 08"
@@ -1211,7 +1211,7 @@ group = "memory"
 summary = "Store a word to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "08 08"
@@ -1247,7 +1247,7 @@ group = "memory"
 summary = "Load a halfword, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 0c"
@@ -1283,7 +1283,7 @@ group = "memory"
 summary = "Store a halfword to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "08 0c"
@@ -1319,7 +1319,7 @@ group = "memory"
 summary = "Load a byte, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases)."
 
 [[insn.example]]
 bytes = "00 10"
@@ -1355,7 +1355,7 @@ group = "memory"
 summary = "Store a byte to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "08 10"
@@ -1391,7 +1391,7 @@ group = "memory"
 summary = "Load a word, from the address in a register, then add or subtract 4 to that register."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] pointer-walking loop `s += *p++` -> `r3 = [r2++=4]` (load, then add 4 to the pointer register); a copy loop is `r3 = [r1++=4]` / `[r0++=4] = r3`; `*++p` is a pre-add of 4 outside the loop. hw/fm1-2026-10-24-v2 (12 cases): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] pointer-walking loop `s += *p++` -> `r3 = [r2++=4]` (load, then add 4 to the pointer register); a copy loop is `r3 = [r1++=4]` / `[r0++=4] = r3`; `*++p` is a pre-add of 4 outside the loop. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
 
 [[insn.example]]
 bytes = "00 05"
@@ -1427,7 +1427,7 @@ group = "memory"
 summary = "Store a word to the address in a register, then add or subtract 4 to that register."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = v` -> `[r0++=4] = r1` (store, then add 4). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = v` -> `[r0++=4] = r1` (store, then add 4). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "80 05"
@@ -1463,7 +1463,7 @@ group = "memory"
 summary = "Load a halfword, zero-extended, from the address in a register, then add or subtract 2 to that register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 06"
@@ -1499,7 +1499,7 @@ group = "memory"
 summary = "Store a halfword to the address in a register, then add or subtract 2 to that register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "80 06"
@@ -1535,7 +1535,7 @@ group = "memory"
 summary = "Load a byte, zero-extended, from the address in a register, then add or subtract 1 to that register."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `s += *p++` on `unsigned char *` -> `r3 = b[r2++=1] (u)`; `strlen`-style loop `while (*s++)`. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `s += *p++` on `unsigned char *` -> `r3 = b[r2++=1] (u)`; `strlen`-style loop `while (*s++)`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 07"
@@ -1571,7 +1571,7 @@ group = "memory"
 summary = "Store a byte to the address in a register, then add or subtract 1 to that register."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = *s++` on bytes -> `b[r0++=1] = r3`; memcpy/memset expansion with rep. hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = *s++` on bytes -> `b[r0++=1] = r3`; memcpy/memset expansion with rep. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "80 07"
@@ -2256,7 +2256,7 @@ group = "memory"
 summary = "Read the byte at the address in a register, set it to 0xFF, and load the low four psr bits (N Z C V) from the old byte's bits 3..0."
 status = "confirmed"
 sources = ["oracle", "ac79-sdk", "hardware"]
-notes = "Layout from oracle fit: register in bits 3..0. [compiler] not emitted. The AC79 SDK spin lock (cpu.h) is inline asm `1: testset b[%0]` then `ifeq goto 1b`: it retries while eq, so a failed attempt (the byte was already set) leaves eq. hw/fm1-2026-10-24-v2 (12 cases): the byte always became 0xFF (old values 0x13..0xE5), no register changed, and the flags did not depend on the flags before: psr bits 3..0 = bits 3..0 of the old byte (N = bit 3, Z = bit 2, C = bit 1, V = bit 0; old 0x74 gave Z, 0x49 gave N and V, 0x75 gave Z and V). That fits the AC79 SDK lock loop: a held lock is 0xFF, so Z is set and `ifeq` retries; a free lock 0x00 clears Z. Old bytes 0x00 and 0xFF, and atomicity, are not tested (hw/followup5-m.json)."
+notes = "Layout from oracle fit: register in bits 3..0. [compiler] not emitted. The AC79 SDK spin lock (cpu.h) is inline asm `1: testset b[%0]` then `ifeq goto 1b`: it retries while eq, so a failed attempt (the byte was already set) leaves eq. hw/fm1-2026-10-24-v2 (12 cases) and followup5-m.jsonl (32 more, old bytes 0x00, 0xFF and every low nibble 0..15, flags before 0 or 0xF): the byte becomes 0xFF (an old 0xFF stays), no register changes, and psr bits 3..0 = bits 3..0 of the old byte whatever the flags were before (N = bit 3, Z = bit 2, C = bit 1, V = bit 0; old 0x00 gave no flags, 0xFF all four, 0x74 gave Z). That fits the AC79 SDK lock loop: a held lock is 0xFF, so Z is set and `ifeq` retries; a free lock 0x00 clears Z. Atomicity is not tested. Before: result flag not tested."
 
 [[insn.example]]
 bytes = "b0 00"
@@ -8727,10 +8727,10 @@ syntax = "{r} = [npc + {s}]"
 encoding = ["1110100001100000", "rrrrssss00000000"]
 fields = { r = "gpr", s = "gpr" }
 group = "memory"
-summary = "Load a word from npc plus a register; with the instruction on a word boundary npc is its own address + 4, and the sum must be word-aligned."
+summary = "Load a word from npc plus a register; npc is the address of the instruction plus 4, rounded up to a word boundary (as for ld.w.npc), and the sum must be word-aligned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2: 12 cases, all inside the batch's code: the word at (address of the instruction + 4) + the register (registers -8..16, multiples of 4), so [npc + 0] is the goto that follows this 4-byte instruction. The flags N Z C V are left alone. Stubs were on word boundaries only (see ld.w.npc)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2: 12 cases, all inside the batch's code: the word at (address of the instruction + 4) + the register (registers -8..16, multiples of 4), so [npc + 0] is the goto that follows this 4-byte instruction. The flags N Z C V are left alone. Only stubs on a word boundary were run for this 4-byte form; the 2 mod 4 probe was of ld.w.npc, so whether npc is pc + 6 or pc + 2 here (round up pc + 4, or the end rounded down) is open. Before: npc was unknown."
 
 [[insn.example]]
 bytes = "60 e8 00 00"
@@ -9863,7 +9863,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 02 00"
@@ -9935,7 +9935,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 03 00"
@@ -10115,7 +10115,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5c ec 02 00"
@@ -10151,7 +10151,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5c ec 03 00"
@@ -10187,7 +10187,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 5 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (5 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5e ec 02 00"
@@ -10223,7 +10223,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the base is the odd register of the stored pair, the word stored from it is the already updated base (2 cases), unlike the scalar stores, which store the value from before the update; the even register as base is not yet tested. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (4 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5e ec 03 00"
@@ -10259,7 +10259,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 00 00"
@@ -10295,7 +10295,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the base is the odd register of the stored pair, the word stored from it is the already updated base (1 cases), unlike the scalar stores, which store the value from before the update; the even register as base is not yet tested. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 01 00"
@@ -10367,7 +10367,7 @@ group = "memory"
 summary = "Load a word from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ec 02 00"
@@ -10439,7 +10439,7 @@ group = "memory"
 summary = "Store a word to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "d0 ec 03 00"
@@ -10619,7 +10619,7 @@ group = "memory"
 summary = "Load a word from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ec 02 00"
@@ -10655,7 +10655,7 @@ group = "memory"
 summary = "Store a word to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "dc ec 03 00"
@@ -10691,7 +10691,7 @@ group = "memory"
 summary = "Load a word from the address in a register, then add another register to that address (post-increment by a register)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] `p += s` stepping loop: `r6 = [r5++=r1]` with the stride r1 pre-scaled by 4 (`r1 << 2`). hw/fm1-2026-10-24-v2 (12 cases): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] `p += s` stepping loop: `r6 = [r5++=r1]` with the stride r1 pre-scaled by 4 (`r1 << 2`). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ec 02 00"
@@ -10727,7 +10727,7 @@ group = "memory"
 summary = "Store a word to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "de ec 03 00"
@@ -10763,7 +10763,7 @@ group = "memory"
 summary = "Load a word, then add or subtract 4 to the address register, 32-bit encoding (any register)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r13 = [r3++=4]`. hw/fm1-2026-10-24-v2 (12 cases): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r13 = [r3++=4]`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "d8 ec 00 00"
@@ -10799,7 +10799,7 @@ group = "memory"
 summary = "Store a word to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d8 ec 01 00"
@@ -10979,7 +10979,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "58 ed 00 00"
@@ -11015,7 +11015,7 @@ group = "memory"
 summary = "Store a halfword to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "58 ed 01 00"
@@ -11051,7 +11051,7 @@ group = "memory"
 summary = "Load a halfword (sign-extended) from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "5c ed 00 00"
@@ -11087,7 +11087,7 @@ group = "memory"
 summary = "Store the high half of a register as a halfword to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The base register is also the stored one in 3 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "5c ed 01 00"
@@ -11123,7 +11123,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ed 00 00"
@@ -11159,7 +11159,7 @@ group = "memory"
 summary = "Store a halfword to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ed 01 00"
@@ -11195,7 +11195,7 @@ group = "memory"
 summary = "Load a halfword (sign-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `s += *p++` on `short *` -> `r3 = h[r2++=2] (s)`. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `s += *p++` on `short *` -> `r3 = h[r2++=2] (s)`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d4 ed 00 00"
@@ -11231,7 +11231,7 @@ group = "memory"
 summary = "Store the high half of a register as a halfword to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The base register is also the stored one in 2 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "d4 ed 01 00"
@@ -11555,7 +11555,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ed 00 00"
@@ -11591,7 +11591,7 @@ group = "memory"
 summary = "Load a halfword (sign-extended) from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "dc ed 02 00"
@@ -11627,7 +11627,7 @@ group = "memory"
 summary = "Store a halfword to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "dc ed 01 00"
@@ -11663,7 +11663,7 @@ group = "memory"
 summary = "Store the high half of a register as a halfword to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The base register is also the stored one in 3 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "dc ed 03 00"
@@ -11699,7 +11699,7 @@ group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 00 00"
@@ -11735,7 +11735,7 @@ group = "memory"
 summary = "Load a halfword (sign-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a halfword, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 02 00"
@@ -11771,7 +11771,7 @@ group = "memory"
 summary = "Store a halfword to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 01 00"
@@ -11807,7 +11807,7 @@ group = "memory"
 summary = "Store the high half of a register as a halfword to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 03 00"
@@ -11951,7 +11951,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
 
 [[insn.example]]
 bytes = "58 ee 00 00"
@@ -11987,7 +11987,7 @@ group = "memory"
 summary = "Store a byte to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "5a ee 00 00"
@@ -12023,7 +12023,7 @@ group = "memory"
 summary = "Load a byte (sign-extended) from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "5c ee 00 00"
@@ -12059,7 +12059,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "d0 ee 00 00"
@@ -12095,7 +12095,7 @@ group = "memory"
 summary = "Store a byte to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d2 ee 00 00"
@@ -12131,7 +12131,7 @@ group = "memory"
 summary = "Load a byte (sign-extended) from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d4 ee 00 00"
@@ -12275,7 +12275,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (3 cases)."
 
 [[insn.example]]
 bytes = "dc ee 00 00"
@@ -12311,7 +12311,7 @@ group = "memory"
 summary = "Load a byte (sign-extended) from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ee 02 00"
@@ -12347,7 +12347,7 @@ group = "memory"
 summary = "Store a byte to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "dc ee 01 00"
@@ -12383,7 +12383,7 @@ group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ee 00 00"
@@ -12419,7 +12419,7 @@ group = "memory"
 summary = "Load a byte (sign-extended) from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a byte, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (3 cases)."
 
 [[insn.example]]
 bytes = "de ee 02 00"
@@ -12455,7 +12455,7 @@ group = "memory"
 summary = "Store a byte to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ee 01 00"
@@ -29697,10 +29697,10 @@ syntax = "{r} = [npc + {n}]"
 encoding = ["111111111010rrrr", "iiiiiiiiiiiiiii0", "jjjjjjjjjjjjjjjj"]
 fields = { r = "gpr", n = { kind = "simm", letters = "ji", scale = 2 } }
 group = "memory"
-summary = "Load a word from npc plus a signed offset; with the instruction on a word boundary npc is its own address + 4, and the sum must be word-aligned."
+summary = "Load a word from npc plus a signed offset; npc is the address of the instruction plus 4, rounded up to a word boundary, and the sum must be word-aligned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ffa0 and vary probes. hw/fm1-2026-10-24-v2: with the stub on a word boundary the load reads the word at (address of the instruction + 4) + n, so [npc + 0] is the instruction's last halfword and the halfword after it. 10 of the 16 reads hit the batch's own code and match; the other 6 (offsets 8, 60, 68, 92, 100, 116, from stubs near a batch's end) went past the last stub and are not checked. Offsets 2 and 6, probed alone, reset the chip, as any misaligned word load does. The flags N Z C V are left alone. Every stub was on a word boundary, so pc + 4 and (pc + 4) rounded down are not told apart (hw/followup5-m.json asks)."
+notes = "Layout from oracle sweep/fit ffa0 and vary probes. hw/fm1-2026-10-24-v2: with the stub on a word boundary the load reads the word at (address of the instruction + 4) + n, so [npc + 0] is the instruction's last halfword and the halfword after it. 10 of the 16 reads hit the batch's own code and match; the other 6 (offsets 8, 60, 68, 92, 100, 116, from stubs near a batch's end) went past the last stub and are not checked. Offsets 2 and 6, probed alone, reset the chip, as any misaligned word load does. With the instruction at 2 mod 4 (followup5-m-npc.jsonl, run alone, no reset) [npc + 0] read the word at the instruction's address + 6, the goto after it: npc is pc + 4 rounded up to a word boundary (here also the instruction's end rounded down), not pc + 4 (that read would have been misaligned) and not pc + 2. The flags N Z C V are left alone. Before: npc and its base were unknown."
 
 [[insn.example]]
 bytes = "a0 ff 00 00 00 00"

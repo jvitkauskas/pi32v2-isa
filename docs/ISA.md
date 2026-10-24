@@ -50,8 +50,12 @@ pi32, `sp` is its own register and `r15` is a general register [kagaimiq-jielie]
 and written with `mov.r_sr` and `mov.sr_r`, loaded with `li.sr_u32`, and pushed and popped with `push.srl`,
 `pop.srl` (`sr0`..`sr5`) and `push.srmask` (any).
 
-Some loads address memory relative to `npc` (`r1 = [npc + r2]`, `ld.w.npc`) [oracle]; what `npc` holds is
-not yet known.
+Some loads address memory relative to `npc` (`r1 = [npc + r2]`, `ld.w.npc`) [oracle]. On the FM-1 `npc` is the
+address of the instruction plus 4, rounded up to a word boundary: an instruction on a word boundary reads the
+word 4 bytes after its own address (for the 6-byte `ld.w.npc` that starts inside the instruction), and the 6-byte `ld.w.npc` at 2 mod 4
+read from its address plus 6; the sum with the offset must be word-aligned, or the chip resets
+[hardware, hw/fm1-2026-10-24-v2, `followup5-m-npc.jsonl`]. For the 4-byte `ld.w.npc.r` at 2 mod 4 the base is
+untested (address + 6 or + 2).
 
 There is also a condition flag, `cc`, set directly by `cc = 0` / `cc = 1` [kagaimiq-jielie]. **Pending:**
 which instructions set and test it.

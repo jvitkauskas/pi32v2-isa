@@ -41,3 +41,12 @@ back in download mode with `m-flasher download-mode`). Run case by case:
 
 The cases of those batches that do not reset were run again as `batch-memfix-*` (with 12 new `ld.w.npc` cases,
 offsets multiples of 4), and the single-case probes as `batch-bis-*`; both are in `results.jsonl`.
+
+## Follow-up for the memory forms (analyst M, round 5)
+
+`followup5-m.jsonl` (with `followup5-m.patterns.json`) holds the 109 cases of `hw/followup5-m-main.json`, built with the
+default `--batch 60 --seed 1` (2 batches, no reset): `testset.b` on old bytes 0x00, 0xFF and every low nibble, the data
+register equal to the base register in every pre/post-increment load and store (64-bit forms with the base as the even
+and as the odd register), and post-increment loads whose increment register is the destination or the base.
+`followup5-m-npc.jsonl` is `hw/followup5-m-npc.json`, one `ld.w.npc` with the stub at 2 mod 4, run alone: it did not
+reset and read the word at the stub address + 6. Findings: `hw/report5-m.md`; models: `tools/hwtest/semantics/m2.py`.
