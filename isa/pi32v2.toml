@@ -17364,10 +17364,10 @@ syntax = "{r}{n} = sat8({s}{m}) (u)"
 encoding = ["1110000001110100", "rrrrssssnm000000"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
-summary = "Operation printed `Rh = sat8(Rh) (u)`: meaning not known beyond the syntax."
+summary = "Saturate a selected halfword to the unsigned 8-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Source is unsigned 16-bit. Source sign bits do not make an unsigned value negative. Preserves the other destination halfword; sign/zero flags describe the selected 16-bit result. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "74 e0 00 00"
@@ -17405,10 +17405,10 @@ syntax = "{r}{n} = sat8({s}{m}) (s)"
 encoding = ["1110000001110100", "rrrrssssnm000001"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
-summary = "Operation printed `Rh = sat8(Rh) (s)`: meaning not known beyond the syntax."
+summary = "Saturate a selected halfword to the signed 8-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Source is signed 16-bit. Signed result is sign-extended to 16 bits. Preserves the other destination halfword; sign/zero flags describe the selected 16-bit result. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "74 e0 01 00"
@@ -17446,10 +17446,10 @@ syntax = "{r} = sat16({s}) (u)"
 encoding = ["11100000011110--", "rrrrssss00000000"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
-summary = "Operation printed `R = sat16(R) (u)`: meaning not known beyond the syntax."
+summary = "Saturate a 32-bit register to the unsigned 16-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Source is unsigned 32-bit. Source sign bits do not make an unsigned value negative. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "78 e0 00 00"
@@ -17477,10 +17477,10 @@ syntax = "{r} = sat16({s}) (s)"
 encoding = ["11100000011110--", "rrrrssss00000001"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
-summary = "Operation printed `R = sat16(R) (s)`: meaning not known beyond the syntax."
+summary = "Saturate a 32-bit register to the signed 16-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Source is signed 32-bit. Signed result is sign-extended to 32 bits. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "78 e0 01 00"
@@ -17508,10 +17508,10 @@ syntax = "{r} = {s} >< {t} (sat)"
 encoding = ["1110000111001100", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
-summary = "Operation printed `R = R >< R (sat)`: meaning not known beyond the syntax."
+summary = "Shift a register left or right by a signed low-6-bit register count with signed saturation."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Sets psr[3] sign, psr[2] zero, psr[1] last shifted-out bit; preserves psr[0]. Count zero preserves psr[1]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "cc e1 03 00"
@@ -17544,10 +17544,10 @@ syntax = "{r} ><= {s}"
 encoding = ["1110000111011100", "rrr0ssss00000010"]
 fields = { r = "pair", s = "gpr" }
 group = "dsp"
-summary = "Operation printed `P ><= R`: meaning not known beyond the syntax."
+summary = "Shift a register pair in place left or right by a signed low-7-bit register count."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is logical; left shift truncates. Only psr[1] changes: the last shifted-out bit; count zero preserves it. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "dc e1 02 00"
@@ -17575,10 +17575,10 @@ syntax = "{r} ><= {s} (sat)"
 encoding = ["1110000111011100", "rrr0ssss00000011"]
 fields = { r = "pair", s = "gpr" }
 group = "dsp"
-summary = "Operation printed `P ><= R (sat)`: meaning not known beyond the syntax."
+summary = "Shift a register pair in place left or right by a signed low-7-bit register count with signed saturation."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Only psr[1] changes: the last shifted-out bit; count zero preserves it. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "dc e1 03 00"
@@ -17751,10 +17751,10 @@ encoding = ["1110000111111111", "rrr-sss-nnnnnnnn"]
 fields = { r = "pair", s = "pair", n = "uimm" }
 group = "dsp"
 absent_on = ["generic"]
-summary = "Operation printed `P = copex(P) (N)`: meaning not known beyond the syntax."
+summary = "Transform a source register pair under an 8-bit immediate control; numeric meaning unresolved."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. All 12 cases wrote only the destination pair and preserved low psr bits. For input even/odd words 0x7fffffff/0x8d68c25e with control 0, output was 0x20000006/0xffffffb5; 0x13bcc27e/0x00000080 with control 1 gave 0x00000043/0x0000001d. Control 77 mapped 0x23ae7f5d/0xce564b90 to 0/0xce564b90. No general model is justified; follow-up varies controls and basis inputs. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "ff e1 00 00"
@@ -17788,10 +17788,10 @@ encoding = ["11100100000000--", "rrrrttttssss--00"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = align8(R, R)`: meaning not known beyond the syntax."
+summary = "Extract the low 32 bits of ((rs << 32) | rt) >> 8."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. First source supplies the high word, second source the low word. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "00 e4 00 00"
@@ -17825,10 +17825,10 @@ encoding = ["11100100000000--", "rrrrttttssss--01"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = align16(R, R)`: meaning not known beyond the syntax."
+summary = "Extract the low 32 bits of ((rs << 32) | rt) >> 16."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. First source supplies the high word, second source the low word. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "00 e4 01 00"
@@ -17862,10 +17862,10 @@ encoding = ["11100100000000--", "rrrrttttssss--10"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = align24(R, R)`: meaning not known beyond the syntax."
+summary = "Extract the low 32 bits of ((rs << 32) | rt) >> 24."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. First source supplies the high word, second source the low word. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "00 e4 02 00"
@@ -17899,10 +17899,10 @@ encoding = ["111001000000010-", "rrrrttttssss-nm-"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, t = "gpr", m = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = pack(Rh, Rh)`: meaning not known beyond the syntax."
+summary = "Place the first selected source halfword in bits 31..16 and the second in bits 15..0."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "04 e4 00 00"
@@ -17946,10 +17946,10 @@ encoding = ["1110010000000110", "rrrrsss-------0n"]
 fields = { r = "gpr", s = "pair", n = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = packb(P) E`: meaning not known beyond the syntax."
+summary = "Pack four consecutive 16-bit pair lanes into four bytes, with selected unsigned or signed saturation to 8 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low halfword of the even source register becomes byte 0; high halfword of the odd register becomes byte 3. Unsigned saturation treats source halfwords as unsigned, including values with bit 15 set. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "06 e4 00 00"
@@ -17983,10 +17983,10 @@ encoding = ["1110010000000110", "rrrrsss-------10"]
 fields = { r = "gpr", s = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = packb(P)`: meaning not known beyond the syntax."
+summary = "Pack four consecutive 16-bit pair lanes into four bytes, keeping each low byte."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low halfword of the even source register becomes byte 0; high halfword of the odd register becomes byte 3. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "06 e4 02 00"
@@ -18015,10 +18015,10 @@ encoding = ["1110010000000110", "rrrrsss-------11"]
 fields = { r = "gpr", s = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = packb(P) (stou)`: meaning not known beyond the syntax."
+summary = "Pack four consecutive 16-bit pair lanes into four bytes, with signed-to-unsigned saturation to 8 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low halfword of the even source register becomes byte 0; high halfword of the odd register becomes byte 3. Signed negative halfwords clamp to zero; values above 255 clamp to 255. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "06 e4 03 00"
@@ -18047,10 +18047,10 @@ encoding = ["11100100000010--", "rrr-ssss------00"]
 fields = { r = "pair", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = unpackb(R) (u)`: meaning not known beyond the syntax."
+summary = "Extend four source bytes to four consecutive 16-bit pair lanes with zero extension."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "08 e4 00 00"
@@ -18079,10 +18079,10 @@ encoding = ["11100100000010--", "rrr-ssss------01"]
 fields = { r = "pair", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = unpackb(R) (s)`: meaning not known beyond the syntax."
+summary = "Extend four source bytes to four consecutive 16-bit pair lanes with sign extension."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "08 e4 01 00"
@@ -18111,10 +18111,10 @@ encoding = ["11100100000011--", "rrr-ttttssss---0"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = mts0(R, R)`: meaning not known beyond the syntax."
+summary = "Interleave the two sources in 8-bit lanes into a pair."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Pair lanes from low to high are rt0, rs0, rt1, rs1, rt2, rs2, rt3, rs3. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "0c e4 00 00"
@@ -18148,10 +18148,10 @@ encoding = ["11100100000011--", "rrr-ttttssss---1"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = mts1(R, R)`: meaning not known beyond the syntax."
+summary = "Interleave the two sources in 16-bit lanes into a pair."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Pair lanes from low to high are rt0, rs0, rt1, rs1. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "0c e4 01 00"
@@ -18561,10 +18561,10 @@ encoding = ["11100100000101--", "rrrrttttssssnm-0"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >< R`: meaning not known beyond the syntax."
+summary = "Shift a selected halfword left or right by a signed low-5-bit register count."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is logical; left shift truncates. Preserves the other destination halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "14 e4 00 00"
@@ -18608,10 +18608,10 @@ encoding = ["11100100000101--", "rrrrttttssssnm-1"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >< R (sat)`: meaning not known beyond the syntax."
+summary = "Shift a selected halfword left or right by a signed low-5-bit register count with signed saturation."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Preserves the other destination halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "14 e4 01 00"
@@ -18951,10 +18951,10 @@ encoding = ["11100100000111--", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >< R (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit lanes left or right by a signed low-5-bit register count."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is logical; left shift truncates. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "1c e4 00 00"
@@ -18988,10 +18988,10 @@ encoding = ["11100100000111--", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >< R (sat,v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit lanes left or right by a signed low-5-bit register count with signed saturation."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "1c e4 01 00"
@@ -19062,10 +19062,10 @@ encoding = ["1110010000100000", "rrr-ttttssss000-"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Accumulate the sum of absolute differences of four lanes into a pair (as the syntax suggests); meaning unverified."
+summary = "Accumulate four unsigned byte absolute differences independently into four 16-bit lanes of a pair; overflow behavior untested."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Previously claimed the sum of four absolute differences accumulates into a pair. Each byte difference instead adds to its own 16-bit accumulator lane, low byte to low halfword; no horizontal sum. Inter-lane carry on overflow remains untested. Saturation at 65535 is suggested by usat syntax; overflow was not exercised and needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "20 e4 00 00"
@@ -19178,10 +19178,10 @@ encoding = ["1110010000100001", "rrrrssss----n-m-"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = abs(Rh)`: meaning not known beyond the syntax."
+summary = "Absolute value of a selected signed halfword."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Writes only the selected destination halfword. The minimum signed 16-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "21 e4 00 00"
@@ -19220,10 +19220,10 @@ encoding = ["111001000010001-", "rrrrssss----n-m-"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = negs(Rh)`: meaning not known beyond the syntax."
+summary = "Negate a selected signed halfword."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Writes only the selected destination halfword. The minimum signed 16-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "22 e4 00 00"
@@ -19262,10 +19262,10 @@ encoding = ["11100100001001-0", "rrrrttttssssnmp0"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = umax(Rh, Rh)`: meaning not known beyond the syntax."
+summary = "Unsigned maximum of selected halfwords."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The unselected destination halfword is preserved. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "24 e4 00 00"
@@ -19314,10 +19314,10 @@ encoding = ["11100100001001-0", "rrrrttttssssnmp1"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = smax(Rh, Rh)`: meaning not known beyond the syntax."
+summary = "Signed maximum of selected halfwords."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The unselected destination halfword is preserved. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "24 e4 01 00"
@@ -19366,10 +19366,10 @@ encoding = ["11100100001001-1", "rrrrttttssssnmp0"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = umin(Rh, Rh)`: meaning not known beyond the syntax."
+summary = "Unsigned minimum of selected halfwords."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The unselected destination halfword is preserved. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "25 e4 00 00"
@@ -19418,10 +19418,10 @@ encoding = ["11100100001001-1", "rrrrttttssssnmp1"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = smin(Rh, Rh)`: meaning not known beyond the syntax."
+summary = "Signed minimum of selected halfwords."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The unselected destination halfword is preserved. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "25 e4 01 00"
@@ -19470,10 +19470,10 @@ encoding = ["111001000010100-", "rrrrssss--------"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = abs(R) (v)`: meaning not known beyond the syntax."
+summary = "Absolute value of each signed 16-bit lane."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The minimum signed 16-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "28 e4 00 00"
@@ -19502,10 +19502,10 @@ encoding = ["111001000010101-", "rrrrssss--------"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = negs(R) (v)`: meaning not known beyond the syntax."
+summary = "Negate each signed 16-bit lane."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The minimum signed 16-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "2a e4 00 00"
@@ -19534,10 +19534,10 @@ encoding = ["11100100001011-0", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = umax(R, R) (v)`: meaning not known beyond the syntax."
+summary = "Unsigned maximum of corresponding 16-bit lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "2c e4 00 00"
@@ -19571,10 +19571,10 @@ encoding = ["11100100001011-0", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = smax(R, R) (v)`: meaning not known beyond the syntax."
+summary = "Signed maximum of corresponding 16-bit lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "2c e4 01 00"
@@ -19608,10 +19608,10 @@ encoding = ["11100100001011-1", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = umin(R, R) (v)`: meaning not known beyond the syntax."
+summary = "Unsigned minimum of corresponding 16-bit lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "2d e4 00 00"
@@ -19645,10 +19645,10 @@ encoding = ["11100100001011-1", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = smin(R, R) (v)`: meaning not known beyond the syntax."
+summary = "Signed minimum of corresponding 16-bit lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "2d e4 01 00"
@@ -19682,10 +19682,10 @@ encoding = ["111001000011000-", "rrrrssss--------"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Absolute value of a signed register: rd = abs(rs)."
+summary = "Absolute value of a signed 32-bit register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a < 0 ? -a : a` -> `r0 = abs(r0)`. The result for 0x80000000 is not established."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Confirms the compiler-derived absolute-value meaning. The minimum signed 32-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "30 e4 00 00"
@@ -19714,10 +19714,10 @@ encoding = ["111001000011001-", "rrrrssss--------"]
 fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = negs(R)`: meaning not known beyond the syntax."
+summary = "Negate a signed 32-bit register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. The minimum signed 32-bit input was not exercised; wrap versus saturation needs follow-up. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "32 e4 00 00"
@@ -19746,10 +19746,10 @@ encoding = ["11100100001101-0", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Unsigned maximum: rd = max(rs, rt) as unsigned numbers."
+summary = "Unsigned maximum of 32-bit registers."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a > b ? a : b` (unsigned) -> `r0 = umax(r0, r1)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Confirms the compiler-derived meaning. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "34 e4 00 00"
@@ -19783,10 +19783,10 @@ encoding = ["11100100001101-0", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Signed maximum: rd = max(rs, rt) as signed numbers."
+summary = "Signed maximum of 32-bit registers."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a > b ? a : b` (int) -> `r0 = smax(r0, r1)`; also used inside a clamp."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Confirms the compiler-derived meaning. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "34 e4 01 00"
@@ -19820,10 +19820,10 @@ encoding = ["11100100001101-1", "rrrrttttssss---0"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Unsigned minimum: rd = min(rs, rt) as unsigned numbers."
+summary = "Unsigned minimum of 32-bit registers."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a < b ? a : b` (unsigned) -> `r0 = umin(r0, r1)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Confirms the compiler-derived meaning. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "35 e4 00 00"
@@ -19857,10 +19857,10 @@ encoding = ["11100100001101-1", "rrrrttttssss---1"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Signed minimum: rd = min(rs, rt) as signed numbers."
+summary = "Signed minimum of 32-bit registers."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a < b ? a : b` (int) -> `r0 = smin(r0, r1)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Confirms the compiler-derived meaning. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "35 e4 01 00"
@@ -22218,10 +22218,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-0000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P == P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 00 00"
@@ -22255,10 +22255,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-0001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P != P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (unequal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 01 00"
@@ -22292,10 +22292,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-0010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 02 00"
@@ -22329,10 +22329,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-0011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 03 00"
@@ -22366,10 +22366,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 08 00"
@@ -22403,10 +22403,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = all(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 09 00"
@@ -22440,10 +22440,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = alls(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 0a 00"
@@ -22477,10 +22477,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = alls(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 0b 00"
@@ -22514,10 +22514,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1100"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = alls(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 0c 00"
@@ -22551,10 +22551,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-1101"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = alls(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "38 e5 0d 00"
@@ -22588,10 +22588,10 @@ encoding = ["1110010100111001", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R == R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 00 00"
@@ -22625,10 +22625,10 @@ encoding = ["1110010100111001", "rrrrttttssss0001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R != R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (unequal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 01 00"
@@ -22662,10 +22662,10 @@ encoding = ["1110010100111001", "rrrrttttssss0010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 02 00"
@@ -22699,10 +22699,10 @@ encoding = ["1110010100111001", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 03 00"
@@ -22736,10 +22736,10 @@ encoding = ["1110010100111001", "rrrrttttssss1000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 08 00"
@@ -22773,10 +22773,10 @@ encoding = ["1110010100111001", "rrrrttttssss1001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = all(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 09 00"
@@ -22810,10 +22810,10 @@ encoding = ["1110010100111001", "rrrrttttssss1010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = alls(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 0a 00"
@@ -22847,10 +22847,10 @@ encoding = ["1110010100111001", "rrrrttttssss1011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = alls(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 0b 00"
@@ -22884,10 +22884,10 @@ encoding = ["1110010100111001", "rrrrttttssss1100"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = alls(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 0c 00"
@@ -22921,10 +22921,10 @@ encoding = ["1110010100111001", "rrrrttttssss1101"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = alls(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less than or equal); write all ones across the destination if all lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "39 e5 0d 00"
@@ -22958,10 +22958,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-0000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P == P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 00 00"
@@ -22995,10 +22995,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-0001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P != P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (unequal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 01 00"
@@ -23032,10 +23032,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-0010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 02 00"
@@ -23069,10 +23069,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-0011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 03 00"
@@ -23106,10 +23106,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 08 00"
@@ -23143,10 +23143,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = any(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 09 00"
@@ -23180,10 +23180,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = anys(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 0a 00"
@@ -23217,10 +23217,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = anys(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 0b 00"
@@ -23254,10 +23254,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1100"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = anys(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 0c 00"
@@ -23291,10 +23291,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-1101"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = anys(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3a e5 0d 00"
@@ -23328,10 +23328,10 @@ encoding = ["1110010100111011", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R == R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 00 00"
@@ -23365,10 +23365,10 @@ encoding = ["1110010100111011", "rrrrttttssss0001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R != R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (unequal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 01 00"
@@ -23402,10 +23402,10 @@ encoding = ["1110010100111011", "rrrrttttssss0010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 02 00"
@@ -23439,10 +23439,10 @@ encoding = ["1110010100111011", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 03 00"
@@ -23476,10 +23476,10 @@ encoding = ["1110010100111011", "rrrrttttssss1000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 08 00"
@@ -23513,10 +23513,10 @@ encoding = ["1110010100111011", "rrrrttttssss1001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = any(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 09 00"
@@ -23550,10 +23550,10 @@ encoding = ["1110010100111011", "rrrrttttssss1010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = anys(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 0a 00"
@@ -23587,10 +23587,10 @@ encoding = ["1110010100111011", "rrrrttttssss1011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = anys(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 0b 00"
@@ -23624,10 +23624,10 @@ encoding = ["1110010100111011", "rrrrttttssss1100"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = anys(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 0c 00"
@@ -23661,10 +23661,10 @@ encoding = ["1110010100111011", "rrrrttttssss1101"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = anys(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less than or equal); write all ones across the destination if any lane comparisons are true, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3b e5 0d 00"
@@ -23698,10 +23698,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-0000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P == P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 00 00"
@@ -23735,10 +23735,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-0001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P != P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (unequal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 01 00"
@@ -23772,10 +23772,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-0010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 02 00"
@@ -23809,10 +23809,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-0011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 03 00"
@@ -23846,10 +23846,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1000"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (greater); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 08 00"
@@ -23883,10 +23883,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1001"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmp(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 16-bit lanes (less than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 09 00"
@@ -23920,10 +23920,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1010"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmps(P >= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 0a 00"
@@ -23957,10 +23957,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1011"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmps(P < P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 0b 00"
@@ -23994,10 +23994,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1100"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmps(P > P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (greater); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 0c 00"
@@ -24031,10 +24031,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-1101"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = cmps(P <= P) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 16-bit lanes (less than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four halfwords across each pair. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3c e5 0d 00"
@@ -24068,10 +24068,10 @@ encoding = ["1110010100111101", "rrrrttttssss0000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R == R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 00 00"
@@ -24105,10 +24105,10 @@ encoding = ["1110010100111101", "rrrrttttssss0001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R != R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (unequal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 01 00"
@@ -24142,10 +24142,10 @@ encoding = ["1110010100111101", "rrrrttttssss0010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 02 00"
@@ -24179,10 +24179,10 @@ encoding = ["1110010100111101", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 03 00"
@@ -24216,10 +24216,10 @@ encoding = ["1110010100111101", "rrrrttttssss1000"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (greater); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 08 00"
@@ -24253,10 +24253,10 @@ encoding = ["1110010100111101", "rrrrttttssss1001"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmp(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four unsigned 8-bit lanes (less than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 09 00"
@@ -24290,10 +24290,10 @@ encoding = ["1110010100111101", "rrrrttttssss1010"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmps(R >= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 0a 00"
@@ -24327,10 +24327,10 @@ encoding = ["1110010100111101", "rrrrttttssss1011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmps(R < R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 0b 00"
@@ -24364,10 +24364,10 @@ encoding = ["1110010100111101", "rrrrttttssss1100"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmps(R > R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (greater); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 0c 00"
@@ -24401,10 +24401,10 @@ encoding = ["1110010100111101", "rrrrttttssss1101"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = cmps(R <= R) (v)`: meaning not known beyond the syntax."
+summary = "Compare four signed 8-bit lanes (less than or equal); write an all-ones lane for each true comparison, zero otherwise."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Previously meaning unknown beyond syntax. Lanes correspond from least significant upward; four bytes in each register. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "3d e5 0d 00"
@@ -43475,10 +43475,10 @@ fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
-summary = "Saturate a register to the unsigned 8-bit range; instruction revision 3."
+summary = "Saturate a 32-bit register to the unsigned 16-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+sources = ["oracle", "hardware"]
+notes = "Previously claimed 8-bit saturation; this revision-3 register form behaves like sat16 on this chip. Source is unsigned 32-bit. Source sign bits do not make an unsigned value negative. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "7c e0 00 00"
@@ -43509,10 +43509,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Saturate a register pair to unsigned 16-bit lanes into one register (as printed); instruction revision 3; meaning not established."
+summary = "Pack four consecutive 16-bit pair lanes into four bytes, with unsigned saturation to 8 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+sources = ["oracle", "hardware"]
+notes = "Previously described saturation to 16-bit lanes; on this chip it behaves like packb, narrowing four halfwords to bytes. Low halfword of the even source register becomes byte 0; high halfword of the odd register becomes byte 3. Unsigned saturation treats source halfwords as unsigned, including values with bit 15 set. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "07 e4 00 00"
@@ -43609,10 +43609,10 @@ fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
-summary = "Saturate a register to the signed 8-bit range; instruction revision 3."
+summary = "Saturate a 32-bit register to the signed 16-bit range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+sources = ["oracle", "hardware"]
+notes = "Previously claimed 8-bit saturation; this revision-3 register form behaves like sat16 on this chip. Source is signed 32-bit. Signed result is sign-extended to 32 bits. Sets psr[3] from the result sign and psr[2] from zero; preserves psr[1:0]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "7c e0 01 00"
@@ -43643,10 +43643,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Saturate a register pair to signed 16-bit lanes into one register (as printed); instruction revision 3; meaning not established."
+summary = "Pack four consecutive 16-bit pair lanes into four bytes, with signed saturation to 8 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+sources = ["oracle", "hardware"]
+notes = "Previously described saturation to 16-bit lanes; on this chip it behaves like packb, narrowing four halfwords to bytes. Low halfword of the even source register becomes byte 0; high halfword of the odd register becomes byte 3. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "07 e4 01 00"
@@ -43744,10 +43744,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Unpack the four bytes of a register into a register pair (unsigned, as printed); instruction revision 3; lane layout not established."
+summary = "Extend four source bytes to four consecutive 16-bit pair lanes with zero extension."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+sources = ["oracle", "hardware"]
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "08 e4 02 00"
@@ -43778,10 +43778,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Unpack the four bytes of a register into a register pair (signed, as printed); instruction revision 3; lane layout not established."
+summary = "Extend four source bytes to four consecutive 16-bit pair lanes with sign extension."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+sources = ["oracle", "hardware"]
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
 
 [[insn.example]]
 bytes = "08 e4 03 00"
