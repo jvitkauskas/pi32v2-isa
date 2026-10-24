@@ -624,8 +624,8 @@ fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
 group = "memory"
 summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "objdump omits the offset when it is 0 ([sp]). [compiler] -O0 locals and spills: `r0 = [sp+8]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "objdump omits the offset when it is 0 ([sp]). [compiler] -O0 locals and spills: `r0 = [sp+8]`. hw/fm1-2026-10-24-v2 (12 cases): loads a word from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "00 20"
@@ -655,8 +655,8 @@ fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
 group = "memory"
 summary = "Store a word to the stack at sp plus 0..252."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] -O0 locals and spills: `[sp+4] = r0`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] -O0 locals and spills: `[sp+4] = r0`. hw/fm1-2026-10-24-v2 (12 cases): stores the word to sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "80 20"
@@ -686,8 +686,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale
 group = "memory"
 summary = "Load a word from memory at r0..r7 plus -64..60."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "objdump prints [r1+0] here, unlike [sp]. [compiler] `*p`, `p[5]` -> `r0 = [r0+0]`, `[r0+20]`; `p[-5]` -> `[r0+-20]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "objdump prints [r1+0] here, unlike [sp]. [compiler] `*p`, `p[5]` -> `r0 = [r0+0]`, `[r0+20]`; `p[-5]` -> `[r0+-20]`. hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "00 60"
@@ -722,8 +722,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale
 group = "memory"
 summary = "Store a word to memory at r0..r7 plus -64..60."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `p[5] = v` on `int *` -> `[r0+20] = r1`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `p[5] = v` on `int *` -> `[r0+20] = r1`. hw/fm1-2026-10-24-v2 (12 cases): stores a word to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "80 60"
@@ -758,8 +758,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o" } }
 group = "memory"
 summary = "Load a byte, zero-extended, from memory at r0..r7 plus -16..15."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "The assembler also accepts the line without (u); a negative offset is written +-11. [compiler] `*(unsigned char *)p` -> `r0 = b[r0+0] (u)`, `p[5]` -> `b[r0+5]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "The assembler also accepts the line without (u); a negative offset is written +-11. [compiler] `*(unsigned char *)p` -> `r0 = b[r0+0] (u)`, `p[5]` -> `b[r0+5]`. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "08 40"
@@ -794,8 +794,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o" } }
 group = "memory"
 summary = "Store the low byte of r0..r7 to memory at r0..r7 plus -16..15."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `p[5] = v` on `unsigned char *` -> `b[r0+5] = r1`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `p[5] = v` on `unsigned char *` -> `b[r0+5] = r1`. hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "88 40"
@@ -1174,8 +1174,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Load a word, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 08"
@@ -1210,8 +1210,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Store a word to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "08 08"
@@ -1246,8 +1246,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Load a halfword, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 0c"
@@ -1282,8 +1282,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Store a halfword to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "08 0c"
@@ -1318,8 +1318,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Load a byte, zero-extended, from the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. What happens to the base register is read from the syntax (meaning not tested)."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases)."
 
 [[insn.example]]
 bytes = "00 10"
@@ -1354,8 +1354,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", i = "gpr_hi" }
 group = "memory"
 summary = "Store a byte to the address in a register, then add a register (r8..r15) to that address register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit/sweep: dest or source in bits 2..0, base in bits 6..4, increment register in bits 9..7 (r8..r15), bit 3 = store. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "08 10"
@@ -1390,8 +1390,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Load a word, from the address in a register, then add or subtract 4 to that register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] pointer-walking loop `s += *p++` -> `r3 = [r2++=4]` (load, then add 4 to the pointer register); a copy loop is `r3 = [r1++=4]` / `[r0++=4] = r3`; `*++p` is a pre-add of 4 outside the loop."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] pointer-walking loop `s += *p++` -> `r3 = [r2++=4]` (load, then add 4 to the pointer register); a copy loop is `r3 = [r1++=4]` / `[r0++=4] = r3`; `*++p` is a pre-add of 4 outside the loop. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
 
 [[insn.example]]
 bytes = "00 05"
@@ -1426,8 +1426,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Store a word to the address in a register, then add or subtract 4 to that register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = v` -> `[r0++=4] = r1` (store, then add 4)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = v` -> `[r0++=4] = r1` (store, then add 4). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "80 05"
@@ -1462,8 +1462,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Load a halfword, zero-extended, from the address in a register, then add or subtract 2 to that register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 06"
@@ -1498,8 +1498,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Store a halfword to the address in a register, then add or subtract 2 to that register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "80 06"
@@ -1534,8 +1534,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Load a byte, zero-extended, from the address in a register, then add or subtract 1 to that register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `s += *p++` on `unsigned char *` -> `r3 = b[r2++=1] (u)`; `strlen`-style loop `while (*s++)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `s += *p++` on `unsigned char *` -> `r3 = b[r2++=1] (u)`; `strlen`-style loop `while (*s++)`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "00 07"
@@ -1570,8 +1570,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "uimm", letters = "s", scale
 group = "memory"
 summary = "Store a byte to the address in a register, then add or subtract 1 to that register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = *s++` on bytes -> `b[r0++=1] = r3`; memcpy/memset expansion with rep."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: base in bits 6..4, data register in bits 2..0, bit 3 = sign of the step (0 = +step, 1 = -step); the step is the access size (4, 2 or 1) and cannot be chosen. [compiler] `*d++ = *s++` on bytes -> `b[r0++=1] = r3`; memcpy/memset expansion with rep. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "80 07"
@@ -2253,10 +2253,10 @@ syntax = "testset b[{x}]"
 encoding = ["000000001011xxxx"]
 fields = { x = "gpr" }
 group = "memory"
-summary = "Test-and-set the byte at the address in a register."
+summary = "Read the byte at the address in a register, set it to 0xFF, and load the low four psr bits (N Z C V) from the old byte's bits 3..0."
 status = "confirmed"
-sources = ["oracle", "ac79-sdk"]
-notes = "Layout from oracle fit: register in bits 3..0. Atomicity and result flag not tested. [compiler] not emitted. The AC79 SDK spin lock (cpu.h) is inline asm `1: testset b[%0]` then `ifeq goto 1b`: it retries while eq, so a failed attempt (the byte was already set) leaves eq."
+sources = ["oracle", "ac79-sdk", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. [compiler] not emitted. The AC79 SDK spin lock (cpu.h) is inline asm `1: testset b[%0]` then `ifeq goto 1b`: it retries while eq, so a failed attempt (the byte was already set) leaves eq. hw/fm1-2026-10-24-v2 (12 cases) and followup5-m.jsonl (32 more, old bytes 0x00, 0xFF and every low nibble 0..15, flags before 0 or 0xF): the byte becomes 0xFF (an old 0xFF stays), no register changes, and psr bits 3..0 = bits 3..0 of the old byte whatever the flags were before (N = bit 3, Z = bit 2, C = bit 1, V = bit 0; old 0x00 gave no flags, 0xFF all four, 0x74 gave Z). That fits the AC79 SDK lock loop: a held lock is 0xFF, so Z is set and `ifeq` retries; a free lock 0x00 clears Z. Atomicity is not tested. Before: result flag not tested."
 
 [[insn.example]]
 bytes = "b0 00"
@@ -3666,8 +3666,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale
 group = "memory"
 summary = "Load a halfword, zero-extended, from memory at r0..r7 plus -32..30."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `*(unsigned short *)p` -> `r0 = h[r0+0] (u)`, `p[5]` -> `h[r0+10]` (the offset is in bytes)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `*(unsigned short *)p` -> `r0 = h[r0+0] (u)`, `p[5]` -> `h[r0+10]` (the offset is in bytes). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "08 60"
@@ -3702,8 +3702,8 @@ fields = { d = "gpr_lo", b = "gpr_lo", n = { kind = "simm", letters = "o", scale
 group = "memory"
 summary = "Store the low halfword of r0..r7 to memory at r0..r7 plus -32..30."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `p[5] = v` on `unsigned short *` -> `h[r0+10] = r1`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. [compiler] `p[5] = v` on `unsigned short *` -> `h[r0+10] = r1`. hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "88 60"
@@ -8727,10 +8727,10 @@ syntax = "{r} = [npc + {s}]"
 encoding = ["1110100001100000", "rrrrssss00000000"]
 fields = { r = "gpr", s = "gpr" }
 group = "memory"
-summary = "Load a word from an address formed from `npc` plus a register (meaning of npc unknown)."
+summary = "Load a word from npc plus a register; npc is the address of the instruction plus 4, rounded up to a word boundary (as for ld.w.npc), and the sum must be word-aligned."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2: 12 cases, all inside the batch's code: the word at (address of the instruction + 4) + the register (registers -8..16, multiples of 4), so [npc + 0] is the goto that follows this 4-byte instruction. The flags N Z C V are left alone. Only stubs on a word boundary were run for this 4-byte form; the 2 mod 4 probe was of ld.w.npc, so whether npc is pc + 6 or pc + 2 here (round up pc + 4, or the end rounded down) is open. Before: npc was unknown."
 
 [[insn.example]]
 bytes = "60 e8 00 00"
@@ -8760,8 +8760,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `|=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ORs it with the register and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "64 e8 00 00"
@@ -8796,8 +8796,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `^=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, XORs it with the register and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "64 e8 01 00"
@@ -8832,8 +8832,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `&=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with the register and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "64 e8 02 00"
@@ -8868,8 +8868,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write on the word at register plus offset: `&= ~reg`."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with the complement of the register and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "64 e8 03 00"
@@ -8904,8 +8904,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write on the word at register plus offset: `|= 1 << reg`."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ORs it with 1 << the register's low five bits and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "66 e8 00 00"
@@ -8940,8 +8940,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write on the word at register plus offset: `^= 1 << reg`."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, XORs it with 1 << the register's low five bits and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "66 e8 01 00"
@@ -8976,8 +8976,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write on the word at register plus offset: `&= 1 << reg`."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with 1 << the register's low five bits and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "66 e8 02 00"
@@ -9012,8 +9012,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write on the word at register plus offset: `&= ~(1 << reg)`."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with the complement of (1 << the register's low five bits) and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "66 e8 03 00"
@@ -9048,8 +9048,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `+=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -O0 `s += i` on a local through its address -> `[r1+0] += r0`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -O0 `s += i` on a local through its address -> `[r1+0] += r0`. hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, adds the register to it and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "68 e8 00 00"
@@ -9084,8 +9084,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `-=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, subtracts the register from it and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "68 e8 02 00"
@@ -9120,8 +9120,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = { kind = "uimm", zer
 group = "memory"
 summary = "Read-modify-write: apply `<<=` with a constant to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts left by the constant and writes the result back to the same address; a raw count field of 0 means 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6c e8 00 00"
@@ -9156,8 +9156,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = { kind = "uimm", zer
 group = "memory"
 summary = "Read-modify-write: apply `<<<=` with a constant to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts left with signed saturation (clamped to 0x7FFFFFFF / 0x80000000) by the constant and writes the result back to the same address; a raw count field of 0 means 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6c e8 01 00"
@@ -9192,8 +9192,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = { kind = "uimm", zer
 group = "memory"
 summary = "Read-modify-write: apply `>>=` with a constant to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts right (logical) by the constant and writes the result back to the same address; a raw count field of 0 means 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6c e8 02 00"
@@ -9228,8 +9228,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = { kind = "uimm", zer
 group = "memory"
 summary = "Read-modify-write: apply `>>>=` with a constant to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts right (arithmetic) by the constant and writes the result back to the same address; a raw count field of 0 means 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6c e8 03 00"
@@ -9264,8 +9264,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `<<=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts left by the register and writes the result back to the same address; the count is the register's low 8 bits and 32 or more acts as 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6e e8 00 00"
@@ -9300,8 +9300,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `<<<=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts left with signed saturation (clamped to 0x7FFFFFFF / 0x80000000) by the register and writes the result back to the same address; the count is the register's low 8 bits and 32 or more acts as 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6e e8 01 00"
@@ -9336,8 +9336,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `>>=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts right (logical) by the register and writes the result back to the same address; the count is the register's low 8 bits and 32 or more acts as 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6e e8 02 00"
@@ -9372,8 +9372,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Read-modify-write: apply `>>>=` with a register to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, shifts right (arithmetic) by the register and writes the result back to the same address; the count is the register's low 8 bits and 32 or more acts as 32. Registers and the flags N Z C V are left alone (unlike the register shifts, which set N Z C)."
 
 [[insn.example]]
 bytes = "6e e8 03 00"
@@ -9408,8 +9408,8 @@ fields = { r = "pair", n = { kind = "uimm", scale = 4 } }
 group = "memory"
 summary = "Load a 64-bit pair from memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] 64-bit argument or spill: `r1_r0 = d[sp+12]`. Arguments after the fourth are on the stack, the fifth at [sp] (`f(a..j)` reads h and i with one `d[sp+12]` and j with `[sp+20]`)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] 64-bit argument or spill: `r1_r0 = d[sp+12]`. Arguments after the fourth are on the stack, the fifth at [sp] (`f(a..j)` reads h and i with one `d[sp+12]` and j with `[sp+20]`). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "d0 e9 00 00"
@@ -9439,8 +9439,8 @@ fields = { n = { kind = "uimm", scale = 4 }, r = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0: a 64-bit argument or a register pair saved: `d[sp] = r1_r0`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0: a 64-bit argument or a register pair saved: `d[sp] = r1_r0`. hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "d0 e9 01 00"
@@ -9470,8 +9470,8 @@ fields = { r = "gpr", n = { kind = "uimm", scale = 4 } }
 group = "memory"
 summary = "Load a word from sp plus a constant offset, 32-bit encoding (any destination register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] destination r8 or above: `r8 = [sp+76]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] destination r8 or above: `r8 = [sp+76]`. hw/fm1-2026-10-24-v2 (12 cases): loads a word from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d4 e9 00 00"
@@ -9501,8 +9501,8 @@ fields = { n = { kind = "uimm", scale = 4 }, r = "gpr" }
 group = "memory"
 summary = "Store a word to sp plus a constant offset, 32-bit encoding (any source register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] source r8 or above: `[sp+40] = r12`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] source r8 or above: `[sp+40] = r12`. hw/fm1-2026-10-24-v2 (12 cases): stores the word to sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d4 e9 01 00"
@@ -9532,8 +9532,8 @@ fields = { r = "gpr", n = { kind = "uimm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type unsigned short: loaded from the stack frame at sp + offset."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type unsigned short: loaded from the stack frame at sp + offset. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 e9 00 00"
@@ -9563,8 +9563,8 @@ fields = { n = { kind = "uimm", scale = 2 }, r = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 `short` local stored at sp + offset."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 `short` local stored at sp + offset. hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 e9 01 00"
@@ -9594,8 +9594,8 @@ fields = { r = "gpr", n = { kind = "uimm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type short: loaded from the stack frame at sp + offset."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type short: loaded from the stack frame at sp + offset. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d9 e9 00 00"
@@ -9625,8 +9625,8 @@ fields = { r = "gpr", n = "uimm" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type unsigned char: loaded from the stack frame at sp + offset."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type unsigned char: loaded from the stack frame at sp + offset. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "dc e9 00 00"
@@ -9656,8 +9656,8 @@ fields = { r = "gpr", n = "uimm" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type signed char: loaded from the stack frame at sp + offset."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0 local of type signed char: loaded from the stack frame at sp + offset. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "dd e9 00 00"
@@ -9687,8 +9687,8 @@ fields = { n = "uimm", r = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at the stack pointer plus a constant offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to sp plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "de e9 00 00"
@@ -9718,8 +9718,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "modimm" }
 group = "memory"
 summary = "Store a modified-immediate constant as a word to register plus offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `memset(p, 0, 12)` -> `[r0+8] = 0x0` (stores a zero word without loading it)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `memset(p, 0, 12)` -> `[r0+8] = 0x0` (stores a zero word without loading it). hw/fm1-2026-10-24-v2 (12 cases): stores the expanded 32-bit constant as a word at the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "40 ea 00 00"
@@ -9754,8 +9754,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "modimm" }
 group = "memory"
 summary = "Read-modify-write: apply `+=` with a modified immediate to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, adds the modified immediate to it and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "80 eb 00 00"
@@ -9790,8 +9790,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "simm" }
 group = "memory"
 summary = "Read-modify-write: apply `+=` with a constant to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -O0 `p[3] += 5` -> `[r0+12] += 5` (load, add, store in one instruction); `i++` of a local through its address -> `[r0+0] += 1`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -O0 `p[3] += 5` -> `[r0+12] += 5` (load, add, store in one instruction); `i++` of a local through its address -> `[r0+0] += 1`. hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, adds the constant to it and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "c0 eb 00 00"
@@ -9826,8 +9826,8 @@ fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 } }
 group = "memory"
 summary = "Load a 64-bit pair from memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` load -> `r1_r0 = d[r0+0]`: the low word goes to the even register, i.e. the lower address; `p[3]` -> `d[r0+24]`. Also loads a PIC function descriptor (code address, then the r15 value)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` load -> `r1_r0 = d[r0+0]`: the low word goes to the even register, i.e. the lower address; `p[3]` -> `d[r0+24]`. Also loads a PIC function descriptor (code address, then the r15 value). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 00 00"
@@ -9862,8 +9862,8 @@ fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4 } }
 group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 02 00"
@@ -9898,8 +9898,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` store -> `d[r0+0] = r3_r2` (even register at the lower address)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` store -> `d[r0+0] = r3_r2` (even register at the lower address). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 01 00"
@@ -9934,8 +9934,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "50 ec 03 00"
@@ -9970,8 +9970,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a 64-bit pair from memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register (not scaled); the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 02 00"
@@ -10006,8 +10006,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a 64-bit pair from memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register shifted left by 3; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 0a 00"
@@ -10042,8 +10042,8 @@ fields = { r = "gpr", s = "gpr", t = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register (not scaled); the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 03 00"
@@ -10078,8 +10078,8 @@ fields = { r = "gpr", s = "gpr", t = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register shifted left by 3; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 0b 00"
@@ -10114,8 +10114,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5c ec 02 00"
@@ -10150,8 +10150,8 @@ fields = { r = "gpr", s = "gpr", t = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5c ec 03 00"
@@ -10186,8 +10186,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 5 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (5 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5e ec 02 00"
@@ -10222,8 +10222,8 @@ fields = { r = "gpr", s = "gpr", t = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (4 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "5e ec 03 00"
@@ -10258,8 +10258,8 @@ fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 4, asm_range = [-
 group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 00 00"
@@ -10294,8 +10294,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "pair" }
 group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
 
 [[insn.example]]
 bytes = "58 ec 01 00"
@@ -10330,8 +10330,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 4 } }
 group = "memory"
 summary = "Load a word from register plus constant offset, 32-bit encoding (any register, wide offset)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `r14 = [r4+44]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `r14 = [r4+44]`. hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d0 ec 00 00"
@@ -10366,8 +10366,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 4 } }
 group = "memory"
 summary = "Load a word from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ec 02 00"
@@ -10402,8 +10402,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Store a word to register plus a constant offset, 32-bit encoding (any register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `[r0+12] = r12`, `[r2+0] = r12`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `[r0+12] = r12`, `[r2+0] = r12`. hw/fm1-2026-10-24-v2 (12 cases): stores the word to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d0 ec 01 00"
@@ -10438,8 +10438,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Store a word to memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "d0 ec 03 00"
@@ -10474,8 +10474,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a word from rs + rt (no scaling)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -fPIC: `r0 = [r1+r0]` where r1 is the GOT-slot offset (R_PI32V2_GOT16) and r0 = r15 (the GOT base)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] -fPIC: `r0 = [r1+r0]` where r1 is the GOT-slot offset (R_PI32V2_GOT16) and r0 = r15 (the GOT base). hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ec 02 00"
@@ -10510,8 +10510,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a word from memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `int *` -> `r0 = [r0+r1<<2]`; also constant-pool style access to a global table with the base in a register (`r1 = &tab; r0 = [r1+r0<<2]`) and offsets beyond the 16-bit forms' reach (`p[500]` -> `r1 = 500; [r0+r1<<2]`)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `int *` -> `r0 = [r0+r1<<2]`; also constant-pool style access to a global table with the base in a register (`r1 = &tab; r0 = [r1+r0<<2]`) and offsets beyond the 16-bit forms' reach (`p[500]` -> `r1 = 500; [r0+r1<<2]`). hw/fm1-2026-10-24-v2 (12 cases): loads a word from the base register plus the index register shifted left by 2; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ec 0a 00"
@@ -10546,8 +10546,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a word to memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the word to the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ec 03 00"
@@ -10582,8 +10582,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a word to memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `int *` -> `[r0+r1<<2] = r2`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `int *` -> `[r0+r1<<2] = r2`. hw/fm1-2026-10-24-v2 (12 cases): stores the word to the base register plus the index register shifted left by 2; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ec 0b 00"
@@ -10618,8 +10618,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a word from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ec 02 00"
@@ -10654,8 +10654,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a word to memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "dc ec 03 00"
@@ -10690,8 +10690,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a word from the address in a register, then add another register to that address (post-increment by a register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] `p += s` stepping loop: `r6 = [r5++=r1]` with the stride r1 pre-scaled by 4 (`r1 << 2`)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] `p += s` stepping loop: `r6 = [r5++=r1]` with the stride r1 pre-scaled by 4 (`r1 << 2`). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): loads a word from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ec 02 00"
@@ -10726,8 +10726,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a word to memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the word to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (3 cases)."
 
 [[insn.example]]
 bytes = "de ec 03 00"
@@ -10762,8 +10762,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 4 } }
 group = "memory"
 summary = "Load a word, then add or subtract 4 to the address register, 32-bit encoding (any register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r13 = [r3++=4]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). [compiler] with register pressure: `r13 = [r3++=4]`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a word from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "d8 ec 00 00"
@@ -10798,8 +10798,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, s = "gpr" }
 group = "memory"
 summary = "Store a word to memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.w.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the word to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d8 ec 01 00"
@@ -10834,8 +10834,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "50 ed 00 00"
@@ -10870,8 +10870,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "50 ed 01 00"
@@ -10906,8 +10906,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `*(short *)p` -> `r0 = h[r0+0] (s)`; the signed halfword load is always the 32-bit form."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `*(short *)p` -> `r0 = h[r0+0] (s)`; the signed halfword load is always the 32-bit form. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "54 ed 00 00"
@@ -10942,8 +10942,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "54 ed 01 00"
@@ -10978,8 +10978,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "58 ed 00 00"
@@ -11014,8 +11014,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "58 ed 01 00"
@@ -11050,8 +11050,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "5c ed 00 00"
@@ -11086,8 +11086,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The base register is also the stored one in 3 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "5c ed 01 00"
@@ -11122,8 +11122,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ed 00 00"
@@ -11158,8 +11158,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d0 ed 01 00"
@@ -11194,8 +11194,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `s += *p++` on `short *` -> `r3 = h[r2++=2] (s)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `s += *p++` on `short *` -> `r3 = h[r2++=2] (s)`. hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d4 ed 00 00"
@@ -11230,8 +11230,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 2 }, s = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The base register is also the stored one in 2 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "d4 ed 01 00"
@@ -11266,8 +11266,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 00 00"
@@ -11302,8 +11302,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 02 00"
@@ -11338,8 +11338,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `unsigned short *` -> `r0 = h[r0+r1<<1] (u)`: the index is scaled by 2."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `unsigned short *` -> `r0 = h[r0+r1<<1] (u)`: the index is scaled by 2. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, zero-extended, from the base register plus the index register shifted left by 1; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 08 00"
@@ -11374,8 +11374,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `short *` -> `r0 = h[r0+r1<<1] (s)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `short *` -> `r0 = h[r0+r1<<1] (s)`. hw/fm1-2026-10-24-v2 (12 cases): loads a halfword, sign-extended, from the base register plus the index register shifted left by 1; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 0a 00"
@@ -11410,8 +11410,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 01 00"
@@ -11446,8 +11446,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at register plus register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 03 00"
@@ -11482,8 +11482,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `unsigned short *` -> `h[r0+r1<<1] = r2`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `unsigned short *` -> `h[r0+r1<<1] = r2`. hw/fm1-2026-10-24-v2 (12 cases): stores the low halfword to the base register plus the index register shifted left by 1; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 09 00"
@@ -11518,8 +11518,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at register plus register shifted by the access size."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): stores the high halfword (bits 31..16) of the register to the base register plus the index register shifted left by 1; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ed 0b 00"
@@ -11554,8 +11554,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ed 00 00"
@@ -11590,8 +11590,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a halfword, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "dc ed 02 00"
@@ -11626,8 +11626,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "dc ed 01 00"
@@ -11662,8 +11662,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The base register is also the stored one in 3 cases, but the update leaves its high half alone, so old and new cannot be told apart."
 
 [[insn.example]]
 bytes = "dc ed 03 00"
@@ -11698,8 +11698,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.hu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a halfword, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 00 00"
@@ -11734,8 +11734,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a halfword (sign-extended) from memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a halfword, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 02 00"
@@ -11770,8 +11770,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a halfword to memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.h.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low halfword to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 01 00"
@@ -11806,8 +11806,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store the high half of a register as a halfword to memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the high halfword (bits 31..16) of the register to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ed 03 00"
@@ -11842,8 +11842,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a zero-extended byte from register plus constant offset, 32-bit encoding (any register)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `r12 = b[r1+7] (u)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] when a register is r8 or above: `r12 = b[r1+7] (u)`. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "50 ee 00 00"
@@ -11878,8 +11878,8 @@ fields = { r = "gpr", n = "simm", s = "gpr" }
 group = "memory"
 summary = "Store a byte to register plus a constant offset, 32-bit encoding."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] offsets beyond the 16-bit form's -16..15: `b[r0+16] = r1`, `b[r0+32] = r1` (memset expansion)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] offsets beyond the 16-bit form's -16..15: `b[r0+16] = r1`, `b[r0+32] = r1` (memset expansion). hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "52 ee 00 00"
@@ -11914,8 +11914,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at register plus a constant offset."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `*(signed char *)p` -> `r0 = b[r0+0] (s)`; `p[-5]` -> `b[r0+-5]`. There is no 16-bit signed byte load, so the 32-bit form is always used."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `*(signed char *)p` -> `r0 = b[r0+0] (s)`; `p[-5]` -> `b[r0+-5]`. There is no 16-bit signed byte load, so the 32-bit form is always used. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the base register plus the offset; the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "54 ee 00 00"
@@ -11950,8 +11950,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases)."
 
 [[insn.example]]
 bytes = "58 ee 00 00"
@@ -11986,8 +11986,8 @@ fields = { r = "gpr", n = "simm", s = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "5a ee 00 00"
@@ -12022,8 +12022,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at pre-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "5c ee 00 00"
@@ -12058,8 +12058,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (2 cases)."
 
 [[insn.example]]
 bytes = "d0 ee 00 00"
@@ -12094,8 +12094,8 @@ fields = { r = "gpr", n = "simm", s = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pin instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "d2 ee 00 00"
@@ -12130,8 +12130,8 @@ fields = { r = "gpr", s = "gpr", n = "simm" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at post-increment by a constant."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "d4 ee 00 00"
@@ -12166,8 +12166,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at register plus register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `unsigned char *` -> `r0 = b[r0+r1] (u)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `unsigned char *` -> `r0 = b[r0+r1] (u)`. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, zero-extended, from the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ee 00 00"
@@ -12202,8 +12202,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at register plus register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `signed char *` (and `char`) -> `r0 = b[r0+r1] (s)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i]` on `signed char *` (and `char`) -> `r0 = b[r0+r1] (s)`. hw/fm1-2026-10-24-v2 (12 cases): loads a byte, sign-extended, from the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ee 02 00"
@@ -12238,8 +12238,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at register plus register."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `unsigned char *` -> `b[r0+r1] = r2`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `p[i] = v` on `unsigned char *` -> `b[r0+r1] = r2`. hw/fm1-2026-10-24-v2 (12 cases): stores the low byte to the base register plus the index register (not scaled); the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "d8 ee 01 00"
@@ -12274,8 +12274,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, zero-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (3 cases)."
 
 [[insn.example]]
 bytes = "dc ee 00 00"
@@ -12310,8 +12310,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): loads a byte, sign-extended, from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases)."
 
 [[insn.example]]
 bytes = "dc ee 02 00"
@@ -12346,8 +12346,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at pre-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 1 more in followup5-m.jsonl): stores the low byte to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (2 cases)."
 
 [[insn.example]]
 bytes = "dc ee 01 00"
@@ -12382,8 +12382,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (zero-extended) from memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit ld.bu.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a byte, zero-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (1 cases). With the index register also the destination, the base gets old base + old register value (1 cases)."
 
 [[insn.example]]
 bytes = "de ee 00 00"
@@ -12418,8 +12418,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Load a byte (sign-extended) from memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a byte, sign-extended, from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (3 cases)."
 
 [[insn.example]]
 bytes = "de ee 02 00"
@@ -12454,8 +12454,8 @@ fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "memory"
 summary = "Store a byte to memory at post-increment by a register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). For some operands the assembler emits the 16-bit st.b.pi instead; the check accepts that only when that entry is in the table (it was confirmed against the merged region tables). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the low byte to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the stored register is also the base register, the value from before the update is stored (1 cases)."
 
 [[insn.example]]
 bytes = "de ee 01 00"
@@ -12490,8 +12490,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "modimm" }
 group = "memory"
 summary = "Read-modify-write: apply `|=` with a modified immediate to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ORs it with the modified immediate and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "00 ef 00 00"
@@ -12526,8 +12526,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "modimm" }
 group = "memory"
 summary = "Read-modify-write: apply `^=` with a modified immediate to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, XORs it with the modified immediate and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "40 ef 00 00"
@@ -12562,8 +12562,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = "modimm" }
 group = "memory"
 summary = "Read-modify-write: apply `&=` with a modified immediate to the word at register plus offset."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Meaning of the whole read-modify-write assumed from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with the modified immediate and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "80 ef 00 00"
@@ -12598,8 +12598,8 @@ fields = { r = "gpr", n = { kind = "simm", scale = 4 }, m = { kind = "modimm", i
 group = "memory"
 summary = "Read-modify-write: AND the word at register plus offset with the complement of a modified immediate."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Printed as the complemented constant."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Printed as the complemented constant. hw/fm1-2026-10-24-v2 (12 cases): reads the word at the base register plus the offset, ANDs it with the printed constant and writes the result back to the same address. Registers and the flags N Z C V are left alone."
 
 [[insn.example]]
 bytes = "c0 ef 00 00"
@@ -29697,10 +29697,10 @@ syntax = "{r} = [npc + {n}]"
 encoding = ["111111111010rrrr", "iiiiiiiiiiiiiii0", "jjjjjjjjjjjjjjjj"]
 fields = { r = "gpr", n = { kind = "simm", letters = "ji", scale = 2 } }
 group = "memory"
-summary = "Load a word using npc plus an even signed 32-bit offset."
+summary = "Load a word from npc plus a signed offset; npc is the address of the instruction plus 4, rounded up to a word boundary, and the sum must be word-aligned."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle sweep/fit ffa0 and vary probes. Meaning of npc and its base address are unknown."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle sweep/fit ffa0 and vary probes. hw/fm1-2026-10-24-v2: with the stub on a word boundary the load reads the word at (address of the instruction + 4) + n, so [npc + 0] is the instruction's last halfword and the halfword after it. 10 of the 16 reads hit the batch's own code and match; the other 6 (offsets 8, 60, 68, 92, 100, 116, from stubs near a batch's end) went past the last stub and are not checked. Offsets 2 and 6, probed alone, reset the chip, as any misaligned word load does. With the instruction at 2 mod 4 (followup5-m-npc.jsonl, run alone, no reset) [npc + 0] read the word at the instruction's address + 6, the goto after it: npc is pc + 4 rounded up to a word boundary (here also the instruction's end rounded down), not pc + 4 (that read would have been misaligned) and not pc + 2. The flags N Z C V are left alone. Before: npc and its base were unknown."
 
 [[insn.example]]
 bytes = "a0 ff 00 00 00 00"

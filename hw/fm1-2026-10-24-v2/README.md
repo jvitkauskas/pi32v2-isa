@@ -56,3 +56,12 @@ additional 12 cases each of `call.l`, `goto.l` and `call.xl` cover forms omitted
 wide-offset solver: all take the target, calls save the next instruction address (`stub + 4` / `stub + 6`),
 and `goto.l` preserves `rets`. All 451 records match, including preserved N/Z/C/V. See
 [the analyst B report](../report5-b.md) for the evidence and remaining scope limits.
+
+## Follow-up for the memory forms (analyst M, round 5)
+
+`followup5-m.jsonl` (with `followup5-m.patterns.json`) holds the 109 cases of `hw/followup5-m-main.json`, built with the
+default `--batch 60 --seed 1` (2 batches, no reset): `testset.b` on old bytes 0x00, 0xFF and every low nibble, the data
+register equal to the base register in every pre/post-increment load and store (64-bit forms with the base as the even
+and as the odd register), and post-increment loads whose increment register is the destination or the base.
+`followup5-m-npc.jsonl` is `hw/followup5-m-npc.json`, one `ld.w.npc` with the stub at 2 mod 4, run alone: it did not
+reset and read the word at the stub address + 6. Findings: `hw/report5-m.md`; models: `tools/hwtest/semantics/m2.py`.
