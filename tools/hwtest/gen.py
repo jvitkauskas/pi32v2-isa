@@ -92,6 +92,22 @@ def make_cases(tab, insns, per_entry, rng):
     return cases
 
 
+def cases_from_file(tab, path):
+    """Cases written by hand: a JSON list of {"id", "values" (raw field values), "in" (16 registers), "flags"}."""
+    cases = []
+    for c in json.loads(Path(path).read_text()):
+        i = tab.by_id(c["id"])
+        if not runnable(i):
+            raise SystemExit(f"{i.id}: not a form the runner can execute blind")
+        values = {f: c["values"][f] for f in i.fields}
+        regs = [int(v, 0) if isinstance(v, str) else v for v in c["in"]]
+        if len(regs) != 16:
+            raise SystemExit(f"{i.id}: 'in' needs 16 registers")
+        cases.append({"id": i.id, "values": values, "bytes": codec.encode(i, values).hex(),
+                      "text": codec.format(i, values), "in": regs, "flags": c.get("flags", 0) & 0xF})
+    return cases
+
+
 def build_batch(cases, workdir, flag_mask=0xF, base=BASE):
     """Assemble and link one batch with the repo's own assembler and linker; return (image, symbols)."""
     lines = ["\t.text"]
@@ -145,6 +161,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("outdir", type=Path)
     p.add_argument("--wave", default="1", choices=["selftest", "1", "fpu", "2"])
+    p.add_argument("--cases", type=Path, help="run these cases (JSON, see cases_from_file) instead of a wave; "
+                                              "the batches are named after the file")
     p.add_argument("--flag-mask", type=lambda v: int(v, 0), default=0xF,
                    help="psr bits the cases set (default 0xF, the condition flags; 0 leaves psr as it is)")
     p.add_argument("--per-entry", type=int, default=12)
@@ -156,9 +174,14 @@ def main():
     a = p.parse_args()
     tab = table.load()
     rng = random.Random(a.seed)
-    insns = select(tab, a.wave)
+    if a.cases:
+        cases = cases_from_file(tab, a.cases)
+        insns = sorted({c["id"] for c in cases})
+        a.wave = a.cases.stem
+    else:
+        insns = select(tab, a.wave)
+        cases = make_cases(tab, insns, a.per_entry, rng)
     nop = tab.by_id("nop")
-    cases = make_cases(tab, insns, a.per_entry, rng)
     a.outdir.mkdir(parents=True, exist_ok=True)
     run = ["#!/bin/sh", "# Run each batch on a unit in USB download mode; power-cycle it afterwards.", "set -e"]
     batches = [cases[k:k + a.batch] for k in range(0, len(cases), a.batch)]

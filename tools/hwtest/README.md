@@ -50,5 +50,12 @@ python3 tools/hwtest/analyze.py /tmp/hw --json results.jsonl
 the next wave in the other slot (`--first-slot`); otherwise its first upload would land on the runner that is
 answering the ROM. Results of real runs are kept under [hw/](../../hw/).
 
+## Checking meanings
+
+`check.py RESULTS.jsonl` runs every case through an executable model of its form (`semantics/*.py`, interface
+in `check.py`) and lists the forms whose hardware results differ. To test particular inputs, write them as a
+JSON list of `{"id", "values" (raw field values), "in" (16 registers), "flags"}` and build batches with
+`gen.py OUTDIR --cases FILE.json --first-slot ...`.
+
 A case that hangs the unit (a trap, a missing instruction) leaves the batch without an `.out` file: power-cycle,
 note the batch, and split it (`--batch`) to find the case.
