@@ -1083,7 +1083,8 @@ asm_rejects = ["{} = [sp++]"]   # objdump prints an empty list; the assembler wa
 group = "stack"
 summary = "Pop any of reti, rete, retx, rets, sr4 and psr (one mask bit each, sr0 first)."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler"]
+notes = "[compiler] `{rets} = [sp++]` before a tail call (`goto`) in -fPIC code, restoring rets without returning."
 
 [[insn.example]]
 bytes = "80 04"
@@ -2838,8 +2839,8 @@ fields = { r = "gpr_hi" }
 group = "constants"
 summary = "Clear one of r8..r15, issued in parallel with a neighbouring instruction (the # form)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Twin of li.zero_hi: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin."
+sources = ["oracle", "compiler"]
+notes = "Twin of li.zero_hi: the same low 13 bits with the top three bits 110; objdump prints the base text followed by two spaces and '#'. Every word of the base shape has a twin. [compiler] `r13 = 0 #` paired with a byte store."
 
 [[insn.example]]
 bytes = "c0 d4"
@@ -5160,8 +5161,8 @@ fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "shifts"
 summary = "Logical shift left by an immediate 1..32, 32-bit encoding that reaches r0..r15: rd = rs << n."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding (raw amount 0 prints as 32). Not confirmed: for `<< 32` the assembler emits the 16-bit lsl.rri, which objdump prints as `<< 0`. The compiler uses the 32-bit shift forms when an operand is r8 or above (seen for shr3.rri.l and lsr.rri.l in a register-pressure test); this one by analogy, not seen."
+sources = ["oracle", "compiler"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding (raw amount 0 prints as 32). Not confirmed: for `<< 32` the assembler emits the 16-bit lsl.rri, which objdump prints as `<< 0`. [compiler] with a high register: `r13 = r1 << 2`; the 32-bit shift forms are used when an operand is r8 or above."
 
 [[insn.example]]
 bytes = "c0 e1 00 00"

@@ -257,7 +257,8 @@ The `(f)` instructions assemble with or without `-mfprev1`; the compiler did not
   callee's pushes). A 64-bit argument is two consecutive words, low first, with no pair alignment
   (`f(int a, long long b, int c)`: a = r0, b = r2:r1 (low in r1), c = r3); a 64-bit value that does not fit in
   the remaining registers goes to the stack whole. 64-bit results come back in `r1_r0`, others in `r0`.
-- `long long` is held in a pair with the low word in the even register.
+- `long long` is held in a pair with the low word in the even register. The stack is only kept 4-byte aligned
+  (frames of `sp += -12` and pushes of 12 or 20 bytes occur).
 - Prologue `[--sp] = {rets, r5, r4}` (`push.rets_rl`), epilogue `{pc, r5, r4} = [sp++]` (`pop.pc_rl`); a function that
   makes no call just ends with `rts`; leaf-with-call uses `push.rets`/`pop.pc`. `r4`..`r15` are saved by the callee when
   used (`{rets, r15-r4}` once), `r0`..`r3` are scratch (r15 is special with `-fPIC`). Variadic functions spill the unnamed register words
