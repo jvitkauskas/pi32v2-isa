@@ -210,6 +210,19 @@ assembler that matches JieLi on text cannot promise identical direct C objects.
 The observed equivalence here concerns the operation/compiler choice; there
 was no hardware or status-flag equivalence test.
 
+Across the 50 files of `tests/corpus/` at -O0, -O2 and -Os (150 objects; JieLi `clang -c` against JieLi
+`clang -S` assembled by the open assembler, which is the same as JieLi's assembler on that text), 16473
+instructions use the same table entry and every other one falls in one of two kinds **[compiler]**:
+
+| Kind | Examples (count) |
+| --- | --- |
+| An equivalent form chosen differently | `add.rr` for `add.rrr` (364), `add.ri.u5` for `add.rri` (96), the twins `add.rr.p` for `add.rrr.p` (95), signed 12-bit compares `if*.ri.s12` for `if*.ri.modimm` (~165), `rmw.add.s12` for `rmw.add.modimm` (60), sometimes a 32-bit form where a 16-bit one fits (`ld.w.sp.l`, `li.modimm`) |
+| A branch of another size | `goto.l` for `goto.s` (175), long compare-and-branch forms (`bgts.ri.l`, `bges.rr.l`, ...) for short ones; offsets after them shift accordingly |
+
+The second kind is decided by the compiler's code generator and does not appear in the `-S` text, so no
+assembler that reads text can reproduce `clang -c` objects in general. The open toolchain therefore aims at
+identity with JieLi's assembler on the same text, which holds for every firmware product above.
+
 For each build, retain the actual compiler/preprocessor output:
 
 ```sh
