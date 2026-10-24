@@ -29,8 +29,8 @@ encoding = ["0000000000000001"]
 group = "control"
 summary = "Wait for an interrupt."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle", "compiler"]
-notes = "[compiler] `__builtin_pi32v2_idle` exists but is rejected with 'cannot compile this builtin function yet'."
+sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
+notes = "[compiler] `__builtin_pi32v2_idle` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned. This does not establish its wait/wakeup behavior in other contexts."
 
 [[insn.example]]
 bytes = "01 00"
@@ -59,8 +59,8 @@ encoding = ["0000000001100000"]
 group = "control"
 summary = "Disable interrupts."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler"]
-notes = "[compiler] `__builtin_pi32v2_cli()` -> `cli`."
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler", "hardware"]
+notes = "[compiler] `__builtin_pi32v2_cli()` -> `cli`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, clears bit 9 (readback 0x01090500), leaving flags unchanged; icfg is restored by the probe. Two cases."
 
 [[insn.example]]
 bytes = "60 00"
@@ -74,8 +74,8 @@ encoding = ["0000000001100001"]
 group = "control"
 summary = "Enable interrupts."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle", "compiler"]
-notes = "[compiler] `__builtin_pi32v2_sti()` -> `sti`."
+sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
+notes = "[compiler] `__builtin_pi32v2_sti()` -> `sti`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, bit 9 stays set and flags are unchanged; icfg is restored by the probe. Two cases plus follow-ups starting with bit 9 clear or set: the bit is set in both, other icfg bits and flags unchanged."
 
 [[insn.example]]
 bytes = "61 00"
@@ -106,7 +106,8 @@ encoding = ["0000000010000001"]
 group = "returns"
 summary = "Return from an interrupt: continue at the address in reti."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle"]
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: A RAM-target case continued at reti, skipping the fall-through marker; the probe restored reti afterwards. Observed flags, current sp and icfg were unchanged in this ROM context. Interrupt-entry state and other modes were not tested."
 
 [[insn.example]]
 bytes = "81 00"
@@ -120,7 +121,8 @@ encoding = ["0000000010000010"]
 group = "returns"
 summary = "Return from an exception: continue at the address in retx."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: A RAM-target case continued at retx, skipping the fall-through marker; the probe restored retx afterwards. Observed flags, current sp and icfg were unchanged in this ROM context. Exception-entry state and other modes were not tested."
 
 [[insn.example]]
 bytes = "82 00"
@@ -134,7 +136,8 @@ encoding = ["0000000010000011"]
 group = "returns"
 summary = "Return from emulation (debug) mode: continue at the address in rete."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: A RAM-target case continued at rete, skipping the fall-through marker; the probe restored rete afterwards. Observed flags, current sp and icfg were unchanged in this ROM context. Debug-entry state and other modes were not tested."
 
 [[insn.example]]
 bytes = "83 00"
@@ -225,7 +228,8 @@ encoding = ["0001010001000000"]
 group = "moves"
 summary = "Make the user stack pointer the current stack pointer."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: With usp preloaded to a scratch pointer, sp read back that pointer after this move. The probe restored both sp and usp."
 
 [[insn.example]]
 bytes = "40 14"
@@ -239,7 +243,8 @@ encoding = ["0001010001000001"]
 group = "moves"
 summary = "Make the supervisor stack pointer the current stack pointer."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: With ssp preloaded to a scratch pointer, sp read back that pointer after this move. The probe restored both sp and ssp."
 
 [[insn.example]]
 bytes = "41 14"
@@ -253,7 +258,8 @@ encoding = ["0001010001000010"]
 group = "moves"
 summary = "Save the current stack pointer as the user stack pointer."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: usp read back the current sp after this move, then the probe restored the previous usp. One aligned scratch pointer tested."
 
 [[insn.example]]
 bytes = "42 14"
@@ -267,7 +273,8 @@ encoding = ["0001010001000011"]
 group = "moves"
 summary = "Save the current stack pointer as the supervisor stack pointer."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "oracle"]
+sources = ["kagaimiq-jielie", "oracle", "hardware"]
+notes = "[hardware] hw/fm1-2026-10-24-v4: ssp read back the current sp after this move, then the probe restored the previous ssp. One aligned scratch pointer tested."
 
 [[insn.example]]
 bytes = "43 14"
@@ -336,8 +343,8 @@ fields = { r = "gpr", s = "sr" }
 group = "moves"
 summary = "Copy a general register to a special register."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Same word as mov.r_sr with the direction bit set."
+sources = ["oracle", "hardware"]
+notes = "Same word as mov.r_sr with the direction bit set. [hardware] hw/fm1-2026-10-24-v4: reti/rete/retx/rets read back only bits 26..1 for inputs 0xFFFFFFFF and 0x12345679; sr4 and cnum still read zero after nonzero writes. psr writes 0 and 15 read back those flags; aligned RAM pointers written to usp/ssp/sp read back unchanged. uspn/sspn remain zero after nonzero pointer writes through this interface; icfgn/icfgs were only rewritten as zero and icfg with its previous value. Each probe restores the saved register. A pc write targeting stub+8 fell through and executed the marker at stub+4; a follow-up targeting hw_taken also fell through, with no register changes."
 
 [[insn.example]]
 bytes = "64 e0 80 00"
@@ -366,8 +373,8 @@ encoding = ["1110100001110000", "0000000000000000"]
 group = "control"
 summary = "Purpose unknown; used by the FM-1 firmware's second-core start-up."
 status = "confirmed"
-sources = ["oracle", "sources-in-use", "compiler"]
-notes = "The only second word objdump accepts after e870 is 0000. [compiler] `__builtin_pi32v2_trigger()` -> `trigger`."
+sources = ["oracle", "sources-in-use", "compiler", "hardware"]
+notes = "The only second word objdump accepts after e870 is 0000. [compiler] `__builtin_pi32v2_trigger()` -> `trigger`. [hardware] hw/fm1-2026-10-24-v4: The case completed with flags 5 and no visible register, flag, sp, rets or scratch change. Activity or state on the other core was not observed."
 
 [[insn.example]]
 bytes = "70 e8 00 00"
@@ -560,8 +567,8 @@ fields = { s = "sr", n = { kind = "uimm", letters = "ji" } }
 group = "constants"
 summary = "Load a 32-bit constant into a special register; the low half comes first in memory."
 status = "confirmed"
-sources = ["oracle", "sources-in-use"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md)."
+sources = ["oracle", "sources-in-use", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24-v4: reti/rete/retx/rets read back bits 26..1 only for 0xFFFFFFFF and 0x12345679; psr reads back 0 or 15 as written. sr4/cnum and uspn/sspn remain zero after the tested nonzero writes. usp/ssp/sp read back the aligned RAM pointer 0x01C27F00. icfgn/icfgs were only rewritten as zero, icfg as its original 0x01090700; a pc-target case using the local hw_taken address fell through without visible changes. Probes of the other targets restore the previous value."
 
 [[insn.example]]
 bytes = "e0 ff 00 00 00 00"
@@ -1086,8 +1093,8 @@ asm_rejects = ["{} = [sp++]"]   # objdump prints an empty list; the assembler wa
 group = "stack"
 summary = "Pop any of reti, rete, retx, rets, sr4 and psr (one mask bit each, sr0 first)."
 status = "confirmed"
-sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler"]
-notes = "[compiler] `{rets} = [sp++]` before a tail call (`goto`) in -fPIC code, restoring rets without returning."
+sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler", "hardware"]
+notes = "[compiler] `{rets} = [sp++]` before a tail call (`goto`) in -fPIC code, restoring rets without returning. [hardware] hw/fm1-2026-10-24-v4: Empty and single-register masks for reti, retx, rets, sr4 and psr completed. Return registers retain bits 26..1; sr4 reads zero and psr reads the supplied 15. A multi-register mask selecting reti, retx, rets, sr4 and psr loaded consecutive words in that order (sr4 still reads zero); the probe restores registers and sp. The original rete-only setup/test/readback sequence hung without a result, but an equivalent retry on a motherboard USB port completed and read back 0x02345678 from input 0x12345679. The earlier hang is not established as an instruction trap; transport and run context both changed."
 
 [[insn.example]]
 bytes = "80 04"
@@ -2174,8 +2181,8 @@ encoding = ["0001010001000100"]
 group = "moves"
 summary = "Copy between sp and the special register uspn."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax. [hardware] hw/fm1-2026-10-24-v4: In the ROM download context, sp became 0x01C01180 (the normal usp value seen in nearby batches), although generic uspn reads were zero before and after attempted writes. sp was restored. Follow-ups preloading normal usp/ssp show the dedicated n move takes that normal bank value; other modes remain untested."
 
 [[insn.example]]
 bytes = "44 14"
@@ -2189,8 +2196,8 @@ encoding = ["0001010001000101"]
 group = "moves"
 summary = "Copy between sp and the special register sspn."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax. [hardware] hw/fm1-2026-10-24-v4: In the ROM download context, sp became 0x01C00E00 (the normal ssp value), although generic sspn reads were zero before and after attempted writes. sp was restored. Follow-ups preloading normal usp/ssp show the dedicated n move takes that normal bank value; other modes remain untested."
 
 [[insn.example]]
 bytes = "45 14"
@@ -2204,8 +2211,8 @@ encoding = ["0001010001000110"]
 group = "moves"
 summary = "Copy between sp and the special register uspn."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax. [hardware] hw/fm1-2026-10-24-v4: After this move, a generic uspn read still returned zero. A follow-up sets sp to a distinct scratch pointer and reads it back from normal usp; the probe restores normal usp. In this ROM context the dedicated move writes usp, while the generic uspn interface reads zero. Other modes remain untested."
 
 [[insn.example]]
 bytes = "46 14"
@@ -2219,8 +2226,8 @@ encoding = ["0001010001000111"]
 group = "moves"
 summary = "Copy between sp and the special register sspn."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax."
+sources = ["oracle", "hardware"]
+notes = "Meaning of uspn/sspn unknown (docs/ISA.md); direction read from the syntax. [hardware] hw/fm1-2026-10-24-v4: After this move, a generic sspn read still returned zero. A follow-up sets sp to a distinct scratch pointer and reads it back from normal ssp; the probe restores normal ssp. In this ROM context the dedicated move writes ssp, while the generic sspn interface reads zero. Other modes remain untested."
 
 [[insn.example]]
 bytes = "47 14"
@@ -2235,10 +2242,10 @@ syntax = "callns {x}"
 encoding = ["000000001001xxxx"]
 fields = { x = "gpr" }
 group = "jumps"
-summary = "Call through a register, variant 'ns'; meaning unknown."
+summary = "Operand- and flag-dependent control form; its general behavior is unresolved."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit: register in bits 3..0. Meaning of 'ns' unknown."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. Meaning of 'ns' unknown. [hardware] hw/fm1-2026-10-24-v4: In the ROM context, operand r0 with flags 0, 5 or 15 followed rets rather than r0, leaving rets unchanged. Operands r7 and r15 with flags 0 also followed rets, but a readback before restoration showed sp advanced by four and r0 became zero; with flags 15 both reset into the app. The operand/flag-dependent rule and mode effects remain unresolved; there is no general executable model."
 
 [[insn.example]]
 bytes = "90 00"
@@ -2277,10 +2284,10 @@ syntax = "cli {x}"
 encoding = ["000000001110xxxx"]
 fields = { x = "gpr" }
 group = "control"
-summary = "Disable interrupts, taking a register operand; meaning unknown."
+summary = "Clear icfg bit 9 and return the previous icfg in the operand register (observed on the FM-1)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit: register in bits 3..0."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, r0 initially 0 or 0x01090700 and flags 0 or 15: r0 receives the previous icfg (0x01090700), and icfg bit 9 clears to give 0x01090500. Flags unchanged; the probe restores icfg. Follow-ups starting with bit 9 clear or set also return the previous icfg (0x01090500 or 0x01090700)."
 
 [[insn.example]]
 bytes = "e0 00"
@@ -2298,10 +2305,10 @@ syntax = "sti {x}"
 encoding = ["000000001111xxxx"]
 fields = { x = "gpr" }
 group = "control"
-summary = "Enable interrupts, taking a register operand; meaning unknown."
+summary = "Set icfg bit 9 from the operand register's bit 9, preserving the other icfg bits (observed on the FM-1)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle fit: register in bits 3..0."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, initial icfg 0x01090700: r0=0 gives icfg 0x01090500, r0=0x01090700 leaves 0x01090700. The operand and flags are unchanged; the probe restores icfg. Follow-ups start with bit 9 clear or set, and a source value of 0x200 sets it without replacing the other icfg bits. Effects of other operand bits are not established."
 
 [[insn.example]]
 bytes = "f0 00"
@@ -2447,8 +2454,8 @@ fields = { n = "uimm" }
 group = "control"
 summary = "Software interrupt with a number 0..7."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: number in bits 2..0; bit 3 is ignored by objdump (the assembler writes 0). [compiler] `__builtin_pi32v2_swi` exists but is rejected with 'cannot compile this builtin function yet'."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout from oracle fit: number in bits 2..0; bit 3 is ignored by objdump (the assembler writes 0). [compiler] `__builtin_pi32v2_swi` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: Number 0 completed with flags 5 and no visible register, flag, sp, rets or scratch change. Interrupt delivery and the other numbers were not tested."
 
 [[insn.example]]
 bytes = "a0 00"
@@ -2502,8 +2509,8 @@ encoding = ["0000000000000010"]
 group = "control"
 summary = "Breakpoint."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: In the ROM download context with [sp] holding hw_taken, the tested case continued there and sp advanced by four; registers, flags and rets were unchanged. This is the observed context behavior, not a determination of debug-mode semantics."
 
 [[insn.example]]
 bytes = "02 00"
@@ -2517,8 +2524,8 @@ encoding = ["0000000000000011"]
 group = "control"
 summary = "Hardware breakpoint."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: Two cases in RAM slot 0x01C20000 hung without results and USB inspection timed out (original USB path and motherboard-port retry). A final case in slot 0x01C28000 reset into the app instead; no instruction result was returned. Placement, ROM context and history were not varied independently, so the cause of the difference and debug-mode semantics remain unknown."
 
 [[insn.example]]
 bytes = "03 00"
@@ -2532,8 +2539,8 @@ encoding = ["0000000000100001"]
 group = "control"
 summary = "System call."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned."
 
 [[insn.example]]
 bytes = "21 00"
@@ -2547,8 +2554,8 @@ encoding = ["0000000001000000"]
 group = "control"
 summary = "Clear the lock flag; meaning unknown."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [compiler] `__builtin_pi32v2_lockclr()` -> `lockclr`; pairs with lockset (see there)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [compiler] `__builtin_pi32v2_lockclr()` -> `lockclr`; pairs with lockset (see there). [hardware] hw/fm1-2026-10-24-v4: Two cases (flags 0 and 15) fell through without visible changes to registers, flags, sp, rets or scratch. Exclusion was not measured."
 
 [[insn.example]]
 bytes = "40 00"
@@ -2562,8 +2569,8 @@ encoding = ["0000000001000001"]
 group = "control"
 summary = "Set the lock flag; meaning unknown."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [compiler] `__builtin_pi32v2_lockset()` -> `lockset`. The AC79 SDK (FreeRTOS port, commented-out critical section) wraps the outermost critical-section entry in `lockset` with a per-CPU nesting count and csyncs, and leaves with `lockclr`: a multi-core exclusion lock."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [compiler] `__builtin_pi32v2_lockset()` -> `lockset`. The AC79 SDK (FreeRTOS port, commented-out critical section) wraps the outermost critical-section entry in `lockset` with a per-CPU nesting count and csyncs, and leaves with `lockclr`: a multi-core exclusion lock. [hardware] hw/fm1-2026-10-24-v4: Two cases (flags 0 and 15), each followed immediately by lockclr, completed without visible changes to registers, flags, sp, rets or scratch. This does not establish lock ownership or exclusion."
 
 [[insn.example]]
 bytes = "41 00"
@@ -2577,8 +2584,8 @@ encoding = ["0000000001000010"]
 group = "control"
 summary = "Send event, local; meaning unknown."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: Two cases (flags 0 and 15) fell through without visible changes to registers, flags, sp, rets or scratch. Event delivery was not measured."
 
 [[insn.example]]
 bytes = "42 00"
@@ -2592,8 +2599,8 @@ encoding = ["0000000001000011"]
 group = "control"
 summary = "Send event, global; meaning unknown."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: One case with flags 0 completed without visible changes; the next batch with flags 15 reset into the app. The batches used different RAM slots and histories; the evidence does not identify the cause or event recipient."
 
 [[insn.example]]
 bytes = "43 00"
@@ -2607,8 +2614,8 @@ encoding = ["0000000001000100"]
 group = "control"
 summary = "Wait for event."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With sevl immediately before it, the case completed with flags 5 and no visible register, flag, sp, rets or scratch change. An unprimed wait and event consumption/delivery were not tested."
 
 [[insn.example]]
 bytes = "44 00"
@@ -2620,10 +2627,10 @@ id = "rtss"
 syntax = "rtss"
 encoding = ["0000000010000100"]
 group = "control"
-summary = "Return variant 'ss'; meaning unknown."
+summary = "Return variant: selects rets in the tested ROM context; other modes are untested."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With reti, rete, retx and rets aimed at four distinct marker positions, this form selected rets. Flags, current sp and icfg were unchanged in this ROM context; setup/readback restores the visible state. Effects in other modes are unknown."
 
 [[insn.example]]
 bytes = "84 00"
@@ -2635,10 +2642,10 @@ id = "rtns"
 syntax = "rtns"
 encoding = ["0000000010000101"]
 group = "control"
-summary = "Return variant 'ns'; meaning unknown."
+summary = "Return variant: selects reti in the tested ROM context; other modes are untested."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With reti, rete, retx and rets aimed at four distinct marker positions, this form selected reti. Flags, current sp and icfg were unchanged in this ROM context; setup/readback restores the visible state. Effects in other modes are unknown."
 
 [[insn.example]]
 bytes = "85 00"
@@ -2650,10 +2657,10 @@ id = "rthw"
 syntax = "rthw"
 encoding = ["0000000010000110"]
 group = "control"
-summary = "Return variant 'hw'; meaning unknown."
+summary = "Return variant: selects retx in the tested ROM context; other modes are untested."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested."
+sources = ["oracle", "hardware"]
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With reti, rete, retx and rets aimed at four distinct marker positions, this form selected retx. Flags, current sp and icfg were unchanged in this ROM context; setup/readback restores the visible state. Effects in other modes are unknown."
 
 [[insn.example]]
 bytes = "86 00"
@@ -2697,8 +2704,8 @@ encoding = ["00000000001---10"]
 group = "control"
 summary = "System synchronisation barrier."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Exact ordering unknown."
+sources = ["oracle", "hardware"]
+notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Exact ordering unknown. [hardware] hw/fm1-2026-10-24-v4: Two cases (flags 0 and 15) fell through without visible changes to registers, flags, sp, rets or scratch. Ordering was not measured."
 
 [[insn.example]]
 bytes = "22 00"
@@ -2712,8 +2719,8 @@ encoding = ["00000000001---11"]
 group = "control"
 summary = "Clear the branch target buffer (name suggests)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Meaning unknown."
+sources = ["oracle", "hardware"]
+notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Meaning unknown. [hardware] hw/fm1-2026-10-24-v4: Both cases (flags 0 and 15) reset the chip into its normal app; no instruction result was returned. This does not establish its branch-buffer effect."
 
 [[insn.example]]
 bytes = "23 00"
@@ -12768,8 +12775,8 @@ group = "stack"
 asm_rejects = ["{} = [sp++]"]
 summary = "Pop a set of special registers from the stack."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [hardware] hw/fm1-2026-10-24-v4: An empty mask and single-register masks other than rete completed (pc included). reti/retx/rets retain bits 26..1, sr4/cnum/uspn/sspn read zero, psr reads the supplied 15, and usp/ssp/sp take the supplied aligned pointer. When sp is popped, its loaded value wins over the old-sp increment; pc pops the supplied address and sp advances by four. The original rete-only case and a multi-register mask selecting reti, retx, rets, sr4 and psr hung; both completed on retry using a motherboard USB port. The multi-register retry loaded consecutive words in register-number order, as pop.srl did. The earlier hangs are not established as instruction traps because transport and run context changed. Other masks and modes remain untested."
 
 [[insn.example]]
 bytes = "50 e9 00 00"
@@ -29679,10 +29686,10 @@ syntax = "gotoss {n}"
 encoding = ["1111111110000000", "iiiiiiiiiiiiiii1", "jjjjjjjjjjjjjjjj"]
 fields = { n = { kind = "simm", letters = "ji", scale = 2 } }
 group = "branches"
-summary = "Execute gotoss with a signed 32-bit byte offset whose low bit is zero."
+summary = "PC-relative transfer that saves the next PC in rets on the FM-1; mode effects are unknown."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from oracle sweep ff80 and vary probes. Meaning unknown."
+sources = ["oracle", "hardware"]
+notes = "Layout from oracle sweep ff80 and vary probes. Meaning unknown. [hardware] hw/fm1-2026-10-24-v4: The tested offset 4 branched to the stub target relative to the end of the six-byte instruction, and wrote that next-instruction address into rets. General registers, flags, sp and scratch were unchanged. Any mode-switching effect is unknown."
 
 [[insn.example]]
 bytes = "80 ff 01 00 00 00"
@@ -41703,9 +41710,9 @@ fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 4to7 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior."
+notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 4to7 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "04 ff 00 00 00 00"
@@ -41740,9 +41747,9 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Objdump prints a register branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only."
+notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "44 ff 00 00 00 00"
@@ -41777,9 +41784,9 @@ fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 14to15 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior."
+notes = "Observed by oracle decode probes; the first-word bit 5 is zero for the signed 12-bit immediate (set selects the separately listed modified-immediate form). Condition codes 14to15 print ??, which the assembler refuses; ignored condition bits here mean identical decoder text, not known identical hardware behavior. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "0e ff 00 00 00 00"
@@ -41814,9 +41821,9 @@ fields = { r = "gpr", s = "gpr", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Objdump prints a register branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only."
+notes = "Observed by oracle decode probes. The unnamed condition codes print ??, which the assembler refuses. Ignored condition bits express identical decoder text only. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "4e ff 00 00 00 00"
@@ -41852,9 +41859,9 @@ group = "branches"
 decode_requires = ["fprev1"]
 summary = "Objdump prints a floating-point branch with condition !=; hardware behavior is untested."
 asm_no_syntax = true
-notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known. [hardware] hw/fm1-2026-10-24-v4: All three tested operand pairs (1.0/1.0, 2.0/1.0 and quiet NaN/1.0) reset into the app, without instruction results. This establishes no comparison rule on this chip."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "44 ff 80 00 00 00"
@@ -41890,9 +41897,9 @@ group = "branches"
 decode_requires = ["fprev1"]
 summary = "Objdump prints a floating-point branch with condition u==; hardware behavior is untested."
 asm_no_syntax = true
-notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known. [hardware] hw/fm1-2026-10-24-v4: All three tested operand pairs (1.0/1.0, 2.0/1.0 and quiet NaN/1.0) reset into the app, without instruction results. This establishes no comparison rule on this chip."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "45 ff 80 00 00 00"
@@ -41928,9 +41935,9 @@ group = "branches"
 decode_requires = ["fprev1"]
 summary = "Objdump prints a floating-point branch with condition uno; hardware behavior is untested."
 asm_no_syntax = true
-notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known. [hardware] hw/fm1-2026-10-24-v4: All three tested operand pairs (1.0/1.0, 2.0/1.0 and quiet NaN/1.0) reset into the app, without instruction results. This establishes no comparison rule on this chip."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "46 ff 80 00 00 00"
@@ -41966,9 +41973,9 @@ group = "branches"
 decode_requires = ["fprev1"]
 summary = "Objdump prints a floating-point branch with condition ord; hardware behavior is untested."
 asm_no_syntax = true
-notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known."
+notes = "Oracle decoding prints this condition, but passing that text to the assembler emits no instruction. Probes with iff and the printed operator produce no encoding; no working assembler spelling is known. [hardware] hw/fm1-2026-10-24-v4: All three tested operand pairs (1.0/1.0, 2.0/1.0 and quiet NaN/1.0) reset into the app, without instruction results. This establishes no comparison rule on this chip."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "47 ff 80 00 00 00"
@@ -42916,9 +42923,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 40 00"
@@ -42964,9 +42971,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 20 00"
@@ -43012,9 +43019,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 10 00"
@@ -43060,9 +43067,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 08 00"
@@ -43108,9 +43115,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 04 00"
@@ -43156,9 +43163,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 02 00"
@@ -43204,9 +43211,9 @@ block = { then = "t", else = "e" }
 group = "branches"
 summary = "Objdump prints a conditional block with an unnamed register comparison; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 01 00"
@@ -43251,9 +43258,9 @@ fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "sim
 group = "branches"
 summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax."
+notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "24 ff 00 00 00 00"
@@ -43288,9 +43295,9 @@ fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "sim
 group = "branches"
 summary = "Objdump prints a branch with an unnamed comparison condition; hardware behavior is unknown."
 asm_no_syntax = true
-notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax."
+notes = "Oracle probes at FF24..FF27 and FF2E..FF2F show a decimal modified immediate. This is distinct from the signed 12-bit forms at FF04..FF07 and FF0E..FF0F. Condition codes print ?? and have no known assembler syntax. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 
 [[insn.example]]
 bytes = "2e ff 00 00 00 00"
@@ -43326,9 +43333,9 @@ group = "branches"
 decode_requires = ["fprev1"]
 summary = "Objdump prints a floating-point branch with an unnamed condition; hardware behavior is unknown."
 status = "confirmed"
-sources = ["oracle"]
+sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Oracle probes and the full second-word sweep at FF4E/FF4F show unnamed floating-point conditions. The assembler refuses the printed ?? spelling."
+notes = "Oracle probes and the full second-word sweep at FF4E/FF4F show unnamed floating-point conditions. The assembler refuses the printed ?? spelling. [hardware] hw/fm1-2026-10-24-v4: The canonical table encoding reset the chip into the app in the tested RAM-target case. No instruction result was returned; ignored selector bits and other operands were not swept on hardware."
 
 [[insn.example]]
 bytes = "4e ff 80 00 00 00"

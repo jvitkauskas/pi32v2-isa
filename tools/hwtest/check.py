@@ -87,7 +87,7 @@ class State:
         self.words = list(pattern)
         k = (self.sp - 4 - self.scratch) // 4
         if 0 <= k < len(self.words):
-            self.words[k] = self.stub          # the runner enters the stub by popping its address from [sp - 4]
+            self.words[k] = rec.get("entry", self.stub)  # setup may precede the instruction under test
 
     def load(self, address, size=4):
         """Little-endian load of `size` bytes from the scratch (as it was before the case)."""

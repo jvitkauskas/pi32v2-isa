@@ -22,8 +22,8 @@ Still open on the encoding side:
 
 - Forms objdump prints with `??` as the condition, and four floating-point conditions (`!=`, `u==`, `uno`,
   `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`. On the FM-1 the
-  register-only ones (the `??` vector compares) reset the chip ([hw](../hw/fm1-2026-10-24/README.md)); the
-  branch and `if` forms were not run.
+  register-only ones (the `??` vector compares) reset the chip ([hw](../hw/fm1-2026-10-24/README.md));
+  the branches also reset in run 4, while the unnamed `if` forms ran like AND-zero blocks in its operand grid.
 - 16-bit words were swept completely; 32-bit and 48-bit second and third words outside E000-FFFF do not
   exist (every first word there is 16-bit).
 
@@ -31,9 +31,9 @@ Still open on the encoding side:
 
 Priorities from real code [fm1-firmware-stats]: one FM-1 factory firmware uses 562 of the table's forms; 97%
 of its image decodes, and the undecodable words inside code are data (text, small constants), apart from one
-that decodes only with `+instrev3`. Forms it uses whose meaning is still open, most used first: `sti.r`,
-`lockclr`, `lockset`, `cli.r`, `callns.r`, `gotoss.xl`, `btbclr` (`shl3` and the 86 DSP forms it uses are now
-settled on hardware). M-VAVE's 016 package (2026-10-21)
+that decodes only with `+instrev3`. Frequently used forms whose control or mode effects remain open include
+`lockclr`, `lockset`, `callns.r`, `gotoss.xl` and `btbclr`; `cli.r`/`sti.r` now have hardware evidence for
+their icfg-bit-9 effects (`shl3` and the 86 DSP forms it uses are also settled on hardware). M-VAVE's 016 package (2026-10-21)
 gives the same picture: 598 forms used, all decoding as objdump does at `-mcpu=r3`; it uses the FPU far more
 (5090 FPU instructions, `madd.f.rrr` 111 times, which JieLi's compiler never emits), and with `+instrev3` it
 contains parallel twins of revision-3 forms that were then missing (`unpack4 ... #`, `sum(... *|*|*|* ...) #`; now in
@@ -41,20 +41,24 @@ the table). Both images now read the same with this repo's objdump as with JieLi
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
-source `compiler`) and from the FM-1 itself (source `hardware`): 730 of the 803 forms (parallel twins not
+source `compiler`) and from the FM-1 itself (source `hardware`): 770 of the 803 forms (parallel twins not
 counted, 282 of which ran too) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
 stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md), and the
-`if` blocks, `rep` loops, table branches and parallel twins in [run 3](../hw/fm1-2026-10-24-v3/README.md).
-Executable models of all of them but `copex.ppi` (`tools/hwtest/semantics/`) match every case, flags, memory,
+`if` blocks, `rep` loops, table branches and parallel twins in [run 3](../hw/fm1-2026-10-24-v3/README.md), and
+40 additional control, return, special-register and unnamed-block forms in [run 4](../hw/fm1-2026-10-24-v4/README.md).
+Every non-parallel form has now been attempted; the other 33 have failure observations without results.
+Executable models of the settled forms (`tools/hwtest/semantics/`) match every captured case, flags, memory,
 `sp`, `rets` and the path taken included. The `psr` flags (N, Z, C, V in bits 3..0, and which forms write which)
 are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in [ISA.md](ISA.md). Still open:
 
-- Not run on hardware: the returns `rti`/`rtx`/`rte`, `rtns`/`rtss`/`rthw`, `callns`, writes to special
-  registers (`mov.sr_r`, `li.sr_u32`, pops into special registers, the `usp`/`ssp`/`uspn`/`sspn` moves), and the
-  control forms `idle`, `cli`/`sti` (with and without a register), `swi`, `syscall`, `bkpt`, `hbkpt`,
-  `lockset`/`lockclr`, `sevl`/`sevg`, `wfe`, `ssync`, `btbclr`, `trigger`. Most change control state the runner
-  depends on (interrupts, stacks, events, the second core); they need the unit at hand to power-cycle. Also not
-  tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks.
+- Control effects still open: `callns.r` depends on its operand and flags (r0 followed rets; r7/r15 also
+  changed sp/r0 with flags zero and reset with flags 15), mode changes of the return variants and
+  `gotoss.xl`, icfg bits other than bit 9, event delivery/consumption, lock exclusion and barrier ordering.
+  The rete-only pops and a multi-register `pop.srmask` sequence initially hung, then completed on a
+  motherboard USB port; the earlier failures are not established as instruction traps. `hbkpt` hung
+  again on that port, then reset in a final retry using the other RAM slot. [Run 4](../hw/fm1-2026-10-24-v4/README.md) separates captures from failures.
+- Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks,
+  an unprimed `wfe`, and software-interrupt numbers other than 0.
 - `iff.ne.rr.1`..`.6`: true for equal or unordered clean operands, but also for many ordered unequal random
   words; no rule found ([run 3](../hw/fm1-2026-10-24-v3/README.md)).
 - `copex.ppi`: depends on something besides its operands (identical inputs gave different results in mode
@@ -63,9 +67,12 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
   revision-3 forms (`popcnt.r_pair`, `sat8.rr`, `vsat16`, `unpack4`, `sum` with `usat`/`ssat`/`msat`) behave
   exactly as an older form whose encoding differs by one selector bit. What they do on a revision-3 core is
   unknown.
-- Forms that reset the chip: the unnamed (`??`) conditions of the vector compares (the `??` branch and `if`
-  forms were not run), the six `mem2.hh.i` multiplies, and misaligned word loads. The `mem2.hh.rh` forms run, but
-  as 16 x 32 multiplies.
+- Forms that reset the chip: the unnamed (`??`) vector compares, the six `mem2.hh.i` multiplies,
+  misaligned word loads, the tested canonical unnamed integer/floating branches, and the four non-round-tripping floating
+  branch conditions (`!=`, `u==`, `uno`, `ord`). Run 4 also observed resets in both `btbclr` cases,
+  `syscall`, `idle`, one of two `sevg` cases and the r7/r15 `callns` cases with flags 15. These are
+  observations in the ROM runner, not proof of intrinsic traps. The `mem2.hh.rh` forms run as 16 x 32
+  multiplies. The seven unnamed block forms ran like AND-zero blocks in the tested operand grid.
 - The `.c` pushes store exactly what the plain pushes do; what `c` changes is unknown. `reti` and `usp` read
   values that stay fixed within a batch and differ between batches (ROM state, untested).
 - A few edges no case reached: the 32-bit clamp of `madd.mul2.prhrhi.{ssat,usat}`; `ld.w.npc.r` with the

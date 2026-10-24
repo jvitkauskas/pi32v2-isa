@@ -48,11 +48,19 @@ prints, which its assembler also accepts as `sr<n>` [oracle]:
 None of the sixteen counts while a batch runs. `reti` and `usp` look like the state of the boot ROM's context when the
 batch's command arrived (the runner is called from the ROM's download handler); that is a reading of the data, not
 tested. The cut on `rets` was seen when popping (`pop.rets_rl`) and in the runner's own write; whether `pc`, `reti` and the
-others are cut the same way was not tested. The names of `sr7`..`sr10` suggest copies of `usp`, `ssp` and `icfg`; they
+others are cut the same way was not tested in run 2. [Run 4](../hw/fm1-2026-10-24-v4/README.md) writes of
+`reti`, `rete` and `retx` through `mov.sr_r` and `li.sr_u32` show the same bits-26..1 cut [hardware].
+The names of `sr7`..`sr10` suggest copies of `usp`, `ssp` and `icfg`; they
 read 0 whenever tried, and what they do is not known. Unlike
 pi32, `sp` is its own register and `r15` is a general register [kagaimiq-jielie]. Special registers are read
 and written with `mov.r_sr` and `mov.sr_r`, loaded with `li.sr_u32`, and pushed and popped with `push.srl`,
 `pop.srl` (`sr0`..`sr5`) and `push.srmask` (any). A push stores the lowest-numbered register at the lowest address.
+
+In [run 4](../hw/fm1-2026-10-24-v4/README.md), writes to `usp`, `ssp` and `sp` retained the aligned RAM
+pointers tested. Both the general-register and immediate special-register writes to `pc` fell through,
+whereas popping `pc` transferred control and advanced `sp`. The dedicated `uspn`/`sspn` moves accessed the
+normal `usp`/`ssp` banks in the ROM context, although their generic special-register interfaces continued
+to read zero. Other modes and hidden bank state remain untested [hardware].
 
 Some loads address memory relative to `npc` (`r1 = [npc + r2]`, `ld.w.npc`) [oracle]. On the FM-1 `npc` is the
 address of the instruction plus 4, rounded up to a word boundary: an instruction on a word boundary reads the
@@ -183,7 +191,17 @@ instruction words [kagaimiq-jielie]), if/then/else blocks [virtualabs-ghidra], f
 
 ## 7. Interrupts, exceptions and modes
 
-**Pending.** Known so far: separate return registers for interrupts, exceptions and emulation (`reti`,
+In the ROM download context, `cli` clears `icfg` bit 9 and `sti` sets it. `cli.r` also returns the previous
+`icfg` in its operand register; `sti.r` takes bit 9 from the operand without replacing the other observed
+bits. Flags stay unchanged. These are the tested state changes; interrupt delivery was not measured
+[hardware, hw/fm1-2026-10-24-v4].
+
+RAM-target probes select `reti` for `rti`/`rtns`, `retx` for `rtx`/`rthw`, `rete` for `rte`, and `rets` for
+`rtss`, without visible changes to flags, current `sp` or `icfg` in this context. `callns.r` is unresolved:
+the operand and flags affect its behavior; see the entry's notes and run 4. `gotoss.xl` saved the next PC
+in `rets` and used an offset relative to that PC. Mode switching remains **pending** [hardware].
+
+Other context known so far: separate return registers for interrupts, exceptions and emulation (`reti`,
 `retx`, `rete`), and user and supervisor stack pointers (`usp`, `ssp`) [kagaimiq-jielie]. Firmware switches
 `sp` between them and saves `psr`, `rets` and `reti` on entry to a handler [sources-in-use].
 

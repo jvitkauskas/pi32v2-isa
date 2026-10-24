@@ -39,8 +39,9 @@ If the self-test hangs, try `--flag-mask 0`, which leaves `psr` alone.
 
 Since record format 2 each case also sets `sp` (inside a 1 KiB scratch that is reset to a known pattern before
 every case) and `rets`, and the runner records `sp`, `rets`, the exit the stub took and the scratch words that
-changed; that is what the `misc`, `stack`, `mem` and `branch` waves need. Not yet tested: parallel pairs (`#`),
-`rep` and `if` blocks, returns other than `rts`, writes to special registers, interrupts, locks and events.
+changed; that is what the `misc`, `stack`, `mem` and `branch` waves need. Blocks, loops and parallel pairs ran in
+[run 3](../../hw/fm1-2026-10-24-v3/README.md); control and special-register probes are recorded in
+[run 4](../../hw/fm1-2026-10-24-v4/README.md). Consult that report for completed and pending tests.
 
 ## Running
 
@@ -57,12 +58,32 @@ python3 tools/hwtest/analyze.py /tmp/hw --json results.jsonl
 the next wave in the other slot (`--first-slot`); otherwise its first upload would land on the runner that is
 answering the ROM. Results of real runs are kept under [hw/](../../hw/).
 
+On the desktop, `tools/hwtest/runstep.sh DIR WAVE` runs the generated script one batch at a time with the
+installed `/opt/m-flasher/m-flasher`. It bounds flasher and USB checks, refuses a slot equal to
+`/tmp/hw/LASTSLOT`, and stops on a hang. Only an observed app identity after a failure triggers
+`download-mode` and continuation. After a confirmed manual power cycle, clear that slot marker before
+resuming; otherwise preserve it. A hang requires a power cycle and operator confirmation, even if USB
+still enumerates. Keep batches outside the desktop's `/tmp` if a reboot may be needed.
+
 ## Checking meanings
 
 `check.py RESULTS.jsonl` runs every case through an executable model of its form (`semantics/*.py`, interface
 in `check.py`) and lists the forms whose hardware results differ. To test particular inputs, write them as a
 JSON list of `{"id", "values" (raw field values), "in" (16 registers), "flags"}` and build batches with
 `gen.py OUTDIR --cases FILE.json --first-slot ...`.
+
+Cases may also supply `sp` and `rets` (numbers or symbols), `misalign` (start the tested instruction at
+2 mod 4), `taken` (aim a branch at the stub's taken exit), or exact `bytes` (which must decode as the given
+entry and field values). `before` and `after` are lists of `{"id", "values"}` instructions for setup,
+readback and restoration. They appear in the manifest and analyzed records; their effects are part of the
+result. `entry`, when present, is where setup starts; `stub` is still the tested instruction's address.
+For blocks, readback follows the generated then/else markers. An unconditional jump skips fall-through
+readback, so return probes must explicitly target their restore sequence.
+
+`"force": true` permits a form outside the automatic waves and requires `--batch 1` (in addition to the
+two calibration nops). It does not prove that a form is safe. Preserve the ROM's state around special-register
+writes and keep all stack/store addresses in the allocated RAM. The generator verifies bytes and layout;
+it cannot verify the effects of unknown instructions. See `cases_from_file` in `gen.py`.
 
 A case that hangs the unit (a trap, a missing instruction) leaves the batch without an `.out` file: power-cycle,
 note the batch, and split it (`--batch`) to find the case.

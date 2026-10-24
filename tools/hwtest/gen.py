@@ -420,13 +420,15 @@ def cases_from_file(tab, path):
     """Cases written by hand: a JSON list of {"id", "values" (raw field values), "in" (16 registers: numbers, or
     symbols such as "hw_scratch+0x100" and "hw_taken"), "flags"}, optionally "sp" and "rets" (same), "taken"
     (true for a branch aimed at the stub's own taken label), "misalign" (true: the stub starts 2 bytes past a word
-    boundary instead of on one), and "bytes" (hex) to run exactly those bytes, which
+    boundary instead of on one), "before" / "after" (lists of {"id", "values"}: instructions run before / after
+    the one under test, e.g. to set or read a special register), "force" (true: run a form the generator would
+    not, e.g. control forms, one case per batch), and "bytes" (hex) to run exactly those bytes, which
     must decode as the entry with those values."""
     cases = []
     for c in json.loads(Path(path).read_text()):
         i = tab.by_id(c["id"])
-        if not (runnable(i) or runnable(i, no_syntax=True) or kind_of(i) or i.block):
-            raise SystemExit(f"{i.id}: not a form the runner can execute")
+        if not (runnable(i) or runnable(i, no_syntax=True) or kind_of(i) or i.block or c.get("force")):
+            raise SystemExit(f"{i.id}: not a form the runner can execute (\"force\": true runs it anyway)")
         values = {f: c["values"][f] for f in i.fields}
         regs = [int(v, 0) if isinstance(v, str) and not v[0].isalpha() else v for v in c["in"]]
         if len(regs) != 16:
@@ -439,11 +441,20 @@ def cases_from_file(tab, path):
                 raise SystemExit(f"{i.id}: bytes {data.hex()} do not decode as this entry with these values")
         case = {"id": i.id, "values": values, "bytes": data.hex(), "text": codec.format(i, values), "in": regs,
                 "flags": c.get("flags", 0) & 0xF}
-        for k in ("sp", "rets", "taken", "misalign"):
+        for k in ("sp", "rets", "taken", "misalign", "force"):
             if k in c:
                 case[k] = c[k]
         if i.block:                     # the block's body: markers (block_lines)
             case["lines"] = block_lines(tab, i, values, data)
+        if c.get("before") or c.get("after"):
+            # set-up and read-back instructions around the one under test, each {"id", "values"}; the stub label
+            # and "bytes" stay those of the instruction under test, so its address is the stub address
+            def part(x):
+                return byte_line(codec.encode(tab.by_id(x["id"]), x["values"]))
+            case["pre_lines"] = [part(x) for x in c.get("before", [])]
+            body = case.get("lines", [byte_line(data), "\tgoto hw_exit0"])
+            case["lines"] = body[:-1] + [part(x) for x in c.get("after", [])] + body[-1:]
+            case["before"], case["after"] = c.get("before", []), c.get("after", [])
         cases.append(case)
     return cases
 
@@ -470,7 +481,14 @@ def build_batch(cases, workdir, flag_mask=0xF, base=BASE, pattern=None):
     for n, c in enumerate(cases):
         b = bytes.fromhex(c["bytes"])
         # every stub starts on a word boundary, or 2 bytes past one with "misalign" (a nop fills the gap)
-        lines += ["\t.p2align 2"] + (["\tnop"] if c.get("misalign") else [])
+        lines += ["\t.p2align 2"]
+        if c.get("pre_lines"):
+            # Pad before entry, so setup falls straight through to the requested stub alignment.
+            size = sum(line.count("0x") for line in c["pre_lines"])
+            pad = ((2 if c.get("misalign") else 0) - size) % 4
+            lines += ["\tnop"] * (pad // 2) + [f"hw_entry_{n}:"] + c["pre_lines"]
+        elif c.get("misalign"):
+            lines += ["\tnop"]
         if c.get("lines"):                    # a stub laid out by its generator (blocks, tables, pairs)
             lines += [f"hw_stub_{n}:"] + c["lines"]
         else:
@@ -484,7 +502,8 @@ def build_batch(cases, workdir, flag_mask=0xF, base=BASE, pattern=None):
     lines.append("hw_cases:")
     for n, c in enumerate(cases):
         words = list(c["in"]) + [c["flags"], c.get("sp", f"hw_scratch+{SP_IN:#x}"), c.get("rets", "hw_taken")]
-        lines.append(f"\t.4byte hw_stub_{n}, " + ", ".join(asm_value(w) for w in words))
+        entry = f"hw_entry_{n}" if c.get("pre_lines") else f"hw_stub_{n}"
+        lines.append(f"\t.4byte {entry}, " + ", ".join(asm_value(w) for w in words))
     lines += ["\t.bss", "\t.p2align 2", "\t.globl hw_results, hw_scratch", f"hw_scratch:\t.space {SCRATCH_WORDS * 4}",
               f"hw_results:\t.space {len(cases) * OUT_WORDS * 4}", ""]
     workdir = Path(workdir)
@@ -523,6 +542,8 @@ SECTIONS {{
         raise SystemExit(f"hw_entry at {syms['hw_entry']:#x}, not at the image start")
     for n, c in enumerate(cases):                     # every stub where the table says, every branch on target
         stub = syms[f"hw_stub_{n}"]
+        if stub % 4 != (2 if c.get("misalign") else 0):
+            raise SystemExit(f"case {n}: stub has the wrong alignment")
         b = bytes.fromhex(c["bytes"])
         if bytes(image[stub - base:stub - base + len(b)]) != b:
             raise SystemExit(f"case {n}: stub bytes not in the image")
@@ -551,6 +572,8 @@ def main():
     rng = random.Random(a.seed)
     if a.cases:
         cases = cases_from_file(tab, a.cases)
+        if a.batch != 1 and any(c.get("force") for c in cases):
+            raise SystemExit('"force": true requires --batch 1')
         insns = sorted({c["id"] for c in cases})
         a.wave = a.cases.stem
     else:
@@ -579,6 +602,8 @@ def main():
             image, syms = build_batch(part, d, a.flag_mask, base, pattern)
         for k, c in enumerate(part):
             c["stub"] = syms[f"hw_stub_{k}"]
+            if c.get("pre_lines"):
+                c["entry"] = syms[f"hw_entry_{k}"]
             c["in_values"] = [resolve(v, syms) for v in c["in"]]
             c["sp_in"] = resolve(c.get("sp", f"hw_scratch+{SP_IN:#x}"), syms)
             c["rets_in"] = resolve(c.get("rets", "hw_taken"), syms)

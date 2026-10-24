@@ -3,6 +3,7 @@
 """The hardware-test pipeline without hardware: a batch builds, and simulated device output analyses back."""
 
 import json
+import os
 import shutil
 import struct
 import subprocess
@@ -14,6 +15,7 @@ from pathlib import Path
 HW = Path(__file__).resolve().parent.parent / "tools" / "hwtest"
 sys.path.insert(0, str(HW))
 import analyze  # noqa: E402
+import check  # noqa: E402
 import gen  # noqa: E402
 
 
@@ -69,6 +71,16 @@ class Pipeline(unittest.TestCase):
         self.assertEqual((nop["exit"], nop["sp_out"]), (0, nop["sp_in"]))
         self.assertEqual(nop["mem"], {})
 
+    def test_analysis_keeps_setup_and_readback(self):
+        self.simulate()
+        c = self.manifest["cases"][-1]
+        c.update(before=[{"id": "mov.r_sr", "values": {"s": 3, "r": 8}}], after=[], entry=c["stub"] - 4)
+        (self.d / "batch-selftest-000.json").write_text(json.dumps(self.manifest))
+        records, problems, _ = analyze.analyse(self.d)
+        self.assertFalse(problems)
+        for key in ("before", "after", "entry"):
+            self.assertEqual(records[-1][key], c[key])
+
     def test_special_waves_build(self):
         d = Path(tempfile.mkdtemp())
         for wave in ("mem", "stack", "branch", "misc"):
@@ -81,6 +93,91 @@ class Pipeline(unittest.TestCase):
         for i in gen.select(table.load(), "1"):
             self.assertFalse(gen.UNSAFE.search(gen.literal(i.syntax)), i.id)
             self.assertNotIn(i.group, {"memory", "stack", "branches", "control", "jumps", "returns", "cache"})
+
+
+@unittest.skipUnless(shutil.which("cpp"), "needs GNU cpp")
+class CustomCases(unittest.TestCase):
+    def test_setup_entry_alignment_and_recorded_context(self):
+        from pi32v2isa import codec, table
+        tab = table.load()
+        read = {"id": "mov.r_sr", "values": {"r": 8, "s": 3}}
+        setup = {"id": "li.u32", "values": {"r": 0, "n": 0x12345678}}
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "custom.json"
+            source = [{"id": "mov.sr_r", "values": {"r": 0, "s": 3}, "in": list(range(16)),
+                       "force": True, "before": [setup], "after": [read], "misalign": misalign}
+                      for misalign in (False, True)]
+            path.write_text(json.dumps(source))
+            cases = gen.cases_from_file(tab, path)
+            image, syms = gen.build_batch(cases, d)
+            for n, case in enumerate(cases):
+                stub, entry = syms[f"hw_stub_{n}"], syms[f"hw_entry_{n}"]
+                self.assertEqual(stub % 4, 2 if source[n]["misalign"] else 0)
+                self.assertEqual(stub - entry, 6)
+                self.assertEqual(image[entry - gen.BASE:stub - gen.BASE], codec.encode(tab.by_id("li.u32"), setup["values"]))
+                self.assertEqual(image[stub - gen.BASE + 4:stub - gen.BASE + 8],
+                                 codec.encode(tab.by_id("mov.r_sr"), read["values"]))
+                rec = {"sp_in": 0x1100, "rets_in": 0, "stub": stub, "entry": entry, "bytes": case["bytes"],
+                       "hw_taken": 0, "scratch": 0x1000, "batch": "custom"}
+                state = check.State(rec, [0] * 256)
+                self.assertEqual(state.load(0x10FC), entry)
+
+    def test_forced_cases_require_single_case_batches(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "forced.json"
+            path.write_text(json.dumps([{"id": "ssync", "values": {}, "in": [0] * 16, "force": True}]))
+            p = subprocess.run([sys.executable, str(HW / "gen.py"), d, "--cases", str(path)],
+                               capture_output=True, text=True)
+            self.assertNotEqual(p.returncode, 0)
+            self.assertIn("requires --batch 1", p.stderr)
+            self.assertFalse(list(Path(d).glob("*.bin")))
+
+
+class BatchSafety(unittest.TestCase):
+    def run_helper(self, mode, last=None):
+        """Fake only USB/privileged commands; never invoke a real flasher or sudo in a test."""
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            state = d / "state"
+            state.mkdir()
+            if last is not None:
+                (state / "LASTSLOT").write_text(last)
+            scripts = {
+                "lsusb": "exit 0" if mode == "absent" else "echo 'ID 4c4a:8057'",
+                "timeout": 'shift 3; exec "$@"',
+                "sudo": 'echo called >> "$HWTEST_STATE_DIR/calls"; exit 23',
+                "sleep": "exit 0",
+            }
+            for name, body in scripts.items():
+                p = d / name
+                p.write_text("#!/bin/sh\n" + body + "\n")
+                p.chmod(0o755)
+            (d / "run-test.sh").write_text('m-flasher run-ram "one.bin" --addr 0x1c20000\n'
+                                           'm-flasher run-ram "two.bin" --addr 0x1c28000\n')
+            env = dict(os.environ, PATH=str(d) + os.pathsep + os.environ["PATH"], HWTEST_STATE_DIR=str(state))
+            p = subprocess.run(["sh", str(HW / "runstep.sh"), str(d), "test"], env=env,
+                               capture_output=True, text=True)
+            calls = (state / "calls").read_text().splitlines() if (state / "calls").exists() else []
+            return p, calls
+
+    def test_slot_collision_checks_numeric_address(self):
+        p, calls = self.run_helper("present", "0x01C20000")
+        self.assertEqual(p.returncode, 5)
+        self.assertIn("SLOT COLLISION", p.stdout)
+        self.assertEqual(calls, [])
+
+    def test_missing_usb_stops_before_upload(self):
+        p, calls = self.run_helper("absent")
+        self.assertEqual(p.returncode, 4)
+        self.assertIn("USB NOT READY", p.stdout)
+        self.assertEqual(calls, [])
+
+    def test_hang_stops_before_the_next_batch(self):
+        p, calls = self.run_helper("present")
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("one: HANG", p.stdout)
+        self.assertNotIn("two:", p.stdout)
+        self.assertEqual(len(calls), 1)
 
 
 if __name__ == "__main__":
