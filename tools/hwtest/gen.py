@@ -134,7 +134,11 @@ def kind_of(i):
 def solve(i, name, want):
     """A raw value for field `name` that stands for `want`, or None."""
     f, w = i.fields[name], len(i.field_bits(name))
-    for raw in range(1 << w) if w <= 16 else ():
+    if f.kind in ("uimm", "simm") and f.zero_as is None:
+        q, r = divmod(want - f.add, f.scale)
+        raw = q & ((1 << w) - 1)
+        return raw if r == 0 and codec.value(f, raw, w) == want else None
+    for raw in range(1 << min(w, 16)):
         if codec.value(f, raw, w) == want:
             return raw
     return None
