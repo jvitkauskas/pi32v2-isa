@@ -117,20 +117,45 @@ ALU forms: `add.rri` (0..31), `add.ri.neg7` (-128..-1, destination = source), `a
 | `a == b` (64-bit) | `xor`, `xor`, `or`, `beqz`/`bnez` | no flags |
 | 32-bit carry-out `(a + b) < a` | an unsigned compare (`if (r2 >= r1) { r0 = 0 }`), not the flags | the flags are only used for 64-bit |
 
-What the flags are, from the compiler's own 64-bit compares (all via `psr`, special register 5):
+What the flags are. The compiler's own 64-bit compares (all via `psr`, special register 5) showed the carry; the
+first hardware run (`hw/fm1-2026-10-24`: every ALU form with all four low `psr` bits set to random values before and
+read after) settled the rest, and a second run of edge cases (`hw/fm1-2026-10-24/followup-p.jsonl`: zero, carry and
+overflow results of every add/subtract form, shift counts, exact rounding ties) confirmed it. The low four bits of `psr`:
 
-- `add`/`sub`/`addc`/`subc` leave the carry in bit 1 of `psr`. After a subtract chain `a - b`, bit 1 is set when
-  there was no borrow, so unsigned `a < b` is "bit 1 clear" (`if ((r1 & 0x2) == 0)`) and `a >= b` is bit 1 set.
-  `addc` adds that bit; `subc` subtracts its complement (`!c`), which is why the chain `sub` then `subc` works.
-- Bits 0 and 3 of `psr` are the other two arithmetic flags: signed `a < b` is `psr[3] ^ psr[0]` (`uextra(p:3)`
-  xor bit 0), signed `a >= b` its complement. These are the sign and overflow flags in some order; which is which
-  is not established. A signed `<=` also needs "result is zero", which the compiler gets from `lo | hi`, not from
-  a flag, so bit 2 (the likely zero flag) is not confirmed either.
-- The instructions that set them, by adjacency to `addc`/`subc`/`mov.r_sr psr` in compiler output, are
-  `add.rrr`, `add.rr`, `add.rri`, `add.s14.rri`, `sub.rrr`, `rsub.modimm.rri`, `addc.rrr`, `subc.rrr`. Whether
-  logic, shift or load instructions also write them is not known.
-- The flag branches `ifeq`..`ifle` (`bc.*`), `cc = 0/1` (`cc.set`) and `fcmp` are never emitted. The AC79 SDK's
-  spin lock is inline asm `testset b[%0]` then `ifeq goto 1b` (retry while eq) [ac79-sdk].
+| Bit | Flag | Meaning |
+| --- | --- | --- |
+| 3 | N | bit 31 of the result |
+| 2 | Z | the 32-bit result is zero |
+| 1 | C | carry out of an add; for a subtract 1 = no borrow (`a >= b` unsigned); for a shift the last bit shifted out |
+| 0 | V | signed overflow of an add or subtract |
+
+- The compiler's tests follow from this. Unsigned `a < b` after `sub`/`subc` is C clear (`(psr & 2) == 0`); signed
+  `a < b` is N xor V (`psr[3] ^ psr[0]`); `a >= b` the complements. `addc` adds C and `subc` subtracts `!C`, so a
+  `sub` then `subc` chain borrows correctly. A signed `<=` needs Z as well, which the compiler takes from `lo | hi`
+  rather than the flag.
+- What each family writes (the rest of the four bits is left as it was):
+
+| Forms | Written | Notes |
+| --- | --- | --- |
+| `add`/`sub`/`rsub` (all shapes), `addc`, `subc`, `add.brev.rr` | N Z C V | `addc`/`subc` take C as carry in. `add.brev.rr` is an add with carries running downward: C and V are those of the bit-reversed addition |
+| `and`/`or`/`xor`/`bic`/`not` (all shapes), the single-bit forms, `mul.*`, `ext.*`, `clz`, `cls`, `sgn`, `rev8`, `rev16`, `revs`, `insert`, `sextra`, `uextra`, `ror.rri`, `ror.rrr` | N Z | C and V are kept |
+| `lsl`, `lsr`, `asr`, `shl3` (32-bit, immediate or register count), `cycc.rri`/`rrr`, `xchg.rrr`, `shiftr.*` | N Z C | C is the last bit shifted out (for `cycc` the new carry; for `shiftr` the bit below the kept ones); a register count of 0 leaves C alone; V is kept |
+| the same operations on a register pair (`lsl.pair`, `lsr.pair`, `asr.pair`, `shl3.pair`, `cycc.pi`/`pr`) | C only | N, Z and V are kept, although the 64-bit result has a sign and may be zero |
+| `ror.pi`, `ror.pr` | nothing | |
+| `cc = 0`, `cc = 1` | C | clears or sets psr bit 1 and nothing else |
+| `li.*`, `mov.*`, `lsr.rri.vb`, `asr.ppi.rnd.vh`, `popcnt.*` | nothing | |
+
+- A shift by a register uses the low 8 bits of the register. Counts above 32 (64 for pairs) act as 32 (64): `lsl` and
+  `lsr` give 0 with C = bit 0 or bit 31 of the source, `asr` the sign mask. A count of 0 leaves the value and C alone.
+  Rotates reduce the count instead (modulo 32, modulo 64 for pairs); `xchg` reads the low 6 bits as a signed count.
+- The AC79 SDK's spin lock is inline asm `testset b[%0]` then `ifeq goto 1b` (retry while eq) [ac79-sdk]. The flag
+  branches `ifeq`..`ifle` (`bc.*`), `cc = 0/1` and `fcmp` are never emitted by the compiler, and the branches have
+  not been run on hardware.
+- Settled by the second run: Z of the add and subtract family follows a zero result, and C and V were each reached
+  in every form (add/sub/rsub/addc/subc/`add.brev.rr`, all shapes); counts with bits 8 and up set (0x100, 0x105) use
+  only the low 8 bits; `shiftr` ties round as `up`/`even`/`round`/`zero` say (toward +inf, to even, away from zero,
+  toward zero) and `asr.ppi.rnd.vh` ties round toward +inf. Still unknown: the flags of the memory, multiply-accumulate,
+  DSP and floating-point forms that other analysts own.
 
 ### Comparisons and branches
 
