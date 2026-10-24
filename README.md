@@ -20,6 +20,7 @@ linker and a compiler backend are later, separate projects that use this referen
 | [docs/ASSEMBLER.md](docs/ASSEMBLER.md) | The assembler: usage, syntax, directives, how it picks encodings, differences from JieLi's |
 | [docs/OBJDUMP.md](docs/OBJDUMP.md) | The objdump: `-d -D -h -t -r -s -j -mcpu` with the text of JieLi's, for the FM-1 builds |
 | [docs/ELF.md](docs/ELF.md) | The object files: sections, symbols, every relocation type, what JieLi's linker checks |
+| [docs/LINKER.md](docs/LINKER.md) | The linker (`python3 -m pi32v2isa ld`): usage, script subset, relocation rules, the executable's layout, differences from JieLi's `ld` |
 | [docs/GAPS.md](docs/GAPS.md) | What is known to exist but is not documented yet |
 | [docs/SOURCES.md](docs/SOURCES.md) | Where each fact comes from, and the sources' licences |
 | [docs/ORACLE.md](docs/ORACLE.md) | How JieLi's toolchain is used as a black-box test oracle |

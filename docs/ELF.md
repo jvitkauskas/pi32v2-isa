@@ -111,15 +111,15 @@ descending order.)
 | 3 | `R_PI32V2_EXTEND_JUMP_17M2` | the 48-bit compare-and-branch forms (`beq.ri.l`... `bfule.rr.l`, the mask branches) | all of w2, signed | (S + A - (P + 6)) / 2 |
 | 4 | `R_PI32V2_EXTEND_CALL_32M2` | `gotoss.xl`, `call.xl` | bits 15..1 of w1 (low 15 bits) and all of w2 (high 16 bits); bit 0 of w1 (the `gotoss`/`call` selector) is kept | (S + A - (P + 6)) / 2, 31 bits, not range-checked |
 | 5 | `R_PI32V2_MOV_ABS32` | `li.u32`, `li.sr_u32`: `r1 = sym`, `psr = sym` | w1 (low half) and w2 (high half) | S + A |
-| 6 | `R_PI32V2_ABS8` | `.byte sym` | 1 byte | S + A + in-place value |
-| 7 | `R_PI32V2_ABS16` | `.short sym` | 2 bytes | S + A + in-place value |
+| 6 | `R_PI32V2_ABS8` | `.byte sym` | 1 byte | S + A + in-place value (signed); both S + A and the sum must fit signed 8 bits ([LINKER.md](LINKER.md) §3) |
+| 7 | `R_PI32V2_ABS16` | `.short sym` | 2 bytes | S + A + in-place value (signed); both S + A and the sum must fit signed 16 bits |
 | 8 | `R_PI32V2_ABS32` | `.long`/`.int`/`.4byte sym` | 4 bytes | S + A + in-place value |
 | 9 | `R_PI32V2_GOT` | `r1 = sym@PI32V2GOT` (what `-fPIC` code uses) | as 5 | as 5 in a static link |
 | 10 | `R_PI32V2_GOTFUNCDESC` | `r1 = sym@PI32V2GOTFUNCDESC` | as 5 | as 5 in a static link |
-| 11 | `R_PI32V2_FUNCDESC` | `.long sym@GOT` and any other `@variant` on a `.long` | 4 bytes | as 8 |
-| 12 | `R_PI32V2_FUNCDESCVALUE` | not written by the assembler | 4 bytes | as 8 |
-| 13 | `R_PI32V2_REL32` | not written by the assembler | 4 bytes | S (not PC-relative in a static link) |
-| 14 | `R_PI32V2_MOV_ABS16` | not written by the assembler | w1 | S + A, -32768..65535 |
+| 11 | `R_PI32V2_FUNCDESC` | `.long sym@GOT` and any other `@variant` on a `.long` | 4 bytes | as 8, but the sum must stay in the signed 32-bit range |
+| 12 | `R_PI32V2_FUNCDESCVALUE` | not written by the assembler | 4 bytes | as 11 |
+| 13 | `R_PI32V2_REL32` | not written by the assembler | 4 bytes | as 11 (not PC-relative in a static link) |
+| 14 | `R_PI32V2_MOV_ABS16` | not written by the assembler | w1 | S + A, -32768..32767 |
 | 15, 16 | `R_PI32V2_GOT16`, `R_PI32V2_GOTFUNCDESC16` | not written by the assembler | w1 | as 14 |
 
 P is `r_offset`. The offset of a branch is counted from the **end** of the instruction (P+4, or P+6 for the
@@ -164,7 +164,8 @@ Observed with JieLi's `ld` (GNU ld 2.26.51 with the `elf32-pi32v2` backend; defa
 - Refused ("file not recognized: Bad value"): a `.symtab` `sh_info` beyond the symbol count, a `.rela` section
   whose `sh_info` names a section of the wrong type, a `.rela` with `sh_entsize` 0.
 - Branch and `MOV` relocations (1 to 5) **overwrite** the field (the in-place value is ignored); data
-  relocations (6 to 8) add the in-place value. The objects contain zeros, so RELA with zeros is right.
+  relocations (6 to 8, 11 to 13) add the in-place value, read as signed. The objects contain zeros, so RELA
+  with zeros is right. (Ranges corrected after linking tests in round 3; [LINKER.md](LINKER.md) §3.)
 - Errors: "relocation truncated to fit: R_PI32V2_LONG_JUMP_23M2 against symbol `x`" when the offset does not fit;
   "relocation unaligned" for an odd branch displacement; "undefined reference to `x`". A weak undefined
   symbol resolves to 0.
