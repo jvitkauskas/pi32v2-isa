@@ -26,13 +26,13 @@ program headers, section headers, symbol order and string table; it prints the d
 `objcopy -O binary -j SECTION` (JieLi's objcopy; stock GNU objcopy 2.44 refuses these files: "program header with
 invalid alignment", their `p_align` is 0x500) for every loaded section.
 
-On 2026-10-24, with the 20260730.1 toolchain, **all 13 links of the FM-1 projects are byte-for-byte identical files**
+On 2026-10-24, with the 20260730.1 toolchain, **all 13 links of the FM-1 projects, and 4 more Felucca app variants, are byte-for-byte identical files**
 (not just loaded contents):
 
 | Project | Links |
 | --- | --- |
 | m-bootloader (non-LTO objects; the boot and installer scripts' size `ASSERT`s relaxed, see below) | boot and installer for `fm1` and `smk37` (4), flash loader A and B (2) |
-| Felucca | update loader, app (also with `FELUCCA_CPU2=0`, the IR size pass, and OTA/CDC/UAC options: 4 more) |
+| Felucca | update loader, app (variants not counted in the 13: `FELUCCA_CPU2=0`, the IR size pass, OTA/CDC/UAC options, plain) |
 | fm1-base (branch open-ble) | loader, app with `--open-ble` (78 objects, 1700 symbols), app with `--no-ble`, bsp hwtest (2) |
 
 Further evidence: the complete fm1-base `tools/build.py template --open-ble` and `--no-ble` builds were run with
@@ -139,8 +139,7 @@ whose name starts `.L` in a merge section are dropped.
 
 ## 6. The output file
 
-ELF32, little-endian, `ET_EXEC`, machine 0xf1, flags 0, no sections after the last ones below, no `PT_PHDR`, no section
-symbols for `.shstrtab`.
+ELF32, little-endian, `ET_EXEC`, machine 0xf1, flags 0, no `PT_PHDR`.
 
 - Section headers: the output sections in script order (empty ones omitted), then `.shstrtab`, `.symtab`, `.strtab`.
   File order: contents, `.symtab`, `.strtab`, `.shstrtab`, section headers.

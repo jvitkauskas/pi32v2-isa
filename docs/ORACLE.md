@@ -152,6 +152,18 @@ symbols. It prints nothing but "identical" when they agree. `linkcompare` links 
 (undefined symbols get `--defsym` values) and compares the loaded sections. The assembler and its checks are
 described in [ASSEMBLER.md](ASSEMBLER.md); the object format they establish is in [ELF.md](ELF.md).
 
+## Checking the linker
+
+```sh
+python3 -m pi32v2isa oracle ldcompare -- --gc-sections -e _start -T app.ld crt0.o main.o
+```
+
+Everything after `--` is `ld`'s command line (without `-o`). `ldcompare` links with JieLi's `ld` and with
+`pi32v2isa ld` and prints the differences by category: `contents` (loaded sections' addresses, types and bytes, and
+`objcopy -O binary -j` of each, run with JieLi's objcopy because stock GNU objcopy refuses these files), `symbols`,
+`entry`, `phdrs`, `layout` (section headers, symbol order, string table). `--cwd DIR` links in a directory. It exits 1 on
+any difference. [LINKER.md](LINKER.md) lists what was checked.
+
 ## Rules
 
 - Black box only: inputs and outputs. Do not extract tables or strings from the toolchain's binaries.
