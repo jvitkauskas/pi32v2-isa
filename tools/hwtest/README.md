@@ -14,9 +14,11 @@ for the table's meanings that JieLi's tools cannot give (docs/GAPS.md, "Meaning"
   enters the case, then pushes every register and reads `psr`, and copies them out.
 - Every batch starts with two `nop` cases. Their outputs must be their inputs; `analyze.py` uses them to find the
   order the push stored the registers in, and refuses a batch where they do not agree.
-- Images are built with this repository's assembler and linker only, for RAM slot `0x01C28000`..`0x01C30000`
-  (M-Flasher's flash loader uses `0x01C20000` or `0x01C28000`; the runner replaces it until the unit is
-  power-cycled). Nothing is written to flash.
+- Images are built with this repository's assembler and linker only, for the flash loader's two RAM slots
+  (`0x01C20000` and `0x01C28000`, 32 KiB each): consecutive batches alternate, so an upload never lands on the
+  runner that is answering the ROM's commands. Start from a freshly powered unit in download mode (M-Flasher
+  refuses to upload over its own running loader); the runner stays until the unit is power-cycled. Nothing is
+  written to flash.
 
 ## Waves
 
@@ -38,7 +40,7 @@ registers, interrupts, locks and events; they need a runner that sets up memory 
 ```sh
 python3 tools/hwtest/gen.py /tmp/hw --wave selftest --per-entry 6
 python3 tools/hwtest/gen.py /tmp/hw --wave 1
-cd /tmp/hw && ./run-selftest.sh         # unit in USB download mode; needs M-Flasher's run-ram
+cd /tmp/hw && ./run-selftest.sh         # a freshly powered unit in USB download mode; needs M-Flasher's run-ram
 python3 tools/hwtest/analyze.py /tmp/hw  # check the self-test before running wave 1
 ./run-1.sh
 python3 tools/hwtest/analyze.py /tmp/hw --json results.json

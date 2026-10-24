@@ -24,8 +24,10 @@ sys.path.insert(0, str(ROOT))
 from pi32v2isa import asm, codec, ld, table  # noqa: E402
 from pi32v2isa.oracle import read_exec  # noqa: E402
 
-BASE = 0x01C28000
-SLOT_END = 0x01C30000
+SLOTS = (0x01C20000, 0x01C28000)   # the flash loader's two 32 KiB slots (m-bootloader SPEC §1)
+SLOT_SIZE = 0x8000
+BASE = SLOTS[1]                     # where a single batch goes; consecutive batches alternate between the slots
+SLOT_END = BASE + SLOT_SIZE
 CASE_WORDS = 18             # stub address, r0..r15, psr flags
 OUT_WORDS = 17              # the 16 pushed registers (stack order), psr
 
@@ -89,7 +91,7 @@ def make_cases(tab, insns, per_entry, rng):
     return cases
 
 
-def build_batch(cases, workdir, flag_mask=0xF):
+def build_batch(cases, workdir, flag_mask=0xF, base=BASE):
     """Assemble and link one batch with the repo's own assembler and linker; return (image, symbols)."""
     lines = ["\t.text"]
     for n, c in enumerate(cases):
@@ -108,7 +110,7 @@ def build_batch(cases, workdir, flag_mask=0xF):
                                      check=True).stdout, "runner.S"))
     (workdir / "cases.o").write_bytes(asm.assemble_source((workdir / "cases.s").read_text(), "cases.s"))
     (workdir / "hw.ld").write_text(f"""ENTRY(hw_entry)
-MEMORY {{ ram (rwx) : ORIGIN = {BASE:#x}, LENGTH = {SLOT_END - BASE:#x} }}
+MEMORY {{ ram (rwx) : ORIGIN = {base:#x}, LENGTH = {SLOT_SIZE:#x} }}
 SECTIONS {{
   .entry : {{ KEEP(*(.entry)) }} > ram
   .text : {{ *(.text*) }} > ram
@@ -125,15 +127,15 @@ SECTIONS {{
     image = bytearray()
     for s in exe["sections"]:
         if s["type"] == 1 and s["flags"] & 2 and s["addr"]:          # PROGBITS, SHF_ALLOC
-            off = s["addr"] - BASE
+            off = s["addr"] - base
             if off < 0:
                 raise SystemExit(f"section {s['name']} below the slot")
             image[len(image):off] = bytes(max(0, off - len(image)))
             image[off:off + len(s["data"])] = s["data"]
     syms = {name: value for name, value, *_ in exe["symbols"] if name}
-    if syms["hw_end"] > SLOT_END:
-        raise SystemExit(f"batch too big: ends at {syms['hw_end']:#x}, past {SLOT_END:#x}")
-    if syms["hw_entry"] != BASE:
+    if syms["hw_end"] > base + SLOT_SIZE:
+        raise SystemExit(f"batch too big: ends at {syms['hw_end']:#x}, past {base + SLOT_SIZE:#x}")
+    if syms["hw_entry"] != base:
         raise SystemExit(f"hw_entry at {syms['hw_entry']:#x}, not at the image start")
     return bytes(image), syms
 
@@ -160,14 +162,16 @@ def main():
         calib = make_cases(tab, [nop], 2, rng)          # every batch starts with two nop calibration cases
         part = calib + part
         with tempfile.TemporaryDirectory() as d:
-            image, syms = build_batch(part, d, a.flag_mask)
+            # alternate slots: an upload never lands on the runner that is answering the ROM's commands
+            base = SLOTS[(n + 1) % 2]
+            image, syms = build_batch(part, d, a.flag_mask, base)
         name = f"batch-{a.wave}-{n:03d}"
         (a.outdir / f"{name}.bin").write_bytes(image)
         length = len(part) * OUT_WORDS * 4
         (a.outdir / f"{name}.json").write_text(json.dumps({
-            "wave": a.wave, "seed": a.seed, "flag_mask": a.flag_mask, "base": BASE, "results": syms["hw_results"], "length": length,
+            "wave": a.wave, "seed": a.seed, "flag_mask": a.flag_mask, "base": base, "results": syms["hw_results"], "length": length,
             "out_words": OUT_WORDS, "cases": part}, indent=0))
-        run.append(f'm-flasher run-ram "{name}.bin" --addr {BASE:#x} --call FC60 '
+        run.append(f'm-flasher run-ram "{name}.bin" --addr {base:#x} --call FC60 '
                    f'--read {syms["hw_results"]:#x}:{length} -o "{name}.out"')
         print(f"{name}: {len(part)} cases, image {len(image)} bytes, results at {syms['hw_results']:#x}, {length} bytes")
     (a.outdir / f"run-{a.wave}.sh").write_text("\n".join(run) + "\n")

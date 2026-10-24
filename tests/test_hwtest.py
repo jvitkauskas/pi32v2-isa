@@ -41,8 +41,10 @@ class Pipeline(unittest.TestCase):
 
     def test_image_fits_and_starts_with_the_entry(self):
         image = (self.d / "batch-selftest-000.bin").read_bytes()
-        self.assertLess(gen.BASE + len(image), gen.SLOT_END)
-        self.assertLessEqual(self.manifest["results"] + self.manifest["length"], gen.SLOT_END)
+        base = self.manifest["base"]
+        self.assertIn(base, gen.SLOTS)
+        self.assertLess(base + len(image), base + gen.SLOT_SIZE)
+        self.assertLessEqual(self.manifest["results"] + self.manifest["length"], base + gen.SLOT_SIZE)
         self.assertEqual(self.manifest["cases"][0]["id"], "nop")
         self.assertIn("run-ram", (self.d / "run-selftest.sh").read_text())
 
