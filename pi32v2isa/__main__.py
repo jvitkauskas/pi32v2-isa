@@ -114,7 +114,7 @@ def cmd_oracle(args):
         t = table.load(args.table)
         bad = 0
         for path in args.items:
-            diffs = oracle.linkcompare(o, path, args.flag, args.include, args.define, t)
+            diffs = oracle.linkcompare(o, path, args.flag, args.include, args.define, t, args.feature)
             print(f"{path}: " + ("linked sections identical" if not diffs else f"{len(diffs)} differences"))
             for d in diffs:
                 print(f"  {d}")
@@ -124,7 +124,7 @@ def cmd_oracle(args):
         t = table.load(args.table)
         bad = 0
         for path in args.items:
-            diffs = oracle.asmcompare(o, path, args.flag, args.include, args.define, t)
+            diffs = oracle.asmcompare(o, path, args.flag, args.include, args.define, t, args.feature)
             print(f"{path}: " + ("identical" if not diffs else f"{len(diffs)} differences"))
             for d in diffs[:args.show * 4]:
                 print(f"  {d}")
@@ -175,6 +175,8 @@ def main(argv=None):
     a.add_argument("--cpp", action="store_true", help="run /usr/bin/cpp over the input first")
     a.add_argument("-I", dest="include", action="append", default=[], help="include/incbin directory (also passed to cpp)")
     a.add_argument("-D", dest="define", action="append", default=[], help="macro definition for cpp")
+    a.add_argument("-m", dest="feature", action="append", default=[],
+                   help="CPU feature the code may use (instrev3, fprev1); without any -m every instruction is allowed")
     a.set_defaults(func=cmd_as)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
     o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare", "linkcompare"])

@@ -306,6 +306,66 @@ class ObjectFormat(unittest.TestCase):
         self.assertEqual(section(obj, ".data").relocs, [(0, 8, "x", 0)])
 
 
+class Command(unittest.TestCase):
+    def test_as_writes_an_object(self):
+        import contextlib
+        import io
+        import tempfile
+        from pathlib import Path
+
+        from pi32v2isa import __main__ as cli
+
+        with tempfile.TemporaryDirectory() as d:
+            src, out = Path(d) / "a.s", Path(d) / "a.o"
+            src.write_text("\t.text\nstart:\n\tr1 = 5\n\tgoto start\n")
+            self.assertEqual(cli.main(["as", str(src), "-o", str(out)]), 0)
+            obj = elf.read(out.read_bytes())
+            self.assertEqual(bytes(section(obj, ".text").data).hex(" "), "41 25 f7 9e")
+            bad = Path(d) / "bad.s"
+            bad.write_text("\tfrobnicate\n")
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                self.assertEqual(cli.main(["as", str(bad), "-o", str(out)]), 1)
+            self.assertIn("bad.s:1", err.getvalue())
+
+    def test_cpp_for_capital_s(self):
+        import tempfile
+        from pathlib import Path
+
+        from pi32v2isa import __main__ as cli
+
+        with tempfile.TemporaryDirectory() as d:
+            src, out = Path(d) / "a.S", Path(d) / "a.o"
+            src.write_text("#define N 7\n/* c */\n\t.text\n\tr1 = N\n#ifdef X\n\tnop\n#endif\n")
+            self.assertEqual(cli.main(["as", str(src), "-o", str(out), "-DX"]), 0)
+            self.assertEqual(bytes(section(elf.read(out.read_bytes()), ".text").data).hex(" "), "41 27 00 00")
+
+    def test_features_gate_instructions(self):
+        src = "\t.text\n\tr1 = popcnt(r2)\n"
+        asm.assemble_source(src, "t.s", tab=TABLE)
+        asm.assemble_source(src, "t.s", tab=TABLE, features={"instrev3"})
+        with self.assertRaises(asm.AsmError):
+            asm.assemble_source(src, "t.s", tab=TABLE, features={"fprev1"})
+
+
+class Compat(unittest.TestCase):
+    def test_late_equ_gets_the_wide_load_with_the_right_value(self):
+        data = text_of("r1 = K\n.equ K, 0x12345\n")
+        self.assertEqual(data.hex(" "), "c1 ff 45 23 01 00")       # JieLi's swaps the halves
+
+    def test_known_jieli_bugs_are_not_reproduced(self):
+        self.assertNotEqual(text_of("r0 = r0 | 0\n").hex(" "), "30 20")           # JieLi: r0 |= 1
+        dec = codec.decode(TABLE, text_of("r0 = r0 | 0\n"))
+        self.assertEqual(codec.format(dec[0], dec[1]), "r0 = r0 | 0x0")
+        with self.assertRaises(asm.AsmError):
+            text_of("call 0x1000000000\n")
+
+    def test_missing_table_forms(self):
+        """Forms JieLi's assembler writes that the table does not list yet."""
+        self.assertEqual(text_of("if ((r1 & 3) == 0) goto 0\n").hex(" "), "60 ff 03 10 00 00")
+        self.assertEqual(text_of("if (r1 == 2048) goto 0\n").hex(" "), "20 ff 00 1e 00 00")   # bit 5: modified immediate
+        self.assertEqual(text_of("r1 = r1 | r13  #\nr1 = [r1+0]\n")[:4].hex(" "), "90 f1 10 1d")
+
+
 def _toolchain():
     try:
         return oracle.Oracle()

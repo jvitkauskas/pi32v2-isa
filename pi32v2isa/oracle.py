@@ -558,7 +558,7 @@ def diff_objects(ref, mine):
     return out
 
 
-def asmcompare(oracle, path, flags=(), include=(), define=(), table=None):
+def asmcompare(oracle, path, flags=(), include=(), define=(), table=None, features=()):
     """Assemble a source file with JieLi's clang and with this repo's assembler and compare the objects'
     sections, symbols and relocations. `.S` files are preprocessed by the system cpp first (so both
     assemblers read the same text); `.c` files are compiled to assembly by JieLi's clang (`flags` are extra
@@ -573,6 +573,7 @@ def asmcompare(oracle, path, flags=(), include=(), define=(), table=None):
             text = asm.preprocess(path, incs, define)
         elif path.suffix == ".c":
             code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *flags,
+                                        *[f"-m{f}" for f in features],
                                         *[f"-I{p}" for p in incs], *[f"-D{p}" for p in define],
                                         "-S", path, "-o", work / "c.s"])
             if code:
@@ -582,11 +583,12 @@ def asmcompare(oracle, path, flags=(), include=(), define=(), table=None):
             text = path.read_text()
         src, ref_obj = work / "in.s", work / "ref.o"
         src.write_text(text)
-        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", "-c", "-x", "assembler",
-                                    *[f"-I{p}" for p in [path.parent, *incs]], src, "-o", ref_obj])
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *[f"-m{f}" for f in features],
+                                    "-c", "-x", "assembler", *[f"-I{p}" for p in [path.parent, *incs]], src,
+                                    "-o", ref_obj])
         ref_ok = code == 0
         try:
-            mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table)
+            mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table, features=set(features))
             mine_err = None
         except asm.AsmError as e:
             mine, mine_err = None, str(e)
@@ -631,7 +633,7 @@ def link_objects(oracle, objects, defsyms=None):
         return out.read_bytes()
 
 
-def linkcompare(oracle, path, flags=(), include=(), define=(), table=None):
+def linkcompare(oracle, path, flags=(), include=(), define=(), table=None, features=()):
     """Assemble a source with JieLi's clang and with this repo's assembler, link each with JieLi's ld and
     compare the loaded sections (name, address, contents). Returns a list of differences."""
     from . import asm, elf
@@ -642,12 +644,13 @@ def linkcompare(oracle, path, flags=(), include=(), define=(), table=None):
         text = asm.preprocess(path, incs, define) if path.suffix == ".S" else path.read_text()
         src, ref = Path(d) / "in.s", Path(d) / "ref.o"
         src.write_text(text)
-        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", "-c", "-x", "assembler",
-                                    *[f"-I{p}" for p in [path.parent, *incs]], src, "-o", ref])
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *[f"-m{f}" for f in features],
+                                    "-c", "-x", "assembler", *[f"-I{p}" for p in [path.parent, *incs]], src,
+                                    "-o", ref])
         if code:
             raise OracleError(f"JieLi's assembler: {err.strip()}")
         theirs = ref.read_bytes()
-        mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table)
+        mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table, features=set(features))
         a = elf.read(link_objects(oracle, [theirs]))
         b = elf.read(link_objects(oracle, [mine]))
     secs = lambda o: {s.name: (s.addr, bytes(s.data), s.length) for s in o.sections if s.addr or s.type == elf.SHT_PROGBITS}

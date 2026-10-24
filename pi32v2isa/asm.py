@@ -856,8 +856,9 @@ class Block:
 
 
 class _Core:
-    def __init__(self, tab=None, include=()):
-        self.table = tab or tbl.load()
+    def __init__(self, tab=None, include=(), features=None):
+        self.features = None if features is None else set(features)     # None: every entry is allowed
+        self.table = tab or _default_table()
         self.isa = _isa_for(self.table)
         self.include = [str(p) for p in include]
         self.sections = {}
@@ -871,7 +872,8 @@ class _Core:
         self.tmp_id = 0              # .Ltmp<n> temporaries (anonymous labels)
         self.stmt_serial = 0
         self.dot_cache = {}
-        self.counter = 0             # \@ macro counter
+        self.counter = 0             # names for the labels of block bodies
+        self.macro_count = 0         # \@: macro invocations so far
         self.macros = {}
         self.blocks = []
         self.pending_pair = False
@@ -984,6 +986,17 @@ class _Core:
                 p = self.sym_pos(r[0])
                 if p:
                     return p[0], p[1] + r[1]
+        return None
+
+    def alias_base(self, s):
+        """The symbol an alias (`.set A, B+4`) ends up naming, following chains of aliases."""
+        for _ in range(100):
+            if s.kind != "alias":
+                return s
+            nxt = self.ev(s.node, None)[0]
+            if nxt is None or nxt is s:
+                return None
+            s = nxt
         return None
 
     def sym_offset(self, s):
@@ -1245,8 +1258,12 @@ class _Core:
 
     def parsed_candidates(self, line):
         """The readings of a canonical line whose numeric operands parse as expressions, and the first error."""
-        good, err = [], None
+        good, err, feature_error = [], None, None
         for c in self.isa.candidates(line):
+            if self.features is not None and not set(c.insn.requires) <= self.features:
+                missing = sorted(set(c.insn.requires) - self.features)
+                feature_error = AsmError(f"this form needs -m{missing[0]}")
+                continue
             try:
                 c.ops = {k: (Num(("un", "-", self.parse_expr(v.node, v.dots)) if v.neg
                                  else self.parse_expr(v.node, v.dots)) if isinstance(v, Num) else v)
@@ -1255,7 +1272,7 @@ class _Core:
                 err = err or e
                 continue
             good.append(c)
-        return good, err
+        return good, feature_error or err
 
     def else_block(self):
         if not self.blocks or self.blocks[-1].kind != "if" or self.blocks[-1].in_else:
@@ -1363,7 +1380,7 @@ class _Core:
             e = elf.Symbol(s.name, bind=s.bind, type=s.type, other=s.other)
             size_node = s.size_node
             if size_node is None and s.kind == "alias":      # an alias has its base symbol's size
-                base = self.ev(s.node, None)[0]
+                base = self.alias_base(s)
                 size_node = base.size_node if base is not None else None
             if size_node is not None:
                 sym, v = self.ev(size_node, None)
@@ -1374,7 +1391,7 @@ class _Core:
                 e.type = elf.STT_OBJECT
             elif s.kind in ("label", "alias"):
                 if s.kind == "alias" and s.type == elf.STT_NOTYPE:      # an alias takes its base symbol's type
-                    base = self.ev(s.node, None)[0]
+                    base = self.alias_base(s)
                     if base is not None:
                         e.type = base.type
                 p = self.sym_pos(s)
@@ -1436,6 +1453,14 @@ TIE.update({f"{c}.ri.l.modimm": 1 for c in ("beq", "bne", "bge", "blt", "bgt", "
 
 
 _ISA_CACHE = {}
+_DEFAULT = []
+
+
+def _default_table():
+    """The table in isa/pi32v2.toml, loaded once."""
+    if not _DEFAULT:
+        _DEFAULT.append(tbl.load())
+    return _DEFAULT[0]
 
 
 def _isa_for(tab):
@@ -1521,8 +1546,8 @@ def parse_string(text):
 class Assembler(_Core):
     """Assemble preprocessed source text. Typical use: `Assembler().assemble(text, "x.s")` then `.finish()`."""
 
-    def __init__(self, tab=None, include=()):
-        super().__init__(tab, include)
+    def __init__(self, tab=None, include=(), features=None):
+        super().__init__(tab, include, features)
         self.stopped = False
         self.cur_file = "<input>"
 
@@ -1606,8 +1631,8 @@ class Assembler(_Core):
                 values[plist[k]] = a
             else:
                 raise AsmError(f"{self.loc}: too many arguments for macro {name}")
-        self.counter += 1
-        inst = self.counter
+        inst = self.macro_count            # \@ counts every macro invocation, from 0
+        self.macro_count += 1
 
         def sub(m):
             tok = m.group(1)
@@ -2024,9 +2049,10 @@ class Assembler(_Core):
         self.cur_file = saved
 
 
-def assemble_source(text, filename="<input>", include=(), tab=None):
-    """Assemble preprocessed source text; returns the ELF object as bytes."""
-    a = Assembler(tab, include)
+def assemble_source(text, filename="<input>", include=(), tab=None, features=None):
+    """Assemble preprocessed source text; returns the ELF object as bytes. `features` (e.g. {"instrev3"})
+    restricts the entries to those whose `requires` it covers; by default every entry is allowed."""
+    a = Assembler(tab, include, features)
     a.assemble(text, filename)
     return a.finish()
 
@@ -2051,9 +2077,13 @@ def main(args):
     if args.cpp or path.endswith(".S"):
         text = preprocess(path, args.include, args.define)
     else:
-        text = sys.stdin.read() if path == "-" else open(path).read()
+        if path == "-":
+            text = sys.stdin.read()
+        else:
+            with open(path) as f:
+                text = f.read()
     try:
-        data = assemble_source(text, path, include)
+        data = assemble_source(text, path, include, features=args.feature or None)
     except AsmError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
