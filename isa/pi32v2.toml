@@ -43221,3 +43221,363 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "07 f4 01 fe"
 text = "r15 = vsat16(r15_r14) (s)  #"
 origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "unpack4.u.pr"
+syntax = "{p} = unpack4({s}) (u)"
+encoding = ["11100100000010--", "ppp-ssss------10"]
+fields = { p = "pair", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Unpack the four bytes of a register into a register pair (unsigned, as printed); instruction revision 3; lane layout not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "08 e4 02 00"
+text = "r1_r0 = unpack4(r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 02 e0"
+text = "r15_r14 = unpack4(r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 02 0f"
+text = "r1_r0 = unpack4(r15) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 02 ef"
+text = "r15_r14 = unpack4(r15) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "unpack4.s.pr"
+syntax = "{p} = unpack4({s}) (s)"
+encoding = ["11100100000010--", "ppp-ssss------11"]
+fields = { p = "pair", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Unpack the four bytes of a register into a register pair (signed, as printed); instruction revision 3; lane layout not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "08 e4 03 00"
+text = "r1_r0 = unpack4(r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 03 e0"
+text = "r15_r14 = unpack4(r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 03 0f"
+text = "r1_r0 = unpack4(r15) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 e4 03 ef"
+text = "r15_r14 = unpack4(r15) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.usat.rrr"
+syntax = "{r} += sum({s} *|*|*|* {t}) (usat)"
+encoding = ["1110010000100000", "rrrrttttssss101-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (usat, as printed); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 e4 0a 00"
+text = "r0 += sum(r0 *|*|*|* r0) (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0a f0"
+text = "r15 += sum(r0 *|*|*|* r0) (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fa 00"
+text = "r0 += sum(r15 *|*|*|* r0) (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0a 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fa ff"
+text = "r15 += sum(r15 *|*|*|* r15) (usat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.ssat.rrr"
+syntax = "{r} += sum({s} *|*|*|* {t}) (ssat)"
+encoding = ["1110010000100000", "rrrrttttssss110-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (ssat, as printed); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 e4 0c 00"
+text = "r0 += sum(r0 *|*|*|* r0) (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0c f0"
+text = "r15 += sum(r0 *|*|*|* r0) (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fc 00"
+text = "r0 += sum(r15 *|*|*|* r0) (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0c 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fc ff"
+text = "r15 += sum(r15 *|*|*|* r15) (ssat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.msat.rrr"
+syntax = "{r} += sum({s} *|*|*|* {t}) (msat)"
+encoding = ["1110010000100000", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (msat, as printed); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 e4 0e 00"
+text = "r0 += sum(r0 *|*|*|* r0) (msat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0e f0"
+text = "r15 += sum(r0 *|*|*|* r0) (msat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fe 00"
+text = "r0 += sum(r15 *|*|*|* r0) (msat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 0e 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (msat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 e4 fe ff"
+text = "r15 += sum(r15 *|*|*|* r15) (msat)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "unpack4.u.pr.p"
+syntax = "{p} = unpack4({s}) (u)  #"
+encoding = ["11110100000010--", "ppp-ssss------10"]
+fields = { p = "pair", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Unpack the four bytes of a register into a register pair (unsigned, as printed) (parallel twin); instruction revision 3; lane layout not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "08 f4 02 00"
+text = "r1_r0 = unpack4(r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 02 e0"
+text = "r15_r14 = unpack4(r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 02 0f"
+text = "r1_r0 = unpack4(r15) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 02 ef"
+text = "r15_r14 = unpack4(r15) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "unpack4.s.pr.p"
+syntax = "{p} = unpack4({s}) (s)  #"
+encoding = ["11110100000010--", "ppp-ssss------11"]
+fields = { p = "pair", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Unpack the four bytes of a register into a register pair (signed, as printed) (parallel twin); instruction revision 3; lane layout not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "08 f4 03 00"
+text = "r1_r0 = unpack4(r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 03 e0"
+text = "r15_r14 = unpack4(r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 03 0f"
+text = "r1_r0 = unpack4(r15) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "08 f4 03 ef"
+text = "r15_r14 = unpack4(r15) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.usat.rrr.p"
+syntax = "{r} += sum({s} *|*|*|* {t}) (usat)  #"
+encoding = ["1111010000100000", "rrrrttttssss101-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (usat, as printed) (parallel twin); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 f4 0a 00"
+text = "r0 += sum(r0 *|*|*|* r0) (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0a f0"
+text = "r15 += sum(r0 *|*|*|* r0) (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fa 00"
+text = "r0 += sum(r15 *|*|*|* r0) (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0a 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fa ff"
+text = "r15 += sum(r15 *|*|*|* r15) (usat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.ssat.rrr.p"
+syntax = "{r} += sum({s} *|*|*|* {t}) (ssat)  #"
+encoding = ["1111010000100000", "rrrrttttssss110-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (ssat, as printed) (parallel twin); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 f4 0c 00"
+text = "r0 += sum(r0 *|*|*|* r0) (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0c f0"
+text = "r15 += sum(r0 *|*|*|* r0) (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fc 00"
+text = "r0 += sum(r15 *|*|*|* r0) (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0c 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fc ff"
+text = "r15 += sum(r15 *|*|*|* r15) (ssat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sum.acc.msat.rrr.p"
+syntax = "{r} += sum({s} *|*|*|* {t}) (msat)  #"
+encoding = ["1111010000100000", "rrrrttttssss111-"]
+fields = { r = "gpr", s = "gpr", t = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Add the sum of four lane products to a register (msat, as printed) (parallel twin); instruction revision 3; lane semantics not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+
+[[insn.example]]
+bytes = "20 f4 0e 00"
+text = "r0 += sum(r0 *|*|*|* r0) (msat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0e f0"
+text = "r15 += sum(r0 *|*|*|* r0) (msat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fe 00"
+text = "r0 += sum(r15 *|*|*|* r0) (msat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 0e 0f"
+text = "r0 += sum(r0 *|*|*|* r15) (msat)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 f4 fe ff"
+text = "r15 += sum(r15 *|*|*|* r15) (msat)  #"
+origin = "oracle:objdump+clang:20260730.1"

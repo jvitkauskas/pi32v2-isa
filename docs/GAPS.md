@@ -14,9 +14,11 @@ form and a `.modimm` form ([audit](audits/2026-10-round2-coverage.md)).
 
 Still open on the encoding side:
 
-- Instruction revision 3: objdump shows some forms only with `-mattr=+instrev3`, and the sweeps above ran
-  without it. A first-word sweep with it found `sat8` and `vsat16` (now in the table); a second-word sweep of
-  every 32/48-bit first word with it is the remaining check.
+- Instruction revision 3 (done 2026-10-24): objdump shows some forms only with `-mattr=+instrev3`, and the
+  earlier sweeps ran without it. Every 16-bit word, and every second word of every 32/48-bit first word, was
+  swept with and without `+instrev3`; the forms that appear only with it (`sat8`, `vsat16`, `unpack4`, and the
+  `(usat)`/`(ssat)`/`(msat)` modes of `sum(... *|*|*|* ...)`, with their parallel twins) are in the table with
+  `decode_requires = ["instrev3"]`. Other CPU models (`-mcpu=r1`, `r2`, `r5`, the rev3 models) were not swept.
 
 - Forms objdump prints with `??` as the condition, and four floating-point conditions (`!=`, `u==`, `uno`,
   `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`; whether the
@@ -33,7 +35,9 @@ that decodes only with `+instrev3`. Forms it uses whose meaning is still open, m
 led by `smin`/`umin`/`smax`, halfword add/sub and saturating multiplies. M-VAVE's 016 package (2026-10-21)
 gives the same picture: 598 forms used, all decoding as objdump does at `-mcpu=r3`; it uses the FPU far more
 (5090 FPU instructions, `madd.f.rrr` 111 times, which JieLi's compiler never emits), and with `+instrev3` it
-contains parallel twins of revision-3 forms the table does not have yet (`unpack4 ... #`, `sum(... *|*|*|* ...) #`).
+contains parallel twins of revision-3 forms that were then missing (`unpack4 ... #`, `sum(... *|*|*|* ...) #`; now in
+the table). Both images now read the same with this repo's objdump as with JieLi's, with and without
+`+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. The compiler showed what many instructions do (summaries and
 notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
