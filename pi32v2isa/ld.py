@@ -30,16 +30,77 @@ RELOC_MAX = 16
 
 # The script used when none is given: text at 0x50000, data in the next page-offset-preserving address.
 DEFAULT_SCRIPT = """
+ENTRY(_start)
 SECTIONS
 {
+  PROVIDE(__executable_start = 0x50000);
   . = 0x50000;
-  .text : { *(.text .stub .text.*) }
-  .rodata : { *(.rodata .rodata.*) }
+  .init : { KEEP(*(SORT_NONE(.init))) }
+  .plt : { *(.plt) }
+  .iplt : { *(.iplt) }
+  .text :
+  {
+    *(.text.unlikely .text.*_unlikely .text.unlikely.*)
+    *(.text.exit .text.exit.*)
+    *(.text.startup .text.startup.*)
+    *(.text.hot .text.hot.*)
+    *(.text .stub .text.* .gnu.linkonce.t.*)
+    *(.gnu.warning)
+  }
+  .fini : { KEEP(*(SORT_NONE(.fini))) }
+  PROVIDE(__etext = .);
+  PROVIDE(_etext = .);
+  PROVIDE(etext = .);
+  .rodata : { *(.rodata .rodata.* .gnu.linkonce.r.*) }
+  .rodata1 : { *(.rodata1) }
+  .sdata2 : { *(.sdata2 .sdata2.* .gnu.linkonce.s2.*) }
+  .sbss2 : { *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*) }
+  .eh_frame : { KEEP(*(.eh_frame)) *(.eh_frame.*) }
+  .gcc_except_table : { *(.gcc_except_table .gcc_except_table.*) }
   . = ALIGN(0x500) + (. & 0x4ff);
-  .data : { *(.data .data.*) *(.sdata .sdata.*) }
-  .bss : { __bss_start = .; *(.bss .bss.*) *(.sbss .sbss.*) *(COMMON) . = ALIGN(4); }
-  .comment : { *(.comment) }
-  /DISCARD/ : { *(.note.GNU-stack) }
+  .tdata : { *(.tdata .tdata.* .gnu.linkonce.td.*) }
+  .tbss : { *(.tbss .tbss.* .gnu.linkonce.tb.*) *(.tcommon) }
+  .preinit_array : { PROVIDE_HIDDEN(__preinit_array_start = .); KEEP(*(.preinit_array)) PROVIDE_HIDDEN(__preinit_array_end = .); }
+  .init_array : { PROVIDE_HIDDEN(__init_array_start = .); KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*))) KEEP(*(.init_array)) PROVIDE_HIDDEN(__init_array_end = .); }
+  .fini_array : { PROVIDE_HIDDEN(__fini_array_start = .); KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*))) KEEP(*(.fini_array)) PROVIDE_HIDDEN(__fini_array_end = .); }
+  .ctors : { KEEP(*(SORT(.ctors.*))) KEEP(*(.ctors)) }
+  .dtors : { KEEP(*(SORT(.dtors.*))) KEEP(*(.dtors)) }
+  .jcr : { KEEP(*(.jcr)) }
+  .data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*) }
+  .data : { *(.data .data.* .gnu.linkonce.d.*) }
+  .data1 : { *(.data1) }
+  .got : { *(.got.plt) *(.igot.plt) *(.got) *(.igot) }
+  .sdata : { *(.sdata .sdata.* .gnu.linkonce.s.*) }
+  _edata = .;
+  PROVIDE(edata = .);
+  . = .;
+  __bss_start = .;
+  .sbss : { *(.dynsbss) *(.sbss .sbss.* .gnu.linkonce.sb.*) *(.scommon) }
+  .bss : { *(.dynbss) *(.bss .bss.* .gnu.linkonce.b.*) *(COMMON) . = ALIGN(. != 0 ? 4 : 1); }
+  . = ALIGN(4);
+  _end = .;
+  PROVIDE(end = .);
+  .stab 0 : { *(.stab) }
+  .stabstr 0 : { *(.stabstr) }
+  .comment 0 : { *(.comment) }
+  .debug 0 : { *(.debug) }
+  .line 0 : { *(.line) }
+  .debug_srcinfo 0 : { *(.debug_srcinfo) }
+  .debug_sfnames 0 : { *(.debug_sfnames) }
+  .debug_aranges 0 : { *(.debug_aranges) }
+  .debug_pubnames 0 : { *(.debug_pubnames) }
+  .debug_info 0 : { *(.debug_info .gnu.linkonce.wi.*) }
+  .debug_abbrev 0 : { *(.debug_abbrev) }
+  .debug_line 0 : { *(.debug_line .debug_line.* .debug_line_end) }
+  .debug_frame 0 : { *(.debug_frame) }
+  .debug_str 0 : { *(.debug_str) }
+  .debug_loc 0 : { *(.debug_loc) }
+  .debug_macinfo 0 : { *(.debug_macinfo) }
+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
+  .debug_ranges 0 : { *(.debug_ranges) }
+  .debug_macro 0 : { *(.debug_macro) }
+  .gnu.attributes 0 : { KEEP(*(.gnu.attributes)) }
+  /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
 }
 """
 
@@ -269,6 +330,15 @@ class MemRegion:
         self.current = origin
 
 
+class RelSec:
+    """A top-level `.`-relative value belongs to the output section before it, or after it if the location counter was
+    assigned in between; sections that end up empty are skipped (resolved when the symbol table is written)."""
+    __slots__ = ("direction", "idx")
+
+    def __init__(self, direction, idx):
+        self.direction, self.idx = direction, idx
+
+
 class Val:
     __slots__ = ("v", "sec")
 
@@ -362,9 +432,10 @@ class Linker:
             sc.extern += one.extern
             sc.inputs += one.inputs
         if self.script.sections is None:
-            self.script.sections = parse_script(DEFAULT_SCRIPT, "<default>").sections
-            if o.scripts:
-                pass
+            default = parse_script(DEFAULT_SCRIPT, "<default>")
+            self.script.sections = default.sections
+            if not o.scripts:
+                self.script.entry = default.entry
         if o.ttext is not None:
             for st in self.script.sections:
                 if isinstance(st, S.Assign) and st.name == ".":
@@ -431,6 +502,8 @@ class Linker:
                 if g.kind == "def" and not g.weak:
                     continue
                 if g.kind == "common":
+                    if sym.size > g.common_size:         # the largest declaration owns the symbol's COMMON slot
+                        g.sym, g.obj = sym, obj
                     g.common_size = max(g.common_size, sym.size)
                     g.common_align = max(g.common_align, sym.value)
                 else:
@@ -541,8 +614,6 @@ class Linker:
                         continue
                     if not any(file_match(p, sec.obj.name) for p in spec.file_pats):
                         continue
-                    if any(file_match(p, sec.obj.name) for p in spec.file_excl):
-                        continue
                     for pat, excl in spec.sections:
                         if glob_match(pat, sec.name) and not any(file_match(p, sec.obj.name) for p in excl):
                             found.append(sec)
@@ -564,34 +635,44 @@ class Linker:
         for sec in orphans:
             self.place_orphan(sec)
 
-    def out_class(self, o):
-        """Kind of an output section for orphan placement: ('code'|'ro'|'data'|'bss'|'other')."""
-        kinds = {self.sec_kind(s) for lst in o.matched.values() for s in lst if not s.discarded}
-        if o.name == ".text":
-            return "code"
-        for k in ("code", "data", "ro", "bss"):
-            if k in kinds:
-                return k
-        return "other"
-
     @staticmethod
     def sec_kind(sec):
+        """The orphan class of an input section: text, rodata, data, bss, or other (not allocated)."""
         if not sec.alloc:
             return "other"
         if sec.nobits:
             return "bss"
-        if sec.flags & SHF_EXEC:
-            return "code"
         if sec.flags & SHF_WRITE:
             return "data"
-        return "ro"
+        return "text" if sec.flags & SHF_EXEC else "rodata"
+
+    def out_has_alloc(self, o):
+        return any(sec.alloc for lst in o.matched.values() for sec in lst if not sec.discarded)
+
+    # where an orphan of each class goes when the script has no section of the class's name
+    ORPHAN_ANCHORS = {"text": ["text"], "rodata": ["rodata", "text"], "data": ["data", "rodata", "text"],
+                      "bss": ["bss", "data", "rodata", "text"]}
 
     def place_orphan(self, sec):
-        """An input section no script statement mentions gets an output section of its own name, placed after the
-        last output section of its kind (else after the last loaded one; a bss-like one after the last allocated)."""
-        name = sec.name
+        """An input section no script statement mentions gets an output section of its own name (commons: .bss),
+        placed after the section of its class's name (.text, .rodata, .data, .bss: else the next one down), or after
+        the orphan of that class placed before it; unallocated ones go last."""
+        name = ".bss" if sec.name == "COMMON" else sec.name
         for o in self.outs:
-            if o.spec.name == name and getattr(o, "orphan", False):
+            if o.spec.name == name:
+                if not getattr(o, "orphan", False):      # the script has a section of that name: join it at the end
+                    key = ("orphans", id(o))
+                    spec = getattr(self, "joined", {}).get(key)
+                    if spec is None:
+                        spec = S.InputSpec([None], [], [])
+                        o.spec.stmts.append(spec)
+                        o.matched[id(spec)] = []
+                        self.joined = getattr(self, "joined", {})
+                        self.joined[key] = spec
+                    spec.sections.append((sec.name, []))
+                    o.matched[id(spec)].append(sec)
+                    sec.out = o
+                    return
                 break
         else:
             spec = S.OutSec(name)
@@ -600,23 +681,30 @@ class Linker:
             o.orphan = True
             o.matched[id(spec.stmts[0])] = []
             kind = self.sec_kind(sec)
-            idx = len(self.outs)
+            anchor = None
             if kind != "other":
-                kinds = [self.out_class(x) for x in self.outs]
-                same = [k for k, c in enumerate(kinds) if c == kind and self.outs[k].spec.name != "/DISCARD/"]
-                if same:
-                    idx = same[-1] + 1
-                else:
-                    loaded = [k for k, c in enumerate(kinds) if c in ("code", "ro", "data")
-                              and self.outs[k].spec.name != "/DISCARD/"]
-                    anyalloc = [k for k, c in enumerate(kinds) if c != "other" and self.outs[k].spec.name != "/DISCARD/"]
-                    pick = loaded if kind != "bss" else anyalloc
-                    if pick:
-                        idx = pick[-1] + 1
-            nxt = self.outs[idx].spec if idx < len(self.outs) else None
+                if not hasattr(self, "holds"):
+                    self.holds = {}
+                for cls in self.ORPHAN_ANCHORS[kind]:
+                    anchor = self.holds.get(cls) or next((x for x in self.outs if x.spec.name == "." + cls), None)
+                    if anchor is not None:
+                        break
+                if kind == "bss" and not (self.holds.get("bss") or any(x.spec.name == ".bss" for x in self.outs)):
+                    allocs = [x for x in self.outs if x.spec.name != "/DISCARD/" and self.out_has_alloc(x)]
+                    anchor = allocs[-1] if allocs else anchor
+            if anchor is not None:
+                spec.region, spec.lma_region = anchor.spec.region, anchor.spec.lma_region
+                idx = self.outs.index(anchor) + 1
+                at = self.script.sections.index(anchor.spec) + 1
+                while at < len(self.script.sections) and isinstance(self.script.sections[at], S.Assign) \
+                        and self.script.sections[at].name != ".":
+                    at += 1                  # symbol assignments right after a section stay with it
+            else:
+                idx, at = len(self.outs), len(self.script.sections)
             self.outs.insert(idx, o)
-            at = self.script.sections.index(nxt) if nxt is not None else len(self.script.sections)
             self.script.sections.insert(at, spec)
+            if kind != "other":
+                self.holds[kind] = o
         o.matched[id(o.spec.stmts[0])].append(sec)
         sec.out = o
 
@@ -816,7 +904,7 @@ class Linker:
         if t == "num":
             return Val(e[1])
         if t == "dot":
-            return Val(st.dot, st.sec or st.last)
+            return Val(st.dot, self.dot_sec(st))
         if t == "name":
             return self.ev_name(e[1], st)
         if t == "un":
@@ -897,11 +985,12 @@ class Linker:
             return Val(self.ev(args[0], st).v)
         if f in ("ADDR", "LOADADDR", "SIZEOF", "ALIGNOF"):
             o = self.find_out(args[0][1])
-            return Val({"ADDR": o.vma, "LOADADDR": o.lma, "SIZEOF": o.size, "ALIGNOF": o.align}[f])
+            return Val({"ADDR": o.vma, "LOADADDR": o.lma, "SIZEOF": o.size, "ALIGNOF": o.align}[f],
+                       o if f == "ADDR" else None)
         if f in ("ALIGN", "BLOCK", "NEXT"):
             if len(args) == 1:
                 a = self.ev(args[0], st).v
-                return Val(align_up(st.dot, a), st.sec or st.last)
+                return Val(align_up(st.dot, a), self.dot_sec(st))
             x, a = self.ev(args[0], st), self.ev(args[1], st).v
             return Val(align_up(x.v, a), x.sec)
         if f == "DEFINED":
@@ -928,7 +1017,7 @@ class Linker:
             return Val(PAGE)
         if f == "DATA_SEGMENT_ALIGN":
             m = self.ev(args[0], st).v
-            return Val(align_up(st.dot, m) + (st.dot & (m - 1)), st.sec or st.last)
+            return Val(align_up(st.dot, m) + (st.dot & (m - 1)), self.dot_sec(st))
         if f in ("DATA_SEGMENT_END", "DATA_SEGMENT_RELRO_END"):
             return self.ev(args[-1], st)
         if f == "ASSERT":
@@ -950,13 +1039,37 @@ class Linker:
         v, sec = self.gaddr(g)
         return Val(v, sec)
 
+    def dot_sec(self, st):
+        if st.sec is not None:
+            return st.sec
+        if st.k == 0 or st.dot_set:
+            return RelSec("next", st.k)
+        return RelSec("prev", st.k - 1)
+
+    def resolve_sec(self, s):
+        """The emitted output section a (possibly relative) section stands for, or None."""
+        if s is None:
+            return None
+        if isinstance(s, RelSec):
+            n = len(self.order)
+            if s.direction == "prev":
+                cand = list(range(min(s.idx, n - 1), -1, -1)) + list(range(s.idx + 1, n))
+            else:
+                cand = list(range(max(s.idx, 0), n)) + list(range(min(s.idx, n) - 1, -1, -1))
+            for want_alloc in (True, False):
+                for i in cand:
+                    if self.order[i].emit and (self.order[i].alloc or not want_alloc):
+                        return self.order[i]
+            return None
+        return s if s.emit else None
+
     # -- assignments
     def assign(self, a, st):
         name = a.name
         if name == ".":
             val = self.ev(a.expr, st)
             if a.op != "=":
-                cur = Val(st.dot, st.sec or st.last)
+                cur = Val(st.dot, self.dot_sec(st))
                 val = self.compound(a.op, cur, val)
             if st.sec is not None and val.sec is None:
                 new = st.sec.vma + val.v          # inside a section an absolute value is an offset from its start
@@ -969,15 +1082,13 @@ class Linker:
                 pass
             st.dot = new & MASK64
             st.dot_set = True
-            return
+            return True
         g = self.globals.get(name)
         if a.provide:
             if g is None or not g.refs and name not in self.referenced_by_script:
-                return
+                return False
             if g.kind in ("def", "common") or (g.kind == "script" and name in self.defined_now):
-                return
-            if g.kind == "script" and False:
-                return
+                return False
         val = self.ev(a.expr, st)
         if a.op != "=":
             cur = self.gaddr(g) if g is not None and g.kind != "undef" else (0, None)
@@ -992,6 +1103,7 @@ class Linker:
         g.sym = None
         self.defined_now.add(name)
         self.script_defined.add(name)
+        return True
 
     def compound(self, op, cur, val):
         base = op[:-1]
@@ -1005,7 +1117,8 @@ class Linker:
             self.dot = 0
             self.sec = None          # output section being laid out
             self.last = None         # last output section laid out
-            self.dot_set = False
+            self.dot_set = False     # `.` assigned since the last output section
+            self.k = 0               # output sections laid out so far
 
     def default_region(self, o):
         flags = 0
@@ -1034,6 +1147,7 @@ class Linker:
             reg.origin = self.ev(r.origin, st).v
             reg.length = self.ev(r.length, st).v
             reg.current = reg.origin
+        self.last_in_region = {}
         self.region_lma = {}
         self.asserts = []
         for a in self.script.top:
@@ -1064,7 +1178,10 @@ class Linker:
         ins = self.placed_inputs(o)
         o.inputs = ins
         al = 1
+        sub = self.ev(spec.subalign, st).v if spec.subalign is not None else None
         for sec in ins:
+            if sub is not None:
+                sec.align = sub
             al = max(al, sec.align)
         if spec.align is not None:
             al = max(al, self.ev(spec.align, st).v)
@@ -1085,6 +1202,7 @@ class Linker:
             dot = region.current
         else:
             dot = st.dot
+        dot0 = dot
         dot = align_up(dot, al)
         o.region = region
         o.vma = dot
@@ -1097,15 +1215,22 @@ class Linker:
         elif lma_region is not None:
             o.lma = lma_region.current
         elif region is not None and id(region) in self.region_lma:
+            # the section before it in this region was loaded from another region: this one follows it there
             o.lma = self.region_lma[id(region)].current
         else:
-            o.lma = o.vma
-        o.lma_region = lma_region or (self.region_lma.get(id(region)) if spec.at is None else None)
+            # no AT: keep the offset between load and run address of the section before it in the same region
+            prev = self.last_in_region.get(region.name if region is not None else None)
+            if prev is not None and prev.lma != prev.vma and not na:
+                o.lma = (o.vma + prev.lma - prev.vma) & MASK64
+            else:
+                o.lma = o.vma
+        o.lma_region = lma_region or (self.region_lma.get(id(region)) if region is not None and spec.at is None else None)
         st.dot, st.sec = dot, o
         o.pieces, o.gaps, o.fill = [], [], b"\0"
+        defined_syms = False
         fill_expr = spec.fill
         if fill_expr is not None:
-            o.fill = self.fill_bytes(self.ev(fill_expr, st).v)
+            o.fill = self.fill_pattern(fill_expr, st)
         for item in spec.stmts:
             if isinstance(item, S.InputSpec):
                 for sec in o.matched.get(id(item), []):
@@ -1113,25 +1238,29 @@ class Linker:
                         continue
                     start = align_up(st.dot, sec.align)
                     if start > st.dot:
-                        o.gaps.append((st.dot - o.vma, start - o.vma))
+                        o.gaps.append((st.dot - o.vma, start - o.vma, o.fill))
                     sec.offset = start - o.vma
                     st.dot = start + sec.size
             elif isinstance(item, S.Assign):
                 before = st.dot
-                self.assign(item, st)
+                if self.assign(item, st) and item.name != ".":
+                    defined_syms = True
                 if item.name == "." and st.dot > before:
-                    o.gaps.append((before - o.vma, st.dot - o.vma))
+                    o.gaps.append((before - o.vma, st.dot - o.vma, o.fill))
             elif isinstance(item, S.DataStmt):
+                defined_syms = True
                 n = {"BYTE": 1, "SHORT": 2, "LONG": 4, "QUAD": 8, "SQUAD": 8}[item.kind]
                 v = self.ev(item.expr, st).v
                 o.pieces.append((st.dot - o.vma, (v & ((1 << (8 * n)) - 1)).to_bytes(n, "little")))
                 st.dot += n
             elif isinstance(item, S.FillStmt):
-                o.fill = self.fill_bytes(self.ev(item.expr, st).v)
+                o.fill = self.fill_pattern(item.expr, st)
             elif isinstance(item, S.AssertStmt):
                 self.asserts.append(item)
         o.size = st.dot - o.vma
         st.sec = None
+        st.k += 1
+        st.dot_set = False
         if not na:
             st.last = o
         # section properties: .text, .data and .bss start with the flags and type of the standard sections of those
@@ -1151,10 +1280,19 @@ class Linker:
                 flags &= ~SHF_WRITE
                 if o.size:
                     o.align = max(o.align, 2)
+        # a section made only of mergeable sections stays mergeable (the header says so)
+        o.entsize = 0
+        placed = [sec for sec in ins]
+        if placed and all(sec.flags & SHF_MERGE for sec in placed):
+            flags |= SHF_MERGE | (SHF_STRINGS if all(sec.flags & SHF_STRINGS for sec in placed) else 0)
+            if len({sec.entsize for sec in placed}) == 1:
+                o.entsize = placed[0].entsize
         o.flags = flags
         o.alloc = bool(flags & SHF_ALLOC)
         if o.noload:
             o.nobits = True
+        elif not ins and o.size > 0 and not o.pieces:
+            o.nobits = True                   # it only moved the location counter
         elif std is not None:
             o.nobits = std[1] == SHT_NOBITS and not has_data
         else:
@@ -1164,7 +1302,7 @@ class Linker:
         else:
             rest = types - {SHT_NOBITS}
             o.type = next(iter(rest)) if len(rest) == 1 else SHT_PROGBITS
-        o.emit = o.size > 0 or (not ins and o.has_syms)
+        o.emit = o.size > 0 or (not ins and defined_syms)
         if na:
             st.dot = saved_dot
         # advance memory regions
@@ -1178,18 +1316,21 @@ class Linker:
                 target.current = o.lma + o.size
                 if target.current > target.origin + target.length:
                     self.error(f"ld: region `{target.name}' overflowed by {target.current - target.origin - target.length} bytes")
+            self.last_in_region[region.name if region is not None else None] = o
             if lma_region is not None and region is not None:
                 self.region_lma[id(region)] = lma_region
-        elif lma_region is not None and region is not None:
-            self.region_lma[id(region)] = lma_region
-        st.dot = st.dot if o.alloc else st.dot
 
-    @staticmethod
-    def fill_bytes(v):
-        return (v & 0xFFFFFFFF).to_bytes(4, "big")
+    def fill_pattern(self, expr, st):
+        """Bytes of a fill: a plain hex number is the pattern itself (its digits, padded to a whole byte), any other
+        expression is a 32-bit big-endian value."""
+        if expr[0] == "num" and len(expr) > 2 and expr[2][:2].lower() == "0x" and expr[2][-1] not in "KkMm":
+            digits = expr[2][2:]
+            return bytes.fromhex(digits.rjust(len(digits) + len(digits) % 2, "0"))
+        return (self.ev(expr, st).v & 0xFFFFFFFF).to_bytes(4, "big")
 
     def layout(self):
         self.outs_by_spec = {id(o.spec): o for o in self.outs}
+        self.order = [o for o in self.outs if o.spec.name != "/DISCARD/"]
         self.outs_by_name = {}
         for o in self.outs:
             self.outs_by_name.setdefault(o.spec.name, o)
@@ -1349,11 +1490,10 @@ class Linker:
                 o.data = bytearray()
                 continue
             buf = bytearray(o.size)
-            if o.fill != b"\0":
-                pat = o.fill
-                for s, e in o.gaps:
-                    for k in range(s, e):
-                        buf[k] = pat[(k - s) % len(pat)]
+            for gs, ge, pat in o.gaps:
+                if pat != b"\0":
+                    for k in range(gs, ge):
+                        buf[k] = pat[(k - gs) % len(pat)]
             for sec in o.inputs:
                 if not sec.nobits and sec.size:
                     buf[sec.offset:sec.offset + sec.size] = sec.data
@@ -1477,13 +1617,16 @@ class Linker:
         gl.sort(key=lambda g: (hash_name(g.name) % HASH_SIZE, -g.order))
         # with --gc-sections a symbol the script defines inside an output section and only the script (or dead
         # code) refers to is written as a local symbol
-        loc = [g for g in gl if self.o.gc and g.kind == "script" and g.in_sec and not g.live_ref and (g.top_ref or g.refs)]
+        loc = [g for g in gl if g.kind == "script" and (g.hidden or (self.o.gc and g.in_sec and not g.live_ref
+                                                                       and (g.top_ref or g.refs)))]
         gl = loc + [g for g in gl if g not in loc]
         if loc and any(e[3] & 15 == elf.STT_FILE for e in ents):   # they follow a file symbol with no name
             ents.append(("", 0, 0, (elf.STB_LOCAL << 4) | elf.STT_FILE, 0, elf.SHN_ABS))
         nlocal = len(ents) + len(loc) + 1
         for g in gl:
             value, out = self.gaddr(g)
+            if g.kind == "script":
+                out = self.resolve_sec(out)
             if g.kind == "def":
                 sym = g.sym
                 typ, size, other, bind = sym.type, sym.size, sym.other, sym.bind
@@ -1491,7 +1634,7 @@ class Linker:
             elif g.kind == "common":
                 typ, size, other, bind, shndx = elf.STT_OBJECT, g.common_size, 0, elf.STB_GLOBAL, index_of[out]
             elif g.kind == "script":
-                typ, size, other, bind = elf.STT_NOTYPE, 0, 2 if g.hidden else 0, elf.STB_GLOBAL
+                typ, size, other, bind = elf.STT_NOTYPE, 0, 0, elf.STB_GLOBAL
                 shndx = index_of.get(out, elf.SHN_ABS) if out is not None else elf.SHN_ABS
             else:       # undefined weak
                 typ, size, other, bind, shndx, value = elf.STT_NOTYPE, 0, 0, elf.STB_WEAK, 0, 0
@@ -1517,20 +1660,28 @@ class Linker:
         return g.kind == "undef" and g.refs and g.weakref and False
 
     def set_entry(self):
-        name = self.o.entry or self.script.entry or "_start"
+        """-e, else ENTRY(); else the symbol `start`; else the start of .text; else 0."""
+        name = self.o.entry or self.script.entry
         self.entry_name = name
-        try:
-            self.entry_value = int(name, 0)
+        text = next((o for o in self.emitted if o.name == ".text"), None)
+        if name:
+            try:
+                self.entry_value = int(name, 0)
+                return
+            except ValueError:
+                pass
+            g = self.globals.get(name)
+            if g is not None and g.kind != "undef":
+                self.entry_value = self.gaddr(g)[0] & 0xFFFFFFFF
+                return
+            self.entry_value = text.vma if text else 0
+            self.warn(f"ld: warning: cannot find entry symbol {name}; defaulting to {self.entry_value:08x}")
             return
-        except ValueError:
-            pass
-        g = self.globals.get(name)
+        g = self.globals.get("start")
         if g is not None and g.kind != "undef":
             self.entry_value = self.gaddr(g)[0] & 0xFFFFFFFF
         else:
-            first = next((o for o in self.emitted if o.flags & SHF_EXEC), None) or (self.emitted[0] if self.emitted else None)
-            self.entry_value = first.vma if first else 0
-            self.warn(f"ld: warning: cannot find entry symbol {name}; defaulting to {self.entry_value:08x}")
+            self.entry_value = text.vma if text else 0
 
     def write(self):
         self.emitted = [o for o in self.outs if o.emit and o.spec.name != "/DISCARD/"]
@@ -1572,7 +1723,7 @@ class Linker:
         for o in self.emitted:
             typ = o.type
             struct.pack_into("<10I", out, sh, shname[o.name], typ, o.flags, o.vma, o.offset, o.size, 0, 0,
-                             o.align, 0)
+                             o.align, o.entsize)
             sh += 40
         struct.pack_into("<10I", out, sh, shname[".shstrtab"], elf.SHT_STRTAB, 0, 0, shstr_off, len(shstr), 0, 0, 1, 0)
         sh += 40

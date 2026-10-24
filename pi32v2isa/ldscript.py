@@ -239,7 +239,7 @@ def parse_unary(lx):
 def parse_primary(lx):
     k, s = lx.next()
     if k == "num":
-        return ("num", parse_number(s))
+        return ("num", parse_number(s), s)
     if k == "op" and s == "(":
         e = parse_expr(lx)
         lx.expect(")")
