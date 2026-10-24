@@ -6,8 +6,8 @@ path = ["pi32v2isa/**", "tests/**", "pyproject.toml", ".gitignore", "REUSE.toml"
 SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
 SPDX-License-Identifier = "MIT-0"
 
-# Documentation and the instruction table are CC0-1.0.
+# Documentation, the instruction table and the hardware results are CC0-1.0.
 [[annotations]]
-path = ["*.md", "docs/**", "isa/**"]
+path = ["*.md", "docs/**", "isa/**", "hw/**"]
 SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
 SPDX-License-Identifier = "CC0-1.0"

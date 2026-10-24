@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT-0
 """Generate hardware test batches: RAM images for tools/hwtest/runner.S with test cases from the table.
 
-    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|2] [--per-entry 12] [--batch 180] [--seed 1]
+    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|fpu|2] [--per-entry 12] [--batch 180] [--seed 1]
+                                 [--first-slot 0x01C28000]
 
 Each case runs one instruction (its exact encoding, as raw bytes) with all sixteen registers and the low four
-psr bits set from known inputs, and records all registers and psr afterwards. OUTDIR gets batch-NNN.bin (the
-image for RAM slot 0x01C28000), batch-NNN.json (the manifest) and run.sh (the M-Flasher commands). See README.md.
+psr bits set from known inputs, and records all registers and psr afterwards. OUTDIR gets batch-W-NNN.bin (the
+image, for one of the two RAM slots), batch-W-NNN.json (the manifest) and run-W.sh (the M-Flasher commands). See README.md.
 """
 import argparse
 import json
@@ -149,6 +150,9 @@ def main():
     p.add_argument("--per-entry", type=int, default=12)
     p.add_argument("--batch", type=int, default=180)
     p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--first-slot", type=lambda v: int(v, 0), default=SLOTS[1], choices=SLOTS,
+                   help="the slot of the first batch (default 0x01C28000); when running waves one after another "
+                        "without a power cycle, start each wave in the other slot from the previous wave's last batch")
     a = p.parse_args()
     tab = table.load()
     rng = random.Random(a.seed)
@@ -163,7 +167,7 @@ def main():
         part = calib + part
         with tempfile.TemporaryDirectory() as d:
             # alternate slots: an upload never lands on the runner that is answering the ROM's commands
-            base = SLOTS[(n + 1) % 2]
+            base = SLOTS[(n + SLOTS.index(a.first_slot)) % 2]
             image, syms = build_batch(part, d, a.flag_mask, base)
         name = f"batch-{a.wave}-{n:03d}"
         (a.outdir / f"{name}.bin").write_bytes(image)
@@ -176,7 +180,7 @@ def main():
         print(f"{name}: {len(part)} cases, image {len(image)} bytes, results at {syms['hw_results']:#x}, {length} bytes")
     (a.outdir / f"run-{a.wave}.sh").write_text("\n".join(run) + "\n")
     (a.outdir / f"run-{a.wave}.sh").chmod(0o755)
-    print(f"{len(insns)} entries, {len(cases)} cases, {len(batches)} batches -> {a.outdir}")
+    print(f"{len(insns)} entries, {len(cases)} cases, {len(batches)} batches -> {a.outdir}; last batch in slot {base:#x}")
 
 
 if __name__ == "__main__":

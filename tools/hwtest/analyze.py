@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: MIT-0
 """Read hardware test results: batch-NNN.out (from M-Flasher) with batch-NNN.json (from gen.py).
 
-    python3 tools/hwtest/analyze.py OUTDIR [--json RESULTS.json]
+    python3 tools/hwtest/analyze.py OUTDIR [--json RESULTS.jsonl]
 
 For every batch with an .out file: finds the order in which the runner's push stored the registers (from the
 nop calibration cases, which must give back their inputs), then lists each case's inputs and outputs. Self-test
 cases are checked against the results their text says they must have. Prints a summary; --json writes every
-case (entry id, encoding, text, inputs, outputs, psr flags in and out) for the records.
+case, one JSON object per line (batch, entry id, encoding, text, field values, inputs, outputs, psr flags in
+and out), for the records.
 """
 import argparse
 import json
@@ -87,7 +88,8 @@ def analyse(outdir):
             out = [0] * 16
             for slot, reg in order.items():
                 out[reg] = w[slot]
-            rec = {"id": c["id"], "bytes": c["bytes"], "text": c["text"], "in": c["in"], "flags_in": c["flags"],
+            rec = {"batch": mp.stem, "id": c["id"], "bytes": c["bytes"], "text": c["text"], "values": c["values"],
+                   "in": c["in"], "flags_in": c["flags"],
                    "out": out, "psr_out": w[16], "changed": [r for r in range(16) if out[r] != c["in"][r]]}
             records.append(rec)
             if m["wave"] == "selftest":
@@ -119,7 +121,7 @@ def main():
     for x in problems:
         print("PROBLEM", x)
     if a.json:
-        a.json.write_text(json.dumps(records, indent=0))
+        a.json.write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in records))
         print(f"{len(records)} cases written to {a.json}")
     return 1 if problems else 0
 

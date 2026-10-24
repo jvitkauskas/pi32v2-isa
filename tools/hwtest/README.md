@@ -39,12 +39,16 @@ registers, interrupts, locks and events; they need a runner that sets up memory 
 
 ```sh
 python3 tools/hwtest/gen.py /tmp/hw --wave selftest --per-entry 6
-python3 tools/hwtest/gen.py /tmp/hw --wave 1
+python3 tools/hwtest/gen.py /tmp/hw --wave 1 --first-slot 0x01C20000
 cd /tmp/hw && ./run-selftest.sh         # a freshly powered unit in USB download mode; needs M-Flasher's run-ram
 python3 tools/hwtest/analyze.py /tmp/hw  # check the self-test before running wave 1
 ./run-1.sh
-python3 tools/hwtest/analyze.py /tmp/hw --json results.json
+python3 tools/hwtest/analyze.py /tmp/hw --json results.jsonl
 ```
+
+`gen.py` prints the slot of each wave's last batch. To run waves one after another without a power cycle, start
+the next wave in the other slot (`--first-slot`); otherwise its first upload would land on the runner that is
+answering the ROM. Results of real runs are kept under [hw/](../../hw/).
 
 A case that hangs the unit (a trap, a missing instruction) leaves the batch without an `.out` file: power-cycle,
 note the batch, and split it (`--batch`) to find the case.
