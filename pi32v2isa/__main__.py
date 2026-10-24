@@ -3,6 +3,7 @@
 """Command line: python3 -m pi32v2isa check | disasm HEX... | stats"""
 
 import argparse
+from pathlib import Path
 import signal
 import sys
 import collections
@@ -82,6 +83,10 @@ def cmd_oracle(args):
             for b, deltas in roles:
                 print(f"   bit {b:2d}: " + ", ".join(f"{d} x{c}" for d, c in deltas))
         return 0
+    if args.action == "cc":
+        source = Path(args.items[0]).read_text() if args.items and args.items[0] != "-" else sys.stdin.read()
+        print(oracle.compile_c(o, source, args.flag, args.feature), end="")
+        return 0
     if args.action == "coverage":
         lo, _, hi = (args.items[0] if args.items else "0-ffff").partition("-")
         total, covered, missing = oracle.coverage(o, table.load(args.table), int(lo, 16), int(hi or lo, 16))
@@ -139,12 +144,13 @@ def main(argv=None):
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "confirm"])
-    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; compare: objects; confirm: ids")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
     o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
     o.add_argument("--show", type=int, default=8, help="confirm: problems to show per entry")
+    o.add_argument("--flag", action="append", default=[], help="cc: extra clang flag, e.g. --flag=-O2")
     o.add_argument("--split", type=lambda v: int(v, 0), default=0, help="fit: bits to group the words by")
     o.set_defaults(func=cmd_oracle)
     args = p.parse_args(argv)

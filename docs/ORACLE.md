@@ -71,14 +71,20 @@ every single bit and three irregular values (so a wide constant does not also fi
 is followed by two `nop`s, so a probe objdump reads as longer shows up as a mismatch instead of
 desynchronising the rest.
 
-Two cases are not mismatches:
+These cases are not mismatches:
 
 - **The assembler prefers another form.** `call 0` assembles to the 16-bit `call.s`, not `call.l`. When the
-  bytes the assembler gives decode, with this table, to another entry that means the same (numbers compared
-  by 32-bit value, so `0xFF` and `255` match), `confirm` accepts it and says which entries it preferred. If
+  bytes the assembler gives decode, with this table, to another entry that means the same, `confirm`
+  accepts it and says which entries it preferred. "Means the same" is: numbers compared by 32-bit value
+  (`0xFF` and `255`), `x op= y` equal to `x = x op y`, and the operands of `+ * | ^ &` in either order. If
   the assembler never once picks the entry being checked, that is a mismatch.
+- **Another encoding of the same entry.** A modified immediate has several raw values for some numbers
+  (0 is raw `000`, `100`, `200` and `300`); the assembler picks one, which is no mismatch.
 - **The assembler refuses a text objdump prints.** objdump prints an empty register list as `{}`, which the
   assembler rejects. An entry lists such texts in `asm_rejects`, and `confirm` checks they really are refused.
+  A field whose values the assembler only partly accepts says so with `asm_range`.
+- **The assembler gets it wrong.** JieLi's assembler turns `r0 = r0 | 0x0` into `r0 |= 1`. An entry lists
+  such texts in `asm_wrong`; `confirm` checks they are still mis-assembled, so a fixed toolchain shows up.
 
 With `--write`, a passing entry becomes `confirmed`, gains the `oracle` source, and gets a few examples: all
 fields at their minimum, each field alone at its maximum (so swapped fields would show), all at maximum.
@@ -89,6 +95,26 @@ bytes = "0f 16"
 text = "r15 = r0"
 origin = "oracle:objdump+clang:20260730.1"
 ```
+
+Block openers (`if (...) {`, `rep`) are assembled with a body and a closing `}`: a single `nop`, or for an
+entry with `body` as many `nop`s as that field says, and their decode probes are padded past the longest
+body so the next probe never falls inside it.
+
+## Regression tests
+
+`python3 -m unittest discover -s tests` re-checks every confirmed entry's recorded examples against the
+toolchain both ways (under a minute, when the toolchain is present). `PI32V2_LIVE_ALL=1` also re-runs the
+full `confirm` of every entry, which takes about an hour.
+
+## Asking the compiler
+
+```sh
+python3 -m pi32v2isa oracle cc probe.c --flag=-O2     # objdump -d -r of what JieLi's clang makes of it
+```
+
+Which instruction the compiler picks for a C operation is evidence of what the instruction does (it uses
+`>>>` for a signed `>>`, so `>>>` shifts arithmetically) and of the calling convention. Source id
+`compiler`.
 
 ## Checking real code
 

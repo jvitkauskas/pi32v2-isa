@@ -82,13 +82,13 @@ class RealTable(unittest.TestCase):
             self.assertEqual(codec.format(t.by_id(insn_id), values), text)
 
     def test_non_linear_immediate_kinds(self):
-        """The inverse-bit mask stays 32 bits; wrapped zero follows the field width."""
+        """The inverse-bit mask stays 32 bits; zero_as replaces a raw zero."""
         invbit = table.Field(kind="invbit", letters="b")
         self.assertEqual(codec.operand(invbit, 14, 5), "4294950911")
-        wrapped = table.Field(kind="uimm_zero_max", letters="n")
-        self.assertEqual(codec.operand(wrapped, 0, 3), "8")
-        self.assertEqual(codec.operand(wrapped, 1, 3), "1")
-        self.assertEqual(codec.operand(wrapped, 7, 3), "7")
+        wrapped = table.Field(kind="uimm", letters="n", zero_as=64)       # a pair shift: 0 means 64
+        self.assertEqual(codec.operand(wrapped, 0, 6), "64")
+        self.assertEqual(codec.operand(wrapped, 1, 6), "1")
+        self.assertEqual(codec.operand(wrapped, 63, 6), "63")
 
     def test_split_field_order(self):
         """li.u32 keeps the low half first in memory."""

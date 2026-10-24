@@ -1,33 +1,53 @@
 # Gaps
 
-What is known to exist but is not documented yet, roughly in the order it matters for FM-1 firmware. When a
-gap is closed, move the facts into the table or [ISA.md](ISA.md) and delete the line here.
+What is known to exist but is not documented yet, roughly in the order it matters. When a gap is closed, move
+the facts into the table or [ISA.md](ISA.md) and delete the line here.
 
-## Done: the FM-1's own assembly
+## Encodings: nearly done
 
-Every instruction in the assembly of m-bootloader, Felucca and felucca-bsp is in the table and confirmed:
-`oracle compare` reads all 674 of them exactly as JieLi's objdump does ([ORACLE.md](ORACLE.md)).
+All 1017 entries are confirmed against JieLi's objdump and assembler. `oracle coverage` (first words, each
+followed by zero words): 0000-1FFF 7200/7200, 2000-BFFF 37632/37888, C000-DFFF 2650/2650, E000-EFFF
+2500/2500, F000-FFFF 2577/2671. Left:
 
-## Needed for compiled code
+- 256 words of `R += N` (2000-BFFF, `001.....11000...`): the assembler writes `r1 = r1 + n` for them.
+- About 20 parallel twins (`F000`..`F7FF`) of region-C entries that were confirmed last, and two mask
+  branches at `FF60`/`FF61`.
+- Words objdump prints with `??` for the condition (`if (R ?? N) goto`, `if (R ?? R) {`, some vector
+  compares): no assembler syntax produces them, so whether the hardware treats them as instructions is open.
+- Four floating-point branch conditions (`!=`, `u==`, `uno`, `ord` at `FF44`..`FF47`) that objdump prints and
+  the assembler does not round-trip.
+- Second words: coverage counts first words. Region C's sweep of every second word matched objdump on all
+  but 0.45% of pairs (the `??` forms); regions B and D were checked by `confirm` probes, not full sweeps.
 
-- **The rest of the 16-bit map.** `oracle sweep` shows about 1000 distinct shapes; the table has the ones the
-  FM-1 assembly uses. Next: arithmetic and logic (`R = R + R`, `R += N`, shifts, `R &= N`, `R ^= N`),
-  halfword loads and stores (`h[...]`), post-increment addressing (`[R++=R]`, `[R++=N]`), extensions
-  (`R = R.b0 (s)`), the other compare-and-branch forms.
-- **The 32-bit forms**: compare-and-branch with two registers and decrement-and-branch (`if (r0 == r1) goto`,
-  `if (--r0 != 0) goto`; first words `e800`..`ea7f`), the other `e06x` first words next to `li.modimm`, the pops matching `push.rmask` and
-  `push.srmask`, multiplies, and everything else whose first word is in `E000`..`FFFF`.
-- **The FPU (`fprev1`).** No public source describes it. Felucca and fm1-base compile with `-mfprev1`.
-- **Parallel issue** (`#`): which pairs are allowed, and what the 32-bit `#` forms are.
-- **`rep` loops and if/then/else blocks.**
-- **Branch offsets:** what they are relative to (ISA.md §6).
-- **Flags:** which instructions set and test `cc`.
-- **The calling convention** beyond the first two arguments (ISA.md §9).
-- **ELF:** the other relocation types, their numbers and fields, section flags, symbol conventions (ISA.md §10).
+## Meaning (behaviour)
+
+`confirmed` covers encoding and syntax only. Unknown or unverified:
+
+- `<<<` and `>>>`: the compiler uses `>>>` for a signed `>>` (an arithmetic shift); `<<<` not yet seen.
+- `callns`, `rtns`, `rtss`, `rthw`, `ifs2ns`, `gotoss`, `npc`: look like secure/non-secure state handling
+  (ARMv8-M style); unknown.
+- `sevl`, `sevg`, `wfe`, `lockset`, `lockclr`, `testset`, `trigger`, `cli R` / `sti R`; special registers
+  `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
+- Floating point: format (IEEE single assumed), rounding of the plain operations, fused or not, exceptions.
+- DSP: saturation and averaging details, `(x2)`, `(rnd,...)`, lane order.
+- What a branch offset is relative to; what `if (...) {` blocks cover; parallel-issue pairing rules.
+- Flags: which instructions set `cc` and the flags `ifeq`..`ifle` test.
+
+## ABI and object files
+
+- The calling convention: the compiler passes the first four arguments in `r0`..`r3` and the rest on the
+  stack; callee-saved registers, stack alignment, 64-bit, float, struct and variadic passing are open.
+- ELF: relocation types beyond `MOV_ABS32` and `LONG_JUMP_23M2`, their numbers and fields, `e_flags`,
+  section and symbol conventions.
+
+## Known toolchain bugs and quirks (keep)
+
+- JieLi's assembler turns `r = r | 0`, `r = r ^ 0` and `r = r & 0xFFFFFFFF` into a set, toggle or clear of
+  bit 0 (`asm_wrong` on `or.modimm.rri`, `xor.modimm.rri`, `and.nmodimm.rri`).
+- It accepts `d[r++=n]` offsets only from -512 to 508, while objdump decodes -1024..1020 (`ld.d.pin.l`).
+- objdump prints an empty register list as `{}`, which the assembler refuses.
 
 ## Known to exist, not needed yet
 
-- SIMD instructions.
-- Instruction revisions and newer CPU models, and which instructions each needs.
+- Instruction revisions and newer CPU models, and which instructions each needs (`instrev3` so far).
 - The other CPU models `r1`, `r2`, `r4`, `r5` and how they differ from `r3`.
-- What `trigger`, `cnum` and the special registers `sr4`, `uspn`, `sspn`, `icfgn` and `icfgs` do.

@@ -114,8 +114,6 @@ def operand(field, raw, width):
         return str(1 << raw)
     if kind == "invbit":
         return str(0xFFFFFFFF ^ (1 << raw))
-    if kind == "uimm_zero_max":
-        return str(raw or (1 << width))
     if kind == "rlist4":            # 0..3: r3 down to r<raw>; 4..15: r<raw> down to r4
         hi, lo = (3, raw) if raw < 4 else (raw, 4)
         return _runs(list(range(hi, lo - 1, -1)))
@@ -138,8 +136,8 @@ def operand(field, raw, width):
     return str(value(field, raw, width))
 
 
-def format(insn, values):
-    """The assembly text of insn with the given raw field values."""
+def format(insn, values, syntax=None):
+    """The assembly text of insn with the given raw field values (in `syntax` if given, else insn.syntax)."""
     def sub(m):
         if m.group(0) in ("{{", "}}"):
             return m.group(0)[0]
@@ -149,4 +147,4 @@ def format(insn, values):
         if plus:
             return "" if text == "0" else "+" + text
         return text
-    return SYNTAX_TOKEN.sub(sub, insn.syntax)
+    return SYNTAX_TOKEN.sub(sub, insn.syntax if syntax is None else syntax)

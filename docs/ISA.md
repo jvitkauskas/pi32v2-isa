@@ -50,6 +50,9 @@ pi32, `sp` is its own register and `r15` is a general register [kagaimiq-jielie]
 and written with `mov.r_sr` and `mov.sr_r`, loaded with `li.sr_u32`, and pushed and popped with `push.srl`,
 `pop.srl` (`sr0`..`sr5`) and `push.srmask` (any).
 
+Some loads address memory relative to `npc` (`r1 = [npc + r2]`, `ld.w.npc`) [oracle]; what `npc` holds is
+not yet known.
+
 There is also a condition flag, `cc`, set directly by `cc = 0` / `cc = 1` [kagaimiq-jielie]. **Pending:**
 which instructions set and test it.
 
@@ -80,6 +83,15 @@ Spellings found so far [oracle]:
 - Byte and halfword loads end in `(u)` (zero-extended) or `(s)`; the assembler accepts the line without it.
 - Constants print in decimal, except `li.modimm`'s, which print in hex.
 - A branch prints its offset followed by the target as `<symbol+offset : address >`.
+- Parallel issue: objdump prints two spaces and `#` after the instruction (`r0 = r1 + r2  #`); the assembler
+  takes `r0 = r1 + r2 #`. Writing a second instruction after the `#` (`... # r3 = r4`) was refused with
+  "invalid parallel-B instruction" in the cases tried.
+- Blocks: `rep` and `if (...) {` open a block that objdump prints indented, closed by a `}` line that takes no
+  bytes. The assembler wants `rep r1 {` / `rep 3 {`, body, `}`, and works out the body's length itself.
+- Halves and lanes: `r1.l` and `r1.h` are a register's low and high 16 bits; `r1.b0`..`r1.b3` its bytes.
+  Pair operands such as `r2,r3` must name registers of one 64-bit pair (`r2,r5` is refused).
+- Modifiers in parentheses after an operation: `(u)`/`(s)` unsigned/signed, `(usat)`/`(ssat)` saturating,
+  `(uavg)`/`(savg)`, `(rnd,...)`, `(x2)`, `(v)` (vector), `(f)` (floating point).
 
 **Pending:** the assembler's comment syntax (the projects run their `.S` files through the C preprocessor
 and use C comments), directives, and how parallel issue is written (reported as `ins1 # ins2`
@@ -96,6 +108,9 @@ and use C comments), directives, and how parallel issue is written (reported as 
   - `E000`..`FFFF`: the first word of a 32-bit instruction, except 99 words in `FF00`..`FFEF` that begin a
     48-bit one. Words in this range that begin neither are not instructions. 774 of the 32-bit first words
     also print with `#`.
+- The same holds for 32-bit forms: an instruction whose first word is in `E000`..`E7FF` has, for 228 forms, a
+  parallel twin with first-word bit 12 set (`F000`..`F7FF`), printed with `  #`. `E800`..`EFFF` (branches,
+  blocks) have none; `F800`..`FFFF` hold other instructions.
 - Extra words hold immediates and operands. A 32-bit constant in a 48-bit instruction is stored low half
   first (`li.u32`, `li.sr_u32`).
 - Small immediates are often split across the word, and offsets are scaled by the access size (words by 4,
@@ -105,24 +120,41 @@ and use C comments), directives, and how parallel issue is written (reported as 
 
 ## 5. Instruction groups
 
-The table's `group` keys, with the entries in each so far:
+The table's `group` keys. Counts are entries (forms), as of the merge of the four region passes; a
+parallel twin counts as its own entry:
 
-| Group | Entries |
-| --- | --- |
-| control | `nop`, `idle`, `csync`, `cli`, `sti`, `trigger` |
-| returns | `rts`, `rti`, `rtx`, `rte` |
-| jumps (through a register) | `call.r`, `goto.r` |
-| branches | `beqz`, `bnez`, `goto.s`, `goto.l`, `call.s`, `call.l` |
-| moves | `mov.rr`, `mov.r_sr`, `mov.sr_r`, `mov.sp_usp`, `mov.sp_ssp`, `mov.usp_sp`, `mov.ssp_sp`, `cc.set` |
-| constants | `li.u8`, `li.neg5`, `li.zero_hi`, `li.s16`, `li.modimm`, `li.u32`, `li.sr_u32`, `or.bit` |
-| memory | `ld.w`, `st.w`, `ld.w.sp`, `st.w.sp`, `ld.bu`, `st.b` |
-| stack | `push.rl`, `pop.rl`, `push.rets_rl`, `pop.rets_rl`, `pop.pc_rl`, `push.srl`, `pop.srl`, `push.rmask`, `push.srmask` |
+| Group | Entries | What is in it |
+| --- | --- | --- |
+| dsp | 360 | half-register and lane arithmetic, saturating and averaging adds, packed multiplies, `all`/`any`/`cmp` vector compares |
+| branches | 137 | `goto`/`call` near and far, compare-and-branch against zero, a number or a register, flag branches (`ifeq goto`), decrement-and-branch, bit tests, `if (...) {` blocks |
+| memory | 132 | loads and stores: word, halfword, byte; register + offset, `sp` + offset, register + register (optionally shifted), pre- and post-increment, `npc`-relative, read-modify-write |
+| arithmetic | 72 | add, subtract (also reversed), with carry, `+=` and three-operand forms, divide, count leading zeros/sign, popcount, byte reversal |
+| multiply | 58 | 32- and 64-bit multiplies and multiply-accumulates, including memory operands |
+| shifts | 52 | `<<`, `>>`, `<<<`, `>>>` by a number or a register, on registers and pairs |
+| logic | 29 | and, or, xor, not, bit clear, with registers and modified immediates |
+| stack | 27 | push and pop of ranges, masks and special registers |
+| moves | 26 | general, special, half-register and pair moves, `sp`/`usp`/`ssp`/`uspn`/`sspn` |
+| fpu | 50 | single-precision add, sub, mul, div, multiply-add/sub, compare, min/max, conversions with four roundings, and their twins |
+| control | 24 | `nop`, `idle`, interrupts on/off, `swi`, `syscall`, `bkpt`, locks and events, `rep`, `trigger` |
+| bitops | 20 | bit insert/extract, bit set/clear/toggle |
+| constants | 19 | the constant loads, from 16-bit `li.u8` to 48-bit `li.u32` |
+| returns, cache, jumps | 11 | `rts`/`rti`/`rtx`/`rte`, cache maintenance, jumps through a register |
 
 Several operations have more than one encoding. JieLi's assembler picks the shortest that fits: a constant
 goes to `li.u8`, `li.neg5` or `li.zero_hi` if it can, then `li.s16` or `li.modimm`, and only then `li.u32`;
-`call`/`goto` take the 16-bit form when the target is near and the 32-bit one for symbols.
+`call`/`goto` take the 16-bit form when the target is near and the 32-bit one for symbols; `r1 = r1 + r2`
+becomes `r1 += r2` where that form exists.
 
 ## 6. Execution model
+
+Known so far [oracle]:
+
+- `rep` repeats the block after it: `rep r1 {` takes the count from a register, `rep 3 {` from a number
+  (1..32); the body is 2..32 bytes (1..16 words).
+- `if (cond) {` makes the following block conditional; the closing `}` takes no bytes, so the block's extent is
+  not encoded in the `if` word itself as far as objdump shows. Compare-and-branch forms jump instead.
+- Shift amounts run 1..32 (1..64 for pairs); a zero amount field means 32 (64).
+- `.pin` post-increment steps by the access size only (±4, ±2, ±1), the sign picked by one bit.
 
 **Pending:** what a branch offset is relative to (objdump prints the same offset at any address), parallel
 issue, `rep` hardware loops (`rep` takes a count register and covers the following
@@ -139,6 +171,10 @@ instruction words [kagaimiq-jielie]), if/then/else blocks [virtualabs-ghidra], f
 **Pending.** The toolchain ships pi32v2 libraries for CPU models `r1`..`r5`, each also as a "large" build
 [oracle]. Features to pin down: `fprev1` (the FPU), SIMD, the instruction revisions and newer CPU models
 ([GAPS.md](GAPS.md)).
+
+Observed with the assembler [oracle]: `popcnt`, `sum(...)` and the halfword memory multiply-accumulates need
+`-minstrev3` (28 entries have `requires = ["instrev3"]`); objdump decodes them without it. The FPU forms
+assemble and decode without `-mfprev1`; whether the hardware needs `fprev1` for them is not known.
 
 ## 9. Calling convention
 

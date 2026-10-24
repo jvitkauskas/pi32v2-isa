@@ -101,9 +101,10 @@ class Oracle:
                 out[int(m.group(1), 16)] = (bytes.fromhex(m.group(2)), text)
         return out
 
-    def decode(self, probes, features=()):
-        """For each byte string, (bytes objdump took as the instruction, its text), or None."""
-        blob = b"".join(p + PAD for p in probes)
+    def decode(self, probes, features=(), pad=PAD):
+        """For each byte string, (bytes objdump took as the instruction, its text), or None. Each probe is
+        followed by `pad` (nops), so one probe read as longer than it is cannot swallow the next."""
+        blob = b"".join(p + pad for p in probes)
         source = "\t.text\n" + "".join(f"\t.byte {', '.join(f'0x{b:02x}' for b in blob[i:i + 16])}\n"
                                        for i in range(0, len(blob), 16))
         listing, err = self._assemble(source, features)
@@ -112,7 +113,7 @@ class Oracle:
         lines, out, addr = self._lines(listing), [], 0
         for p in probes:
             out.append(lines.get(addr))
-            addr += len(p) + len(PAD)
+            addr += len(p) + len(pad)
         return out
 
     def listing(self, data, features=()):
@@ -125,23 +126,47 @@ class Oracle:
         return [(a, b, t) for a, (b, t) in sorted(self._lines(listing).items())]
 
     def encode(self, texts, features=()):
-        """For each assembly line, the bytes JieLi's assembler produced, or an error message (str)."""
-        # A line that opens a block (`if (r0 == r1) {`) needs a body and a closing brace, or the assembler fails
-        # or never returns. The body is a nop, dropped again below; the brace is a directive that emits no bytes.
-        opens = [t.rstrip().endswith("{") for t in texts]
-        source = "\t.text\n" + "".join(f"\t{t}\n" + ("\tnop\n\t}\n" if o else "") for t, o in zip(texts, opens))
+        """For each assembly text, the bytes JieLi's assembler produced for its first instruction, or an error
+        message (str). A text may span several lines (a block with its body); a single line that opens a
+        block (`if (r0 == r1) {`) gets a `nop` body and a closing brace, since the assembler fails or never
+        returns without one. Only the first instruction's bytes are returned; `}` emits no bytes."""
+        blocks = []
+        for t in texts:
+            lines = t.split("\n")
+            if len(lines) == 1 and t.rstrip().endswith("{"):
+                lines = [t, "nop", "}"]
+            blocks.append(lines)
+        source = "\t.text\n" + "".join(f"\t{ln}\n" for b in blocks for ln in b)
         listing, err = self._assemble(source, features)
         if listing is not None:
-            lines = [b for _, (b, _) in sorted(self._lines(listing).items())]
-            if len(lines) == len(texts) + sum(opens):
+            got = [b for _, (b, _) in sorted(self._lines(listing).items())]
+            counts = [sum(1 for ln in b if ln.strip() != "}") for b in blocks]
+            if len(got) == sum(counts):
                 out, k = [], 0
-                for o in opens:
-                    out.append(lines[k])
-                    k += 2 if o else 1
+                for c in counts:
+                    out.append(got[k])
+                    k += c
                 return out
         if len(texts) == 1:
             return [err or "assembler output did not match the input"]
         return [r for t in texts for r in self.encode([t], features)]   # find which line failed
+
+
+def compile_c(oracle, source, flags=(), features=()):
+    """Compile C source with JieLi's clang for pi32v2 and return objdump's listing of the object, with
+    relocations (-r). Black box: C in, the compiler's choice of instructions out. `flags` are extra clang
+    flags (e.g. -O2, -Os); `features` become -m<feature>."""
+    with tempfile.TemporaryDirectory() as d:
+        c, obj = Path(d) / "probe.c", Path(d) / "probe.o"
+        c.write_text(source)
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *flags,
+                                    *[f"-m{f}" for f in features], "-c", c, "-o", obj])
+        if code:
+            raise OracleError(f"compile failed: {err.strip()}")
+        code, out, err = oracle._run([oracle.objdump, "-d", "-r", f"-mcpu={CPU}", obj])
+        if code:
+            raise OracleError(f"objdump failed: {err.strip()}")
+        return out
 
 
 def parse_values(spec):
@@ -176,10 +201,32 @@ def bits(data):
 NUMBER = re.compile(r"(?<![\w])(-?(?:0x[0-9A-Fa-f]+|\d+))(?![\w])")
 
 
+COMPOUND = re.compile(r"^(\S+) (<<<|>>>|<<|>>|[-+*|^&])= (\S+)(\s+#)?$")
+SUB_CONST = re.compile(r"^(\S+) = (\S+) - (\d+)(\s+#)?$")
+COMMUTATIVE = re.compile(r"^(\S+) = (\S+) ([+*|^&]) (\S+)(\s+#)?$")
+
+
+def _canonical(text):
+    """A text with its numbers as 32-bit values, `x op= y` written `x = x op y`, and the operands of a
+    commutative operation (+ * | ^ &) in sorted order."""
+    t = NUMBER.sub(lambda m: str(int(m.group(1), 0) & 0xFFFFFFFF), text)
+    m = COMPOUND.match(t)
+    if m:
+        t = f"{m.group(1)} = {m.group(1)} {m.group(2)} {m.group(3)}{m.group(4) or ''}"
+    m = SUB_CONST.match(t)              # x = a - N is x = a + (-N)
+    if m:
+        t = f"{m.group(1)} = {m.group(2)} + {-int(m.group(3)) & 0xFFFFFFFF}{m.group(4) or ''}"
+    m = COMMUTATIVE.match(t)
+    if m:
+        a, b = sorted((m.group(2), m.group(4)))
+        t = f"{m.group(1)} = {a} {m.group(3)} {b}{m.group(5) or ''}"
+    return re.sub(r"\s+#$", "  #", t)
+
+
 def same_meaning(a, b):
-    """Texts equal once every number is compared by its 32-bit value (0xFF and 255, -1 and 0xFFFFFFFF)."""
-    norm = lambda t: NUMBER.sub(lambda m: str(int(m.group(1), 0) & 0xFFFFFFFF), t)
-    return norm(a) == norm(b)
+    """Texts that say the same thing: numbers compared by their 32-bit value (0xFF and 255, -1 and
+    0xFFFFFFFF), `x op= y` the same as `x = x op y`, and `a op b` the same as `b op a` for + * | ^ &."""
+    return _canonical(a) == _canonical(b)
 
 
 def probe_values(insn, limit=4096, wide=6000):
@@ -236,7 +283,9 @@ def confirm(oracle, table, insn):
     encodings = [codec.encode(insn, v) for v in values_list]
     texts = [codec.format(insn, v) for v in values_list]
     problems = []
-    decoded = oracle.decode(encodings, insn.requires)
+    # a block opener's body is the words after it: pad with more than the longest body (16 words), so the
+    # next probe is never inside it
+    decoded = oracle.decode(encodings, insn.requires, pad=bytes(34) if insn.body else PAD)
     for data, text, got in zip(encodings, texts, decoded):
         if got is None:
             problems.append(f"decode {data.hex(' ')}: objdump printed nothing at this address")
@@ -244,10 +293,29 @@ def confirm(oracle, table, insn):
             problems.append(f"decode {data.hex(' ')}: objdump took {got[0].hex(' ')} as one instruction ({got[1]!r})")
         elif got[1] != text:
             problems.append(f"decode {data.hex(' ')}: objdump prints {got[1]!r}, table says {text!r}")
-    assembled = oracle.encode(texts, insn.requires)
+    asm_texts = [codec.format(insn, v, insn.asm_syntax or None) for v in values_list]
+    if insn.body:                       # a block whose body length is a field: give it that many nop bytes
+        field = insn.fields[insn.body]
+        sizes = [codec.value(field, v[insn.body], len(insn.field_bits(insn.body))) for v in values_list]
+        asm_texts = [t + "\n" + "nop\n" * (n // 2) + "}" for t, n in zip(asm_texts, sizes)]
+    assembled = oracle.encode(asm_texts, insn.requires)
     preferred = collections.Counter()   # other entries the assembler chose for the same text
-    for data, text, got in zip(encodings, texts, assembled):
-        if text in insn.asm_rejects:
+    out_of_range = []                   # probes with a value the assembler is known to refuse (asm_range)
+    for v in values_list:
+        bad = False
+        for name, f in insn.fields.items():
+            if f.asm_range:
+                n = codec.value(f, v[name], len(insn.field_bits(name)))
+                bad = bad or not f.asm_range[0] <= n <= f.asm_range[1]
+        out_of_range.append(bad)
+    for data, text, got, refused in zip(encodings, texts, assembled, out_of_range):
+        if text in insn.asm_wrong:
+            if got == data:
+                problems.append(f"encode {text!r}: listed in asm_wrong, but the assembler now gets it right")
+        elif refused:
+            if not isinstance(got, str):
+                problems.append(f"encode {text!r}: outside asm_range, but the assembler gives {got.hex(' ')}")
+        elif text in insn.asm_rejects:
             if not isinstance(got, str):
                 problems.append(f"encode {text!r}: listed in asm_rejects, but the assembler gives {got.hex(' ')}")
         elif isinstance(got, str):
@@ -261,7 +329,7 @@ def confirm(oracle, table, insn):
                 # for one value); the assembler picks one, which is no disagreement
             else:
                 problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
-    if preferred and sum(preferred.values()) == len(texts) - len(insn.asm_rejects):
+    if preferred and sum(preferred.values()) == len(texts) - len(insn.asm_rejects) - sum(out_of_range):
         problems.append(f"encode: the assembler never chose this form (always {', '.join(preferred)})")
     examples = []
     for v in chosen_examples(insn, values_list):
@@ -401,3 +469,31 @@ def coverage(oracle, table, lo=0, hi=0xFFFF):
         else:
             missing[w] = (n, text)
     return total, covered, shapes(missing)
+
+
+def check_examples(oracle, table):
+    """A quick regression check: every confirmed entry's recorded examples still decode to their text with
+    JieLi's objdump, and their text still assembles to the same bytes (or to another table entry that means
+    the same). Much faster than confirming every entry; `confirm` remains the full check."""
+    problems = []
+    by_features = collections.defaultdict(list)
+    for i in table.insns:
+        if i.status == "confirmed":
+            for x in i.examples:
+                by_features[tuple(i.requires)].append((i, x))
+    for features, items in by_features.items():
+        pad = bytes(34)                 # room for the longest block body
+        decoded = oracle.decode([x.bytes for _, x in items], features, pad=pad)
+        for (i, x), got in zip(items, decoded):
+            if got is None or got[0] != x.bytes or got[1] != x.text:
+                problems.append(f"{i.id}: {x.bytes.hex(' ')} now decodes as {got}, example says {x.text!r}")
+        plain = [(i, x) for i, x in items
+                 if not i.asm_syntax and not i.body and x.text not in i.asm_rejects and x.text not in i.asm_wrong]
+        for (i, x), got in zip(plain, oracle.encode([x.text for _, x in plain], features)):
+            if isinstance(got, str):
+                problems.append(f"{i.id}: {x.text!r} no longer assembles: {got.splitlines()[0] if got else '?'}")
+            elif got != x.bytes:
+                other = codec.decode(table, got)
+                if not (other and other[2] == len(got) and same_meaning(codec.format(other[0], other[1]), x.text)):
+                    problems.append(f"{i.id}: {x.text!r} assembles to {got.hex(' ')}, example says {x.bytes.hex(' ')}")
+    return problems

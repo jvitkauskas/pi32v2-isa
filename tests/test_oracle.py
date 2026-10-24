@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import copy
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -62,7 +63,7 @@ class Aliases(unittest.TestCase):
         t = table.Table(format=1, insns=[i])
 
         class Fake:
-            def decode(self, probes, features=()):
+            def decode(self, probes, features=(), pad=oracle.PAD):
                 return [(p, codec.format(i, codec.fields_of(i, p))) for p in probes]
 
             def encode(self, texts, features=()):
@@ -98,6 +99,32 @@ class BlockEncoding(unittest.TestCase):
         got = Fake().encode(["if (r0 == r1) {", "nop"])
         self.assertEqual(got, [bytes.fromhex("10 e8 00 01"), bytes.fromhex("00 00")])
         self.assertIn("\tif (r0 == r1) {\n\tnop\n\t}\n\tnop\n", seen[0])
+
+
+    def test_multi_line_text_returns_its_first_instruction(self):
+        """A text with a body (`rep r1 {` + nops + `}`) yields only the opener's bytes."""
+        class Fake(oracle.Oracle):
+            def __init__(self):
+                pass
+
+            def _assemble(self, source, features=()):
+                return ("   0:  11 03  \trep 4 r1 {\n   2:  00 00  \t\tnop\n   4:  00 00  \t\tnop\n"
+                        "              \t}\n   6:  80 00  \trts\n"), ""
+
+        got = Fake().encode(["rep r1 {\nnop\nnop\n}", "rts"])
+        self.assertEqual(got, [bytes.fromhex("11 03"), bytes.fromhex("80 00")])
+
+
+class Meaning(unittest.TestCase):
+    def test_equivalent_spellings(self):
+        same = [("r1 += r2", "r1 = r1 + r2"), ("r8 += r0  #", "r8 = r0 + r8  #"), ("r0 <<= r0  #", "r0 = r0 << r0  #"),
+                ("r1 = 0xFF", "r1 = 255"), ("r1 |= r2", "r1 = r2 | r1"), ("r1 = -1", "r1 = 0xFFFFFFFF")]
+        differ = [("r1 = r2 - r3", "r1 = r3 - r2"), ("r1 -= r2", "r1 = r2 - r1"), ("r1 = r2 << r3", "r1 = r3 << r2"),
+                  ("r1 += r2", "r1 += r2  #")]
+        for a, b in same:
+            self.assertTrue(oracle.same_meaning(a, b), (a, b))
+        for a, b in differ:
+            self.assertFalse(oracle.same_meaning(a, b), (a, b))
 
 
 class Probes(unittest.TestCase):
@@ -150,6 +177,11 @@ class Live(unittest.TestCase):
     def setUp(self):
         self.o, self.t = _toolchain(), table.load()
 
+    def test_examples_still_agree(self):
+        """Every confirmed entry's examples, both ways (seconds)."""
+        self.assertEqual(oracle.check_examples(self.o, self.t), [])
+
+    @unittest.skipUnless(os.environ.get("PI32V2_LIVE_ALL"), "full confirm of every entry takes about an hour; set PI32V2_LIVE_ALL=1")
     def test_confirmed_entries_agree(self):
         for i in self.t.insns:
             if i.status == "confirmed":

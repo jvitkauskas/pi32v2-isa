@@ -28,7 +28,6 @@ KINDS = {
     "simm": None,
     "bit": {5},
     "invbit": {5},
-    "uimm_zero_max": None,
     "rlist4": {4},
     "rmask": {16},
     "srmask": None,
@@ -54,6 +53,7 @@ class Field:
     decimal: bool = False   # modimm only: printed as a signed decimal instead of hex
     lead: str = ""          # rmask only: a register name printed first, before the list
     zero_as: int | None = None   # uimm only: the number the raw value 0 stands for
+    asm_range: list[int] = field(default_factory=list)   # uimm/simm: [lo, hi] the assembler accepts, if narrower
 
 
 @dataclass
@@ -77,6 +77,9 @@ class Insn:
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
     asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
+    asm_wrong: list[str] = field(default_factory=list)     # texts JieLi's assembler is known to mis-assemble
+    asm_syntax: str = ""    # how the assembler wants the line, when it differs from objdump's syntax
+    body: str = ""          # a block opener: the field whose value is the body's length in bytes
 
     @property
     def nbits(self):
@@ -127,7 +130,7 @@ def _field(name, spec):
     return Field(kind=spec.get("kind", ""), letters=spec.get("letters", name),
                  scale=spec.get("scale", 1), add=spec.get("add", 0), values=list(spec.get("values", [])),
                  invert=spec.get("invert", False), decimal=spec.get("decimal", False),
-                 lead=spec.get("lead", ""), zero_as=spec.get("zero_as"))
+                 lead=spec.get("lead", ""), zero_as=spec.get("zero_as"), asm_range=list(spec.get("asm_range", [])))
 
 
 def load(path=TABLE):
@@ -148,6 +151,9 @@ def load(path=TABLE):
             examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
                       for x in e.get("example", [])],
             asm_rejects=list(e.get("asm_rejects", [])),
+            asm_wrong=list(e.get("asm_wrong", [])),
+            asm_syntax=e.get("asm_syntax", ""),
+            body=e.get("body", ""),
         ))
     return Table(format=raw.get("format", 0), insns=insns)
 
@@ -244,6 +250,8 @@ def check(table, sources=None):
                 errors.append(f"{where}: field {name!r}: lead applies only to rmask")
             if f.zero_as is not None and f.kind != "uimm":
                 errors.append(f"{where}: field {name!r}: zero_as applies only to uimm")
+            if f.asm_range and (f.kind not in NUMERIC or len(f.asm_range) != 2):
+                errors.append(f"{where}: field {name!r}: asm_range is [lo, hi], for uimm/simm only")
             if f.kind != "enum" and f.values:
                 errors.append(f"{where}: field {name!r}: values apply only to enum")
             if (f.scale != 1 or f.add) and f.kind not in NUMERIC:
@@ -255,6 +263,10 @@ def check(table, sources=None):
             errors.append(f"{where}: field {name!r} never appears in syntax")
         if SYNTAX_TOKEN.sub("", i.syntax).count("{") or SYNTAX_TOKEN.sub("", i.syntax).count("}"):
             errors.append(f"{where}: syntax has a lone brace; write {{{{ or }}}} for a literal one")
+        for name in set(placeholders(i.asm_syntax)) - i.fields.keys():
+            errors.append(f"{where}: asm_syntax uses {{{name}}}, which is not a field")
+        if i.body and (i.body not in i.fields or i.fields[i.body].kind not in NUMERIC):
+            errors.append(f"{where}: body {i.body!r} is not a uimm or simm field")
         if i.status not in STATUSES:
             errors.append(f"{where}: unknown status {i.status!r}")
         for s in i.sources:

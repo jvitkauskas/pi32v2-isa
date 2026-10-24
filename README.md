@@ -25,9 +25,10 @@ linker and a compiler backend are later, separate projects that use this referen
 
 ## Status
 
-Early. The table holds 49 forms, all confirmed against JieLi's toolchain (encoding and syntax, every field
-value or a wide sample): everything the FM-1 projects' assembly uses. The disassembler reads all 674
-instructions of that assembly exactly as JieLi's objdump does. The assembler is not written yet.
+The table holds 1017 forms, all confirmed against JieLi's toolchain (encoding and syntax): every
+decodable 16-bit word and every 32-bit first word in E000-EFFF, and all but 94 first words in F000-FFFF.
+The disassembler reads the FM-1 projects' assembly exactly as JieLi's objdump does. What the instructions do
+is documented only as far as the syntax and the compiler show it; the assembler is not written yet.
 [docs/GAPS.md](docs/GAPS.md) lists what comes next.
 
 ## Use
@@ -40,6 +41,7 @@ python3 -m pi32v2isa disasm 80 00 01 00    # decode bytes (hex)
 python3 -m pi32v2isa oracle fetch          # get JieLi's toolchain, for checking entries (docs/ORACLE.md)
 python3 -m pi32v2isa oracle sweep          # see what the toolchain makes of every 16-bit word
 python3 -m pi32v2isa oracle confirm        # check entries against it
+python3 -m pi32v2isa oracle cc file.c      # what JieLi's compiler makes of some C
 python3 -m unittest discover -s tests      # run the tests
 ```
 

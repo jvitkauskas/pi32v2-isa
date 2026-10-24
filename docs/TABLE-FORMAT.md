@@ -18,6 +18,9 @@ status = "confirmed"                # guessed | documented | confirmed
 sources = ["oracle"]                # ids from docs/SOURCES.md
 notes = "objdump omits the offset when it is 0 ([sp])."   # optional
 asm_rejects = []                    # optional: texts objdump prints that JieLi's assembler refuses
+asm_wrong = []                      # optional: texts JieLi's assembler is known to mis-assemble
+asm_syntax = ""                     # optional: how the assembler wants the line, if not as objdump prints it
+body = ""                           # optional: a block opener's field that is the body length in bytes
 
 [[insn.example]]                    # optional; zero or more
 bytes = "2d 31"                     # hex, in memory order
@@ -64,6 +67,7 @@ or as an inline table:
 | `invert` | false | `modimm` only: print the bitwise complement of the modified immediate |
 | `decimal` | false | `modimm` only: print as an unsigned 32-bit decimal instead of hex |
 | `lead` | (none) | `rmask` only: a name printed first, before the registers (`{rets, r3-r0}`; just `{rets}` when the mask is empty) |
+| `asm_range` | (none) | `uimm`/`simm` only: `[lo, hi]`, the values JieLi's assembler accepts when that is narrower than what the field holds |
 | `zero_as` | (none) | `uimm` only: the number printed for the raw value 0 (a shift amount where 0 means 32) |
 | `scale` | 1 | `uimm`/`simm` only: the printed number is the raw value (sign-extended for `simm`) times `scale`, plus `add` |
 | `add` | 0 | `uimm`/`simm` only |
@@ -78,6 +82,10 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 - `{x}` is field `x`.
 - `{+x}` prints `+` and the value, or nothing when the value is 0 (`[sp]`, `[sp+4]`).
 - `{{` and `}}` are literal braces (`[--sp] = {{{l}}}` prints `[--sp] = {r3-r0}`).
+- A block opener (`rep`, `if (...) {`) prints `{` at the end of its line; objdump then prints the body
+  and a `}` line, which take no bytes of their own. When the assembler wants the line differently (`rep r1 {`
+  where objdump prints `rep 4 r1 {`), `asm_syntax` gives its form, and `body` names the field the
+  assembler works out from the body's length.
 - The text follows JieLi's **objdump**. The assembler accepts more spellings (`[r1 + 0]`, `b[r4+4]` without
   `(u)`); an assembler written from this table must accept those too.
 
@@ -95,7 +103,6 @@ its third, so its encoding uses `i` then `j` and the field says `letters = "ji"`
 | `simm` | any | two's-complement number | `-11` |
 | `bit` | 5 | a bit number, printed as the bit's value | `16384` |
 | `invbit` | 5 | a bit number, printed as the 32-bit complement of the bit's value | `4294950911` |
-| `uimm_zero_max` | any | unsigned number with raw zero printed as 2 to the field width (a 5-bit field prints 1..32) | `32` |
 | `modimm` | 12 | modified immediate: bits 11..10 = 0 repeats byte `XY` as `XY`, `00XY00XY`, `XY00XY00` or `XYXYXYXY` (bits 9..8); otherwise `1` + bits 6..0, rotated right by bits 11..7. Printed in hex | `0x10000` |
 | `enum` | any | one of a fixed set of words or suffixes, chosen by the raw value from the field's `values` list (`".l"`/`".h"`, `"usat"`/`"ssat"`) | `.h` |
 | `rlist4` | 4 | register range: 0..3 is `r3` down to `r<n>`, 4..15 is `r<n>` down to `r4` | `r3, r2`, `r6-r4` |
