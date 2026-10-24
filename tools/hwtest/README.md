@@ -82,6 +82,11 @@ m-flasher run-ram RUNNER.bin --addr 0x01C20000 --read 0x01C30000:0x50000 -o ram.
 python3 tools/hwtest/analyze.py /tmp/app --ram ram.bin@0x01C30000 --json results.jsonl
 ```
 
+For handlers, watchdog recovery and timer gating, use the optional experiment profile described in
+[APP.md](APP.md#steps-3–4-experiment-profile). `appcollect.py` excludes unfinished batches from instruction
+results; `appverify.py` checks trap tags and timing-dependent counter relations. These observations and
+ordinary numerical instruction models are complementary.
+
 ## Checking meanings
 
 `check.py RESULTS.jsonl` runs every case through an executable model of its form (`semantics/*.py`, interface

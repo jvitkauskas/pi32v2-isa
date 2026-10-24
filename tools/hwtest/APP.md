@@ -1,12 +1,15 @@
 # Design: running test cases as an FM-1 application
 
-Status: steps 1 and 2 done (`hw/fm1-2026-10-24-app`): the build and install path works, RAM above the
-bootloader survives the return to download mode, and the runner gives the same results as an application as in
-download mode. Steps 3 and 4 are not started.
+Status: steps 1–4 have run. Steps 1–2 (`hw/fm1-2026-10-24-app`) verified retention and the batch harness.
+Steps 3–4 (`hw/fm1-2026-10-24-app2`) verified watchdog skip/restart, recording handlers, software interrupts
+0..7, timer masking/pending retention through icfg bits 8/9, and timer priorities 0/3/7. Event blocking and
+consumption, other power modes, software IRQ masking and interrupt nesting remain open.
 
 Tools: `fm1app.py` (assemble, link at `0x02000120`, pack a `.fwsc`; `--plugin` for RAM images),
 `app/probe.S` (step 1), `app/driver.S` with `gen.py --app` (runs batches), `app/reset.S` (starts the installed
-application from download mode), `analyze.py --ram` (results from a RAM dump).
+application from download mode), `analyze.py --ram` (results from a RAM dump). The optional experiment profile is `app/experiment.S`
+with `app/platform.S`, `appplan.py` (plans and tagged vectors), `appcollect.py` (completion-aware extraction),
+and `appverify.py` (counter/cause assertions); `runapp.sh` installs and captures it after a verified backup.
 
 Run 5 (`hw/fm1-2026-10-24-v5/README.md`) showed that the download-mode runner can install its own handlers in
 the RAM vector table, so `syscall`, `bkpt` and `hbkpt` are now captured there. What download mode still cannot do:
@@ -46,8 +49,9 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
 - **Back to download mode.** An application requests it by writing `usb_update_mode` + NUL at `0x01C7FD80` and
   doing a soft reset (power-control bit 4) (SPEC §4.2). That is how the stock firmware's soft key works.
 - **Retained RAM.** fm1-base keeps a crash record in a `.noinit` area at `0x01C7C000` that survives a reset, and
-  `0x01C7FD80` onward is the boot/update/application communication area (SPEC §6.1). Whether the mask ROM's
-  download mode leaves `0x01C7C000` alone is **not known**; step 1 below checks it. Run 5 saw some RAM words
+  `0x01C7FD80` onward is the boot/update/application communication area (SPEC §6.1). The mask ROM's
+  download mode left the sampled retained areas unchanged in step 1; step 3 also preserved the progress
+  journal across a watchdog restart. Run 5 saw some RAM words
   differ after each recovery, so "retained" has to be measured, not assumed.
 - **Packaging.** M-Flasher installs `.fwsc` packages, M-VAVE's or custom ones in the same format (fm1-base
   `fm1pkg.py` builds them; format in SPEC §5). m-bootloader stays installed, so download mode, and with it
@@ -95,8 +99,60 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
 
 - ~~Is the result area retained across the ROM's download-mode entry (step 1)?~~ Yes: every sampled
   area in `0x01C0C000..0x01C1FFFF` and `0x01C30000..0x01C7F7FF` kept all its words, and the ROM clears the marker.
-- The watchdog's timeout settings and how to arm it from an application (fm1-base `fm1_sys.h`; SPEC §3.1 lists
-  the enable bit in the P33 bridge).
-- Whether the vector table can be written before m-bootloader's state is cleared, and whether any guard
-  (fm1-base locks `0x01C7FD50..0x01C7FFFF` against writes after start-up) is active at entry.
+- ~~How to arm the watchdog~~: the experiment uses P33 register 0x80, timeout code 0xB (nominal 2 s),
+  reset mode, and clears the exception-enable bit in P33 0x17. An intentional stall caused a restart;
+  the app marked the unfinished batch and continued without a manual power cycle. Precise timing was
+  not calibrated. See app2 for the original register facts and observed journal.
+- ~~Can the application install its vector table at entry?~~ The experiment installed all 128 RAM entries
+  and received the intended callbacks without a write-guard exception. It did not install fm1-base
+  guards or establish the behavior after such guards are enabled.
 - ~~The `.fwsc` packer~~: `fm1app.py`, written from SPEC §5; M-Flasher accepts its packages.
+
+
+## Steps 3–4 experiment profile
+
+Use a distinct `--run-id` for every new attempt. At most nine one-probe batches fit in the retained slots;
+each still starts with two calibration nops. After `gen.py --cases ... --batch 1 --app`, run:
+
+```sh
+python3 tools/hwtest/appplan.py DIR --run-id 0x2006 --modes 0,2 --priorities 3,7
+python3 tools/hwtest/fm1app.py DIR/app.fwsc tools/hwtest/app/experiment.S DIR/app.S DIR/plan.S
+```
+
+The example mode list requires exactly two batches. Mode 0 runs without a timer; mode 1 deliberately stalls
+after arming the watchdog; mode 2 starts TIMER5 (source 63) before the runner. Priority is 0..7. The handler
+acknowledges TIMER5 and software sources, records exception/debug causes before clearing them, and uses
+rete/rte for debug entry 0. Other asynchronous handlers preserve their return PC; synchronous syscall and
+exception probes explicitly resume at the planned instruction end. The exception can arrive after later
+runner instructions: the entry frame is not automatically the state at the tested opcode.
+
+The profile sets its own main/supervisor stacks at `0x01C0D000` / `0x01C0F000`. It leaves the bootloader
+and all flash beyond the installed application untouched. It does not start the second core, alter voltages,
+or configure unrelated peripherals. Interrupt-controller state is owned by the app, not borrowed from USB.
+
+Retained header at `0x01C7C000`, twelve words: magic `0x32504148`, starts, next batch, active batch+1,
+boot argument, main sp after stack setup, psr/icfg after journal setup and before controller setup,
+run id, current journal pointer, resume PC,
+and P33 timeout flag. On restart, an active batch is marked unfinished and skipped; 16 starts is the cap.
+The journal at header+0x100+256*batch has status (0 untouched, 1 active, 2 completed, 3 unfinished at restart),
+handler count, last vector, EMU_MSG, DBG_MSG, reti/rete/retx/rets, psr/icfg/entry sp, sixteen GPRs, and reserved
+sample words. It is a last-entry snapshot plus a count, not a trace of every interrupt.
+
+`appcollect.py` requires a matching run id and only analyzes status-2 batches. A failed batch's RAM is never
+turned into instruction outputs. Keep the binary dump outside the repository. `appverify.py` checks
+`expectations.json` over handler tags/causes and relative counter samples; timer counts intentionally have
+no exact numerical prediction. `check.py` models GPR/scratch preservation for the recording-handler context.
+
+`runapp.sh` expects app.fwsc, reset.bin and reader.bin in its directory. The latter two use `0x01C28000`;
+the unchanged bundled M-Flasher loader uses `0x01C20000`. A normal application reset can disconnect with
+ENODEV or time out: the script checks download-mode USB before reading, without repeating the start.
+The loader's install/read CRC checks and logs are retained. If the unit fails to return, stop for operator
+recovery; do not retry uploads blindly. Before every run, confirm that an existing custom plug-in does not
+occupy the loader's target slot.
+
+Restore only the application area after testing. For app2 the specified full backup was repackaged as a
+`.fwsc` member ending at `0xA9000` (the original application-file extent, rounded to a sector), then
+installed without --with-bootloader or --wipe-settings. A first package incorrectly used the stock
+`0x93000` boundary and was refused before writing because this backup has larger application files.
+The complete package bounds allowed writes to `[0x4000,0xA9000)`; a generic full-backup restore command has broader permission and is not
+used by this workflow. Verify by reading the flash afterwards and comparing it to the requested backup.

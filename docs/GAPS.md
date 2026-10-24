@@ -41,22 +41,24 @@ the table). Both images now read the same with this repo's objdump as with JieLi
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
-source `compiler`) and from the FM-1 itself (source `hardware`): 773 of the 803 forms (parallel twins not
+source `compiler`) and from the FM-1 itself (source `hardware`): 774 of the 803 forms (parallel twins not
 counted, 282 of which ran too) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
 stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md), and the
 `if` blocks, `rep` loops, table branches and parallel twins in [run 3](../hw/fm1-2026-10-24-v3/README.md), and
 40 additional control, return, special-register and unnamed-block forms in [run 4](../hw/fm1-2026-10-24-v4/README.md).
 Every non-parallel form has now been attempted. Run 5 adds successful `syscall`, `hbkpt` and `btbclr` captures with RAM handlers;
-the other 30 have failure observations without results. Its six `iff.ne.rr.1`..`.6` forms match AND-nonzero
+the other 29 have failure observations without results. Its six `iff.ne.rr.1`..`.6` forms match AND-nonzero
 blocks on this chip (480 earlier cases and 48 distinguishing follow-ups).
-Executable models of the settled forms (`tools/hwtest/semantics/`) match every captured case, flags, memory,
+Application interrupt-count relations are checked by `tools/hwtest/appverify.py`; exact timer counts
+remain timing-dependent. Executable models of the settled numerical forms (`tools/hwtest/semantics/`)
+match every modeled captured case, flags, memory,
 `sp`, `rets` and the path taken included. The `psr` flags (N, Z, C, V in bits 3..0, and which forms write which)
 are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in [ISA.md](ISA.md). Still open:
 
 - Control effects still open: `callns.r` selects rets/reti/retx/rete by the encoded field low two bits
   in controlled [run-5](../hw/fm1-2026-10-24-v5/README.md) probes of all sixteen fields, with flags 0 and 15;
   its mode effects, mode changes of the return variants and
-  `gotoss.xl`, icfg bits other than bit 9, event delivery/consumption, lock exclusion and barrier ordering.
+  `gotoss.xl`, icfg bits other than bits 8/9, event delivery/consumption, lock exclusion and barrier ordering.
   The rete-only pops and a multi-register `pop.srmask` sequence initially hung, then completed on a
   motherboard USB port; the earlier failures are not established as instruction traps. `hbkpt` hung
   again on that port, then reset in a final retry using the other RAM slot. [Run 4](../hw/fm1-2026-10-24-v4/README.md) separates captures from failures.
@@ -66,8 +68,14 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
   including the earlier `swi 0` batch, is unproved. Fresh hooked `swi 0` completed without handler entry;
   `idle` reset. Other modes, software-interrupt delivery/acknowledgement and the branch-buffer effect
   of `btbclr` remain open.
-- Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks,
-  an unprimed `wfe`, and software-interrupt numbers other than 0.
+- Application [steps 3–4](../hw/fm1-2026-10-24-app2/README.md) establish TIMER5 delivery gates at icfg
+  bits 8 and 9, pending retention across both masks, and delivery at priorities 0/3/7. All eight `swi`
+  numbers reached vectors 120..127. `idle` woke through TIMER5 without resetting. `btbclr` reached the
+  exception handler with EMU_MSG bit 1 (illegal instruction); its advertised buffer effect remains open.
+  Both application `wfe` cases, including sevl/wfe before the main wfe, returned without a handler entry;
+  blocking and event consumption remain unestablished. Software IRQ masking, interrupt nesting and
+  other event/power configurations remain open.
+- Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks.
 - `copex.ppi`: run 5 reproduces different mode-15 outputs after restoring all GPR inputs and flags,
   including the old destination, and inserting waits. Unobserved state/history remains unresolved
   ([run 5](../hw/fm1-2026-10-24-v5/README.md), earlier [report](../hw/report-q.md)).

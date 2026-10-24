@@ -281,3 +281,42 @@ class Application(unittest.TestCase):
         records, problems, summary = analyze.analyse(d, (bytes(ram), 0x01C30000))
         self.assertEqual(len(summary), len(manifests))
         self.assertEqual(sum(len(m["cases"]) for m in manifests), len(records))
+
+
+@unittest.skipUnless(shutil.which('cpp'), 'needs GNU cpp')
+class AppExperiments(unittest.TestCase):
+    def test_plan_build_and_failed_batch_filter(self):
+        import appplan
+        import appcollect
+        with tempfile.TemporaryDirectory() as directory:
+            d=Path(directory)
+            cases=d/'probe.json'
+            cases.write_text(json.dumps([{'id':'csync','values':{},'in':list(range(16)),'force':True}]*2))
+            subprocess.run([sys.executable,str(HW/'gen.py'),str(d),'--cases',str(cases),'--batch','1','--app'],
+                           check=True,capture_output=True)
+            (d/'plan.S').write_text(appplan.plan(d,12345,[1,0],3))
+            with self.assertRaises(ValueError):
+                appplan.plan(d,12345,[0],3)
+            subprocess.run([sys.executable,str(HW/'fm1app.py'),str(d/'app.fwsc'),str(HW/'app/experiment.S'),
+                            str(d/'app.S'),str(d/'plan.S')],check=True,capture_output=True)
+            exe=fm1app.read_exec((d/'app.elf').read_bytes())
+            symbols={n:v for n,v,*_ in exe['symbols'] if n}
+            self.assertEqual(symbols['app_entry'],0x02000120)
+            self.assertIn('app_vec_127',symbols)
+            self.assertLess(len((d/'app.bin').read_bytes()),fm1app.APP_MAX)
+            manifests=[json.loads(p.read_text()) for p in sorted(d.glob('batch-*.json'))]
+            ram=bytearray(0x4d000)
+            struct.pack_into('<12I',ram,0x4c000,0x32504148,2,2,0,0,0,0,0,12345,0,0,0)
+            struct.pack_into('<I',ram,0x4c100,3)   # first batch was unfinished at a restart
+            struct.pack_into('<I',ram,0x4c200,2)
+            m=manifests[1]
+            for k,c in enumerate(m['cases']):
+                struct.pack_into('<53I',ram,m['results']-0x1c30000+k*212,*c['in_values'],c['flags'],
+                                 c['sp_in'],0,c['rets_in'],0,*[0]*32)
+            _,obs,pats,records=appcollect.collect(d,bytes(ram),12345)
+            self.assertEqual([o['status'] for o in obs],[3,2])
+            self.assertEqual(len(records),3)
+            self.assertEqual(set(pats),{'batch-probe-001'})
+            self.assertEqual({r['batch'] for r in records},{'batch-probe-001'})
+            with self.assertRaises(ValueError):
+                appcollect.collect(d,bytes(ram),99999)

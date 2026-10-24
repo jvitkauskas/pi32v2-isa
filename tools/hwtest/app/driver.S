@@ -23,7 +23,13 @@
 app_entry:
 	goto 1f				/* as JieLi's images start: an entry, and a return at +2 */
 	rts
-1:	r4 = RECORD
+1:
+#ifdef HW_APP_EXPERIMENT
+	sp = 0x01C0D000
+	ssp = 0x01C0F000
+	call app_initialize
+#else
+	r4 = RECORD
 	r5 = [r4+0]
 	r6 = 0x52415748			/* "HWAR" */
 	r7 = 1
@@ -43,10 +49,21 @@ app_entry:
 	r1 = icfg
 	[r4+28] = r1
 
+#endif
+
 	r8 = app_batches
 	r9 = [r8+0]			/* batches */
 	r8 = r8 + 4
-	r10 = 0				/* this batch */
+#ifdef HW_APP_EXPERIMENT
+	r1 = RECORD
+	r10 = [r1+8]
+	r2 = r10 << 3
+	r3 = r10 << 2
+	r8 = r8 + r2
+	r8 = r8 + r3
+#else
+	r10 = 0                        /* this batch */
+#endif
 next_batch:
 	if (r10 == r9) goto done
 	r4 = RECORD
@@ -66,6 +83,9 @@ copy:
 	goto copy
 copied:
 	csync
+#ifdef HW_APP_EXPERIMENT
+	call app_prepare
+#endif
 	r0 = app_params			/* the runner's entry: hw_entry(params) puts its handler at [params+8] */
 	call r11
 	r0 = app_command
@@ -73,6 +93,9 @@ copied:
 	r2 = app_handler
 	r2 = [r2+0]
 	call r2
+#ifdef HW_APP_EXPERIMENT
+	call app_finish
+#endif
 	r10 = r10 + 1
 	r4 = RECORD
 	[r4+8] = r10
@@ -80,6 +103,9 @@ copied:
 	goto next_batch
 
 done:
+#ifdef HW_APP_EXPERIMENT
+	call app_quiesce
+#endif
 	r4 = RECORD
 	r1 = 0
 	[r4+12] = r1

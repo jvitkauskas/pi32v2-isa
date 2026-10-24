@@ -30,7 +30,7 @@ group = "control"
 summary = "Wait for an interrupt."
 status = "confirmed"
 sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
-notes = "[compiler] `__builtin_pi32v2_idle` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned. This does not establish its wait/wakeup behavior in other contexts. [hardware] hw/fm1-2026-10-24-v5: with RAM entries 0/1/2/120 hooked and an owned ssp, reset into the app without a result. No handler entry could be observed; wakeup configuration remains unresolved."
+notes = "[compiler] `__builtin_pi32v2_idle` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned. This does not establish its wait/wakeup behavior in other contexts. [hardware] hw/fm1-2026-10-24-v5: with RAM entries 0/1/2/120 hooked and an owned ssp, reset into the app without a result. No handler entry could be observed; wakeup configuration remains unresolved. [hardware] hw/fm1-2026-10-24-app2: With TIMER5 enabled at priority 3, idle completed after one timer-handler entry (vector 63), without a restart. GPRs, low flags, sp, rets and case scratch were unchanged. This supplies a working interrupt/wakeup context for the earlier ROM-context resets; other power/clock configurations remain open."
 
 [[insn.example]]
 bytes = "01 00"
@@ -60,7 +60,7 @@ group = "control"
 summary = "Disable interrupts."
 status = "confirmed"
 sources = ["kagaimiq-jielie", "sources-in-use", "oracle", "compiler", "hardware"]
-notes = "[compiler] `__builtin_pi32v2_cli()` -> `cli`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, clears bit 9 (readback 0x01090500), leaving flags unchanged; icfg is restored by the probe. Two cases."
+notes = "[compiler] `__builtin_pi32v2_cli()` -> `cli`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, clears bit 9 (readback 0x01090500), leaving flags unchanged; icfg is restored by the probe. Two cases. [hardware] hw/fm1-2026-10-24-app2: TIMER5 delivery at priority 3 was held while bit 9 was clear; its pending flag remained set. After stopping the timer without acknowledging it, enabling interrupts delivered exactly one pending handler entry. The visible control effect therefore gates delivery rather than discarding that pending source."
 
 [[insn.example]]
 bytes = "60 00"
@@ -75,7 +75,7 @@ group = "control"
 summary = "Enable interrupts."
 status = "confirmed"
 sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
-notes = "[compiler] `__builtin_pi32v2_sti()` -> `sti`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, bit 9 stays set and flags are unchanged; icfg is restored by the probe. Two cases plus follow-ups starting with bit 9 clear or set: the bit is set in both, other icfg bits and flags unchanged."
+notes = "[compiler] `__builtin_pi32v2_sti()` -> `sti`. [hardware] hw/fm1-2026-10-24-v4: With initial icfg 0x01090700, bit 9 stays set and flags are unchanged; icfg is restored by the probe. Two cases plus follow-ups starting with bit 9 clear or set: the bit is set in both, other icfg bits and flags unchanged. [hardware] hw/fm1-2026-10-24-app2: With icfg bit 8 set, enabling bit 9 permitted TIMER5 handler counts to advance. With bit 8 clear, sti still set bit 9 but delivery remained blocked until bit 8 was enabled. Priorities 0, 3 and 7 all delivered in the application environment."
 
 [[insn.example]]
 bytes = "61 00"
@@ -344,7 +344,7 @@ group = "moves"
 summary = "Copy a general register to a special register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Same word as mov.r_sr with the direction bit set. [hardware] hw/fm1-2026-10-24-v4: reti/rete/retx/rets read back only bits 26..1 for inputs 0xFFFFFFFF and 0x12345679; sr4 and cnum still read zero after nonzero writes. psr writes 0 and 15 read back those flags; aligned RAM pointers written to usp/ssp/sp read back unchanged. uspn/sspn remain zero after nonzero pointer writes through this interface; icfgn/icfgs were only rewritten as zero and icfg with its previous value. Each probe restores the saved register. A pc write targeting stub+8 fell through and executed the marker at stub+4; a follow-up targeting hw_taken also fell through, with no register changes."
+notes = "Same word as mov.r_sr with the direction bit set. [hardware] hw/fm1-2026-10-24-v4: reti/rete/retx/rets read back only bits 26..1 for inputs 0xFFFFFFFF and 0x12345679; sr4 and cnum still read zero after nonzero writes. psr writes 0 and 15 read back those flags; aligned RAM pointers written to usp/ssp/sp read back unchanged. uspn/sspn remain zero after nonzero pointer writes through this interface; icfgn/icfgs were only rewritten as zero and icfg with its previous value. Each probe restores the saved register. A pc write targeting stub+8 fell through and executed the marker at stub+4; a follow-up targeting hw_taken also fell through, with no register changes. [hardware] hw/fm1-2026-10-24-app2: For icfg writes, bit 8 independently gated TIMER5 delivery while bit 9 stayed set. Clearing bit 8 held the timer pending flag without running its handler; after the timer was stopped, writing both enable bits delivered exactly one pending interrupt. Other icfg bits and mode transitions are not settled by this test."
 
 [[insn.example]]
 bytes = "64 e0 80 00"
@@ -2287,7 +2287,7 @@ group = "control"
 summary = "Clear icfg bit 9 and return the previous icfg in the operand register (observed on the FM-1)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, r0 initially 0 or 0x01090700 and flags 0 or 15: r0 receives the previous icfg (0x01090700), and icfg bit 9 clears to give 0x01090500. Flags unchanged; the probe restores icfg. Follow-ups starting with bit 9 clear or set also return the previous icfg (0x01090500 or 0x01090700)."
+notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, r0 initially 0 or 0x01090700 and flags 0 or 15: r0 receives the previous icfg (0x01090700), and icfg bit 9 clears to give 0x01090500. Flags unchanged; the probe restores icfg. Follow-ups starting with bit 9 clear or set also return the previous icfg (0x01090500 or 0x01090700). [hardware] hw/fm1-2026-10-24-app2: The timer masking and pending-retention tests match cli. The operand receives the previous icfg, with bits 8 and 9 set in the tested entry state; other visible registers follow the explicit surrounding setup/readback."
 
 [[insn.example]]
 bytes = "e0 00"
@@ -2308,7 +2308,7 @@ group = "control"
 summary = "Set icfg bit 9 from the operand register's bit 9, preserving the other icfg bits (observed on the FM-1)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, initial icfg 0x01090700: r0=0 gives icfg 0x01090500, r0=0x01090700 leaves 0x01090700. The operand and flags are unchanged; the probe restores icfg. Follow-ups start with bit 9 clear or set, and a source value of 0x200 sets it without replacing the other icfg bits. Effects of other operand bits are not established."
+notes = "Layout from oracle fit: register in bits 3..0. [hardware] hw/fm1-2026-10-24-v4: Four cases, initial icfg 0x01090700: r0=0 gives icfg 0x01090500, r0=0x01090700 leaves 0x01090700. The operand and flags are unchanged; the probe restores icfg. Follow-ups start with bit 9 clear or set, and a source value of 0x200 sets it without replacing the other icfg bits. Effects of other operand bits are not established. [hardware] hw/fm1-2026-10-24-app2: An operand with bit 9 set permitted TIMER5 delivery when bit 8 was already set; operand zero held the source pending. After the timer was stopped, enabling both gates delivered exactly one retained interrupt. This is interrupt delivery evidence in addition to the run-4 bit readback."
 
 [[insn.example]]
 bytes = "f0 00"
@@ -2455,7 +2455,7 @@ group = "control"
 summary = "Software interrupt with a number 0..7."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle fit: number in bits 2..0; bit 3 is ignored by objdump (the assembler writes 0). [compiler] `__builtin_pi32v2_swi` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: Number 0 completed with flags 5 and no visible register, flag, sp, rets or scratch change. Interrupt delivery and the other numbers were not tested. [hardware] hw/fm1-2026-10-24-v5: a fresh number-0 case with tagged RAM entries 0/1/2/120 installed completed with no handler entry; flags, sampled sp and icfg were unchanged, and a following plain upload worked. An earlier swi batch failed during upload/start immediately after a bkpt handler had used rti; plain uploads after debug rti also failed, so executing swi in that failed batch is not established. Delivery, other numbers and acknowledgement remain open. No interrupt-controller MMIO was written."
+notes = "Layout from oracle fit: number in bits 2..0; bit 3 is ignored by objdump (the assembler writes 0). [compiler] `__builtin_pi32v2_swi` exists but is rejected with 'cannot compile this builtin function yet'. [hardware] hw/fm1-2026-10-24-v4: Number 0 completed with flags 5 and no visible register, flag, sp, rets or scratch change. Interrupt delivery and the other numbers were not tested. [hardware] hw/fm1-2026-10-24-v5: a fresh number-0 case with tagged RAM entries 0/1/2/120 installed completed with no handler entry; flags, sampled sp and icfg were unchanged, and a following plain upload worked. An earlier swi batch failed during upload/start immediately after a bkpt handler had used rti; plain uploads after debug rti also failed, so executing swi in that failed batch is not established. Delivery, other numbers and acknowledgement remain open. No interrupt-controller MMIO was written. [hardware] hw/fm1-2026-10-24-app2: All numbers 0 through 7 delivered exactly one handler entry at RAM vector 120+n, with the corresponding software sources enabled at priority 3 and both global icfg gates enabled. The handler acknowledged ILAT_CLR bit n and returned through rti; no restart was needed. GPRs, low flags, sp and rets were preserved in this handler environment. Masked software delivery was not tested."
 
 [[insn.example]]
 bytes = "a0 00"
@@ -2510,7 +2510,7 @@ group = "control"
 summary = "Breakpoint."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: In the ROM download context with [sp] holding hw_taken, the tested case continued there and sp advanced by four; registers, flags and rets were unchanged. This is the observed context behavior, not a determination of debug-mode semantics. [hardware] hw/fm1-2026-10-24-v5: a tagged own handler identifies RAM table entry 0 as the debug route. Entry uses the current stack with rete = instruction end and icfg = 0x01090700. Explicitly setting rete to the cleanup continuation and returning with rte completed in both RAM slots; the following plain upload succeeded each time. Earlier reti/rti handlers returned captures but the following upload/start hung. Their apparent return alone did not establish a usable debug exit. The unhooked run-4 ROM stack-pop observation is preserved above."
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: In the ROM download context with [sp] holding hw_taken, the tested case continued there and sp advanced by four; registers, flags and rets were unchanged. This is the observed context behavior, not a determination of debug-mode semantics. [hardware] hw/fm1-2026-10-24-v5: a tagged own handler identifies RAM table entry 0 as the debug route. Entry uses the current stack with rete = instruction end and icfg = 0x01090700. Explicitly setting rete to the cleanup continuation and returning with rte completed in both RAM slots; the following plain upload succeeded each time. Earlier reti/rti handlers returned captures but the following upload/start hung. Their apparent return alone did not establish a usable debug exit. The unhooked run-4 ROM stack-pop observation is preserved above. [hardware] hw/fm1-2026-10-24-app2: Completed through vector 0 in the application, using the recording handler and an explicit rete/rte continuation. GPRs, low flags, sp and rets were preserved; only the handler frame words below the exit frame remain in scratch."
 
 [[insn.example]]
 bytes = "02 00"
@@ -2525,7 +2525,7 @@ group = "control"
 summary = "Debug breakpoint; a RAM vector-0 handler and rete/rte return work on the AC791N."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Found by the oracle sweep; the name is what objdump prints. [hardware] hw/fm1-2026-10-24-v4: Two cases in RAM slot 0x01C20000 hung without results and USB inspection timed out (original USB path and motherboard-port retry). A final case in slot 0x01C28000 reset into the app instead; no instruction result was returned. Placement, ROM context and history were not varied independently, so the cause of the difference and debug-mode semantics remain unknown. [hardware] hw/fm1-2026-10-24-v5: tagged RAM handlers identify vector-table entry 0 at 0x01C7FE00 as the debug route. Entry uses the current stack, icfg = 0x01090700, and rete = the hbkpt address. Setting rete to the cleanup continuation and returning with rte completed in both RAM slots, with a following plain upload succeeding each time. Earlier handlers that explicitly set reti and used rti returned captures, but the next upload/start failed and USB inspection timed out; the tagged hbkpt batch in slot 0x01C20000 was one such following upload, so reaching its main instruction is not established. A slot-only or intrinsic-hang rule is therefore unsupported. Wider debug configuration and other contexts remain open."
+notes = "Found by the oracle sweep; the name is what objdump prints. [hardware] hw/fm1-2026-10-24-v4: Two cases in RAM slot 0x01C20000 hung without results and USB inspection timed out (original USB path and motherboard-port retry). A final case in slot 0x01C28000 reset into the app instead; no instruction result was returned. Placement, ROM context and history were not varied independently, so the cause of the difference and debug-mode semantics remain unknown. [hardware] hw/fm1-2026-10-24-v5: tagged RAM handlers identify vector-table entry 0 at 0x01C7FE00 as the debug route. Entry uses the current stack, icfg = 0x01090700, and rete = the hbkpt address. Setting rete to the cleanup continuation and returning with rte completed in both RAM slots, with a following plain upload succeeding each time. Earlier handlers that explicitly set reti and used rti returned captures, but the next upload/start failed and USB inspection timed out; the tagged hbkpt batch in slot 0x01C20000 was one such following upload, so reaching its main instruction is not established. A slot-only or intrinsic-hang rule is therefore unsupported. Wider debug configuration and other contexts remain open. [hardware] hw/fm1-2026-10-24-app2: Completed through vector 0 in the application with an explicit next-instruction rete/rte continuation and no restart. This independently confirms a usable debug-handler context beyond the ROM runner."
 
 [[insn.example]]
 bytes = "03 00"
@@ -2540,7 +2540,7 @@ group = "control"
 summary = "System call."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned. [hardware] hw/fm1-2026-10-24-v5: an own handler and a tagged follow-up returned results; the tag identifies RAM table entry 2. The handler ran once on the supplied ssp, recorded reti = instruction end and icfg = 0x01090200, and continued through an explicitly set reti and rti. Subsequent uploads worked. Setup restored original RAM vectors and visible core state. Other privilege modes remain open."
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: The tested case reset into the normal app; no instruction result was returned. [hardware] hw/fm1-2026-10-24-v5: an own handler and a tagged follow-up returned results; the tag identifies RAM table entry 2. The handler ran once on the supplied ssp, recorded reti = instruction end and icfg = 0x01090200, and continued through an explicitly set reti and rti. Subsequent uploads worked. Setup restored original RAM vectors and visible core state. Other privilege modes remain open. [hardware] hw/fm1-2026-10-24-app2: Completed through the application recording handler at vector 2 with no reset; GPRs, flags, sp, rets and case scratch were preserved. The handler explicitly resumed at the instruction end using reti/rti."
 
 [[insn.example]]
 bytes = "21 00"
@@ -2600,7 +2600,7 @@ group = "control"
 summary = "Send event, global; meaning unknown."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: One case with flags 0 completed without visible changes; the next batch with flags 15 reset into the app. The batches used different RAM slots and histories; the evidence does not identify the cause or event recipient. [hardware] hw/fm1-2026-10-24-v5: flags 5, RAM entries 0/1/2/120 hooked: completed with handler count zero, preserving flags and the restored vector. Event transmission and other-core effects were not measured."
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: One case with flags 0 completed without visible changes; the next batch with flags 15 reset into the app. The batches used different RAM slots and histories; the evidence does not identify the cause or event recipient. [hardware] hw/fm1-2026-10-24-v5: flags 5, RAM entries 0/1/2/120 hooked: completed with handler count zero, preserving flags and the restored vector. Event transmission and other-core effects were not measured. [hardware] hw/fm1-2026-10-24-app2: Completed in the application with handlers installed and no handler entry or visible case-state change. Other-core event delivery remains unmeasured."
 
 [[insn.example]]
 bytes = "43 00"
@@ -2615,7 +2615,7 @@ group = "control"
 summary = "Wait for event."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With sevl immediately before it, the case completed with flags 5 and no visible register, flag, sp, rets or scratch change. An unprimed wait and event consumption/delivery were not tested. [hardware] hw/fm1-2026-10-24-v5: after sevl, with RAM entries 0/1/2/120 hooked, completed with handler count zero. An unprimed wait and event routing remain untested."
+notes = "Found by the oracle sweep; the name is what objdump prints, meaning not tested. [hardware] hw/fm1-2026-10-24-v4: With sevl immediately before it, the case completed with flags 5 and no visible register, flag, sp, rets or scratch change. An unprimed wait and event consumption/delivery were not tested. [hardware] hw/fm1-2026-10-24-v5: after sevl, with RAM entries 0/1/2/120 hooked, completed with handler count zero. An unprimed wait and event routing remain untested. [hardware] hw/fm1-2026-10-24-app2: The first application case and a second preceded by sevl and another wfe both completed without a handler entry despite an armed timer. Registers, low flags, sp, rets and scratch were unchanged. These results do not establish blocking, event consumption, or a nop in every context."
 
 [[insn.example]]
 bytes = "44 00"
@@ -2717,10 +2717,10 @@ id = "btbclr"
 syntax = "btbclr"
 encoding = ["00000000001---11"]
 group = "control"
-summary = "Clear the branch target buffer (name suggests)."
+summary = "Objdump names a branch-buffer clear; an illegal-instruction exception is observed in the tested AC791N application context."
 status = "confirmed"
-sources = ["oracle", "hardware"]
-notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Meaning unknown. [hardware] hw/fm1-2026-10-24-v4: Both cases (flags 0 and 15) reset the chip into its normal app; no instruction result was returned. This does not establish its branch-buffer effect. [hardware] hw/fm1-2026-10-24-v5: two hooked cases returned results with one delayed handler entry, using the supplied ssp. The tagged follow-up identifies RAM table entry 1. Earlier readback instructions had already run: saved reti = stub+24 in the original case, stub+34 in the tagged case. The latter saved the original icfg 0x01090700 in r2 before entry; handler icfg was 0x07010280, and after its rti the repeated readback sampled 0x07010700 before restoration. The handler explicitly rewound reti to the start of cleanup, and a following upload succeeded. The source of the delayed exception and any branch-buffer effect remain unresolved; these cases are unmodeled."
+sources = ["oracle", "hardware", "ac79-sdk"]
+notes = "objdump ignores bits 4..2 of the word; the assembler writes them 0. Meaning unknown. [hardware] hw/fm1-2026-10-24-v4: Both cases (flags 0 and 15) reset the chip into its normal app; no instruction result was returned. This does not establish its branch-buffer effect. [hardware] hw/fm1-2026-10-24-v5: two hooked cases returned results with one delayed handler entry, using the supplied ssp. The tagged follow-up identifies RAM table entry 1. Earlier readback instructions had already run: saved reti = stub+24 in the original case, stub+34 in the tagged case. The latter saved the original icfg 0x01090700 in r2 before entry; handler icfg was 0x07010280, and after its rti the repeated readback sampled 0x07010700 before restoration. The handler explicitly rewound reti to the start of cleanup, and a following upload succeeded. The source of the delayed exception and any branch-buffer effect remain unresolved; these cases are unmodeled. [hardware] hw/fm1-2026-10-24-app2: The application recording handler captured vector 1 with EMU_MSG = 0x2 and DBG_MSG = 0, then acknowledged the cause and resumed after the opcode without a restart. The AC79 SDK debug.c names EMU_MSG bit 1 as an illegal-instruction cause (facts only). This identifies the previously unexplained exception in the tested normal application context; an actual branch-buffer operation or other enabling modes remain unestablished."
 
 [[insn.example]]
 bytes = "23 00"

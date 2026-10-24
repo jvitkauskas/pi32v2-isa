@@ -1,0 +1,360 @@
+{
+  "batch-watchdog-000": {
+    "status": 3,
+    "handler_count": 0
+  },
+  "batch-watchdog-001": {
+    "handler_count": 0
+  },
+  "batch-traps-000": {
+    "vector": 2,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-traps-001": {
+    "vector": 0,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-traps-002": {
+    "vector": 0,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-traps-003": {
+    "vector": 1,
+    "handler_count": 1,
+    "emu": 2
+  },
+  "batch-traps-004": {
+    "vector": 0,
+    "handler_count": 0,
+    "emu": 0
+  },
+  "batch-traps-005": {
+    "vector": 0,
+    "handler_count": 0,
+    "emu": 0
+  },
+  "batch-traps-006": {
+    "vector": 63,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-traps-007": {
+    "vector": 120,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-controls-000": {
+    "vector": 63,
+    "min_handlers": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "greater": [
+      [
+        10,
+        9
+      ]
+    ]
+  },
+  "batch-controls-001": {
+    "vector": 63,
+    "min_handlers": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "greater": [
+      [
+        10,
+        9
+      ]
+    ],
+    "set": [
+      [
+        12,
+        768
+      ]
+    ]
+  },
+  "batch-controls-002": {
+    "vector": 63,
+    "min_handlers": 1,
+    "greater": [
+      [
+        9,
+        8
+      ]
+    ]
+  },
+  "batch-controls-003": {
+    "vector": 63,
+    "min_handlers": 1,
+    "greater": [
+      [
+        9,
+        8
+      ]
+    ]
+  },
+  "batch-controls-004": {
+    "vector": 63,
+    "min_handlers": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "greater": [
+      [
+        10,
+        9
+      ]
+    ],
+    "clear": [
+      [
+        11,
+        512
+      ]
+    ]
+  },
+  "batch-controls-005": {
+    "vector": 63,
+    "min_handlers": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "greater": [
+      [
+        10,
+        9
+      ]
+    ],
+    "clear": [
+      [
+        11,
+        256
+      ]
+    ],
+    "set": [
+      [
+        11,
+        512
+      ]
+    ]
+  },
+  "batch-controls-006": {
+    "vector": 63,
+    "min_handlers": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "greater": [
+      [
+        10,
+        9
+      ]
+    ],
+    "clear": [
+      [
+        11,
+        256
+      ]
+    ],
+    "set": [
+      [
+        11,
+        512
+      ]
+    ]
+  },
+  "batch-controls-007": {
+    "vector": 63,
+    "min_handlers": 1,
+    "greater": [
+      [
+        9,
+        8
+      ]
+    ]
+  },
+  "batch-controls-008": {
+    "vector": 63,
+    "min_handlers": 1,
+    "greater": [
+      [
+        9,
+        8
+      ]
+    ]
+  },
+  "batch-pending-000": {
+    "vector": 63,
+    "handler_count": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "one_more": [
+      [
+        10,
+        9
+      ]
+    ],
+    "set": [
+      [
+        13,
+        32768
+      ]
+    ],
+    "clear": [
+      [
+        15,
+        32769
+      ]
+    ]
+  },
+  "batch-pending-001": {
+    "vector": 63,
+    "handler_count": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "one_more": [
+      [
+        10,
+        9
+      ]
+    ],
+    "set": [
+      [
+        13,
+        32768
+      ]
+    ],
+    "clear": [
+      [
+        15,
+        32769
+      ]
+    ]
+  },
+  "batch-pending-002": {
+    "vector": 63,
+    "handler_count": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "one_more": [
+      [
+        10,
+        9
+      ]
+    ],
+    "set": [
+      [
+        13,
+        32768
+      ]
+    ],
+    "clear": [
+      [
+        15,
+        32769
+      ]
+    ]
+  },
+  "batch-pending-003": {
+    "vector": 63,
+    "handler_count": 1,
+    "equal": [
+      [
+        8,
+        9
+      ]
+    ],
+    "one_more": [
+      [
+        10,
+        9
+      ]
+    ],
+    "set": [
+      [
+        13,
+        32768
+      ]
+    ],
+    "clear": [
+      [
+        15,
+        32769
+      ]
+    ]
+  },
+  "batch-soft-000": {
+    "vector": 120,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-001": {
+    "vector": 121,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-002": {
+    "vector": 122,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-003": {
+    "vector": 123,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-004": {
+    "vector": 124,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-005": {
+    "vector": 125,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-006": {
+    "vector": 126,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-007": {
+    "vector": 127,
+    "handler_count": 1,
+    "emu": 0
+  },
+  "batch-soft-008": {
+    "handler_count": 0
+  }
+}

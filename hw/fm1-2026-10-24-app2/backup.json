@@ -1,0 +1,51 @@
+{
+  "before": "/home/julius/backups/hwapp/fm1-20261025-011222.bin",
+  "before_sha256": "db9f6869bbcab1a70562a93bed018ff821f0de9b81bfda7e71e4a1db1e6e7555",
+  "restore": "/home/julius/backups/hwapp/fm1-20261025-005103.bin",
+  "restore_sha256": "852607102a3a867d1afe4eb20d969c1c323a1c4ef908eb5b823e9ffb870b7f73",
+  "restore_package_sha256": "d6232b26f559cc6b912960ca32bf9b2a4fb6060f0063993c9ec5aa6325ea15dc",
+  "restore_range": [
+    16384,
+    692224
+  ],
+  "restore_status": "Full flash matches requested backup; original application running",
+  "original_application_files": [
+    {
+      "name": "app.bin",
+      "offset": 320,
+      "length": 597928,
+      "crc16": 24393
+    },
+    {
+      "name": "cfg_tool.bin",
+      "offset": 598248,
+      "length": 383,
+      "crc16": 11893
+    },
+    {
+      "name": "DX7.bin",
+      "offset": 598631,
+      "length": 73226,
+      "crc16": 19099
+    }
+  ],
+  "restore_attempts": [
+    {
+      "extent": 602112,
+      "status": "refused before write",
+      "reason": "Package truncated the requested backup application; CRC validation failed.",
+      "log": "Connecting to /dev/sg0\nStarting the M-Flasher loader 1.2\nReading the flash\n\n    1%\n    3%\n    4%\n    6%\n    7%\n    9%\n   10%\n   12%\n   14%\n   15%\n   17%\n   18%\n   20%\n   21%\n   23%\n   25%\n   26%\n   28%\n   29%\n   31%\n   32%\n   34%\n   35%\n   37%\n   39%\n   40%\n   42%\n   43%\n   45%\n   46%\n   48%\n   50%\n   51%\n   53%\n   54%\n   56%\n   57%\n   59%\n   60%\n   62%\n   64%\n   65%\n   67%\n   68%\n   70%\n   71%\n   73%\n   75%\n   76%\n   78%\n   79%\n   81%\n   82%\n   84%\n   85%\n   87%\n   89%\n   90%\n   92%\n   93%\n   95%\n   96%\n   98%\n  100%\nRead in 1.2 s (856 KB/s)\nChecked: the chip's CRC32 of the flash matches the read\n  model       FM-1\n  bootloader  m-bootloader 1.2-22e2559 (fm1)\n  firmware    unknown\n  app         OK\n  chip key    0x980F\n  flash       0x856014\n  unit id     4150354433333610\n  loader      M-Flasher 1.2, CPU at 96 MHz\n    * the installed bootloader is built for the FM-1\n    - flash chip 0x856014\nRefused: the package's firmware does not decrypt with this unit's chip key (0x980F): writing it would not start\n"
+    },
+    {
+      "extent": 692224,
+      "status": "installed and CRC verified",
+      "log": "Connecting to /dev/sg0\nM-Flasher loader 1.2 already running\nReading the flash\n\n    1%\n    3%\n    4%\n    6%\n    7%\n    9%\n   10%\n   12%\n   14%\n   15%\n   17%\n   18%\n   20%\n   21%\n   23%\n   25%\n   26%\n   28%\n   29%\n   31%\n   32%\n   34%\n   35%\n   37%\n   39%\n   40%\n   42%\n   43%\n   45%\n   46%\n   48%\n   50%\n   51%\n   53%\n   54%\n   56%\n   57%\n   59%\n   60%\n   62%\n   64%\n   65%\n   67%\n   68%\n   70%\n   71%\n   73%\n   75%\n   76%\n   78%\n   79%\n   81%\n   82%\n   84%\n   85%\n   87%\n   89%\n   90%\n   92%\n   93%\n   95%\n   96%\n   98%\n  100%\nRead in 1.2 s (855 KB/s)\nChecked: the chip's CRC32 of the flash matches the read\n  model       FM-1\n  bootloader  m-bootloader 1.2-22e2559 (fm1)\n  firmware    unknown\n  app         OK\n  chip key    0x980F\n  flash       0x856014\n  unit id     4150354433333610\n  loader      M-Flasher 1.2, CPU at 96 MHz\n    * the installed bootloader is built for the FM-1\n    - flash chip 0x856014\n\nInstall firmware FM-1_901\nWrites 19 sectors (76 KiB): 0x04000-0x16FFF\nInstalls FM-1_901 (0x04000-0xA8FFF).\nBackup saved: /home/julius/Documents/M-Flasher/backups/fm1-20261025-013905.bin\nWriting 0x04000-0x16FFF\nDone: everything written is verified (the chip's CRC32 matches)\n"
+    }
+  ],
+  "readback": "/home/julius/backups/hwapp/fm1-20261025-013934.bin",
+  "readback_sha256": "852607102a3a867d1afe4eb20d969c1c323a1c4ef908eb5b823e9ffb870b7f73",
+  "matches_full_requested_backup": true,
+  "usb_state": "Bus 007 Device 031: ID 4c4a:c755  FM-1",
+  "lastslot": "cleared after confirmed reset into application",
+  "restore_start_log": "Connecting to /dev/sg0\nUploading 34 bytes to 0x01C28000 and starting them\ncommand 0xfb08: SG_IO failed: No such device (os error 19) (tried 4 times)\n"
+}
