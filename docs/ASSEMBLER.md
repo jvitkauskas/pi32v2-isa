@@ -75,8 +75,8 @@ give a different data relocation ([ELF.md](ELF.md#5-relocations)). `PI32V2FUNCDE
 ## 3. Choosing an encoding
 
 Several entries often match one line (`r1 = 5` matches every constant load). The rules, each checked against JieLi's
-assembler with a differential run over the table (38 000 lines, one per field-value combination of every
-entry) and over compiler output:
+assembler with a differential run over the table (92 711 lines: up to 100 field-value combinations of every entry, none of
+them differing) and over compiler output:
 
 1. The **shortest** form wins (2, 4 or 6 bytes) among those whose operands fit.
 2. Among forms of the same size, a form written as the line is beats one reached through an alias (`r1 = r2 - 3` is
@@ -178,8 +178,10 @@ python3 -m pi32v2isa oracle linkcompare FILE.S -I DIR        # the same sources 
 
 `asmcompare` assembles a file with JieLi's `clang` and with this assembler and reports every difference in header
 fields, sections (type, flags, alignment, entry size, size, contents), relocations and symbols; `.c` files are first
-compiled to assembly by JieLi's clang. On 2026-10-24 the 11 FM-1 sources
-(`m-bootloader/src/*.S`, `Felucca/firmware/crt0.S` and `hal/*.S`, `felucca-bsp/chip/*.S` and `loader/*.S`), 279
-`clang -S` outputs of 93 C files (modes `-O0`, `-O1`, `-O2`, `-Os`, `-Oz`, `-O3`, with sections options and `-minstrev3`)
-and 35 test snippets were assembled by both: the objects are byte for byte identical except where JieLi's
-assembler has the bugs listed above.
+compiled to assembly by JieLi's clang. On 2026-10-24 the 11 FM-1 sources (`m-bootloader/src/*.S`,
+`Felucca/firmware/crt0.S` and `hal/*.S`, `felucca-bsp/chip/*.S` and `loader/*.S`), 279 `clang -S` outputs (31 C files
+from the same repositories at `-O0`, `-O1`, `-O2`, `-O3`, `-Os`, `-Oz`, with `-ffunction-sections`, `-minstrev3` and
+`-fPIC` variants) and 29 snippets (`tests/asm/*.s`: each directive, section kind, relaxation boundary and macro feature)
+were assembled by both. Objects are byte for byte identical in 307 cases; JieLi's assembler refuses 11 (`-fPIC` output with
+`r1 = sym@PI32V2GOT  #`) and so does this one; two snippets differ only by the late-`.equ` bug above. The sources
+linked with JieLi's `ld` give identical loaded sections.

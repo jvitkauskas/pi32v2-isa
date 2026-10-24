@@ -2,10 +2,11 @@
 
 What JieLi's assembler writes (relocatable objects) and what JieLi's linker does with them, as observed with the
 oracle ([ORACLE.md](ORACLE.md); source id `oracle`). The repo's assembler (`pi32v2isa/asm.py`, writer in
-`pi32v2isa/elf.py`) produces the same layout: of 285 objects (JieLi's `clang -S` output for 93 C files in
-several optimisation modes, plus the FM-1 `.S` files and small test snippets) it wrote the same bytes as JieLi's
-assembler in 284; the one exception is an assembler bug JieLi's has ([ASSEMBLER.md](ASSEMBLER.md)). Evidence
-is reproducible with `python3 -m pi32v2isa oracle asmcompare FILE` (objects) and `oracle linkcompare FILE`
+`pi32v2isa/elf.py`) produces the same layout: of 307 objects (the 11 FM-1 `.S` files, 268 outputs of JieLi's
+`clang -S` for 31 C files in nine compile modes, and 28 test snippets) it wrote the same bytes as JieLi's
+assembler in all 307; two further snippets differ only by an assembler bug JieLi's has
+([ASSEMBLER.md](ASSEMBLER.md)), and JieLi's own assembler refuses 11 more files (`-fPIC` output with
+`r1 = sym@PI32V2GOT  #`). Evidence is reproducible with `python3 -m pi32v2isa oracle asmcompare FILE` (objects) and `oracle linkcompare FILE`
 (objects linked with JieLi's `ld`).
 
 ## 1. Header

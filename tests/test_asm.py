@@ -23,6 +23,17 @@ def section(obj, name):
     return next(s for s in obj.sections if s.name == name)
 
 
+# Examples the assembler writes as another entry of the same length: JieLi's assembler picks the same one
+# (checked line by line by the live comparison).
+SAME_SIZE = {
+    ("add.modimm.rri", "add.s14.rri"), ("add.modimm.rri.p", "add.s14.rri.p"), ("add.rr", "add.rrr"),
+    ("add.rr.p", "add.rrr.p"), ("and.nmodimm.rri", "and.modimm.rri"), ("li.modimm", "li.s16"),
+    ("li.modimm.p", "li.s16.p"), ("pop.pc_rmask", "pop.srmask"), ("push.rets_rmask.c", "push.srmask.c"),
+    ("rmw.add.s12", "rmw.add.modimm"), ("rmw.and.nmodimm", "rmw.and.modimm"),
+} | {(f"{c}.ri.s12", f"{c}.ri.modimm") for c in
+     ("if.eq", "if.ne", "if.ge", "if.gt", "if.le", "if.lt", "ifs.ge", "ifs.gt", "ifs.le", "ifs.lt")}
+
+
 class RoundTrip(unittest.TestCase):
     def test_every_example_assembles_to_the_same_meaning(self):
         """Each confirmed entry's example text gives the example's bytes, or a form of the same meaning that is
@@ -51,6 +62,8 @@ class RoundTrip(unittest.TestCase):
                     mine = got[:dec[2]]
                     if mine != ex.bytes:
                         self.assertLessEqual(len(mine), len(ex.bytes))
+                        if len(mine) == len(ex.bytes):
+                            self.assertIn((insn.id, dec[0].id), SAME_SIZE)
                         self.assertTrue(oracle.same_meaning(codec.format(dec[0], dec[1]), text),
                                         f"{text!r} -> {codec.format(dec[0], dec[1])!r}")
                 n += 1
@@ -423,6 +436,23 @@ class Live(unittest.TestCase):
             p.write_text(EXAMPLE)
             self.assertEqual(oracle.asmcompare(self.o, p, table=TABLE), [])
             self.assertEqual(oracle.linkcompare(self.o, p, table=TABLE), [])
+
+    def test_snippets(self):
+        """tests/asm/*.s are assembled by JieLi's clang and by this assembler: same objects, except where a
+        constant is defined after its use (JieLi's swaps the halves of the 32-bit load)."""
+        from pathlib import Path
+
+        known = {"fwdref.s": "contents differ first at +0x2", "expr.s": "contents differ first at +0x6"}
+        files = sorted(Path(__file__).with_name("asm").glob("*.s"))
+        self.assertGreater(len(files), 25)
+        for f in files:
+            with self.subTest(file=f.name):
+                diffs = oracle.asmcompare(self.o, f, table=TABLE)
+                if f.name in known:
+                    self.assertEqual(len(diffs), 1, diffs)
+                    self.assertIn(known[f.name], diffs[0])
+                else:
+                    self.assertEqual(diffs, [])
 
     def test_choices_agree_with_jielis_assembler(self):
         lines = ["r1 = 5", "r1 = 1024", "r1 = 0x10000", "r15 = -1", "r1 += r2", "r1 = r2 | r1", "r0 = r0 - 0", "r1 = r2 - 3",
