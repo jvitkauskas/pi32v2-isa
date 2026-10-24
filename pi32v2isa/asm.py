@@ -1,0 +1,1832 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+"""A table-driven pi32v2 assembler that writes ELF relocatable objects (docs/ASSEMBLER.md, docs/ELF.md).
+
+Instruction matchers are built from the table's `syntax` and `asm_syntax` strings by inverting
+`codec.format`/`codec.operand`; encodings are chosen like JieLi's assembler does (the shortest form whose fields
+fit, branches relaxed to a fixed point). Directives follow the LLVM-style assembler JieLi's toolchain contains.
+"""
+
+import math
+import os
+import re
+import struct
+import subprocess
+import sys
+
+from . import codec, elf, table as tbl
+
+M64 = (1 << 64) - 1
+M32 = (1 << 32) - 1
+
+
+class AsmError(Exception):
+    pass
+
+
+def s64(x):
+    x &= M64
+    return x - (1 << 64) if x >> 63 else x
+
+
+# --- lexical helpers ---------------------------------------------------------------------------------------
+
+WORDCH = re.compile(r"[A-Za-z0-9_.$@\\-]")
+IDENT = r"[A-Za-z_.$][A-Za-z0-9_.$@]*"
+IDENT_RE = re.compile(IDENT)
+
+
+def strip_comments(text):
+    """Remove /* */ comments (they may span lines), `//` and `;` comments, and a `#` at the start of a line.
+    String and character literals are left alone."""
+    out, i, n = [], 0, len(text)
+    in_line_start = True
+    while i < n:
+        c = text[i]
+        if c == '"':
+            j = i + 1
+            while j < n and text[j] != '"' and text[j] != "\n":
+                j += 2 if text[j] == "\\" else 1
+            out.append(text[i:j + 1])
+            i = j + 1
+            in_line_start = False
+        elif c == "'" and i + 2 < n and (text[i + 2] == "'" or (text[i + 1] == "\\" and i + 3 < n and text[i + 3] == "'")):
+            j = i + (4 if text[i + 1] == "\\" else 3)
+            out.append(text[i:j])
+            i = j
+            in_line_start = False
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            if j < 0:
+                raise AsmError("unterminated /* comment")
+            out.append("\n" * text.count("\n", i, j) if "\n" in text[i:j] else " ")
+            i = j + 2
+        elif text.startswith("//", i) or c == ";" or (c == "#" and in_line_start):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+        else:
+            out.append(c)
+            if c == "\n":
+                in_line_start = True
+            elif not c.isspace():
+                in_line_start = False
+            i += 1
+    return "".join(out)
+
+
+def canon(text):
+    """Collapse white space; keep a single space only between two word characters."""
+    parts = text.split()
+    if not parts:
+        return ""
+    res = parts[0]
+    for p in parts[1:]:
+        res += (" " if WORDCH.match(res[-1]) and WORDCH.match(p[0]) else "") + p
+    return res
+
+
+# --- expressions -------------------------------------------------------------------------------------------
+
+TOKEN = re.compile(r"""\s*(?:
+    (?P<num>0[xX][0-9a-fA-F]+|0[bB][01]+|[0-9][0-9a-fA-F]*[hH](?![A-Za-z0-9_])|[0-9]+(?![A-Za-z0-9_.$@])
+        |[0-9]+[fb](?![A-Za-z0-9_.$@]))
+   |(?P<chr>'(?:\\.|[^\\'])'?)
+   |(?P<id>[A-Za-z_.$][A-Za-z0-9_.$@]*)
+   |(?P<op><<|>>|<=|>=|==|!=|<>|&&|\|\||[-+*/%&|^~!<>()])
+)""", re.X)
+
+BIN_LEVEL = {"||": 1, "&&": 2, "==": 3, "!=": 3, "<>": 3, "<": 3, ">": 3, "<=": 3, ">=": 3,
+             "+": 4, "-": 4, "|": 5, "&": 5, "^": 5, "!": 5, "*": 6, "/": 6, "%": 6, "<<": 6, ">>": 6}
+CHAR_ESC = {"n": 10, "t": 9, "r": 13, "b": 8, "f": 12, "v": 11, "a": 7, "0": 0, "\\": 92, "'": 39, '"': 34}
+
+
+def tokenize(text):
+    pos, out = 0, []
+    text = text.rstrip()
+    while pos < len(text):
+        m = TOKEN.match(text, pos)
+        if not m or m.end() == pos:
+            if text[pos:].strip() == "":
+                break
+            raise AsmError(f"bad token in expression near {text[pos:pos + 12]!r}")
+        pos = m.end()
+        kind = m.lastgroup
+        out.append((kind, m.group(kind)))
+    return out
+
+
+class ExprParser:
+    def __init__(self, asm, text):
+        self.asm, self.toks, self.i = asm, tokenize(text), 0
+        self.text = text
+
+    def peek(self):
+        return self.toks[self.i] if self.i < len(self.toks) else (None, None)
+
+    def parse(self):
+        node = self.binary(1)
+        if self.i != len(self.toks):
+            raise AsmError(f"junk in expression {self.text!r}")
+        return node
+
+    def binary(self, level):
+        if level > 6:
+            return self.unary()
+        left = self.binary(level + 1)
+        while True:
+            kind, val = self.peek()
+            if kind == "op" and BIN_LEVEL.get(val) == level:
+                self.i += 1
+                left = ("bin", val, left, self.binary(level + 1))
+            else:
+                return left
+
+    def unary(self):
+        kind, val = self.peek()
+        if kind == "op" and val in ("-", "+", "~", "!"):
+            self.i += 1
+            return ("un", val, self.unary())
+        return self.primary()
+
+    def primary(self):
+        kind, val = self.peek()
+        if kind is None:
+            raise AsmError(f"expression {self.text!r} ends early")
+        self.i += 1
+        if kind == "num":
+            return self.asm.number(val)
+        if kind == "chr":
+            body = val[1:].rstrip("'") if len(val) > 1 else ""
+            if body.startswith("\\"):
+                c = body[1:2]
+                if c not in CHAR_ESC:
+                    raise AsmError(f"bad character escape {val}")
+                return ("num", CHAR_ESC[c])
+            return ("num", ord(body[:1]))
+        if kind == "id":
+            return self.asm.symref(val)
+        if val == "(":
+            node = self.binary(1)
+            if self.peek() != ("op", ")"):
+                raise AsmError(f"missing ) in {self.text!r}")
+            self.i += 1
+            return node
+        raise AsmError(f"unexpected {val!r} in expression {self.text!r}")
+
+
+def walk_syms(node):
+    if node[0] == "sym":
+        yield node[1]
+    elif node[0] == "un":
+        yield from walk_syms(node[2])
+    elif node[0] == "bin":
+        yield from walk_syms(node[2])
+        yield from walk_syms(node[3])
+
+
+# --- operands ----------------------------------------------------------------------------------------------
+
+SR_NUMBER = {name: n for n, name in enumerate(codec.SR_NAMES)}
+SR_NUMBER.update({f"sr{n}": n for n in range(16)})
+REGISTER_WORDS = set(SR_NUMBER) | {f"r{n}" for n in range(16)} | {"cc", "npc", "c"}
+
+_MODIMM = {}
+
+
+def modimm_raw(value, invert=False):
+    """A raw 12-bit modified immediate that expands to `value` (the lowest one), or None."""
+    if not _MODIMM:
+        for raw in range(4096):
+            _MODIMM.setdefault(codec.modimm(raw), raw)
+    return _MODIMM.get((value ^ M32) & M32 if invert else value & M32)
+
+
+class Num:
+    """A numeric operand whose value is known only at layout time."""
+
+    def __init__(self, node):
+        self.node = node
+
+
+def fit_num(fld, width, v, kind=None):
+    """The raw field value for number v in a uimm/simm field, or None if it does not fit."""
+    kind = kind or fld.kind
+    v32 = v & M32
+    cands = [v]
+    if v32 != v:
+        cands.append(v32)
+    if v32 >= 1 << 31:
+        cands.append(v32 - (1 << 32))
+    for value in cands:
+        if fld.asm_range and not fld.asm_range[0] <= value <= fld.asm_range[1]:
+            continue
+        if fld.zero_as is not None and value == fld.zero_as:
+            return 0
+        d = value - fld.add
+        if d % fld.scale:
+            continue
+        r = d // fld.scale
+        if kind == "uimm":
+            if 0 <= r < 1 << width and not (fld.zero_as is not None and r == 0):
+                return r
+        else:
+            if -(1 << (width - 1)) <= r < 1 << (width - 1):
+                return r & ((1 << width) - 1)
+    return None
+
+
+def parse_reglist(text):
+    """'r3-r0, rets' -> (set of general register numbers, set of other names) or None."""
+    regs, names = set(), set()
+    text = text.strip()
+    if not text:
+        return regs, names
+    for item in text.split(","):
+        item = item.strip().replace(" ", "")
+        m = re.fullmatch(r"r(\d+)(?:-r(\d+))?", item)
+        if m:
+            a = int(m.group(1))
+            b = int(m.group(2)) if m.group(2) else a
+            if a > 15 or b > 15:
+                return None
+            regs.update(range(min(a, b), max(a, b) + 1))
+        elif re.fullmatch(IDENT, item):
+            names.add(item)
+        else:
+            return None
+    return regs, names
+
+
+def operand_raw(insn, name, text):
+    """Convert operand text to a raw field value (int), a Num marker for expressions (handled by the caller),
+    or None when the text is not valid for the field."""
+    fld = insn.fields[name]
+    kind, width = fld.kind, len(insn.field_bits(name))
+    if kind in ("gpr", "gpr_lo", "gpr_hi"):
+        m = re.fullmatch(r"r(\d+)", text)
+        if not m or len(text) > 3 or (len(m.group(1)) > 1 and m.group(1)[0] == "0"):
+            return None
+        n = int(m.group(1))
+        if n > 15:
+            return None
+        if kind == "gpr_lo":
+            return n if n < 8 else None
+        if kind == "gpr_hi":
+            return n - 8 if n >= 8 else None
+        return n
+    if kind == "pair":
+        m = re.fullmatch(r"r(\d+)_r(\d+)", text)
+        if not m:
+            return None
+        hi, lo = int(m.group(1)), int(m.group(2))
+        return lo // 2 if hi == lo + 1 and lo % 2 == 0 and hi <= 15 else None
+    if kind == "pair_regs":
+        m = re.fullmatch(r"r(\d+),r(\d+)", text.replace(" ", ""))
+        if not m:
+            return None
+        a, b = int(m.group(1)), int(m.group(2))
+        if a > 15 or b > 15 or a // 2 != b // 2:
+            return None
+        return (a // 2) << 2 | (a & 1) << 1 | (b & 1)
+    if kind == "sr":
+        return SR_NUMBER.get(text)
+    if kind == "enum":
+        want = canon(text)
+        for raw, v in enumerate(fld.values):
+            if canon(v) == want:
+                return raw
+        return None
+    if kind in ("rlist4", "rmask", "srmask"):
+        got = parse_reglist(text)
+        if got is None:
+            return None
+        regs, names = got
+        if kind == "rlist4":
+            if names or not regs:
+                return None
+            lo, hi = min(regs), max(regs)
+            if regs != set(range(lo, hi + 1)):
+                return None
+            if hi == 3 and lo <= 3:
+                return lo
+            return hi if lo == 4 and hi >= 4 else None
+        if kind == "rmask":
+            want = {fld.lead} if fld.lead else set()
+            if names != want:
+                return None
+            return sum(1 << r for r in regs)
+        if regs:
+            return None
+        mask = 0
+        for nm in names:
+            if nm not in SR_NUMBER or SR_NUMBER[nm] >= width:
+                return None
+            mask |= 1 << SR_NUMBER[nm]
+        return mask
+    raise AssertionError(kind)
+
+
+NUMERIC_KINDS = ("uimm", "simm", "bit", "invbit", "modimm")
+
+
+def numeric_raw(insn, name, value):
+    """Raw field value for a constant number in a numeric-kind field, or None."""
+    fld = insn.fields[name]
+    kind, width = fld.kind, len(insn.field_bits(name))
+    if kind in ("uimm", "simm"):
+        return fit_num(fld, width, value)
+    if kind in ("bit", "invbit"):
+        v = value & M32
+        if kind == "invbit":
+            v ^= M32
+        return v.bit_length() - 1 if v and v & (v - 1) == 0 else None
+    if kind == "modimm":
+        return modimm_raw(value, fld.invert)
+    raise AssertionError(kind)
+
+
+# --- matchers ----------------------------------------------------------------------------------------------
+
+OPS = ["<<<", ">>>", "<<", ">>", "+", "-", "*", "&", "|", "^"]
+SENT = 0xE000
+
+
+def _template(insn, syntax):
+    """Canonical text of a syntax with a private-use sentinel per placeholder, and the placeholder list."""
+    holders, out = [], []
+    pos = 0
+    for m in tbl.SYNTAX_TOKEN.finditer(syntax):
+        out.append(syntax[pos:m.start()])
+        if m.group(0) in ("{{", "}}"):
+            out.append(m.group(0)[0])
+        else:
+            holders.append((m.group(2), bool(m.group(1))))
+            out.append(chr(SENT + len(holders) - 1))
+        pos = m.end()
+    out.append(syntax[pos:])
+    return canon("".join(out)), holders
+
+
+def _kind_regex(insn, name, group):
+    fld = insn.fields[name]
+    k = fld.kind
+    if k in ("gpr", "gpr_lo", "gpr_hi"):
+        return rf"(?P<{group}>r\d+)"
+    if k == "pair":
+        return rf"(?P<{group}>r\d+_r\d+)"
+    if k == "pair_regs":
+        return rf"(?P<{group}>r\d+,r\d+)"
+    if k == "sr":
+        return rf"(?P<{group}>[A-Za-z_][A-Za-z0-9_]*)"
+    if k == "enum":
+        alts = sorted({canon(v) for v in fld.values}, key=len, reverse=True)
+        return rf"(?P<{group}>" + "|".join(re.escape(a) for a in alts) + ")"
+    if k in ("rlist4", "rmask", "srmask"):
+        return rf"(?P<{group}>[^{{}}]*?)"
+    return rf"(?P<{group}>.+?)"
+
+
+class Matcher:
+    """One way to write an entry: a compiled regular expression and how its groups map to fields."""
+
+    def __init__(self, insn, order, syntax, same=None, u_optional=False):
+        self.insn, self.order = insn, order
+        text, holders = _template(insn, syntax)
+        self.holders = holders
+        seen, parts, groups = {}, [], {}
+        for ch in text:
+            code = ord(ch)
+            if SENT <= code < SENT + 0x100:
+                name, plus = holders[code - SENT]
+                if name in seen:
+                    parts.append(rf"(?P={seen[name]})")
+                    continue
+                group = f"f_{name}"
+                seen[name] = group
+                body = _kind_regex(insn, name, group)
+                parts.append(rf"(?:\+{body})?" if plus else body)
+                groups[name] = group
+            else:
+                parts.append(re.escape(ch))
+        pattern = "".join(parts)
+        if u_optional and pattern.endswith(re.escape("(u)")):
+            pattern = pattern[:-len(re.escape("(u)"))] + r"(?:\(u\))?"
+        self.regex = re.compile(pattern + "$", re.S)
+        self.groups = groups
+        self.plus = {n for n, p in holders if p}
+
+
+def x_alias_syntax(syntax):
+    """`{d} += {s}` -> `{d} = {d} + {s}`: the long way to write a two-operand form, or None."""
+    m = re.fullmatch(r"\{(\w)\} (<<<|>>>|<<|>>|\+|-|\*|&|\||\^)= (.+)", syntax)
+    if not m:
+        return None
+    return f"{{{m.group(1)}}} = {{{m.group(1)}}} {m.group(2)} {m.group(3)}"
+
+
+class Candidate:
+    def __init__(self, insn, ops, order):
+        self.insn, self.ops, self.order = insn, ops, order
+        self.size = 2 * len(insn.words)
+
+
+def branch_field(insn):
+    """The field holding a pc-relative target (`goto {n}`, `call {n}`, `gotoss {n}`), or None."""
+    m = re.search(r"\b(?:goto|call|gotoss) \{(\w)\}(?: \(\w\))?$", insn.syntax)
+    if m and insn.fields[m.group(1)].kind == "simm":
+        return m.group(1)
+    return None
+
+
+def abs32_field(insn):
+    """The field of a 32-bit constant load, which can carry a relocation, or None."""
+    for name, f in insn.fields.items():
+        if f.kind == "uimm" and len(insn.field_bits(name)) == 32:
+            return name
+    return None
+
+
+BRANCH_RELOC = {(2, 16): 1, (2, 22): 2, (3, 16): 3, (3, 31): 4}
+
+
+class Isa:
+    """The matchers built from a table."""
+
+    def __init__(self, tab):
+        self.table = tab
+        self.matchers = []
+        self.by_key = {}
+        self.cache = {}
+        self.branch = {i.id: branch_field(i) for i in tab.insns}
+        self.abs32 = {i.id: abs32_field(i) for i in tab.insns}
+        for order, insn in enumerate(tab.insns):
+            syntaxes = [insn.syntax]
+            if insn.asm_syntax:
+                syntaxes = [insn.asm_syntax]
+            for sx in list(syntaxes):
+                alias = x_alias_syntax(sx)
+                if alias:
+                    syntaxes.append(alias)
+            for sx in syntaxes:
+                self.matchers.append(Matcher(insn, order, sx, u_optional=True))
+        # index by the literal prefix before the first placeholder
+        for m in self.matchers:
+            text = _template(m.insn, m.insn.asm_syntax or m.insn.syntax)[0]
+            self.by_key.setdefault(self._prefix(text), []).append(m)
+        self.prefix_lengths = sorted({len(k) for k in self.by_key}, reverse=True)
+
+    @staticmethod
+    def _prefix(text):
+        out = []
+        for ch in text:
+            if SENT <= ord(ch) < SENT + 0x100:
+                break
+            out.append(ch)
+        return "".join(out)
+
+    def _skeleton(self, line):
+        s = re.sub(r"(?<![A-Za-z0-9_.$@])(?:0[xX][0-9a-fA-F]+|\d+)(?![A-Za-z0-9_.$@])", "N", line)
+        return s
+
+    def candidates(self, line):
+        """All (insn, operands) readings of a canonical instruction line; operand values are raw ints or Num."""
+        out = []
+        for key_len in self.prefix_lengths:
+            for m in self.by_key.get(line[:key_len], ()):
+                got = m.regex.match(line)
+                if got:
+                    ops = self._operands(m, got)
+                    if ops is not None:
+                        out.append(Candidate(m.insn, ops, m.order))
+        return out
+
+    def _operands(self, m, got):
+        insn, ops = m.insn, {}
+        for name, group in m.groups.items():
+            text = got.group(group)
+            if text is None:
+                if name in m.plus:
+                    ops[name] = 0
+                    continue
+                return None
+            fld = insn.fields[name]
+            if fld.kind in NUMERIC_KINDS:
+                ops[name] = Num(text)
+            else:
+                raw = operand_raw(insn, name, text)
+                if raw is None:
+                    return None
+                ops[name] = raw
+        return ops
+
+
+# --- assembler state ---------------------------------------------------------------------------------------
+
+class Sym:
+    def __init__(self, name):
+        self.name = name
+        self.kind = "undef"          # undef | label | abs | alias
+        self.section = None
+        self.item = 0
+        self.offset = 0
+        self.value = 0
+        self.node = None             # alias: the expression
+        self.bind = elf.STB_LOCAL
+        self.declared = False        # .globl / .weak / .local seen
+        self.type = elf.STT_NOTYPE
+        self.other = 0
+        self.size_node = None
+        self.common = None           # (size, align)
+        self.pure = False            # abs: a constant that involved no labels and no forward references
+        self.reloc_ref = False       # used by a relocation: must be in the symbol table
+        self.used = False
+        self.temp = name.startswith(".L")
+        self.file = False
+
+
+class Sec:
+    def __init__(self, name, type_, flags, align=1, entsize=0):
+        self.name, self.type, self.flags, self.align, self.entsize = name, type_, flags, align, entsize
+        self.items = []
+        self.offs = []
+        self.size = 0
+        self.group = None
+
+
+class Item:
+    """An item of a section; `size(asm)` is its size at the current layout."""
+    fixed = True
+    loc = None
+
+
+class Raw(Item):
+    def __init__(self, data):
+        self.data = bytes(data)
+
+    def size(self, asm, sec, off):
+        return len(self.data)
+
+    def emit(self, asm, sec, off, out):
+        out.data += self.data
+
+
+class Data(Item):
+    """.byte/.short/.long/.quad with an expression."""
+
+    def __init__(self, width, node, loc):
+        self.width, self.node, self.loc = width, node, loc
+
+    def size(self, asm, sec, off):
+        return self.width
+
+    def emit(self, asm, sec, off, out):
+        sym, add = asm.ev(self.node, self.loc)
+        if sym is None:
+            lo, hi = -(1 << (8 * self.width - 1)), (1 << (8 * self.width)) - 1
+            if self.width < 8 and not lo <= add <= hi:
+                raise AsmError(f"{self.loc}: out of range literal value in {self.width}-byte data")
+            out.data += (add & ((1 << (8 * self.width)) - 1)).to_bytes(self.width, "little")
+            return
+        types = {1: 6, 2: 7, 4: 8}
+        if self.width not in types:
+            raise AsmError(f"{self.loc}: a {self.width}-byte relocation is not supported")
+        sym = asm.reloc_symbol(sym)
+        out.relocs.append((off, types[self.width], sym.name, add))
+        out.data += bytes(self.width)
+
+
+class Space(Item):
+    """.space/.fill/.zero: `count` units of `unit` bytes filled with `value`."""
+
+    def __init__(self, count, unit, value, loc, strict=False):
+        self.count, self.unit, self.value, self.loc, self.strict = count, unit, value, loc, strict
+        self.cache = 0
+
+    def size(self, asm, sec, off):
+        sym, n = asm.ev(self.count, self.loc, provisional=True)
+        if sym is not None:
+            raise AsmError(f"{self.loc}: size must be absolute")
+        if n < 0 or (n == 0 and self.strict):
+            raise AsmError(f"{self.loc}: invalid number of bytes")
+        self.cache = n * self.unit
+        return self.cache
+
+    def emit(self, asm, sec, off, out):
+        sym, v = asm.ev(self.value, self.loc) if self.value is not None else (None, 0)
+        n = self.cache
+        if self.unit == 1 or self.value is None:
+            out.data += bytes([v & 0xFF]) * n
+        else:
+            out.data += (v & ((1 << (8 * min(self.unit, 8))) - 1)).to_bytes(min(self.unit, 8), "little") \
+                .ljust(self.unit, b"\0") * (n // self.unit)
+
+
+class Align(Item):
+    def __init__(self, boundary, fill, maxskip, loc):
+        self.boundary, self.fill, self.maxskip, self.loc = boundary, fill, maxskip, loc
+        self.pad = 0
+
+    def size(self, asm, sec, off):
+        b = self.boundary
+        pad = (-off) % b
+        if self.maxskip is not None and pad > self.maxskip:
+            pad = 0
+        self.pad = pad
+        return pad
+
+    def emit(self, asm, sec, off, out):
+        out.data += bytes([self.fill]) * self.pad
+
+
+class Org(Item):
+    def __init__(self, node, fill, loc):
+        self.node, self.fill, self.loc = node, fill, loc
+        self.pad = 0
+
+    def size(self, asm, sec, off):
+        sym, n = asm.ev(self.node, self.loc, provisional=True)
+        if sym is not None:
+            if sym.section is not sec:
+                raise AsmError(f"{self.loc}: .org target must be in the current section")
+            n += asm.sym_offset(sym)
+        if n < off:
+            raise AsmError(f"{self.loc}: .org moves backwards")
+        self.pad = n - off
+        return self.pad
+
+    def emit(self, asm, sec, off, out):
+        out.data += bytes([self.fill]) * self.pad
+
+
+class Leb(Item):
+    def __init__(self, node, signed, loc):
+        self.node, self.signed, self.loc = node, signed, loc
+        self.data = b""
+
+    def size(self, asm, sec, off):
+        sym, v = asm.ev(self.node, self.loc, provisional=True)
+        if sym is not None:
+            raise AsmError(f"{self.loc}: LEB128 operand must be absolute")
+        out = bytearray()
+        while True:
+            b = v & 0x7F
+            v >>= 7
+            if self.signed:
+                done = (v == 0 and not b & 0x40) or (v == -1 and b & 0x40)
+            else:
+                done = v == 0
+            out.append(b | (0 if done else 0x80))
+            if done:
+                break
+        self.data = bytes(out)
+        return len(self.data)
+
+    def emit(self, asm, sec, off, out):
+        out.data += self.data
+
+
+class Insn(Item):
+    fixed = False
+
+    def __init__(self, cands, loc, fixed_const, body=None):
+        self.cands = cands        # sorted: preferred first within a size
+        self.loc = loc
+        self.fixed_const = fixed_const
+        self.body = body          # (start label, end label) for `rep`
+        self.chosen = None
+        self.cur = 0              # current size
+        self.sec = None
+        self.off = 0
+
+    def size(self, asm, sec, off):
+        self.sec, self.off = sec, off
+        return self.cur
+
+    def emit(self, asm, sec, off, out):
+        self.sec, self.off = sec, off
+        data, reloc = asm.encode_cand(self, self.chosen, off)
+        if reloc:
+            out.relocs.append((off, reloc[0], reloc[1].name, reloc[2]))
+        out.data += data
+
+
+class OutSec:
+    def __init__(self):
+        self.data = bytearray()
+        self.relocs = []
+        self.size = 0
+
+
+# --- the assembler -----------------------------------------------------------------------------------------
+
+DEFAULT_SECTIONS = {
+    ".text": (elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_EXECINSTR, 2),
+    ".data": (elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_WRITE, 1),
+    ".bss": (elf.SHT_NOBITS, elf.SHF_ALLOC | elf.SHF_WRITE, 1),
+    ".rodata": (elf.SHT_PROGBITS, elf.SHF_ALLOC, 1),
+}
+SECTION_TYPES = {"progbits": elf.SHT_PROGBITS, "nobits": elf.SHT_NOBITS, "note": 7, "init_array": 14,
+                 "fini_array": 15, "preinit_array": 16}
+SECTION_FLAGS = {"a": elf.SHF_ALLOC, "w": elf.SHF_WRITE, "x": elf.SHF_EXECINSTR, "M": elf.SHF_MERGE,
+                 "S": elf.SHF_STRINGS, "T": elf.SHF_TLS, "G": elf.SHF_GROUP}
+SYMBOL_TYPES = {"function": elf.STT_FUNC, "object": elf.STT_OBJECT, "notype": elf.STT_NOTYPE,
+                "tls_object": elf.STT_TLS, "common": elf.STT_COMMON, "STT_FUNC": elf.STT_FUNC,
+                "STT_OBJECT": elf.STT_OBJECT, "STT_NOTYPE": elf.STT_NOTYPE, "STT_TLS": elf.STT_TLS,
+                "gnu_indirect_function": 10}
+
+STRING_ESC = {"n": 10, "t": 9, "r": 13, "b": 8, "f": 12, "\\": 92, '"': 34, "a": 7, "v": 11}
+
+
+class Block:
+    def __init__(self, kind, insn_item, end_label):
+        self.kind, self.item, self.end_label = kind, insn_item, end_label
+
+
+class _Core:
+    def __init__(self, tab=None, include=()):
+        self.table = tab or tbl.load()
+        self.isa = _isa_for(self.table)
+        self.include = [str(p) for p in include]
+        self.sections = {}
+        self.order = []
+        self.syms = {}
+        self.cur = None
+        self.stack = []
+        self.file_name = None
+        self.local_count = {}        # numeric label -> instances defined
+        self.counter = 0             # \@ macro counter
+        self.macros = {}
+        self.blocks = []
+        self.cond = []               # conditional assembly stack: (active, taken, parent_active)
+        self.loc = "<input>"
+        self.sizes = []
+        self.dot_count = 0
+        self.switch(".text")
+        self.search_dirs = ["."]
+        self.warnings = []
+        self._prov = False
+
+    # -- sections ------------------------------------------------------------------------------------------
+    def switch(self, name, type_=None, flags=None, entsize=0):
+        sec = self.sections.get(name)
+        if sec is None:
+            if type_ is None:
+                type_, flags, align = DEFAULT_SECTIONS.get(name, (elf.SHT_PROGBITS, 0, 1))
+                if flags == 0 and name.startswith(".text"):
+                    flags = elf.SHF_ALLOC | elf.SHF_EXECINSTR
+                elif flags == 0 and name.startswith(".data"):
+                    flags = elf.SHF_ALLOC | elf.SHF_WRITE
+                elif flags == 0 and name.startswith(".bss"):
+                    type_, flags = elf.SHT_NOBITS, elf.SHF_ALLOC | elf.SHF_WRITE
+                elif flags == 0 and name.startswith(".rodata"):
+                    flags = elf.SHF_ALLOC
+            else:
+                align = 1
+                if name == ".text":
+                    align = 2
+            sec = Sec(name, type_, flags or 0, align, entsize)
+            self.sections[name] = sec
+            self.order.append(sec)
+        self.cur = sec
+        return sec
+
+    # -- symbols -------------------------------------------------------------------------------------------
+    def sym(self, name):
+        s = self.syms.get(name)
+        if s is None:
+            s = self.syms[name] = Sym(name)
+        return s
+
+    def number(self, text):
+        t = text.lower()
+        if re.fullmatch(r"[0-9]+[fb]", t) and not (t.endswith("b") and re.fullmatch(r"[01]+b", t) and False):
+            n = t[:-1]
+            if t.endswith("b") and re.fullmatch(r"0[bB][01]+", text):
+                pass
+            return self.local_ref(n, t[-1])
+        if t.startswith("0x"):
+            return ("num", int(t, 16))
+        if t.startswith("0b") and re.fullmatch(r"0b[01]+", t):
+            return ("num", int(t[2:], 2))
+        if t.endswith("h"):
+            return ("num", int(t[:-1], 16))
+        if len(t) > 1 and t[0] == "0":
+            try:
+                return ("num", int(t, 8))
+            except ValueError:
+                raise AsmError(f"bad octal number {text}") from None
+        return ("num", int(t))
+
+    def local_ref(self, n, direction):
+        count = self.local_count.get(n, 0)
+        if direction == "b":
+            if count == 0:
+                raise AsmError(f"{self.loc}: undefined backward reference {n}b")
+            name = f".L{n}\x01{count}"
+        else:
+            name = f".L{n}\x01{count + 1}"
+        s = self.sym(name)
+        s.temp = True
+        return ("sym", s)
+
+    def symref(self, name):
+        if name == ".":
+            return ("sym", self.here())
+        if name in REGISTER_WORDS:
+            raise AsmError(f"register name {name} in an expression")
+        s = self.sym(name)
+        s.used = True
+        return ("sym", s)
+
+    def here(self):
+        """An anonymous label at the current location."""
+        self.dot_count += 1
+        s = self.syms[f".Ldot{self.dot_count}"] = Sym(f".Ldot{self.dot_count}")
+        s.temp = True
+        self.define_label(s)
+        return s
+
+    def define_label(self, s):
+        if s.kind not in ("undef",) and not (s.kind == "abs" and not s.pure and False):
+            raise AsmError(f"{self.loc}: symbol {s.name} is already defined")
+        s.kind = "label"
+        s.section = self.cur
+        s.item = len(self.cur.items)
+        return s
+
+    def sym_pos(self, s):
+        """(section, offset) of a label or alias, or None."""
+        if s.kind == "label":
+            return s.section, s.offset
+        if s.kind == "alias":
+            r = self.ev(s.node, None)
+            if r[0] is not None and r[0] is not s:
+                p = self.sym_pos(r[0])
+                if p:
+                    return p[0], p[1] + r[1]
+        return None
+
+    def sym_offset(self, s):
+        p = self.sym_pos(s)
+        if p is None:
+            raise AsmError(f"{self.loc}: symbol {s.name} is not defined in a section")
+        return p[1]
+
+    # -- expression evaluation -----------------------------------------------------------------------------
+    def ev(self, node, loc, provisional=False):
+        """(symbol or None, addend). A symbol result is relocatable: a label, alias or undefined name."""
+        t = node[0]
+        if t == "num":
+            return None, node[1]
+        if t == "sym":
+            s = node[1]
+            if s.kind == "abs":
+                return None, s.value
+            if s.kind == "alias":
+                r = self.ev(s.node, loc, provisional)
+                return (None, r[1]) if r[0] is None else (s, 0)
+            if provisional and s.kind == "label":
+                self.provisional_offsets(s.section)
+            return s, 0
+        if t == "un":
+            sym, v = self.ev(node[2], loc, provisional)
+            if sym is not None:
+                raise AsmError(f"{loc}: expected relocatable expression")
+            op = node[1]
+            return None, s64({"-": -v, "+": v, "~": ~v, "!": int(v == 0)}[op])
+        _, op, a, b = node
+        sa, va = self.ev(a, loc, provisional)
+        sb, vb = self.ev(b, loc, provisional)
+        if op in ("+", "-"):
+            if sa is None and sb is None:
+                return None, s64(va + vb if op == "+" else va - vb)
+            if sb is None:
+                return sa, s64(va + vb if op == "+" else va - vb)
+            if op == "+" and sa is None:
+                return sb, s64(va + vb)
+            if op == "-" and sa is not None:
+                pa, pb = self.sym_pos(sa), self.sym_pos(sb)
+                if pa and pb and pa[0] is pb[0]:
+                    if provisional:
+                        self.provisional_offsets(pa[0])
+                    return None, s64(self.sym_offset(sa) + va - self.sym_offset(sb) - vb)
+            raise AsmError(f"{loc}: can't resolve this expression (symbol difference across sections or undefined)")
+        if sa is not None or sb is not None:
+            raise AsmError(f"{loc}: expected relocatable expression")
+        if op in ("/", "%"):
+            if vb == 0:
+                raise AsmError(f"{loc}: division by zero")
+            q = abs(va) // abs(vb) * (1 if (va < 0) == (vb < 0) else -1)
+            return None, s64(q if op == "/" else va - q * vb)
+        r = {
+            "*": lambda: va * vb, "<<": lambda: (va << (vb & 63)), ">>": lambda: ((va & M64) >> (vb & 63)),
+            "&": lambda: va & vb, "|": lambda: va | vb, "^": lambda: va ^ vb, "!": lambda: va | ~vb,
+            "==": lambda: int(va == vb), "!=": lambda: int(va != vb), "<>": lambda: int(va != vb),
+            "<": lambda: int(va < vb), ">": lambda: int(va > vb), "<=": lambda: int(va <= vb),
+            ">=": lambda: int(va >= vb), "&&": lambda: int(bool(va) and bool(vb)),
+            "||": lambda: int(bool(va) or bool(vb)),
+        }[op]()
+        return None, s64(r)
+
+    def provisional_offsets(self, sec):
+        """Offsets of the labels of `sec` from the items' current sizes (used while parsing)."""
+        if self._prov:
+            return
+        self._prov = True
+        try:
+            off = 0
+            offs = []
+            for item in sec.items:
+                offs.append(off)
+                if isinstance(item, Insn):
+                    off += item.cur
+                elif isinstance(item, Align):
+                    off += (-off) % item.boundary
+                else:
+                    try:
+                        off += item.size(self, sec, off)
+                    except AsmError:
+                        pass
+            offs.append(off)
+            for s in self.syms.values():
+                if s.kind == "label" and s.section is sec:
+                    s.offset = offs[min(s.item, len(offs) - 1)]
+        finally:
+            self._prov = False
+
+    def parse_expr(self, text):
+        text = text.strip()
+        if not text:
+            raise AsmError(f"{self.loc}: missing expression")
+        return ExprParser(self, text).parse()
+
+    def const_expr(self, text, what="expression"):
+        """Evaluate an expression that must be a constant right now."""
+        node = self.parse_expr(text)
+        sym, v = self.ev(node, self.loc, provisional=True)
+        if sym is not None:
+            raise AsmError(f"{self.loc}: {what} must be absolute")
+        return v
+
+    def is_pure(self, node):
+        """True if an expression is a constant that involved no labels and no forward references."""
+        for s in walk_syms(node):
+            if s.kind != "abs" or not s.pure:
+                return False
+        return True
+
+    # -- emission of instructions --------------------------------------------------------------------------
+    def encode_cand(self, item, cand, off):
+        """(bytes, reloc or None) for candidate `cand` of `item` at section offset `off`, or None if it cannot
+        be encoded with the current layout. A reloc is (type, symbol, addend)."""
+        insn = cand.insn
+        isa = self.isa
+        values, reloc = {}, None
+        sec = item.sec
+        for name, op in cand.ops.items():
+            if not isinstance(op, Num):
+                values[name] = op
+                continue
+            sym, add = self.ev(op.node, item.loc)
+            fld = insn.fields[name]
+            width = len(insn.field_bits(name))
+            if name == isa.branch[insn.id]:
+                end = off + cand.size
+                if sym is None:
+                    disp = add
+                else:
+                    pos = self.sym_pos(sym)
+                    if pos and pos[0] is sec and sym.bind != elf.STB_WEAK and sym.kind != "undef":
+                        disp = pos[1] + add - end
+                    else:
+                        rtype = BRANCH_RELOC.get((len(insn.words), width))
+                        if rtype is None or (insn.id == "call.xl"):
+                            return None
+                        reloc = (rtype, self.reloc_symbol(sym), add)
+                        values[name] = 0
+                        continue
+                if disp % 2:
+                    raise AsmError(f"{item.loc}: branch displacement {disp} is odd")
+                raw = fit_num(fld, width, disp, "simm")
+                if raw is None:
+                    return None
+                values[name] = raw
+                continue
+            if sym is not None:
+                if name == isa.abs32[insn.id]:
+                    reloc = (5, self.reloc_symbol(sym), add)
+                    values[name] = 0
+                    continue
+                return None
+            if name == isa.abs32[insn.id] and not item.fixed_const:
+                values[name] = add & M32
+                continue
+            raw = numeric_raw(insn, name, add)
+            if raw is None:
+                return None
+            values[name] = raw
+        if insn.body:
+            n = self.body_length(item)
+            raw = fit_num(insn.fields[insn.body], len(insn.field_bits(insn.body)), n)
+            if raw is None:
+                return None
+            values[insn.body] = raw
+        return codec.encode(insn, values), reloc
+
+    def body_length(self, item):
+        start, end = item.body
+        return self.sym_offset(end) - self.sym_offset(start)
+
+    def reloc_symbol(self, sym):
+        sym.reloc_ref = True
+        return sym
+
+    # -- statements ----------------------------------------------------------------------------------------
+    def instruction(self, text):
+        line = canon(text)
+        opens = line.endswith("{")
+        cands = self.isa.candidates(line)
+        if not cands:
+            raise AsmError(f"{self.loc}: unrecognised instruction or operand: {text.strip()}")
+        good, err = [], None
+        for c in cands:
+            try:
+                c.ops = {k: (Num(self.parse_expr(v.node)) if isinstance(v, Num) else v) for k, v in c.ops.items()}
+            except AsmError as e:
+                err = err or e
+                continue
+            good.append(c)
+        if not good:
+            raise AsmError(f"{self.loc}: {err}")
+        cands = good
+        # parse-time constness of the numeric operands
+        fixed = all(self.is_pure(op.node) for c in cands for op in c.ops.values() if isinstance(op, Num))
+        cands.sort(key=lambda c: (c.size, TIE.get(c.insn.id, 0), c.order))
+        item = Insn(cands, self.loc, fixed)
+        item.cur = cands[0].size
+        item.chosen = cands[0]
+        if opens:
+            self.counter += 1
+            start = self.syms[f".Lbody{self.counter}"] = Sym(f".Lbody{self.counter}")
+            start.temp = True
+            end = self.syms[f".Lbodyend{self.counter}"] = Sym(f".Lbodyend{self.counter}")
+            end.temp = True
+            self.cur.items.append(item)
+            self.define_label(start)
+            self.blocks.append(Block("insn", item, end))
+            item.body = (start, end)
+            return
+        self.cur.items.append(item)
+
+    def close_block(self):
+        if not self.blocks:
+            raise AsmError(f"{self.loc}: unmatched }}")
+        b = self.blocks.pop()
+        self.define_label(b.end_label)
+
+    def label(self, name):
+        m = re.fullmatch(r"\d+", name)
+        if m:
+            n = int(name)
+            self.local_count[name] = self.local_count.get(name, 0) + 1
+            s = self.sym(f".L{name}\x01{self.local_count[name]}")
+            s.temp = True
+            self.define_label(s)
+            return
+        s = self.sym(name)
+        if s.kind == "abs" or s.kind == "alias":
+            raise AsmError(f"{self.loc}: symbol {name} is already defined")
+        self.define_label(s)
+        s.used = True
+
+    # -- layout --------------------------------------------------------------------------------------------
+    def layout(self):
+        """Choose every instruction's form: start from the smallest and grow until nothing changes."""
+        for _ in range(200):
+            changed = False
+            for sec in self.order:
+                off, offs = 0, []
+                for item in sec.items:
+                    offs.append(off)
+                    off += item.size(self, sec, off)
+                offs.append(off)
+                sec.offs, sec.size = offs, off
+            for s in self.syms.values():
+                if s.kind == "label":
+                    s.offset = s.section.offs[s.item]
+            for sec in self.order:
+                for idx, item in enumerate(sec.items):
+                    if not isinstance(item, Insn):
+                        continue
+                    off = sec.offs[idx]
+                    item.sec, item.off = sec, off
+                    pick = None
+                    for c in item.cands:
+                        if c.size >= item.cur and self.encode_cand(item, c, off) is not None:
+                            pick = c
+                            break
+                    if pick is None:
+                        raise AsmError(f"{item.loc}: no encoding fits the operands of this instruction")
+                    item.chosen = pick
+                    if pick.size != item.cur:
+                        item.cur = pick.size
+                        changed = True
+            if not changed:
+                return
+        raise AsmError("layout did not converge")
+
+    # -- output --------------------------------------------------------------------------------------------
+    def finish(self):
+        if self.blocks:
+            raise AsmError(f"{self.loc}: block not closed with }}")
+        if self.cond:
+            raise AsmError(f"{self.loc}: .if without .endif")
+        self.layout()
+        outs = {}
+        for sec in self.order:
+            o = OutSec()
+            for idx, item in enumerate(sec.items):
+                off = sec.offs[idx]
+                if sec.type == elf.SHT_NOBITS:
+                    if isinstance(item, (Space, Align, Org)):
+                        pass
+                    elif isinstance(item, Data) or isinstance(item, Raw):
+                        pass
+                    continue
+                item.emit(self, sec, off, o)
+            outs[sec.name] = o
+        # symbols
+        symbols = []
+        for s in self.syms.values():
+            if s.kind == "undef" and not (s.reloc_ref or s.declared):
+                continue
+            if s.temp and not s.reloc_ref:
+                continue
+            if s.kind == "label" and s.name.startswith(".Ldot"):
+                continue
+            symbols.append(s)
+        secidx = {sec.name: n + 2 for n, sec in enumerate(self.order)}
+        result = []
+        for s in symbols:
+            e = elf.Symbol(s.name, bind=s.bind, type=s.type, other=s.other)
+            if s.size_node is not None:
+                sym, v = self.ev(s.size_node, None)
+                e.size = v & M32
+            if s.common:
+                e.shndx, e.value, e.size = elf.SHN_COMMON, s.common[1], s.common[0]
+                e.bind = elf.STB_GLOBAL
+                e.type = elf.STT_OBJECT
+            elif s.kind in ("label", "alias"):
+                p = self.sym_pos(s)
+                if p is None:
+                    raise AsmError(f"symbol {s.name} refers to an undefined symbol")
+                e.shndx, e.value = secidx[p[0].name], p[1]
+            elif s.kind == "abs":
+                e.shndx, e.value = elf.SHN_ABS, s.value & M32
+            elif s.kind == "undef" and s.bind == elf.STB_LOCAL:
+                e.bind = elf.STB_GLOBAL
+            result.append(e)
+        result.sort(key=lambda e: (e.bind != elf.STB_LOCAL, e.name.encode()))
+        if self.file_name is not None:
+            result.insert(0, elf.Symbol(self.file_name, bind=elf.STB_LOCAL, type=elf.STT_FILE, shndx=elf.SHN_ABS))
+        sections = []
+        for sec in self.order:
+            o = outs[sec.name]
+            e = elf.Section(sec.name, sec.type, sec.flags, sec.align, sec.entsize)
+            if sec.type == elf.SHT_NOBITS:
+                e.size = sec.size
+            else:
+                e.data = o.data
+            e.relocs = o.relocs
+            sections.append(e)
+        return elf.write(sections, result)
+
+
+TIE = {}
+
+
+_ISA_CACHE = {}
+
+
+def _isa_for(tab):
+    key = id(tab)
+    if key not in _ISA_CACHE:
+        _ISA_CACHE[key] = Isa(tab)
+    return _ISA_CACHE[key]
+
+
+# --- source processing: statements, directives, macros ------------------------------------------------------
+
+LABEL = re.compile(rf"\s*({IDENT}|\d+)\s*:(?!=)")
+SUBST = re.compile(r"\\(\(\)|@|[A-Za-z_][A-Za-z0-9_]*)")
+
+
+def split_args(text, seps=","):
+    """Split at top-level separators, outside quotes and brackets."""
+    out, depth, cur, quote, i = [], 0, [], None, 0
+    while i < len(text):
+        c = text[i]
+        if quote:
+            cur.append(c)
+            if c == "\\" and i + 1 < len(text):
+                cur.append(text[i + 1])
+                i += 1
+            elif c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+            cur.append(c)
+        elif c in "([{":
+            depth += 1
+            cur.append(c)
+        elif c in ")]}":
+            depth -= 1
+            cur.append(c)
+        elif c in seps and depth == 0:
+            out.append("".join(cur))
+            cur = []
+        else:
+            cur.append(c)
+        i += 1
+    out.append("".join(cur))
+    return [a.strip() for a in out]
+
+
+def parse_string(text):
+    """The bytes of a "quoted" string with C escapes."""
+    text = text.strip()
+    if len(text) < 2 or text[0] != '"' or text[-1] != '"':
+        raise AsmError(f"expected a quoted string, found {text!r}")
+    body, out, i = text[1:-1], bytearray(), 0
+    while i < len(body):
+        c = body[i]
+        if c != "\\":
+            out += c.encode()
+            i += 1
+            continue
+        i += 1
+        c = body[i:i + 1]
+        if c in STRING_ESC and c != "":
+            out.append(STRING_ESC[c])
+            i += 1
+        elif c.isdigit() and c in "01234567":
+            j = i
+            while j < len(body) and j < i + 3 and body[j] in "01234567":
+                j += 1
+            out.append(int(body[i:j], 8) & 0xFF)
+            i = j
+        elif c in ("x", "X"):
+            j = i + 1
+            while j < len(body) and body[j] in "0123456789abcdefABCDEF":
+                j += 1
+            if j == i + 1:
+                raise AsmError("invalid escape sequence in string")
+            out.append(int(body[i + 1:j], 16) & 0xFF)
+            i = j
+        else:
+            raise AsmError("invalid escape sequence (unrecognized character) in string")
+    return bytes(out)
+
+
+class Assembler(_Core):
+    """Assemble preprocessed source text. Typical use: `Assembler().assemble(text, "x.s")` then `.finish()`."""
+
+    def __init__(self, tab=None, include=()):
+        super().__init__(tab, include)
+        self.depth = 0
+        self.stopped = False
+        self.cur_file = "<input>"
+
+    # -- driver --------------------------------------------------------------------------------------------
+    def assemble(self, text, filename="<input>"):
+        self.cur_file = filename
+        lines = strip_comments(text).split("\n")
+        self.run(lines, filename, 1)
+
+    def run(self, lines, filename, first_line):
+        i = 0
+        while i < len(lines) and not self.stopped:
+            self.loc = f"{filename}:{first_line + i}"
+            line = lines[i]
+            i += 1
+            word = line.split(None, 1)[0].lower() if line.strip() else ""
+            if self.cond and not self.cond[-1][0] and not word.startswith((".if", ".else", ".endif", ".elseif")):
+                if word in (".macro", ".rept", ".irp", ".irpc", ".rep"):
+                    i = self.collect(lines, i, word)[1]
+                continue
+            if word in (".macro", ".rept", ".rep", ".irp", ".irpc"):
+                body, i2 = self.collect(lines, i, word)
+                self.start_block(word, line, body, filename, first_line + i)
+                i = i2
+                continue
+            self.statement(line)
+
+    def collect(self, lines, i, opener):
+        """The body lines up to the matching .endm/.endr; returns (body, next index)."""
+        depth, body = 1, []
+        starts = (".macro",) if opener == ".macro" else (".rept", ".rep", ".irp", ".irpc")
+        end = ".endm" if opener == ".macro" else ".endr"
+        while i < len(lines):
+            w = lines[i].split(None, 1)[0].lower() if lines[i].strip() else ""
+            if w in starts:
+                depth += 1
+            elif w == end or (opener == ".macro" and w == ".endmacro"):
+                depth -= 1
+                if depth == 0:
+                    return body, i + 1
+            body.append(lines[i])
+            i += 1
+        raise AsmError(f"{self.loc}: missing {end}")
+
+    def start_block(self, word, line, body, filename, lineno):
+        rest = line.split(None, 1)[1] if len(line.split(None, 1)) > 1 else ""
+        if word == ".macro":
+            name, *params = [p for p in re.split(r"[,\s]+", rest.strip()) if p]
+            defaults, plist = {}, []
+            for p in params:
+                pn, _, dv = p.partition("=")
+                pn = pn.split(":")[0]
+                plist.append(pn)
+                if dv:
+                    defaults[pn] = dv
+            self.macros[name] = (plist, defaults, body)
+            return
+        if word in (".rept", ".rep"):
+            n = self.const_expr(rest, "repeat count")
+            for _ in range(max(n, 0)):
+                self.run(body, filename, lineno)
+            return
+        args = split_args(rest)
+        var = args[0]
+        items = args[1:] if word == ".irp" else list(args[1] if len(args) > 1 else "")
+        for it in items:
+            sub = [re.sub(r"\\" + re.escape(var) + r"(?![A-Za-z0-9_])", it.replace("\\", "\\\\"), ln) for ln in body]
+            self.run(sub, filename, lineno)
+
+    def expand_macro(self, name, argtext):
+        plist, defaults, body = self.macros[name]
+        args = [a for a in split_args(argtext, ",") if a != ""] if argtext.strip() else []
+        if len(args) == 1 and " " in args[0] and len(plist) > 1 and not args[0].startswith('"'):
+            args = args[0].split()
+        values = dict(defaults)
+        for k, a in enumerate(args):
+            if "=" in a and a.split("=", 1)[0] in plist:
+                key, _, v = a.partition("=")
+                values[key] = v
+            elif k < len(plist):
+                values[plist[k]] = a
+            else:
+                raise AsmError(f"{self.loc}: too many arguments for macro {name}")
+        self.counter += 1
+        inst = self.counter
+
+        def sub(m):
+            tok = m.group(1)
+            if tok == "()":
+                return ""
+            if tok == "@":
+                return str(inst)
+            return values.get(tok, "")
+        lines = [SUBST.sub(sub, ln) for ln in body]
+        self.run(lines, self.loc.rsplit(":", 1)[0], int(self.loc.rsplit(":", 1)[1]))
+
+    # -- one statement -------------------------------------------------------------------------------------
+    def statement(self, line):
+        text = line.strip()
+        if not text:
+            return
+        active = not self.cond or self.cond[-1][0]
+        if active:
+            while True:
+                m = LABEL.match(text)
+                if not m or text.startswith("."+"if"):
+                    break
+                self.label(m.group(1))
+                text = text[m.end():].strip()
+            if not text:
+                return
+        word = text.split(None, 1)[0]
+        rest = text[len(word):].strip()
+        lw = word.lower()
+        if lw.startswith((".if", ".else", ".endif", ".elseif")):
+            return self.conditional(lw, rest)
+        if not active:
+            return
+        if text == "}":
+            return self.close_block()
+        if text.startswith("}") and re.fullmatch(r"\}\s*else\s*\{", text):
+            raise AsmError(f"{self.loc}: else blocks are not supported")
+        if word in self.macros:
+            return self.expand_macro(word, rest)
+        if word.startswith("."):
+            return self.directive(lw, rest)
+        self.instruction(text)
+
+    def conditional(self, w, rest):
+        if w == ".endif":
+            if not self.cond:
+                raise AsmError(f"{self.loc}: .endif without .if")
+            self.cond.pop()
+            return
+        parent = not self.cond or self.cond[-1][0]
+        if w in (".else", ".elseif"):
+            if not self.cond:
+                raise AsmError(f"{self.loc}: {w} without .if")
+            _, taken, par = self.cond.pop()
+            if w == ".else":
+                self.cond.append([par and not taken, True, par])
+            else:
+                ok = par and not taken and self.truth(".if", rest)
+                self.cond.append([ok, taken or ok, par])
+            return
+        ok = parent and self.truth(w, rest)
+        self.cond.append([ok, ok, parent])
+
+    def truth(self, w, rest):
+        if w == ".ifdef" or w == ".ifndef":
+            s = self.syms.get(rest.strip())
+            d = (s is not None and s.kind != "undef") or rest.strip() in self.macros
+            return d if w == ".ifdef" else not d
+        if w in (".ifc", ".ifnc"):
+            a = split_args(rest)
+            eq = len(a) == 2 and a[0] == a[1]
+            return eq if w == ".ifc" else not eq
+        if w in (".ifb", ".ifnb"):
+            blank = not rest.strip()
+            return blank if w == ".ifb" else not blank
+        v = self.const_expr(rest, "condition") if rest.strip() else 0
+        return {".if": v != 0, ".ifne": v != 0, ".ifeq": v == 0, ".ifge": v >= 0, ".ifgt": v > 0,
+                ".ifle": v <= 0, ".iflt": v < 0}[w]
+
+    # -- directives ----------------------------------------------------------------------------------------
+    def directive(self, d, rest):
+        fn = getattr(self, "d_" + d[1:].replace(".", "_"), None)
+        if fn is None:
+            raise AsmError(f"{self.loc}: unknown directive {d}")
+        fn(rest)
+
+    def add(self, item):
+        if self.cur.type == elf.SHT_NOBITS and isinstance(item, (Data, Raw, Insn, Leb)):
+            raise AsmError(f"{self.loc}: can't emit initialised data into the NOBITS section {self.cur.name}")
+        item.loc = self.loc
+        self.cur.items.append(item)
+
+    # sections
+    def d_text(self, rest):
+        self.switch(".text")
+
+    def d_data(self, rest):
+        self.switch(".data")
+
+    def d_bss(self, rest):
+        self.switch(".bss")
+
+    def d_rodata(self, rest):
+        self.switch(".rodata")
+
+    def d_section(self, rest, push=False):
+        args = split_args(rest)
+        name = args[0].strip('"') if args[0].startswith('"') else args[0]
+        if push:
+            self.stack.append(self.cur)
+        flags_s, type_s = None, None
+        if len(args) > 1 and args[1]:
+            flags_s = args[1].strip('"')
+        if len(args) > 2 and args[2]:
+            type_s = args[2].lstrip("@%")
+        if flags_s is None:
+            exact = {".text": None, ".data": None, ".bss": None, ".rodata": None}
+            if name in DEFAULT_SECTIONS or name in (".init", ".fini"):
+                if name in (".init", ".fini"):
+                    self.switch(name, elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_EXECINSTR)
+                else:
+                    self.switch(name)
+            else:
+                t = 7 if name.startswith(".note") else elf.SHT_PROGBITS
+                self.switch(name, t, 0)
+            return
+        flags = 0
+        for ch in flags_s:
+            if ch not in SECTION_FLAGS:
+                raise AsmError(f"{self.loc}: unknown section flag {ch!r}")
+            flags |= SECTION_FLAGS[ch]
+        typ = SECTION_TYPES.get(type_s, elf.SHT_PROGBITS) if type_s else elf.SHT_PROGBITS
+        if type_s and type_s not in SECTION_TYPES:
+            raise AsmError(f"{self.loc}: unknown section type {type_s}")
+        entsize = 0
+        if flags & elf.SHF_MERGE:
+            if len(args) < 4:
+                raise AsmError(f"{self.loc}: mergeable section needs an entry size")
+            entsize = self.const_expr(args[3], "entry size")
+        sec = self.switch(name, typ, flags, entsize)
+        if name in self.sections and sec.flags != flags and False:
+            raise AsmError(f"{self.loc}: conflicting section flags for {name}")
+
+    def d_pushsection(self, rest):
+        self.d_section(rest, push=True)
+
+    def d_popsection(self, rest):
+        if not self.stack:
+            raise AsmError(f"{self.loc}: .popsection without corresponding .pushsection")
+        self.cur = self.stack.pop()
+
+    def d_previous(self, rest):
+        if self.stack:
+            self.cur = self.stack.pop()
+
+    def d_subsection(self, rest):
+        pass
+
+    # symbol attributes
+    def _each_name(self, rest):
+        for n in split_args(rest):
+            if n:
+                yield self.sym(n)
+
+    def d_globl(self, rest):
+        for s in self._each_name(rest):
+            s.bind, s.declared = elf.STB_GLOBAL, True
+
+    d_global = d_globl
+
+    def d_weak(self, rest):
+        for s in self._each_name(rest):
+            s.bind, s.declared = elf.STB_WEAK, True
+
+    def d_local(self, rest):
+        for s in self._each_name(rest):
+            s.bind = elf.STB_LOCAL
+
+    def d_hidden(self, rest):
+        for s in self._each_name(rest):
+            s.other = 2
+
+    def d_protected(self, rest):
+        for s in self._each_name(rest):
+            s.other = 3
+
+    def d_internal(self, rest):
+        for s in self._each_name(rest):
+            s.other = 1
+
+    def d_extern(self, rest):
+        pass
+
+    def d_type(self, rest):
+        name, _, t = rest.partition(",")
+        t = t.strip().lstrip("@%").strip()
+        if t not in SYMBOL_TYPES:
+            raise AsmError(f"{self.loc}: unknown symbol type {t!r}")
+        self.sym(name.strip()).type = SYMBOL_TYPES[t]
+
+    def d_size(self, rest):
+        name, _, e = rest.partition(",")
+        self.sym(name.strip()).size_node = self.parse_expr(e)
+
+    def d_file(self, rest):
+        if rest.strip().startswith('"'):
+            if self.file_name is None:
+                self.file_name = parse_string(rest).decode()
+
+    def d_ident(self, rest):
+        sec = self.sections.get(".comment")
+        if sec is None:
+            saved = self.cur
+            sec = self.switch(".comment", elf.SHT_PROGBITS, elf.SHF_MERGE | elf.SHF_STRINGS, 1)
+            self.cur = saved
+            sec.items.append(Raw(b"\0"))
+        sec.items.append(Raw(parse_string(rest) + b"\0"))
+
+    def d_weakref(self, rest):
+        pass
+
+    def d_line(self, rest):
+        pass
+
+    def d_end(self, rest):
+        self.stopped = True
+
+    def d_error(self, rest):
+        raise AsmError(f"{self.loc}: {parse_string(rest).decode() if rest.strip().startswith(chr(34)) else rest}")
+
+    def d_warning(self, rest):
+        self.warnings.append(f"{self.loc}: warning: {rest}")
+
+    def d_abort(self, rest):
+        raise AsmError(f"{self.loc}: .abort detected")
+
+    def d_comm(self, rest):
+        a = split_args(rest)
+        s = self.sym(a[0])
+        size = self.const_expr(a[1], "size")
+        align = self.const_expr(a[2], "alignment") if len(a) > 2 else 1
+        s.common = (size, align)
+        s.bind, s.declared, s.kind = elf.STB_GLOBAL, True, "abs"
+        s.kind = "undef"
+        s.type = elf.STT_OBJECT
+
+    def d_lcomm(self, rest):
+        a = split_args(rest)
+        if len(a) > 2:
+            raise AsmError(f"{self.loc}: alignment not supported on this target")
+        s = self.sym(a[0])
+        size = self.const_expr(a[1], "size")
+        saved = self.cur
+        self.switch(".bss")
+        self.define_label(s)
+        s.type = elf.STT_OBJECT
+        s.size_node = ("num", size)
+        self.add(Space(("num", size), 1, None, self.loc))
+        self.cur = saved
+
+    def d_equ(self, rest):
+        name, _, e = rest.partition(",")
+        name = name.strip()
+        s = self.sym(name)
+        if s.kind in ("label",):
+            raise AsmError(f"{self.loc}: symbol {name} is already defined")
+        node = self.parse_expr(e)
+        pure = self.is_pure(node)
+        try:
+            sym, v = self.ev(node, self.loc, provisional=True)
+        except AsmError:
+            sym, v = ..., 0
+        if sym is None:
+            s.kind, s.value, s.pure = "abs", v, pure
+        else:
+            s.kind, s.node, s.pure = "alias", node, False
+
+    d_set = d_equ
+    d_equiv = d_equ
+
+    # data
+    def _data(self, rest, width):
+        for a in split_args(rest):
+            if a == "":
+                raise AsmError(f"{self.loc}: missing expression in data directive")
+            self.add(Data(width, self.parse_expr(a), self.loc))
+
+    def d_byte(self, rest):
+        self._data(rest, 1)
+
+    def d_short(self, rest):
+        self._data(rest, 2)
+
+    d_2byte = d_short
+
+    def d_long(self, rest):
+        self._data(rest, 4)
+
+    d_int = d_long
+    d_4byte = d_long
+
+    def d_quad(self, rest):
+        self._data(rest, 8)
+
+    d_8byte = d_quad
+
+    def _float(self, rest, fmt):
+        for a in split_args(rest):
+            try:
+                v = float(a)
+            except ValueError:
+                raise AsmError(f"{self.loc}: bad floating-point number {a!r}") from None
+            self.add(Raw(struct.pack("<" + fmt, v)))
+
+    def d_float(self, rest):
+        self._float(rest, "f")
+
+    d_single = d_float
+
+    def d_double(self, rest):
+        self._float(rest, "d")
+
+    def d_ascii(self, rest, zero=False):
+        for a in split_args(rest):
+            self.add(Raw(parse_string(a) + (b"\0" if zero else b"")))
+
+    def d_asciz(self, rest):
+        self.d_ascii(rest, True)
+
+    d_string = d_asciz
+
+    def d_uleb128(self, rest):
+        for a in split_args(rest):
+            self.add(Leb(self.parse_expr(a), False, self.loc))
+
+    def d_sleb128(self, rest):
+        for a in split_args(rest):
+            self.add(Leb(self.parse_expr(a), True, self.loc))
+
+    def d_space(self, rest):
+        a = split_args(rest)
+        self.add(Space(self.parse_expr(a[0]), 1, self.parse_expr(a[1]) if len(a) > 1 else None, self.loc, True))
+
+    d_skip = d_space
+
+    def d_zero(self, rest):
+        self.add(Space(self.parse_expr(rest), 1, None, self.loc, True))
+
+    def d_fill(self, rest):
+        a = split_args(rest)
+        size = self.const_expr(a[1], "size") if len(a) > 1 else 1
+        value = self.parse_expr(a[2]) if len(a) > 2 else ("num", 0)
+        self.add(Space(self.parse_expr(a[0]), min(size, 8) if size else 1, value, self.loc))
+
+    def _align(self, rest, power):
+        a = split_args(rest)
+        n = self.const_expr(a[0], "alignment")
+        boundary = (1 << n) if power else n
+        if boundary <= 0 or boundary & (boundary - 1):
+            raise AsmError(f"{self.loc}: alignment must be a power of 2")
+        fill = self.const_expr(a[1], "fill") & 0xFF if len(a) > 1 and a[1] else 0
+        maxskip = self.const_expr(a[2], "max skip") if len(a) > 2 and a[2] else None
+        self.cur.align = max(self.cur.align, boundary)
+        self.add(Align(boundary, fill, maxskip, self.loc))
+
+    def d_align(self, rest):
+        self._align(rest, False)
+
+    d_balign = d_align
+    d_balignw = d_align
+    d_balignl = d_align
+
+    def d_p2align(self, rest):
+        self._align(rest, True)
+
+    d_p2alignw = d_p2align
+    d_p2alignl = d_p2align
+
+    def d_org(self, rest):
+        a = split_args(rest)
+        fill = self.const_expr(a[1], "fill") & 0xFF if len(a) > 1 else 0
+        self.add(Org(self.parse_expr(a[0]), fill, self.loc))
+
+    def _find(self, name):
+        base = os.path.dirname(self.cur_file) or "."
+        for d in [base, *self.include, "."]:
+            p = os.path.join(d, name)
+            if os.path.exists(p):
+                return p
+        return None
+
+    def d_incbin(self, rest):
+        a = split_args(rest)
+        name = parse_string(a[0]).decode()
+        p = self._find(name)
+        if p is None:
+            raise AsmError(f"{self.loc}: Could not find incbin file '{name}'")
+        data = open(p, "rb").read()
+        skip = self.const_expr(a[1], "skip") if len(a) > 1 else 0
+        count = self.const_expr(a[2], "count") if len(a) > 2 else None
+        data = data[skip:] if count is None else data[skip:skip + count]
+        self.add(Raw(data))
+
+    def d_include(self, rest):
+        name = parse_string(rest).decode()
+        p = self._find(name)
+        if p is None:
+            raise AsmError(f"{self.loc}: Could not find include file '{name}'")
+        saved = self.cur_file
+        self.cur_file = p
+        self.run(strip_comments(open(p).read()).split("\n"), p, 1)
+        self.cur_file = saved
+
+
+def assemble_source(text, filename="<input>", include=(), tab=None):
+    """Assemble preprocessed source text; returns the ELF object as bytes."""
+    a = Assembler(tab, include)
+    a.assemble(text, filename)
+    return a.finish()
+
+
+def preprocess(path, include=(), defines=()):
+    """Run the system C preprocessor (/usr/bin/cpp) over an assembly file (.S) and return its output."""
+    cmd = ["/usr/bin/cpp", "-P", "-x", "assembler-with-cpp"]
+    for d in include:
+        cmd += ["-I", str(d)]
+    for d in defines:
+        cmd += ["-D", d]
+    r = subprocess.run(cmd + [str(path)], capture_output=True, text=True)
+    if r.returncode:
+        raise AsmError(f"cpp failed: {r.stderr.strip()}")
+    return r.stdout
+
+
+def main(args):
+    """Entry for `python3 -m pi32v2isa as IN.s -o OUT.o [--cpp] [-I DIR] [-D NAME[=VALUE]]`."""
+    path = args.input
+    include = [os.path.dirname(os.path.abspath(path))] + list(args.include)
+    if args.cpp or path.endswith(".S"):
+        text = preprocess(path, args.include, args.define)
+    else:
+        text = sys.stdin.read() if path == "-" else open(path).read()
+    try:
+        data = assemble_source(text, path, include)
+    except AsmError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    out = args.output or (os.path.splitext(os.path.basename(path))[0] + ".o")
+    with open(out, "wb") as f:
+        f.write(data)
+    return 0

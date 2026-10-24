@@ -45,6 +45,12 @@ def cmd_stats(args):
     return 0
 
 
+def cmd_as(args):
+    from . import asm
+
+    return asm.main(args)
+
+
 def cmd_oracle(args):
     from . import oracle
 
@@ -104,6 +110,16 @@ def cmd_oracle(args):
                 print(d)
         print(", ".join(f"{n} {k}" for k, n in total.items()) or "no code found")
         return 1 if total["different"] or total["not in table"] else 0
+    if args.action == "asmcompare":
+        t = table.load(args.table)
+        bad = 0
+        for path in args.items:
+            diffs = oracle.asmcompare(o, path, args.flag, args.include, args.define, t)
+            print(f"{path}: " + ("identical" if not diffs else f"{len(diffs)} differences"))
+            for d in diffs[:args.show * 4]:
+                print(f"  {d}")
+            bad += bool(diffs)
+        return 1 if bad else 0
     # confirm
     t = table.load(args.table)
     ids = args.items or [i.id for i in t.insns if i.status != "confirmed"]
@@ -143,14 +159,23 @@ def main(argv=None):
     d.add_argument("--base", type=lambda s: int(s, 0), default=0, help="address of the first byte")
     d.set_defaults(func=cmd_disasm)
     sub.add_parser("stats", help="count entries by status").set_defaults(func=cmd_stats)
+    a = sub.add_parser("as", help="assemble a pi32v2 source file into an ELF object (docs/ASSEMBLER.md)")
+    a.add_argument("input", help="assembly source (- for stdin); .S files go through cpp")
+    a.add_argument("-o", "--output", help="object file to write (default: the input's name with .o)")
+    a.add_argument("--cpp", action="store_true", help="run /usr/bin/cpp over the input first")
+    a.add_argument("-I", dest="include", action="append", default=[], help="include/incbin directory (also passed to cpp)")
+    a.add_argument("-D", dest="define", action="append", default=[], help="macro definition for cpp")
+    a.set_defaults(func=cmd_as)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm"])
-    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids")
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare"])
+    o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids; asmcompare: FILE.S (or .s, .c) [more files]")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
     o.add_argument("--write", action="store_true", help="confirm: record passing entries in the table")
     o.add_argument("--show", type=int, default=8, help="confirm: problems to show per entry")
     o.add_argument("--flag", action="append", default=[], help="cc: extra clang flag, e.g. --flag=-O2")
+    o.add_argument("-I", dest="include", action="append", default=[], help="asmcompare: include directory")
+    o.add_argument("-D", dest="define", action="append", default=[], help="asmcompare: cpp macro definition")
     o.add_argument("--split", type=lambda v: int(v, 0), default=0, help="fit: bits to group the words by")
     o.set_defaults(func=cmd_oracle)
     args = p.parse_args(argv)
