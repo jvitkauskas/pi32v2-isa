@@ -41999,10 +41999,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42037,7 +42037,7 @@ encoding = ["1111010100111000", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42075,10 +42075,10 @@ encoding = ["1110010100111000", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42113,7 +42113,7 @@ encoding = ["1111010100111000", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42151,10 +42151,10 @@ encoding = ["1110010100111001", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42189,7 +42189,7 @@ encoding = ["1111010100111001", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42227,10 +42227,10 @@ encoding = ["1110010100111001", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42265,7 +42265,7 @@ encoding = ["1111010100111001", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42303,10 +42303,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42341,7 +42341,7 @@ encoding = ["1111010100111010", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42379,10 +42379,10 @@ encoding = ["1110010100111010", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42417,7 +42417,7 @@ encoding = ["1111010100111010", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42455,10 +42455,10 @@ encoding = ["1110010100111011", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42493,7 +42493,7 @@ encoding = ["1111010100111011", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42531,10 +42531,10 @@ encoding = ["1110010100111011", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42569,7 +42569,7 @@ encoding = ["1111010100111011", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42607,10 +42607,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42645,7 +42645,7 @@ encoding = ["1111010100111100", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42683,10 +42683,10 @@ encoding = ["1110010100111100", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42721,7 +42721,7 @@ encoding = ["1111010100111100", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42759,10 +42759,10 @@ encoding = ["1110010100111101", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42797,7 +42797,7 @@ encoding = ["1111010100111101", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
@@ -42835,10 +42835,10 @@ encoding = ["1110010100111101", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."
+sources = ["oracle", "hardware"]
+notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only. [hardware] Every condition value (each setting of the ignored bits) of this form reset the FM-1 at once, one case per run, with the runner unchanged; a likely illegal-instruction trap with no handler in download mode (hw/fm1-2026-10-24, README, unnamed-conditions.json). Not for use."
 asm_no_syntax = true
 
 [[insn.example]]
@@ -42873,7 +42873,7 @@ encoding = ["1111010100111101", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Objdump prints a vector comparison with an unnamed condition; hardware behavior is unknown."
+summary = "Objdump prints a vector comparison with an unnamed condition; the plain form resets the FM-1 (see the plain entry); this twin was not run."
 status = "confirmed"
 sources = ["oracle"]
 notes = "Layout from the complete oracle second-word sweeps of the E and F vector-compare first words. These condition codes print ?? and have no known assembler syntax. Ignored condition bits express identical decoder text only."

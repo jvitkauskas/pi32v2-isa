@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT-0
 """Generate hardware test batches: RAM images for tools/hwtest/runner.S with test cases from the table.
 
-    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|fpu|2] [--per-entry 12] [--batch 180] [--seed 1]
+    python3 tools/hwtest/gen.py OUTDIR [--wave selftest|1|fpu|2|3] [--per-entry 12] [--batch 180] [--seed 1]
                                  [--first-slot 0x01C28000]
 
 Each case runs one instruction (its exact encoding, as raw bytes) with all sixteen registers and the low four
@@ -53,9 +53,10 @@ def risky(i):
     return i.id.startswith("div.") or "instrev3" in i.requires or "instrev3" in i.decode_requires
 
 
-def runnable(i):
-    """Register-only forms the runner can execute blind: no memory, stack, sp, special registers or control flow."""
-    if i.status != "confirmed" or i.group not in SAFE_GROUPS or i.id.endswith(".p") or i.asm_no_syntax:
+def runnable(i, no_syntax=False):
+    """Register-only forms the runner can execute blind: no memory, stack, sp, special registers or control flow.
+    Forms JieLi's assembler cannot write (asm_no_syntax) only with no_syntax (wave 3)."""
+    if i.status != "confirmed" or i.group not in SAFE_GROUPS or i.id.endswith(".p") or i.asm_no_syntax != no_syntax:
         return False
     if i.body or i.block or any(f.kind not in SAFE_KINDS for f in i.fields.values()):
         return False
@@ -64,9 +65,12 @@ def runnable(i):
 
 def select(tab, wave):
     """selftest: the runner's own check; 1: integer and DSP forms; fpu: the floating-point forms (the FPU may need
-    enabling first); 2: forms that may trap or be missing (division, instruction revision 3)."""
+    enabling first); 2: forms that may trap or be missing (division, instruction revision 3); 3: register-only
+    forms objdump prints but the assembler cannot write (unnamed `??` conditions)."""
     if wave == "selftest":
         return [tab.by_id(x) for x in ("nop", "mov.rr", "add.rrr", "li.u8", "lsl.rri", "sub.rrr")]
+    if wave == "3":
+        return [i for i in tab.insns if runnable(i, no_syntax=True)]
     pool = [i for i in tab.insns if runnable(i)]
     if wave == "2":
         return [i for i in pool if risky(i)]
@@ -93,17 +97,24 @@ def make_cases(tab, insns, per_entry, rng):
 
 
 def cases_from_file(tab, path):
-    """Cases written by hand: a JSON list of {"id", "values" (raw field values), "in" (16 registers), "flags"}."""
+    """Cases written by hand: a JSON list of {"id", "values" (raw field values), "in" (16 registers), "flags"},
+    optionally "bytes" (hex) to run exactly those bytes, which must decode as the entry with those values."""
     cases = []
     for c in json.loads(Path(path).read_text()):
         i = tab.by_id(c["id"])
-        if not runnable(i):
+        if not (runnable(i) or runnable(i, no_syntax=True)):
             raise SystemExit(f"{i.id}: not a form the runner can execute blind")
         values = {f: c["values"][f] for f in i.fields}
         regs = [int(v, 0) if isinstance(v, str) else v for v in c["in"]]
         if len(regs) != 16:
             raise SystemExit(f"{i.id}: 'in' needs 16 registers")
-        cases.append({"id": i.id, "values": values, "bytes": codec.encode(i, values).hex(),
+        data = codec.encode(i, values)
+        if "bytes" in c:                # exact bytes, e.g. to set bits the entry ignores ('-')
+            data = bytes.fromhex(c["bytes"].replace(" ", ""))
+            got = codec.decode(tab, data)
+            if not got or got[0].id != i.id or codec.fields_of(i, data) != values:
+                raise SystemExit(f"{i.id}: bytes {data.hex()} do not decode as this entry with these values")
+        cases.append({"id": i.id, "values": values, "bytes": data.hex(),
                       "text": codec.format(i, values), "in": regs, "flags": c.get("flags", 0) & 0xF})
     return cases
 
@@ -160,7 +171,7 @@ SECTIONS {{
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("outdir", type=Path)
-    p.add_argument("--wave", default="1", choices=["selftest", "1", "fpu", "2"])
+    p.add_argument("--wave", default="1", choices=["selftest", "1", "fpu", "2", "3"])
     p.add_argument("--cases", type=Path, help="run these cases (JSON, see cases_from_file) instead of a wave; "
                                               "the batches are named after the file")
     p.add_argument("--flag-mask", type=lambda v: int(v, 0), default=0xF,

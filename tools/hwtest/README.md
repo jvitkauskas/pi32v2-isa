@@ -28,6 +28,7 @@ for the table's meanings that JieLi's tools cannot give (docs/GAPS.md, "Meaning"
 | `1` | 306 register-only integer forms: arithmetic, logic, shifts, multiplies, bit operations, DSP, constants, register moves | none expected: no memory, stack, `sp`, special registers or control flow |
 | `fpu` | 24 floating-point forms | the FPU may need enabling before use (Felucca's start-up code may do it); if they hang, that is the finding |
 | `2` | 22 forms: integer division, `div.f`, and the instruction-revision-3 forms (`popcnt`, `sum`, `sat8`, `vsat16`, `unpack4`) | division by zero may trap; this chip may not implement revision 3 |
+| `3` | 12 vector compares with unnamed (`??`) conditions, which JieLi's assembler cannot write | **reset the FM-1** (hw/fm1-2026-10-24): the unit drops off USB and boots its app; put it back with `m-flasher download-mode` |
 
 Each case sets the low four `psr` bits (the condition flags, [COMPILER.md](../../docs/COMPILER.md)) from its inputs.
 If the self-test hangs, try `--flag-mask 0`, which leaves `psr` alone.

@@ -73,3 +73,14 @@ same unit without a hang or trap. The cases targeted what the 12 random cases pe
 register shift-count width and negative counts, the `(usat,x2)` subtraction boundary, the clamping limits of the
 saturating and multiply-accumulate forms, the carry of `madd`/`msub` on the 64-bit pair, and whether the three
 `sum.acc.*.rrr` encodings are one operation. `python3 tools/hwtest/check.py followup-r.jsonl` matches on every case.
+
+## Unnamed conditions: the chip resets
+
+Wave 3 (`gen.py --wave 3`) runs the twelve register-only vector compares objdump prints with `??` (`all`, `any`,
+`cmp`; conditions 4..7 and 14..15; `.rrr.v` and `.ppp.v`). Its first batch reset the unit: USB dropped during
+the `FC60` command and the unit came back as the normal FM-1 app (`4c4a:c755`). Run one form per batch, every
+form reset it; run one case per batch with every value of the condition bits (`unnamed-conditions.json`, 36
+cases built with `gen.py --cases ... --batch 1`, using its `bytes` key to set the ignored bits), every case
+reset it. Each batch ran two `nop` cases first, and the self-test, run again between, was still 38/38. The unit
+was put back in download mode with `m-flasher download-mode` (USB MIDI) after each reset. No results file:
+nothing came back. Most likely an illegal-instruction trap, which download mode does not handle.

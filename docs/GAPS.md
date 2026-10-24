@@ -21,8 +21,9 @@ Still open on the encoding side:
   `decode_requires = ["instrev3"]`. Other CPU models (`-mcpu=r1`, `r2`, `r5`, the rev3 models) were not swept.
 
 - Forms objdump prints with `??` as the condition, and four floating-point conditions (`!=`, `u==`, `uno`,
-  `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`; whether the
-  hardware treats them as instructions is unknown.
+  `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`. On the FM-1 the
+  register-only ones (the `??` vector compares) reset the chip ([hw](../hw/fm1-2026-10-24/README.md)); the
+  branch and `if` forms were not run.
 - 16-bit words were swept completely; 32-bit and 48-bit second and third words outside E000-FFFF do not
   exist (every first word there is 16-bit).
 
@@ -31,25 +32,33 @@ Still open on the encoding side:
 Priorities from real code [fm1-firmware-stats]: one FM-1 factory firmware uses 562 of the table's forms; 97%
 of its image decodes, and the undecodable words inside code are data (text, small constants), apart from one
 that decodes only with `+instrev3`. Forms it uses whose meaning is still open, most used first: `sti.r`,
-`shl3.rri` (`<<<`, 514 uses), `lockclr`, `lockset`, `cli.r`, `callns.r`, `gotoss.xl`, `btbclr`, then 86 DSP forms
-led by `smin`/`umin`/`smax`, halfword add/sub and saturating multiplies. M-VAVE's 016 package (2026-10-21)
+`lockclr`, `lockset`, `cli.r`, `callns.r`, `gotoss.xl`, `btbclr` (`shl3` and the 86 DSP forms it uses are now
+settled on hardware). M-VAVE's 016 package (2026-10-21)
 gives the same picture: 598 forms used, all decoding as objdump does at `-mcpu=r3`; it uses the FPU far more
 (5090 FPU instructions, `madd.f.rrr` 111 times, which JieLi's compiler never emits), and with `+instrev3` it
 contains parallel twins of revision-3 forms that were then missing (`unpack4 ... #`, `sum(... *|*|*|* ...) #`; now in
 the table). Both images now read the same with this repo's objdump as with JieLi's, with and without
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
-`confirmed` covers encoding and syntax only. The compiler showed what many instructions do (summaries and
-notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
+`confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
+source `compiler`) and from the FM-1 itself (source `hardware`, [hw/fm1-2026-10-24](../hw/fm1-2026-10-24/README.md)):
+every register-only form (353, including the FPU, division and the revision-3 forms) ran on the chip, and
+executable models of all but `copex.ppi` (`tools/hwtest/semantics/`) match every case, flags included. The
+`psr` flags (N, Z, C, V in bits 3..0, and which forms write which) are in [COMPILER.md](COMPILER.md). Still open:
 
-- Instructions the compiler never emits: `<<<` (`shl3`), `<c>` (`cycc`), the register-count `rep`, `ifs2ns`,
-  `gotoss`, `ld.w.npc`, and the whole DSP/SIMD group (about 450 entries still say "meaning unknown").
-- Edge cases: shift counts of 32 or more, divide by zero, `abs` of 0x80000000, NaN in `fmin`/`fmax`.
-- Flags: which `psr` bits are sign, overflow and zero; which instructions write them.
-- `callns`, `rtns`, `rtss`, `rthw`, `npc`, `sevl`, `sevg`, `wfe`, `trigger`, `cli R` / `sti R`; special
-  registers `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
-- Floating point: format (IEEE single assumed), rounding of the plain operations, exceptions.
-- All of this needs tests on hardware (an FM-1 running small test programs) or other evidence.
+- Forms the runner cannot run blind, so untested on hardware: memory, stack and `sp` forms, branches
+  (including the flag branches `ifeq`..`ifle`, `bc.*`), `rep` and `if` blocks, parallel twins (`#`), special
+  registers and the control forms `callns`, `rtns`, `rtss`, `rthw`, `npc`, `sevl`, `sevg`, `wfe`, `trigger`,
+  `cli R` / `sti R`, `lockset` / `lockclr`; special registers `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
+  They need a runner that sets up memory and control state.
+- `copex.ppi`: depends on something besides its operands (identical inputs gave different results in mode
+  15); internal state or history is suspected ([report](../hw/report-q.md)).
+- Instruction revision 3 on this chip: it is not implemented as such. `popcnt.rr` does nothing, and the other
+  revision-3 forms (`popcnt.r_pair`, `sat8.rr`, `vsat16`, `unpack4`, `sum` with `usat`/`ssat`/`msat`) behave
+  exactly as an older form whose encoding differs by one selector bit. What they do on a revision-3 core is
+  unknown.
+- Unnamed (`??`) conditions of the vector compares reset the chip; the `??` branch and `if` forms were not run.
+- A few edges no case reached: the 32-bit clamp of `madd.mul2.prhrhi.{ssat,usat}`.
 
 ## ABI and object files
 
