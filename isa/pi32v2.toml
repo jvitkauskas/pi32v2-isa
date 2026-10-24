@@ -6619,8 +6619,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Unsigned 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both unsigned."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned long long)a * b` -> `r1_r0 = r1 * r0 (u)`; also the base of a 64 x 64 -> 64 multiply (one `mul.u.prr` plus two `mul.rrr`/`mul.rr` cross products)."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(unsigned long long)a * b` -> `r1_r0 = r1 * r0 (u)`; also the base of a 64 x 64 -> 64 multiply (one `mul.u.prr` plus two `mul.rrr`/`mul.rr` cross products). Hardware (hw/fm1-2026-10-24): all 12 cases match. The full 64-bit product, low word in the even register; psr unchanged in every case (unlike madd/msub). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the full product on the edge operands (0xffffffff and 0x80000000 squares) with psr unchanged."
 
 [[insn.example]]
 bytes = "f8 e1 00 00"
@@ -6655,8 +6655,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Signed 32 x 32 -> 64-bit multiply: the register pair rd (odd register = high word) = rs * rt, both signed."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(long long)a * b` -> `r1_r0 = r1 * r0 (s)`; the high word of `((long long)a * b) >> 32` is the odd register; division by a constant (-mllvm -pi32v2-div-expand) uses it for the magic-number multiply."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(long long)a * b` -> `r1_r0 = r1 * r0 (s)`; the high word of `((long long)a * b) >> 32` is the odd register; division by a constant (-mllvm -pi32v2-div-expand) uses it for the magic-number multiply. Hardware (hw/fm1-2026-10-24): all 12 cases match. The full 64-bit product, low word in the even register; psr unchanged in every case (unlike madd/msub). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the full product on the edge operands (0xffffffff and 0x80000000 squares) with psr unchanged."
 
 [[insn.example]]
 bytes = "f8 e1 00 10"
@@ -6691,8 +6691,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Unsigned multiply-accumulate into a pair: p += rs * rt (64-bit sum of an unsigned 32 x 32 product)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc + (unsigned long long)a * b` -> `r1_r0 += r3 * r2 (u)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc + (unsigned long long)a * b` -> `r1_r0 += r3 * r2 (u)`. Hardware (hw/fm1-2026-10-24): all 12 cases match. The 64-bit product (signed or unsigned as printed, taken modulo 2^64) is added with no saturation. psr bit 1 (carry) becomes the carry out of that 64-bit addition; bits 0, 2 and 3 unchanged. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the carry rule on edge accumulators and products (squares of 0xffffffff and 0x80000000, small and 0x7fffffff products)."
 
 [[insn.example]]
 bytes = "fc e1 00 00"
@@ -6727,8 +6727,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Signed multiply-accumulate into a pair: p += rs * rt (64-bit sum of a signed 32 x 32 product)."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc + (long long)a * b` -> `r1_r0 += r3 * r2 (s)`; also the dot-product loop `s += (long long)a[i] * b[i]`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc + (long long)a * b` -> `r1_r0 += r3 * r2 (s)`; also the dot-product loop `s += (long long)a[i] * b[i]`. Hardware (hw/fm1-2026-10-24): all 12 cases match. The 64-bit product (signed or unsigned as printed, taken modulo 2^64) is added with no saturation. psr bit 1 (carry) becomes the carry out of that 64-bit addition; bits 0, 2 and 3 unchanged. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the carry rule on edge accumulators and products (squares of 0xffffffff and 0x80000000, small and 0x7fffffff products)."
 
 [[insn.example]]
 bytes = "fc e1 00 10"
@@ -6763,8 +6763,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Unsigned multiply-subtract from a pair: p -= rs * rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc - (unsigned long long)a * b` -> `r1_r0 -= r3 * r2 (u)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc - (unsigned long long)a * b` -> `r1_r0 -= r3 * r2 (u)`. Hardware (hw/fm1-2026-10-24): all 12 cases match. The 64-bit product (signed or unsigned as printed, taken modulo 2^64) is subtracted with no saturation. psr bit 1 (carry) becomes 1 when there is no borrow (old pair >= the product modulo 2^64), as for sub; bits 0, 2 and 3 unchanged. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the carry rule on edge accumulators and products (squares of 0xffffffff and 0x80000000, small and 0x7fffffff products)."
 
 [[insn.example]]
 bytes = "fe e1 00 00"
@@ -6799,8 +6799,8 @@ fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 summary = "Signed multiply-subtract from a pair: p -= rs * rt."
 status = "confirmed"
-sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc - (long long)a * b` -> `r1_r0 -= r3 * r2 (s)`."
+sources = ["oracle", "compiler", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `acc - (long long)a * b` -> `r1_r0 -= r3 * r2 (s)`. Hardware (hw/fm1-2026-10-24): all 12 cases match. The 64-bit product (signed or unsigned as printed, taken modulo 2^64) is subtracted with no saturation. psr bit 1 (carry) becomes 1 when there is no borrow (old pair >= the product modulo 2^64), as for sub; bits 0, 2 and 3 unchanged. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the carry rule on edge accumulators and products (squares of 0xffffffff and 0x80000000, small and 0x7fffffff products)."
 
 [[insn.example]]
 bytes = "fe e1 00 10"
@@ -6834,10 +6834,10 @@ encoding = ["1110010110-----0", "rrr-ttttssss11-1"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += R *|*|*|* R (u)`: meaning not known beyond the syntax."
+summary = "Four unsigned byte products of rs and rt added to the four 16-bit lanes of pair rd, each lane wrapping modulo 2^16."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane i is byte i (lane 0 = least significant); the four 16-bit products fill the pair rd, lane 0 in the low half of the even register, lane 3 in the high half of the odd one. Lanes did wrap in the cases (no saturation). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "80 e5 0d 00"
@@ -6871,10 +6871,10 @@ encoding = ["1110010110-----1", "rrr-ttttssss11-1"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "multiply"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += R *|*|*|* R (m)`: meaning not known beyond the syntax."
+summary = "Four byte products (rs unsigned, rt signed) added to the four 16-bit lanes of pair rd, each lane wrapping modulo 2^16."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane i is byte i (lane 0 = least significant); the four 16-bit products fill the pair rd, lane 0 in the low half of the even register, lane 3 in the high half of the odd one. Lanes did wrap in the cases (no saturation). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "81 e5 0d 00"
@@ -17607,10 +17607,10 @@ syntax = "{r} = {s} >> {n} (u)"
 encoding = ["1110000111011110", "rrrr00nnsss0nnnn"]
 fields = { r = "gpr", s = "pair", n = "uimm" }
 group = "dsp"
-summary = "Operation printed `R = P >> N (u)`: meaning not known beyond the syntax."
+summary = "Shift the 64-bit pair rs right by the constant n (0..63), logical: the pair is an unsigned 64-bit value, a result above 0xffffffff gives 0xffffffff; the 32-bit result goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. rd may be a register of the source pair. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "de e1 00 00"
@@ -17643,10 +17643,10 @@ syntax = "{r} = {s} >> {n} (s)"
 encoding = ["1110000111011110", "rrrr10nnsss0nnnn"]
 fields = { r = "gpr", s = "pair", n = "uimm" }
 group = "dsp"
-summary = "Operation printed `R = P >> N (s)`: meaning not known beyond the syntax."
+summary = "Shift the 64-bit pair rs right by the constant n (0..63), arithmetic: the pair is a signed 64-bit value, the result is clamped to the signed 32-bit range; the 32-bit result goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. rd may be a register of the source pair. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "de e1 00 08"
@@ -17679,10 +17679,10 @@ syntax = "{r} = {s} >> {t} (u)"
 encoding = ["1110000111011111", "rrrrttttsss00000"]
 fields = { r = "gpr", s = "pair", t = "gpr" }
 group = "dsp"
-summary = "Operation printed `R = P >> R (u)`: meaning not known beyond the syntax."
+summary = "Shift the 64-bit pair rs right by the count in rt, logical: the pair is an unsigned 64-bit value, a result above 0xffffffff gives 0xffffffff; the 32-bit result goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. The count is rt's low 8 bits: counts of 64 up to 255 shift everything out (0 for (u), the sign for (s)); 0x6b = 107 gave 0 where 6 bits would have shifted by 43. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x20, 0x40, 0x41, 0x81, 0xc0, 0xf8, 0x108) confirmed the 8-bit count: bit 8 is ignored and 0x81..0xf8 are large counts, not negative ones; carry for counts of 64 and up is bit 63. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "df e1 00 00"
@@ -17715,10 +17715,10 @@ syntax = "{r} = {s} >> {t} (s)"
 encoding = ["1110000111011111", "rrrrttttsss00001"]
 fields = { r = "gpr", s = "pair", t = "gpr" }
 group = "dsp"
-summary = "Operation printed `R = P >> R (s)`: meaning not known beyond the syntax."
+summary = "Shift the 64-bit pair rs right by the count in rt, arithmetic: the pair is a signed 64-bit value, the result is clamped to the signed 32-bit range; the 32-bit result goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. The count is rt's low 8 bits: counts of 64 up to 255 shift everything out (0 for (u), the sign for (s)); 0x6b = 107 gave 0 where 6 bits would have shifted by 43. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x20, 0x40, 0x41, 0x81, 0xc0, 0xf8, 0x108) confirmed the 8-bit count: bit 8 is ignored and 0x81..0xf8 are large counts, not negative ones; carry for counts of 64 and up is bit 63. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "df e1 01 00"
@@ -18186,10 +18186,10 @@ encoding = ["1110010000010000", "rrrr00nmsssspppp"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh << N`: meaning not known beyond the syntax."
+summary = "Shift half m of rs left (zero fill) by the constant 1..16 (field value 0 means 16); the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A count of 16 gives 0. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "10 e4 00 00"
@@ -18233,10 +18233,10 @@ encoding = ["1110010000010000", "rrrr01nmsssspppp"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh <<< N`: meaning not known beyond the syntax."
+summary = "Shift half m of rs left (saturating: the lane is read as signed and the result clamped to -32768..32767) by the constant 1..16 (field value 0 means 16); the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A count of 16 gives 0x7fff or 0x8000 (a zero lane stays 0). shl3 (`<<<`) is a saturating shift left: 0xb42a <<< 16 = 0x8000, 0x7f80 <<< 14 = 0x7fff, 0xffff <<< 3 = 0xfff8. The id keeps the printed operator. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "10 e4 00 04"
@@ -18280,10 +18280,10 @@ encoding = ["1110010000010000", "rrrr10nmsssspppp"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >> N`: meaning not known beyond the syntax."
+summary = "Shift half m of rs right (logical) by the constant 1..16 (field value 0 means 16); the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A count of 16 gives 0. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "10 e4 00 08"
@@ -18327,10 +18327,10 @@ encoding = ["1110010000010000", "rrrr11nmsssspppp"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >>> N`: meaning not known beyond the syntax."
+summary = "Shift half m of rs right (arithmetic: the sign of the 16-bit lane fills) by the constant 1..16 (field value 0 means 16); the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A count of 16 gives the sign fill (0 or 0xffff). Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "10 e4 00 0c"
@@ -18374,10 +18374,10 @@ encoding = ["111001000001001-", "rrrrttttssssnm00"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh << R`: meaning not known beyond the syntax."
+summary = "Shift half m of rs left (zero fill) by the count in rt; the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Counts above 15 give 0. The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e4 00 00"
@@ -18421,10 +18421,10 @@ encoding = ["111001000001001-", "rrrrttttssssnm01"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh <<< R`: meaning not known beyond the syntax."
+summary = "Shift half m of rs left (saturating: the lane is read as signed and the result clamped to -32768..32767) by the count in rt; the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Counts above 15 give 0x7fff or 0x8000 (a zero lane stays 0). The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts and counts of 128 and up as right shifts; whether bits 8 and up are ignored cannot be seen on this form (the saturated result is the same), lsl/lsr/asr show they are. shl3 (`<<<`) is a saturating shift left: 0xb42a <<< 16 = 0x8000, 0x7f80 <<< 14 = 0x7fff, 0xffff <<< 3 = 0xfff8. The id keeps the printed operator. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e4 01 00"
@@ -18468,10 +18468,10 @@ encoding = ["111001000001001-", "rrrrttttssssnm10"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >> R`: meaning not known beyond the syntax."
+summary = "Shift half m of rs right (logical) by the count in rt; the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Counts above 15 give 0. The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e4 02 00"
@@ -18515,10 +18515,10 @@ encoding = ["111001000001001-", "rrrrttttssssnm11"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh >>> R`: meaning not known beyond the syntax."
+summary = "Shift half m of rs right (arithmetic: the sign of the 16-bit lane fills) by the count in rt; the 16-bit result goes to half n of rd, the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Counts above 15 give the sign fill (0 or 0xffff). The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e4 03 00"
@@ -18656,10 +18656,10 @@ encoding = ["111001000001100-", "rrrr00--ssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R << N (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs left (zero fill) by the same constant 1..16 (field value 0 means 16); the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. A count of 16 gives 0. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "18 e4 00 00"
@@ -18693,10 +18693,10 @@ encoding = ["111001000001100-", "rrrr01--ssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R <<< N (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs left (saturating: the lane is read as signed and the result clamped to -32768..32767) by the same constant 1..16 (field value 0 means 16); the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. A count of 16 gives 0x7fff or 0x8000 (a zero lane stays 0). shl3 (`<<<`) is a saturating shift left: 0xb42a <<< 16 = 0x8000, 0x7f80 <<< 14 = 0x7fff, 0xffff <<< 3 = 0xfff8. The id keeps the printed operator. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "18 e4 00 04"
@@ -18730,10 +18730,10 @@ encoding = ["111001000001100-", "rrrr10--ssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >> N (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs right (logical) by the same constant 1..16 (field value 0 means 16); the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. A count of 16 gives 0. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "18 e4 00 08"
@@ -18767,10 +18767,10 @@ encoding = ["111001000001100-", "rrrr11--ssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 16 } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >>> N (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs right (arithmetic: the sign of the 16-bit lane fills) by the same constant 1..16 (field value 0 means 16); the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. A count of 16 gives the sign fill (0 or 0xffff). Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "18 e4 00 0c"
@@ -18804,10 +18804,10 @@ encoding = ["111001000001101-", "rrrrttttssss--00"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R << R (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs left (zero fill) by the count in rt; the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. Counts above 15 give 0. The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "1a e4 00 00"
@@ -18841,10 +18841,10 @@ encoding = ["111001000001101-", "rrrrttttssss--01"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R <<< R (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs left (saturating: the lane is read as signed and the result clamped to -32768..32767) by the count in rt; the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. Counts above 15 give 0x7fff or 0x8000 (a zero lane stays 0). The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts and counts of 128 and up as right shifts; whether bits 8 and up are ignored cannot be seen on this form (the saturated result is the same), lsl/lsr/asr show they are. shl3 (`<<<`) is a saturating shift left: 0xb42a <<< 16 = 0x8000, 0x7f80 <<< 14 = 0x7fff, 0xffff <<< 3 = 0xfff8. The id keeps the printed operator. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "1a e4 01 00"
@@ -18878,10 +18878,10 @@ encoding = ["111001000001101-", "rrrrttttssss--10"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >> R (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs right (logical) by the count in rt; the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. Counts above 15 give 0. The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "1a e4 02 00"
@@ -18915,10 +18915,10 @@ encoding = ["111001000001101-", "rrrrttttssss--11"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R >>> R (v)`: meaning not known beyond the syntax."
+summary = "Shift both 16-bit halves of rs right (arithmetic: the sign of the 16-bit lane fills) by the count in rt; the two results are the halves of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. (v) = two independent 16-bit lanes. Counts above 15 give the sign fill (0 or 0xffff). The count is the low 8 bits of rt: a register whose low byte was 0x46 shifted everything out (a 6-bit count would have shifted by 6). The follow-up (hw/fm1-2026-10-24/followup-r.jsonl; counts 0x11, 0x40, 0x81, 0xf8, 0x108, 0x80000008) ruled out 6- and 7-bit counts, ignored bits 8 and up, and counts of 128 and up are large counts, not shifts the other way. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "1a e4 03 00"
@@ -19026,10 +19026,10 @@ encoding = ["1110010000100000", "rrr-ttttsss-01--"]
 fields = { r = "pair", s = "pair", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Four-lane operation of a pair and a register (operator printed `+|+|+|+` or similar); meaning unknown beyond the syntax."
+summary = "Add the four unsigned bytes of rt to the four 16-bit lanes of pair rs (byte i to lane i); the lanes, wrapped to 16 bits, go to pair rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A pair holds four 16-bit lanes: lane 0 and 1 are the low and high half of the even register, lane 2 and 3 those of the odd one. One case wrapped a lane past 0xffff; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) wrapped more (saturating instead would have failed 2 of its 3 cases). Before the run the table called it a four-lane operation of a pair and a register, meaning unknown."
 
 [[insn.example]]
 bytes = "20 e4 04 00"
@@ -19100,10 +19100,10 @@ encoding = ["1110010000100000", "rrr-ttttssss001n"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = ["+|+|+|+", "-|-|-|-"] }, t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Four-lane operation of two registers into a pair; meaning unknown beyond the syntax."
+summary = "Four byte-wise sums or differences of rs and rt (bytes unsigned); each result is a 16-bit lane of pair rd (a negative difference is its 16-bit two's complement, 0 - 0x55 = 0xffab)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A pair holds four 16-bit lanes: lane 0 and 1 are the low and high half of the even register, lane 2 and 3 those of the odd one. The sign is the n field (+|+|+|+ or -|-|-|-). Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "20 e4 02 00"
@@ -19142,10 +19142,10 @@ encoding = ["1110010000100000", "rrrrttttssss100-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Four-lane operation of two registers into one; meaning unknown beyond the syntax."
+summary = "Rounding unsigned average per byte: each of the four bytes of rd is (a + b + 1) >> 1 of the matching bytes of rs and rt."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Also what the three revision-3 sum.acc.*.rrr encodings do on this chip. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "20 e4 08 00"
@@ -19895,10 +19895,10 @@ encoding = ["1110010000111--n", "rrrrttttssss0---"]
 fields = { r = "gpr", s = "gpr", t = "gpr", n = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R + R E`: meaning not known beyond the syntax."
+summary = "Saturating 32-bit add: rd = rs + rt clamped to 0..2^32-1 for (usat) or to the signed 32-bit range for (ssat)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "38 e4 00 00"
@@ -19937,10 +19937,10 @@ encoding = ["1110010000111--n", "rrrrttttssss1---"]
 fields = { r = "gpr", s = "gpr", t = "gpr", n = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = R - R E`: meaning not known beyond the syntax."
+summary = "Saturating 32-bit subtract: rd = rs - rt clamped to 0..2^32-1 for (usat) (a borrow gives 0) or to the signed 32-bit range for (ssat)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "38 e4 08 00"
@@ -19979,10 +19979,10 @@ encoding = ["11100100100pppp-", "rrrrppppssssnm00"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh + N`: meaning not known beyond the syntax."
+summary = "Add an 8-bit constant (0..255) to half m of rs; the 16-bit sum, wrapped, goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Wraps modulo 65536, no saturation. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "80 e4 00 00"
@@ -20026,10 +20026,10 @@ encoding = ["11100100100pppp-", "rrrrppppssssnm01"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh - N`: meaning not known beyond the syntax."
+summary = "Subtract an 8-bit constant (0..255) from half m of rs; the 16-bit difference, wrapped, goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Wraps modulo 65536, no saturation. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "80 e4 01 00"
@@ -20073,10 +20073,10 @@ encoding = ["1110010011-qqqqi", "rrrrqqqqssssppnm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "enum", values = ["+|+", "+|-", "-|+", "-|-"] }, q = "uimm", i = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Two-lane operation with a sign pattern, a constant and a saturation or averaging mode; meaning unknown beyond the syntax."
+summary = "Two 16-bit lanes of rs (half n gives the high result, half m the low) each plus or minus the 8-bit constant q, with the signs in p (first = high) and saturation usat (unsigned) or ssat (signed); result is the whole of rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Only the two clamping modes exist here (no averaging). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "c0 e4 00 00"
@@ -20130,10 +20130,10 @@ encoding = ["1110010100000---", "rrrrttttssssnmp0"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh + Rh`: meaning not known beyond the syntax."
+summary = "Add half p of rt to half m of rs; the 16-bit sum, wrapped, goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Wraps modulo 65536, no saturation. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "00 e5 00 00"
@@ -20182,10 +20182,10 @@ encoding = ["1110010100000---", "rrrrttttssssnmp1"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh - Rh`: meaning not known beyond the syntax."
+summary = "Subtract half p of rt from half m of rs; the 16-bit difference, wrapped, goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Wraps modulo 65536, no saturation. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "00 e5 01 00"
@@ -20234,10 +20234,10 @@ encoding = ["1110010100001qqq", "rrrrttttssssnmp0"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)", "(uavg)", "(savg)", "(rnd,uavg)", "(rnd,savg)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh + Rh E`: meaning not known beyond the syntax."
+summary = "Add half p of rt to half m of rs under the mode in brackets (clamp, doubled-then-clamp, or halve); the 16-bit result goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Modes: (usat)/(ssat) clamp the exact result of unsigned/signed lanes to 16 bits; (x2) doubles the exact result first; (uavg)/(savg) halve it (rounded down), (rnd,..) adding 1 before halving. Added lanes did not show the (usat,x2) oddity of subtracted lanes (see sub.rhrhrhe). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "08 e5 00 00"
@@ -20291,10 +20291,10 @@ encoding = ["1110010100001qqq", "rrrrttttssssnmp1"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)", "(uavg)", "(savg)", "(rnd,uavg)", "(rnd,savg)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh - Rh E`: meaning not known beyond the syntax."
+summary = "Subtract half p of rt from half m of rs under the mode in brackets (clamp, doubled-then-clamp, or halve); the 16-bit result goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Modes: (usat)/(ssat) clamp the exact result of unsigned/signed lanes to 16 bits; (x2) doubles the exact result first; (uavg)/(savg) halve it (rounded down), (rnd,..) adding 1 before halving. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Odd: with (usat,x2) a subtracted lane whose doubled difference does not fit in 16 bits gave 0, not 0xffff (differences up to 0x6a61 doubled normally, from 0x8d3d up gave 0; the follow-up, hw/fm1-2026-10-24/followup-r.jsonl, gave 0 at exactly 0x8000 on subadd, subsub and sub.rhrhrhe, the first difference whose double does not fit; 0x7fff, which doubles to 0xfffe, was not tried); added lanes saturate to 0xffff as expected. The 12 cases here did not reach that range, the sibling two-lane forms did; the follow-up did on this form too (0x8001 - 1 = 0x8000 gave 0). Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "08 e5 01 00"
@@ -20348,10 +20348,10 @@ encoding = ["111001010001pq00", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (usat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (unsigned lanes, result clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "10 e5 00 00"
@@ -20405,10 +20405,10 @@ encoding = ["111001010001pq00", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (usat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (unsigned lanes, result clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "10 e5 04 00"
@@ -20462,10 +20462,10 @@ encoding = ["111001010001pq00", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (usat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (unsigned lanes, result clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "10 e5 08 00"
@@ -20519,10 +20519,10 @@ encoding = ["111001010001pq00", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (usat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (unsigned lanes, result clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "10 e5 0c 00"
@@ -20576,10 +20576,10 @@ encoding = ["111001010001pq01", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (ssat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (signed lanes, result clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "11 e5 00 00"
@@ -20633,10 +20633,10 @@ encoding = ["111001010001pq01", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (ssat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (signed lanes, result clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "11 e5 04 00"
@@ -20690,10 +20690,10 @@ encoding = ["111001010001pq01", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (ssat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (signed lanes, result clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "11 e5 08 00"
@@ -20747,10 +20747,10 @@ encoding = ["111001010001pq01", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (ssat)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (signed lanes, result clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "11 e5 0c 00"
@@ -20804,10 +20804,10 @@ encoding = ["111001010001pq10", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (usat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (unsigned lanes, the exact result is doubled and then clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "12 e5 00 00"
@@ -20861,10 +20861,10 @@ encoding = ["111001010001pq10", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (usat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (unsigned lanes, the exact result is doubled and then clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Odd: with (usat,x2) a subtracted lane whose doubled difference does not fit in 16 bits gave 0, not 0xffff (differences up to 0x6a61 doubled normally, from 0x8d3d up gave 0; the follow-up, hw/fm1-2026-10-24/followup-r.jsonl, gave 0 at exactly 0x8000 on subadd, subsub and sub.rhrhrhe, the first difference whose double does not fit; 0x7fff, which doubles to 0xfffe, was not tried); added lanes saturate to 0xffff as expected. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e5 04 00"
@@ -20918,10 +20918,10 @@ encoding = ["111001010001pq10", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (usat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (unsigned lanes, the exact result is doubled and then clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Odd: with (usat,x2) a subtracted lane whose doubled difference does not fit in 16 bits gave 0, not 0xffff (differences up to 0x6a61 doubled normally, from 0x8d3d up gave 0; the follow-up, hw/fm1-2026-10-24/followup-r.jsonl, gave 0 at exactly 0x8000 on subadd, subsub and sub.rhrhrhe, the first difference whose double does not fit; 0x7fff, which doubles to 0xfffe, was not tried); added lanes saturate to 0xffff as expected. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e5 08 00"
@@ -20975,10 +20975,10 @@ encoding = ["111001010001pq10", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (usat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (unsigned lanes, the exact result is doubled and then clamped to 0..65535)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Odd: with (usat,x2) a subtracted lane whose doubled difference does not fit in 16 bits gave 0, not 0xffff (differences up to 0x6a61 doubled normally, from 0x8d3d up gave 0; the follow-up, hw/fm1-2026-10-24/followup-r.jsonl, gave 0 at exactly 0x8000 on subadd, subsub and sub.rhrhrhe, the first difference whose double does not fit; 0x7fff, which doubles to 0xfffe, was not tried); added lanes saturate to 0xffff as expected. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "12 e5 0c 00"
@@ -21032,10 +21032,10 @@ encoding = ["111001010001pq11", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (ssat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (signed lanes, the exact result is doubled and then clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "13 e5 00 00"
@@ -21089,10 +21089,10 @@ encoding = ["111001010001pq11", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (ssat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (signed lanes, the exact result is doubled and then clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "13 e5 04 00"
@@ -21146,10 +21146,10 @@ encoding = ["111001010001pq11", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (ssat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (signed lanes, the exact result is doubled and then clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "13 e5 08 00"
@@ -21203,10 +21203,10 @@ encoding = ["111001010001pq11", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (ssat,x2)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (signed lanes, the exact result is doubled and then clamped to -32768..32767)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "13 e5 0c 00"
@@ -21260,10 +21260,10 @@ encoding = ["111001010010pq00", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (unsigned lanes, half the exact result rounded down)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "20 e5 00 00"
@@ -21317,10 +21317,10 @@ encoding = ["111001010010pq00", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (unsigned lanes, half the exact result rounded down)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "20 e5 04 00"
@@ -21374,10 +21374,10 @@ encoding = ["111001010010pq00", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (unsigned lanes, half the exact result rounded down)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "20 e5 08 00"
@@ -21431,10 +21431,10 @@ encoding = ["111001010010pq00", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (unsigned lanes, half the exact result rounded down)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "20 e5 0c 00"
@@ -21488,10 +21488,10 @@ encoding = ["111001010010pq01", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (signed lanes, half the exact result rounded toward minus infinity)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "21 e5 00 00"
@@ -21545,10 +21545,10 @@ encoding = ["111001010010pq01", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (signed lanes, half the exact result rounded toward minus infinity)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "21 e5 04 00"
@@ -21602,10 +21602,10 @@ encoding = ["111001010010pq01", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (signed lanes, half the exact result rounded toward minus infinity)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "21 e5 08 00"
@@ -21659,10 +21659,10 @@ encoding = ["111001010010pq01", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (signed lanes, half the exact result rounded toward minus infinity)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "21 e5 0c 00"
@@ -21716,10 +21716,10 @@ encoding = ["111001010010pq10", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (rnd,uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (as (uavg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "22 e5 00 00"
@@ -21773,10 +21773,10 @@ encoding = ["111001010010pq10", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (rnd,uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (as (uavg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "22 e5 04 00"
@@ -21830,10 +21830,10 @@ encoding = ["111001010010pq10", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (rnd,uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (as (uavg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "22 e5 08 00"
@@ -21887,10 +21887,10 @@ encoding = ["111001010010pq10", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (rnd,uavg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (as (uavg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "22 e5 0c 00"
@@ -21944,10 +21944,10 @@ encoding = ["111001010010pq11", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|+ Rh,Rh (rnd,savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the sum rs.m + rt.q (as (savg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "23 e5 00 00"
@@ -22001,10 +22001,10 @@ encoding = ["111001010010pq11", "rrrrttttssss01nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh +|- Rh,Rh (rnd,savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the sum rs.n + rt.p and the low half the difference rs.m - rt.q (as (savg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "23 e5 04 00"
@@ -22058,10 +22058,10 @@ encoding = ["111001010010pq11", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|+ Rh,Rh (rnd,savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the sum rs.m + rt.q (as (savg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "23 e5 08 00"
@@ -22115,10 +22115,10 @@ encoding = ["111001010010pq11", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh -|- Rh,Rh (rnd,savg)`: meaning not known beyond the syntax."
+summary = "Two 16-bit lanes: the high half of rd is the difference rs.n - rt.p and the low half the difference rs.m - rt.q (as (savg) with 1 added before halving)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The lane written first in the text is the high half of rd. In the averaging modes a subtraction that goes negative is taken modulo 2^17 before halving (unsigned: 0 - 0x82ee gives 0xbe89). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "23 e5 0c 00"
@@ -22172,10 +22172,10 @@ encoding = ["1110010100110mmm", "rrr-ttt-sss-nnnn"]
 fields = { r = "pair", s = "pair", n = { kind = "enum", values = ["+|+|+|+", "+|+|+|-", "+|+|-|+", "+|+|-|-", "+|-|+|+", "+|-|+|-", "+|-|-|+", "+|-|-|-", "-|+|+|+", "-|+|+|-", "-|+|-|+", "-|+|-|-", "-|-|+|+", "-|-|+|-", "-|-|-|+", "-|-|-|-"] }, t = "pair", m = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)", "(uavg)", "(savg)", "(rnd,uavg)", "(rnd,savg)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Pair operation with an operator and mode chosen by two fields; meaning unknown beyond the syntax."
+summary = "Four 16-bit lanes of pairs rs and rt combined lane by lane, with one sign per lane printed from lane 3 down to lane 0, under the mode in brackets; the four 16-bit results fill pair rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md)."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane layout as add4.ppr (lane 0 = low half of the even register); the sign list reads lane 3 first. Modes as for add.rhrhrhe. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "30 e5 00 00"
@@ -24439,10 +24439,10 @@ encoding = ["11100101010000qq", "rrrrttttssssnmp-"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh = Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half m of rs by half p of rt; the product (doubled for x2) clamped to 16 bits (unsigned for usat, signed for ssat) goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The result is the clamped low-precision product itself, not a high half. (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "40 e5 00 00"
@@ -24496,10 +24496,10 @@ encoding = ["11100101010010qq", "rrrrttttssssnmp-"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh += Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half m of rs by half p of rt and add the product (doubled for x2) to half n of rd; the sum clamped to 16 bits (usat unsigned, ssat signed) goes back to that half."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulator half is read as an unsigned number even in ssat mode (0xaaaa + 0 gave 0x7fff). (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the unsigned accumulator read (a signed read failed one of its cases) and a single clamp after the accumulate (clamping the product first failed too)."
 
 [[insn.example]]
 bytes = "48 e5 00 00"
@@ -24553,10 +24553,10 @@ encoding = ["11100101010011qq", "rrrrttttssssnmp-"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `Rh -= Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half m of rs by half p of rt and subtract the product (doubled for x2) from half n of rd; the result clamped to 16 bits (usat unsigned, ssat signed) goes back to that half."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulator half is read as an unsigned number even in ssat mode. (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed a single clamp after the subtract (clamping the product first failed)."
 
 [[insn.example]]
 bytes = "4c e5 00 00"
@@ -24610,10 +24610,10 @@ encoding = ["11100101010100pp", "rrrrttttssss-nm-"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, t = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half n of rs by half m of rt; the 32-bit product (doubled for x2) clamped to 32 bits goes to rd (unsigned for usat, signed for ssat)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping only matters with x2 (seen: usat,x2 gave 0xffffffff). (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "50 e5 00 00"
@@ -24662,10 +24662,10 @@ encoding = ["11100101010110pp", "rrrrttttssss-nm-"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, t = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R += Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half n of rs by half m of rt and add the product (doubled for x2) to rd, clamped to 32 bits (unsigned for usat, signed for ssat)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulator is the whole rd, signed under ssat. (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the signed accumulator under ssat (an unsigned read failed several cases)."
 
 [[insn.example]]
 bytes = "58 e5 00 00"
@@ -24714,10 +24714,10 @@ encoding = ["11100101010111pp", "rrrrttttssss-nm-"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, t = "gpr", m = { kind = "enum", values = [".l", ".h"] }, p = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R -= Rh * Rh E`: meaning not known beyond the syntax."
+summary = "Multiply half n of rs by half m of rt and subtract the product (doubled for x2) from rd, clamped to 32 bits (unsigned for usat, signed for ssat)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulator is the whole rd, signed under ssat. (usat) multiplies unsigned halves, (ssat) signed halves; (x2) doubles the product before it is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the signed accumulator under ssat (an unsigned read failed several cases)."
 
 [[insn.example]]
 bytes = "5c e5 00 00"
@@ -24766,10 +24766,10 @@ encoding = ["111001010110pqii", "rrrrttttssss00nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2 and clamped to 16 bits (usat unsigned, ssat signed); the two halves make rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lanes are the halves of rd, high half = first lane printed. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "60 e5 00 00"
@@ -24828,10 +24828,10 @@ encoding = ["111001010110pqii", "rrrrttttssss10nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R += Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2 and clamped to 16 bits (usat unsigned, ssat signed); each is added to the matching 16-bit half of rd before clamping; the two halves make rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lanes are the halves of rd, high half = first lane printed. The accumulator halves are read as unsigned numbers even in ssat mode. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the unsigned accumulator-half read (a signed read failed one of its four cases)."
 
 [[insn.example]]
 bytes = "60 e5 08 00"
@@ -24890,10 +24890,10 @@ encoding = ["111001010110pqii", "rrrrttttssss11nm"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R -= Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2 and clamped to 16 bits (usat unsigned, ssat signed); each is subtracted from the matching 16-bit half of rd before clamping; the two halves make rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lanes are the halves of rd, high half = first lane printed. The accumulator halves are read as unsigned numbers even in ssat mode. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) confirmed the unsigned accumulator-half read (a signed read failed one of its four cases)."
 
 [[insn.example]]
 bytes = "60 e5 0c 00"
@@ -24953,10 +24953,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = sum(Rh,Rh *|* Rh,Rh) (u)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two unsigned 16 x 16 products, rs.n * rt.p to the odd register and rs.m * rt.q to the even register of pair rd (not summed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 00 10"
@@ -25011,10 +25011,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += sum(Rh,Rh *|* Rh,Rh) (u)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two unsigned 16 x 16 products, rs.n * rt.p added to the odd register and rs.m * rt.q to the even register of pair rd, each sum clamped to 32 bits (unsigned); not summed across lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 08 10"
@@ -25069,10 +25069,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P -= sum(Rh,Rh *|* Rh,Rh) (u)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two unsigned 16 x 16 products, rs.n * rt.p subtracted from the odd register and rs.m * rt.q from the even register of pair rd, each result clamped to 32 bits (unsigned); not summed across lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 0c 10"
@@ -25127,10 +25127,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = sum(Rh,Rh *|* Rh,Rh) (s)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two signed 16 x 16 products, rs.n * rt.p to the odd register and rs.m * rt.q to the even register of pair rd (not summed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "71 e5 00 10"
@@ -25185,10 +25185,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += sum(Rh,Rh *|* Rh,Rh) (s)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two signed 16 x 16 products, rs.n * rt.p added to the odd register and rs.m * rt.q to the even register of pair rd, each sum clamped to 32 bits (signed); not summed across lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "71 e5 08 10"
@@ -25243,10 +25243,10 @@ fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, 
 group = "dsp"
 requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P -= sum(Rh,Rh *|* Rh,Rh) (s)`: meaning not known beyond the syntax."
+summary = "On the FM-1: two signed 16 x 16 products, rs.n * rt.p subtracted from the odd register and rs.m * rt.q from the even register of pair rd, each result clamped to 32 bits (signed); not summed across lanes."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The name suggests a horizontal sum, but the chip writes two separate 32-bit results (nothing is added across lanes): the encoding differs from the pair mul2 forms only in second-word bit 12, which it ignores, so sum.(s) = mul2 (ssat) and sum.(u) = mul2 (usat), sum.acc = madd.mul2, sum.nacc = msub.mul2 (instruction revision 3 may mean more on newer chips). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "71 e5 0c 10"
@@ -25300,10 +25300,10 @@ encoding = ["111001010111pqii", "rrr0ttttssss00nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2, as 32-bit numbers in the pair rd (high lane = odd register), clamped to 32 bits (usat unsigned, ssat signed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 00 00"
@@ -25362,10 +25362,10 @@ encoding = ["111001010111pqii", "rrr0ttttssss10nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2, as 32-bit numbers in the pair rd (high lane = odd register); each is added to its register, clamped to 32 bits (usat unsigned, ssat signed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulators are signed under ssat. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 08 00"
@@ -25424,10 +25424,10 @@ encoding = ["111001010111pqii", "rrr0ttttssss11nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat)", "(ssat)", "(usat,x2)", "(ssat,x2)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P -= Rh,Rh *|* Rh,Rh E`: meaning not known beyond the syntax."
+summary = "Two 16 x 16 products (rs.n * rt.p goes to the high lane and rs.m * rt.q to the low lane), each doubled for x2, as 32-bit numbers in the pair rd (high lane = odd register); each is subtracted from its register, clamped to 32 bits (usat unsigned, ssat signed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulators are signed under ssat. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "70 e5 0c 00"
@@ -25486,10 +25486,10 @@ encoding = ["1110010110-----0", "rrr-ttttssss11-0"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = R *|*|*|* R (u)`: meaning not known beyond the syntax."
+summary = "Four byte products, all bytes unsigned: byte i of rs times byte i of rt, as 16-bit lanes of pair rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane i is byte i (lane 0 = least significant); the four 16-bit products fill the pair rd, lane 0 in the low half of the even register, lane 3 in the high half of the odd one. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "80 e5 0c 00"
@@ -25523,10 +25523,10 @@ encoding = ["1110010110-----1", "rrr-ttttssss11-0"]
 fields = { r = "pair", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = R *|*|*|* R (m)`: meaning not known beyond the syntax."
+summary = "Four byte products, rs bytes unsigned and rt bytes signed (m = mixed); each is a 16-bit lane of pair rd (negative products in two's complement)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane i is byte i (lane 0 = least significant); the four 16-bit products fill the pair rd, lane 0 in the low half of the even register, lane 3 in the high half of the odd one. The signed operand is rt, the unsigned one rs (0xc4 * -1 = -196 = 0xff3c). Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "81 e5 0c 00"
@@ -25560,10 +25560,10 @@ encoding = ["1110010110-nnnn-", "rrr-nnnnssss10--"]
 fields = { r = "pair", s = "gpr", n = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = R *|*|*|* N (m)`: meaning not known beyond the syntax."
+summary = "Four byte products of the unsigned bytes of rs with the signed 8-bit constant n (-128..127), as 16-bit lanes of pair rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Lane i is byte i (lane 0 = least significant); the four 16-bit products fill the pair rd, lane 0 in the low half of the even register, lane 3 in the high half of the odd one. The constant is signed, the register bytes unsigned. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "80 e5 08 00"
@@ -25597,10 +25597,10 @@ encoding = ["1110010110mmmmm0", "rrrrmmmmssss0n00"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh * N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply the unsigned half n of rs by an unsigned 9-bit constant (0..511); the 32-bit product goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The product always fits, so nothing is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "80 e5 00 00"
@@ -25639,10 +25639,10 @@ encoding = ["1110010110mmmmm0", "rrrrmmmmssss0n10"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R += Rh * N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply the unsigned half n of rs by an unsigned constant (0..511) and add it to rd as unsigned 32-bit numbers, clamped to 0xffffffff."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping did not occur in them; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it and the 32-bit clamp held. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "80 e5 02 00"
@@ -25681,10 +25681,10 @@ encoding = ["1110010110mmmmm0", "rrrrmmmmssss0n11"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R -= Rh * N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply the unsigned half n of rs by an unsigned constant (0..511) and subtract it from rd as unsigned 32-bit numbers, clamped at 0."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. A result below 0 gave 0. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "80 e5 03 00"
@@ -25723,10 +25723,10 @@ encoding = ["1110010110mmmmm1", "rrrrmmmmssss0n00"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R = Rh * N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply the signed half n of rs by a signed 9-bit constant (-256..255); the 32-bit product goes to rd."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The product always fits, so nothing is clamped. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "81 e5 00 00"
@@ -25765,10 +25765,10 @@ encoding = ["1110010110mmmmm1", "rrrrmmmmssss0n10"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R += Rh * N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply the signed half n of rs by a signed constant (-256..255) and add it to rd as signed 32-bit numbers, clamped to the signed range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping did not occur in them; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it and the 32-bit clamp held. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "81 e5 02 00"
@@ -25807,10 +25807,10 @@ encoding = ["1110010110mmmmm1", "rrrrmmmmssss0n11"]
 fields = { r = "gpr", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `R -= Rh * N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply the signed half n of rs by a signed constant (-256..255) and subtract it from rd as signed 32-bit numbers, clamped to the signed range."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping did not occur in them; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it and the 32-bit clamp held. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "81 e5 03 00"
@@ -25849,10 +25849,10 @@ encoding = ["1110010111ppppp0", "rrr-ppppssss00nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = Rh,Rh *|* N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (unsigned halves and an unsigned constant (0..511)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "c0 e5 00 00"
@@ -25896,10 +25896,10 @@ encoding = ["1110010111ppppp0", "rrr-ppppssss10nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += Rh,Rh *|* N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (unsigned halves and an unsigned constant (0..511)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one; each product is added to its register, clamped to 32 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping was not reached in the first 12 cases, nor in the follow-up (hw/fm1-2026-10-24/followup-r.jsonl; the operand signs it used did not overflow), so its 32-bit clamping is still untested. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "c0 e5 08 00"
@@ -25943,10 +25943,10 @@ encoding = ["1110010111ppppp0", "rrr-ppppssss11nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "uimm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P -= Rh,Rh *|* N (usat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (unsigned halves and an unsigned constant (0..511)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one; each product is subtracted from its register, clamped to 32 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping was not reached in the first 12 cases; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it and the 32-bit clamp held. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "c0 e5 0c 00"
@@ -25990,10 +25990,10 @@ encoding = ["1110010111ppppp1", "rrr-ppppssss00nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P = Rh,Rh *|* N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (signed halves and a signed constant (-256..255)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "c1 e5 00 00"
@@ -26037,10 +26037,10 @@ encoding = ["1110010111ppppp1", "rrr-ppppssss10nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P += Rh,Rh *|* N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (signed halves and a signed constant (-256..255)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one; each product is added to its register, clamped to 32 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulators are signed under ssat. Clamping was not reached in the first 12 cases, nor in the follow-up (hw/fm1-2026-10-24/followup-r.jsonl; the operand signs it used did not overflow), so its 32-bit clamping is still untested. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "c1 e5 08 00"
@@ -26084,10 +26084,10 @@ encoding = ["1110010111ppppp1", "rrr-ppppssss11nm"]
 fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, p = "simm" }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Operation printed `P -= Rh,Rh *|* N (ssat)`: meaning not known beyond the syntax."
+summary = "Multiply half n and half m of rs (signed halves and a signed constant (-256..255)) by the same constant: the product of half n is the odd (high) register of pair rd, that of half m the even one; each product is subtracted from its register, clamped to 32 bits."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Mnemonic-free DSP/bit form; meaning unknown beyond the syntax."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. The accumulators are signed under ssat. Clamping was not reached in the first 12 cases; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it and the 32-bit clamp held. Was: meaning unknown beyond the syntax."
 
 [[insn.example]]
 bytes = "c1 e5 0c 00"
@@ -26877,10 +26877,10 @@ encoding = ["1110010001--uu-p", "rrr-ttt-sss-nnss"]
 fields = { r = "pair", s = "pair_regs", n = { kind = "enum", values = ["+|+", "+|-", "-|+", "-|-"] }, m = { kind = "pair_regs", letters = "tu" }, p = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Two-lane add/subtract with a sign pattern (+|+, +|-, -|+, -|-) and saturation (usat or ssat) on two register-name pairs, result to a register pair; semantics beyond the syntax unknown."
+summary = "Two 32-bit lanes: the high register of pair rd is the first named register of s combined with the first of m by the first sign, the low register the second names by the second sign, each clamped to 32 bits (usat unsigned, ssat signed)."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The operands name two registers of one 64-bit pair (pair_regs); the assembler refuses names from different pairs (\"should in same 64-bit register as previous register\")."
+sources = ["oracle", "hardware"]
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The operands name two registers of one 64-bit pair (pair_regs); the assembler refuses names from different pairs (\"should in same 64-bit register as previous register\"). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Example: r15_r14 = r4,r5 +|- r12,r13 gives r15 = r4 + r12 and r14 = r5 - r13. The first named register and the first sign belong to the high result register. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
 
 [[insn.example]]
 bytes = "40 e4 00 00"
@@ -43359,10 +43359,10 @@ encoding = ["11100100101ppppq", "rrrrppppssssnm1o"]
 fields = { r = "gpr", n = { kind = "enum", values = [".l", ".h"] }, s = "gpr", m = { kind = "enum", values = [".l", ".h"] }, o = { kind = "enum", values = ["+", "-"] }, p = "uimm", q = { kind = "enum", values = ["(usat)", "(ssat)"] } }
 group = "dsp"
 absent_on = ["r1", "r5"]
-summary = "Add or subtract an unsigned 8-bit immediate on register halves with a printed saturation mode; behavior is untested."
+summary = "Add or subtract the 8-bit constant p (0..255) to/from half m of rs with unsigned (usat) or signed (ssat) 16-bit clamping; the result goes to half n of rd and the other half of rd is kept."
 status = "confirmed"
-sources = ["oracle"]
-notes = "The complete F4A0..F4BF second-word sweeps expose these forms only when second-word bit 1 is set. Black-box probes at E4A0/E4BF confirm the non-parallel counterpart; bit 0 selects add/subtract and first-word bit 0 selects usat/ssat."
+sources = ["oracle", "hardware"]
+notes = "The complete F4A0..F4BF second-word sweeps expose these forms only when second-word bit 1 is set. Black-box probes at E4A0/E4BF confirm the non-parallel counterpart; bit 0 selects add/subtract and first-word bit 0 selects usat/ssat. Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Clamping was not reached in the first 12 cases; the follow-up (hw/fm1-2026-10-24/followup-r.jsonl) reached it at both ends for usat and ssat and the model held. Before the run the table called its behaviour untested."
 
 [[insn.example]]
 bytes = "a0 e4 02 00"
@@ -43813,10 +43813,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Add the sum of four lane products to a register (usat, as printed); instruction revision 3; lane semantics not established."
+summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+sources = ["oracle", "hardware"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24). Hardware (hw/fm1-2026-10-24): all 12 cases of each of the three sum.acc.*.rrr encodings match that model; psr unchanged. Second-word bits 2 and 1 are therefore ignored when bit 3 is set (add4.rrr.rnd.uavg is 100-, these are 101-, 110-, 111-). Before the run the table called it an accumulate of a sum of four lane products (lane semantics not established); the chip lacks instruction revision 3 or does something else with it. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) gave 0xffc04080 for rs = 0xff80017f, rt = 0xffff7f80 on all three encodings: the unsigned rounding average (a signed one would differ), so they are one operation here."
 
 [[insn.example]]
 bytes = "20 e4 0a 00"
@@ -43852,10 +43852,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Add the sum of four lane products to a register (ssat, as printed); instruction revision 3; lane semantics not established."
+summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+sources = ["oracle", "hardware"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24). Hardware (hw/fm1-2026-10-24): all 12 cases of each of the three sum.acc.*.rrr encodings match that model; psr unchanged. Second-word bits 2 and 1 are therefore ignored when bit 3 is set (add4.rrr.rnd.uavg is 100-, these are 101-, 110-, 111-). Before the run the table called it an accumulate of a sum of four lane products (lane semantics not established); the chip lacks instruction revision 3 or does something else with it. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) gave 0xffc04080 for rs = 0xff80017f, rt = 0xffff7f80 on all three encodings: the unsigned rounding average (a signed one would differ), so they are one operation here."
 
 [[insn.example]]
 bytes = "20 e4 0c 00"
@@ -43891,10 +43891,10 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
-summary = "Add the sum of four lane products to a register (msat, as printed); instruction revision 3; lane semantics not established."
+summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
-sources = ["oracle"]
-notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24)."
+sources = ["oracle", "hardware"]
+notes = "objdump decodes it only with -mattr=+instrev3; found by sweeping every second word of every 32-bit first word with and without +instrev3 (2026-10-24). Hardware (hw/fm1-2026-10-24): all 12 cases of each of the three sum.acc.*.rrr encodings match that model; psr unchanged. Second-word bits 2 and 1 are therefore ignored when bit 3 is set (add4.rrr.rnd.uavg is 100-, these are 101-, 110-, 111-). Before the run the table called it an accumulate of a sum of four lane products (lane semantics not established); the chip lacks instruction revision 3 or does something else with it. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) gave 0xffc04080 for rs = 0xff80017f, rt = 0xffff7f80 on all three encodings: the unsigned rounding average (a signed one would differ), so they are one operation here."
 
 [[insn.example]]
 bytes = "20 e4 0e 00"

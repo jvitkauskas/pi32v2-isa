@@ -64,3 +64,12 @@ returning their inputs. It targeted what the 12 random cases per form had not re
 results of the add and subtract forms, N and Z results of other forms, register shift counts with bits 8 and up set
 and at the 32/64 boundaries, exact rounding ties of `shiftr.*` and `asr.ppi.rnd.vh`, bit fields running past bit 31,
 `cls`/`clz` edge values and simple inputs for `popcnt.*`.
+
+## Follow-up run for the DSP arithmetic and multiply group (analyst R)
+
+`followup-r.jsonl` (same record format as `results.jsonl`) holds the results of `hw/followup-r.json`: 403 hand-built
+cases for 96 forms of that group, plus the 6 `nop` calibration cases of its three batches. It ran as 3 batches on the
+same unit without a hang or trap. The cases targeted what the 12 random cases per form could not settle: the
+register shift-count width and negative counts, the `(usat,x2)` subtraction boundary, the clamping limits of the
+saturating and multiply-accumulate forms, the carry of `madd`/`msub` on the 64-bit pair, and whether the three
+`sum.acc.*.rrr` encodings are one operation. `python3 tools/hwtest/check.py followup-r.jsonl` matches on every case.
