@@ -152,7 +152,7 @@ group = "jumps"
 summary = "Call the subroutine at the address in a register; the return address goes to rets."
 status = "confirmed"
 sources = ["kagaimiq-jielie", "oracle", "compiler", "hardware"]
-notes = "[compiler] -O0 indirect call `call r0`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. rets receives the byte address immediately after this 2-byte call (instruction address + 2), not the target. No general register, sp or scratch word changes."
+notes = "[compiler] -O0 indirect call `call r0`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. rets receives the next instruction address: instruction address + its length (2 bytes here). Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl) confirms the rule for 4-byte call.l and 6-byte call.xl; the earlier address + 2 statement applies only to 2-byte calls. No general register, sp or scratch word changes."
 
 [[insn.example]]
 bytes = "c0 00"
@@ -833,7 +833,7 @@ group = "branches"
 summary = "Branch if a register (r0..r7) is zero; offset -256..254 bytes (16-bit instruction)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "[compiler] `if (r1 == 0) goto +2` skipping one 16-bit instruction (used for `a == 0 ? 1 : 0` and a null-terminator test). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously the offset base was described as unpinned; hardware targets instruction end + byte offset and tests the register directly."
+notes = "[compiler] `if (r1 == 0) goto +2` skipping one 16-bit instruction (used for `a == 0 ? 1 : 0` and a null-terminator test). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously the offset base was described as unpinned; hardware targets instruction end + byte offset and tests the register directly. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero inputs against conflicting Z flags, with flags preserved."
 
 [[insn.example]]
 bytes = "00 40"
@@ -864,7 +864,7 @@ group = "branches"
 summary = "Branch if a register (r0..r7) is not zero; offset -256..254 bytes (16-bit instruction)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `if (r1 != 0) goto +2`; also the back edge of a counted-down loop. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested target is the instruction end plus the printed byte offset; this tests the register directly, without changing flags."
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] `if (r1 != 0) goto +2`; also the back edge of a counted-down loop. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested target is the instruction end plus the printed byte offset; this tests the register directly, without changing flags. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero inputs against conflicting Z flags, with flags preserved."
 
 [[insn.example]]
 bytes = "80 40"
@@ -916,7 +916,7 @@ group = "branches"
 summary = "Call a subroutine -256..254 bytes away; the return address goes to rets."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. rets receives the byte address immediately after this 2-byte call (instruction address + 2), not the target. No general register, sp or scratch word changes."
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. rets receives the next instruction address: instruction address + its length (2 bytes here). Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl) confirms the rule for 4-byte call.l and 6-byte call.xl; the earlier address + 2 statement applies only to 2-byte calls. No general register, sp or scratch word changes."
 
 [[insn.example]]
 bytes = "01 80"
@@ -936,8 +936,8 @@ fields = { n = { kind = "simm", letters = "ps", scale = 2 } }
 group = "branches"
 summary = "Call a subroutine up to about 4 MiB away; the return address goes to rets."
 status = "confirmed"
-sources = ["oracle", "sources-in-use", "compiler"]
-notes = "Relocation R_PI32V2_LONG_JUMP_23M2 when the target is a symbol. [compiler] every call to a function in another unit: `call 0` with relocation R_PI32V2_LONG_JUMP_23M2 (ELF type 2)."
+sources = ["oracle", "sources-in-use", "compiler", "hardware"]
+notes = "Relocation R_PI32V2_LONG_JUMP_23M2 when the target is a symbol. [compiler] every call to a function in another unit: `call 0` with relocation R_PI32V2_LONG_JUMP_23M2 (ELF type 2). Hardware (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 12/12 cases reach instruction end + byte offset; N/Z/C/V (psr bits 3..0) unchanged. Previously the return-address value was unspecified; rets receives the next instruction address, instruction address + its length (4 bytes here). No general register, sp or scratch word changes."
 
 [[insn.example]]
 bytes = "80 ea 00 00"
@@ -957,8 +957,8 @@ fields = { n = { kind = "simm", letters = "ps", scale = 2 } }
 group = "branches"
 summary = "Jump up to about 4 MiB away."
 status = "confirmed"
-sources = ["oracle", "sources-in-use", "compiler"]
-notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] tail calls and branches to other symbols, `goto 0` with relocation R_PI32V2_LONG_JUMP_23M2 (ELF type 2). The compiler turns every `f(); return;`-style tail call into this."
+sources = ["oracle", "sources-in-use", "compiler", "hardware"]
+notes = "Layout from the oracle's decoding sweep (docs/ORACLE.md). [compiler] tail calls and branches to other symbols, `goto 0` with relocation R_PI32V2_LONG_JUMP_23M2 (ELF type 2). The compiler turns every `f(); return;`-style tail call into this. Hardware (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 12/12 cases reach instruction end + byte offset; N/Z/C/V (psr bits 3..0) unchanged. Previously the offset base was unspecified; it is the instruction end. No general register, sp, rets or scratch word changes."
 
 [[insn.example]]
 bytes = "c0 ea 00 00"
@@ -13067,7 +13067,7 @@ group = "branches"
 summary = "Compare two registers and branch when the first is equal to the second (`if` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 e8 00 00"
@@ -13104,7 +13104,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 ==, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases do not take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 e8 00 08"
@@ -13329,7 +13329,7 @@ group = "branches"
 summary = "Branch when Z = 1; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "ac79-sdk", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. The AC79 SDK's spin lock (include_lib/driver/cpu/wl82/asm/cpu.h, inline asm) is `1: testset b[%0]; ifeq goto 1b`, i.e. it retries while eq, so testset leaves eq set when it did not get the lock. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. The AC79 SDK's spin lock (include_lib/driver/cpu/wl82/asm/cpu.h, inline asm) is `1: testset b[%0]; ifeq goto 1b`, i.e. it retries while eq, so testset leaves eq set when it did not get the lock. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 7/7 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "40 e8 00 00"
@@ -13350,7 +13350,7 @@ group = "branches"
 summary = "Branch when r0 bit 0 is clear; offset -512..510 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously described as unknown. All observed exits equal ((r0 & 1) == 0), not a predicate of the input flags alone. This encoding is the fixed-r0, bit-0 test with the unusual ifs2ns spelling; exhaustive flag independence is requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously described as unknown. All observed exits equal ((r0 & 1) == 0), not a predicate of the input flags alone. This encoding is the fixed-r0, bit-0 test with the unusual ifs2ns spelling; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 32/32 cases) confirms both bit-0 states under all 16 input flags, also varying r0 bit 31, with flags preserved."
 
 [[insn.example]]
 bytes = "50 e8 00 04"
@@ -13371,7 +13371,7 @@ group = "branches"
 summary = "Branch when r0 bit 0 is set; offset -512..510 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously described as unknown. All observed exits equal ((r0 & 1) != 0), not a predicate of the input flags alone. This encoding is the fixed-r0, bit-0 test with the unusual ifs2ns spelling; exhaustive flag independence is requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously described as unknown. All observed exits equal ((r0 & 1) != 0), not a predicate of the input flags alone. This encoding is the fixed-r0, bit-0 test with the unusual ifs2ns spelling; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 32/32 cases) confirms both bit-0 states under all 16 input flags, also varying r0 bit 31, with flags preserved."
 
 [[insn.example]]
 bytes = "50 e8 00 06"
@@ -13392,7 +13392,7 @@ group = "branches"
 summary = "Branch if the register ANDed with a single-bit mask is zero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The mask is printed as the bit's value (1 << bit number); the compared constant is always 0. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The mask is printed as the bit's value (1 << bit number); the compared constant is always 0. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 
 [[insn.example]]
 bytes = "50 e8 00 00"
@@ -13428,7 +13428,7 @@ group = "branches"
 summary = "Branch if the register ANDed with a single-bit mask is non-zero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The mask is printed as the bit's value (1 << bit number); the compared constant is always 0. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). The mask is printed as the bit's value (1 << bit number); the compared constant is always 0. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 
 [[insn.example]]
 bytes = "50 e8 00 02"
@@ -13464,7 +13464,7 @@ group = "branches"
 summary = "Compare two registers and branch if a != b; the target offset is -512..510 bytes from the end of the instruction."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] `for` loop test `if (r4 != r6) goto top`; `a == b` as `if (r4 != r1) goto skip`. Equality needs no signed/unsigned variant. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] `for` loop test `if (r4 != r6) goto top`; `a == b` as `if (r4 != r1) goto skip`. Equality needs no signed/unsigned variant. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 e8 00 00"
@@ -13501,7 +13501,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 != or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 3 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "80 e8 00 08"
@@ -13726,7 +13726,7 @@ group = "branches"
 summary = "Branch when Z = 0; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 9/9 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "c0 e8 00 00"
@@ -13747,7 +13747,7 @@ group = "branches"
 summary = "Unsigned compare of two registers, branch if a >= b (`if` form); offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] unsigned `for (; a < b; a++)` -> `if (r4 >= r5) goto exit` before the loop (signed variant is bges.rr). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] unsigned `for (; a < b; a++)` -> `if (r4 >= r5) goto exit` before the loop (signed variant is bges.rr). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 e9 00 00"
@@ -13784,7 +13784,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >= or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 2 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 e9 00 08"
@@ -14009,7 +14009,7 @@ group = "branches"
 summary = "Branch when C = 1; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 6/6 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "40 e9 00 00"
@@ -14030,7 +14030,7 @@ group = "branches"
 summary = "Compare two registers and branch when the first is less than the second (`if` form); the target offset is -512..510 bytes. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 e9 00 00"
@@ -14067,7 +14067,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases do not take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "80 e9 00 08"
@@ -14292,7 +14292,7 @@ group = "branches"
 summary = "Branch when C = 0; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 7/7 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "c0 e9 00 00"
@@ -14313,7 +14313,7 @@ group = "branches"
 summary = "Decrement a register, then branch if the result is not zero (loop back edge); offset -65536..65534 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Printed `if (--rN != 0) goto N`; the constant is always 0. [compiler] counted loops `for (i = 0; i < n; i++)` at -O2/-Os become `if (--r1 != 0) goto top` with a guard `ifs (r1 < 1) goto exit` before the loop; the body does not use the counter. The 32-bit encoding reaches -65536..65534 bytes; offsets are from the end of the instruction (docs/COMPILER.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The register is decremented modulo 2^32 and the resulting value is tested directly. Unlike sub, this leaves all four flags unchanged. The recorded counters all branch; inputs 0, 1 and 2 are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Printed `if (--rN != 0) goto N`; the constant is always 0. [compiler] counted loops `for (i = 0; i < n; i++)` at -O2/-Os become `if (--r1 != 0) goto top` with a guard `ifs (r1 < 1) goto exit` before the loop; the body does not use the counter. The 32-bit encoding reaches -65536..65534 bytes; offsets are from the end of the instruction (docs/COMPILER.md). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The register is decremented modulo 2^32 and the resulting value is tested directly. Unlike sub, this leaves all four flags unchanged. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm 0 wraps to 0xffffffff and branches, 1 becomes 0 and falls through, and 2 becomes 1 and branches; all preserve input flags 15."
 
 [[insn.example]]
 bytes = "00 ea 00 00"
@@ -14826,7 +14826,7 @@ group = "branches"
 summary = "Compare two registers and branch when the first is greater than the second (`if` form); the target offset is -512..510 bytes. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 ec 00 00"
@@ -14863,7 +14863,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 > or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 ec 00 08"
@@ -15088,7 +15088,7 @@ group = "branches"
 summary = "Branch when C = 1 and Z = 0; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 8/8 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "40 ec 00 00"
@@ -15109,7 +15109,7 @@ group = "branches"
 summary = "Compare two registers and branch when the first is less than or equal to the second (`if` form); the target offset is -512..510 bytes. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 ec 00 00"
@@ -15146,7 +15146,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <=, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "80 ec 00 08"
@@ -15371,7 +15371,7 @@ group = "branches"
 summary = "Branch when C = 0 or Z = 1; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 7/7 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "c0 ec 00 00"
@@ -15392,7 +15392,7 @@ group = "branches"
 summary = "Signed compare of two registers, branch if a >= b (`ifs` form); offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed `if (a < b) {...}` -> `ifs (r5 >= r4) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed `if (a < b) {...}` -> `ifs (r5 >= r4) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 ed 00 00"
@@ -15429,7 +15429,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >=, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 ed 00 08"
@@ -15654,7 +15654,7 @@ group = "branches"
 summary = "Branch when N = V; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 9/9 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "40 ed 00 00"
@@ -15675,7 +15675,7 @@ group = "branches"
 summary = "Signed compare of two registers, branch if a < b (`ifs` form); offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed loop test `for (; a < b; ...)`-style `ifs (r3 < r1) goto top`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed loop test `for (; a < b; ...)`-style `ifs (r3 < r1) goto top`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 ed 00 00"
@@ -15712,7 +15712,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 < or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "80 ed 00 08"
@@ -15937,7 +15937,7 @@ group = "branches"
 summary = "Branch when N != V; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 8/8 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "c0 ed 00 00"
@@ -15958,7 +15958,7 @@ group = "branches"
 summary = "Compare two registers and branch when the first is greater than the second (`ifs` form); the target offset is -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 ee 00 00"
@@ -15995,7 +15995,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases do not take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 ee 00 08"
@@ -16220,7 +16220,7 @@ group = "branches"
 summary = "Branch when Z = 0 and N = V; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 6/6 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "40 ee 00 00"
@@ -16241,7 +16241,7 @@ group = "branches"
 summary = "Signed compare of two registers, branch if a <= b (`ifs` form); offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed `if (a > b) {...}` -> `ifs (r0 <= r1) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. [compiler] signed `if (a > b) {...}` -> `ifs (r0 <= r1) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 ee 00 00"
@@ -16278,7 +16278,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <= or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 2 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Bits 10..9 of the second word are ignored by objdump. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "80 ee 00 08"
@@ -16503,7 +16503,7 @@ group = "branches"
 summary = "Branch when Z = 1 or N != V; N/Z/C/V are psr bits 3..0. Offset -65536..65534 bytes from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; missing truth-table rows are requested in hw/followup5-b.json."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Never emitted by the compiler (it compares with if/ifs/iff blocks and compare-and-branch forms). The names are ARM-style condition codes (cs/cc carry, hi/ls unsigned, ge/lt/gt/le signed). What sets the flags: add/sub/addc/subc leave the carry (psr bit 1, set when no borrow) and bits 0 and 3 (psr bit 3 xor bit 0 is signed less-than), see docs/COMPILER.md. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The flag predicate is now hardware-tested, rather than inferred only from the condition-code names; follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl, 9/9 cases) completes all 16 input-flag combinations for this predicate, with flags preserved."
 
 [[insn.example]]
 bytes = "c0 ee 00 00"
@@ -26930,7 +26930,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register == a signed 10-bit immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 f8 00 00"
@@ -26966,7 +26966,7 @@ group = "branches"
 summary = "Branch if a register != a signed 10-bit constant; offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] `do { a = g(a); } while (a != 3)` -> `if (r0 != 3) goto top`; `for (i = 0; i != 16; ...)` with -Os. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] `do { a = g(a); } while (a != 3)` -> `if (r0 != 3) goto top`; `for (i = 0; i != 16; ...)` with -Os. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 f8 00 00"
@@ -27002,7 +27002,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register >= a unsigned 10-bit immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 f9 00 00"
@@ -27038,7 +27038,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register < a unsigned 10-bit immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 f9 00 00"
@@ -27074,7 +27074,7 @@ group = "branches"
 summary = "Unsigned compare of a register with an unsigned 10-bit constant, branch if a > n; offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] switch bound check `if (r4 > 5) goto default` before `tbb` (an unsigned index test). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] switch bound check `if (r4 > 5) goto default` before `tbb` (an unsigned index test). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 fc 00 00"
@@ -27110,7 +27110,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register <= a unsigned 10-bit immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 fc 00 00"
@@ -27146,7 +27146,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register >= a signed 10-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 fd 00 00"
@@ -27182,7 +27182,7 @@ group = "branches"
 summary = "Signed compare of a register with a signed 10-bit constant, branch if a < n; offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] loop guard `n <= 0` skipped as `ifs (r1 < 1) goto exit`; `while (a > 5)` entry test `ifs (r0 < 6) goto exit`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] loop guard `n <= 0` skipped as `ifs (r1 < 1) goto exit`; `while (a > 5)` entry test `ifs (r0 < 6) goto exit`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 fd 00 00"
@@ -27218,7 +27218,7 @@ group = "branches"
 summary = "Signed compare of a register with a signed 10-bit constant, branch if a > n; offset -512..510 bytes."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] `while (a > 5)` loop back edge -> `ifs (r0 > 5) goto top`; `for (i = n - 1; i >= 0; i--)` -> `ifs (r1 > -1) goto top`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] `while (a > 5)` loop back edge -> `ifs (r0 > 5) goto top`; `for (i = n - 1; i >= 0; i--)` -> `ifs (r1 > -1) goto top`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 fe 00 00"
@@ -27254,7 +27254,7 @@ group = "branches"
 summary = "Branch by -512..510 bytes when a register <= a signed 10-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "80 fe 00 00"
@@ -27290,7 +27290,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes if (ra & rb) == 0."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] -O0 `if (a & b)`: `if ((r0 & r1) == 0) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] -O0 `if (a & b)`: `if ((r0 & r1) == 0) goto over-the-body`. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 fa 00 00"
@@ -27326,7 +27326,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes if (ra & rb) != 0."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] 64-bit saturating add: `if ((r1 & r5) != 0) goto ...` combining sign flags. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout inferred from oracle sweep, fit and vary probes. [compiler] 64-bit saturating add: `if ((r1 & r5) != 0) goto ...` combining sign flags. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 
 [[insn.example]]
 bytes = "00 fb 00 00"
@@ -27362,7 +27362,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register == a signed 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "00 ff 00 00 00 00"
@@ -27398,7 +27398,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register == a modified immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "20 ff 00 00 00 00"
@@ -27434,7 +27434,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register != a signed 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "01 ff 00 00 00 00"
@@ -27470,7 +27470,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register != a modified immediate."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "21 ff 00 00 00 00"
@@ -27506,7 +27506,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "02 ff 00 00 00 00"
@@ -27542,7 +27542,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a modified immediate. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "22 ff 00 00 00 00"
@@ -27578,7 +27578,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "03 ff 00 00 00 00"
@@ -27614,7 +27614,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a modified immediate. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "23 ff 00 00 00 00"
@@ -27650,7 +27650,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "08 ff 00 00 00 00"
@@ -27686,7 +27686,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a modified immediate. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "28 ff 00 00 00 00"
@@ -27722,7 +27722,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "09 ff 00 00 00 00"
@@ -27758,7 +27758,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a modified immediate. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "29 ff 00 00 00 00"
@@ -27794,7 +27794,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a signed 12-bit constant, signed compare."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "0a ff 00 00 00 00"
@@ -27830,7 +27830,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a modified immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "2a ff 00 00 00 00"
@@ -27866,7 +27866,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "0b ff 00 00 00 00"
@@ -27902,7 +27902,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a modified immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "2b ff 00 00 00 00"
@@ -27938,7 +27938,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "0c ff 00 00 00 00"
@@ -27974,7 +27974,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a modified immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "2c ff 00 00 00 00"
@@ -28010,7 +28010,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored. The compiler uses the .modimm form at -O0 for constants such as 16384 and 131072 that are modified immediates but do not fit 12 bits [compiler]. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "0d ff 00 00 00 00"
@@ -28046,7 +28046,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a modified immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "2d ff 00 00 00 00"
@@ -28084,7 +28084,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register == another."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern ==; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "40 ff 00 00 00 00"
@@ -28120,7 +28120,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register != another."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit bit-pattern !=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm the immediate neighbors 0 and 2 against 1; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "41 ff 00 00 00 00"
@@ -28156,7 +28156,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register >= another. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "42 ff 00 00 00 00"
@@ -28192,7 +28192,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register < another. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "43 ff 00 00 00 00"
@@ -28228,7 +28228,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register > another. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "48 ff 00 00 00 00"
@@ -28264,7 +28264,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register <= another. The comparison is unsigned."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit unsigned <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "49 ff 00 00 00 00"
@@ -28300,7 +28300,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register >= another in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "4a ff 00 00 00 00"
@@ -28336,7 +28336,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register < another in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "4b ff 00 00 00 00"
@@ -28372,7 +28372,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register > another in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed >; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "4c ff 00 00 00 00"
@@ -28408,7 +28408,7 @@ group = "branches"
 summary = "Branch by -65536..65534 bytes when one register <= another in a signed comparison."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Equality is covered; adjacent operand boundaries are not. See hw/followup5-b.json for adjacent/sign probes."
+notes = "Layout from oracle sweep/fit ff40 and vary probes. Second-word bits 6..0 do not change the decoded text and the assembler writes them as zero. [compiler] the 32-bit compare-and-branch forms (any registers, offset +-64 KiB) are what -O0 emits for loop tests and `if`, e.g. int `i < n` -> `ifs (r1 >= r0) goto exit` (signed = s, unsigned = no s). Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. The tested predicate is 32-bit signed <=; immediate fields use their declared extension/modified-immediate decoding. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 3/3 cases confirm the immediate neighbors 0 and 2 against 1, plus a signed/unsigned boundary probe; the strict/non-strict condition and flags preservation match the model."
 
 [[insn.example]]
 bytes = "4d ff 00 00 00 00"
@@ -28445,7 +28445,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 ==, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 2 recorded NaN cases do not take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "40 ff 80 00 00 00"
@@ -28482,7 +28482,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 != or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "41 ff 80 00 00 00"
@@ -28519,7 +28519,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >= or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 3 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "42 ff 80 00 00 00"
@@ -28556,7 +28556,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "43 ff 80 00 00 00"
@@ -28593,7 +28593,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 > or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 3 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "48 ff 80 00 00 00"
@@ -28630,7 +28630,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <=, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "49 ff 80 00 00 00"
@@ -28667,7 +28667,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >=, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. All recorded non-NaN cases match binary32 comparison. The NaN clause follows the ordered/unordered condition family and compiler evidence; this encoding has no recorded NaN case, so that clause awaits hw/followup5-b.json, which also tests signed zeros and adjacent floats."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "4a ff 80 00 00 00"
@@ -28704,7 +28704,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 < or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "4b ff 80 00 00 00"
@@ -28741,7 +28741,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 >, ordered (false if either operand is NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 3 recorded NaN cases do not take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. [compiler] float isunordered(a, b) / `a != a` (isnan) is `iff (a > b) goto L1` then `iff (a u> b) goto L2`; `u>` is true when either operand is NaN. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases do not take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "4c ff 80 00 00 00"
@@ -28778,7 +28778,7 @@ decode_requires = ["fprev1"]
 summary = "Branch on binary32 <= or unordered (either operand NaN). Offset from the instruction end."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output; 1 recorded NaN cases take the branch. All finite cases match binary32 comparison. Signed zeros, adjacent floats and NaNs on each side are requested in hw/followup5-b.json."
+notes = "Layout from oracle sweep/fit ff40 and condition/offset probes. Decode and assembly accept this without fprev1. Second-word bits 5..0 are ignored by objdump and zeroed by the assembler. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Previously NaN behavior was unspecified or inferred from compiler output. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 5/5 cases confirm +0 == -0, adjacent binary32 ordering, quiet NaN on the left and signaling NaN on the right; both NaN cases take the branch. Flags remain unchanged."
 
 [[insn.example]]
 bytes = "4d ff 80 00 00 00"
@@ -29657,8 +29657,8 @@ fields = { n = { kind = "simm", letters = "ji", scale = 2 } }
 group = "branches"
 summary = "Call with a signed 32-bit byte offset whose low bit is zero."
 status = "confirmed"
-sources = ["oracle"]
-notes = "Layout inferred from oracle sweep, fit and vary probes."
+sources = ["oracle", "hardware"]
+notes = "Layout inferred from oracle sweep, fit and vary probes. Hardware (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 12/12 cases reach instruction end + byte offset; N/Z/C/V (psr bits 3..0) unchanged. Previously the return-address value was unspecified; rets receives the next instruction address, instruction address + its length (6 bytes here). No general register, sp or scratch word changes."
 
 [[insn.example]]
 bytes = "80 ff 00 00 00 00"
@@ -41625,7 +41625,7 @@ encoding = ["1111111101100000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "modimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Compare a register masked by a modified immediate with zero and branch on equality."
-notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 asm_wrong = ["if ((r0 & 0x0) == 0) goto -2", "if ((r0 & 0x0) == 0) goto 0", "if ((r0 & 0x0) == 0) goto 128", "if ((r0 & 0x0) == 0) goto 16", "if ((r0 & 0x0) == 0) goto 2", "if ((r0 & 0x0) == 0) goto 256", "if ((r0 & 0x0) == 0) goto 32", "if ((r0 & 0x0) == 0) goto 4", "if ((r0 & 0x0) == 0) goto 64", "if ((r0 & 0x0) == 0) goto 8", "if ((r1 & 0x0) == 0) goto -2", "if ((r1 & 0x0) == 0) goto 0", "if ((r1 & 0x0) == 0) goto 128", "if ((r1 & 0x0) == 0) goto 16", "if ((r1 & 0x0) == 0) goto 2", "if ((r1 & 0x0) == 0) goto 256", "if ((r1 & 0x0) == 0) goto 32", "if ((r1 & 0x0) == 0) goto 4", "if ((r1 & 0x0) == 0) goto 64", "if ((r1 & 0x0) == 0) goto 8", "if ((r11 & 0x0) == 0) goto -2", "if ((r11 & 0x0) == 0) goto 0", "if ((r11 & 0x0) == 0) goto 128", "if ((r11 & 0x0) == 0) goto 16", "if ((r11 & 0x0) == 0) goto 2", "if ((r11 & 0x0) == 0) goto 256", "if ((r11 & 0x0) == 0) goto 32", "if ((r11 & 0x0) == 0) goto 4", "if ((r11 & 0x0) == 0) goto 64", "if ((r11 & 0x0) == 0) goto 8", "if ((r15 & 0x0) == 0) goto -2", "if ((r15 & 0x0) == 0) goto 0", "if ((r15 & 0x0) == 0) goto 128", "if ((r15 & 0x0) == 0) goto 16", "if ((r15 & 0x0) == 0) goto 2", "if ((r15 & 0x0) == 0) goto 256", "if ((r15 & 0x0) == 0) goto 32", "if ((r15 & 0x0) == 0) goto 4", "if ((r15 & 0x0) == 0) goto 64", "if ((r15 & 0x0) == 0) goto 8", "if ((r2 & 0x0) == 0) goto -2", "if ((r2 & 0x0) == 0) goto 0", "if ((r2 & 0x0) == 0) goto 128", "if ((r2 & 0x0) == 0) goto 16", "if ((r2 & 0x0) == 0) goto 2", "if ((r2 & 0x0) == 0) goto 256", "if ((r2 & 0x0) == 0) goto 32", "if ((r2 & 0x0) == 0) goto 4", "if ((r2 & 0x0) == 0) goto 64", "if ((r2 & 0x0) == 0) goto 8", "if ((r4 & 0x0) == 0) goto -2", "if ((r4 & 0x0) == 0) goto 0", "if ((r4 & 0x0) == 0) goto 128", "if ((r4 & 0x0) == 0) goto 16", "if ((r4 & 0x0) == 0) goto 2", "if ((r4 & 0x0) == 0) goto 256", "if ((r4 & 0x0) == 0) goto 32", "if ((r4 & 0x0) == 0) goto 4", "if ((r4 & 0x0) == 0) goto 64", "if ((r4 & 0x0) == 0) goto 8", "if ((r5 & 0x0) == 0) goto -2", "if ((r5 & 0x0) == 0) goto 0", "if ((r5 & 0x0) == 0) goto 128", "if ((r5 & 0x0) == 0) goto 16", "if ((r5 & 0x0) == 0) goto 2", "if ((r5 & 0x0) == 0) goto 256", "if ((r5 & 0x0) == 0) goto 32", "if ((r5 & 0x0) == 0) goto 4", "if ((r5 & 0x0) == 0) goto 64", "if ((r5 & 0x0) == 0) goto 8", "if ((r8 & 0x0) == 0) goto -2", "if ((r8 & 0x0) == 0) goto 0", "if ((r8 & 0x0) == 0) goto 128", "if ((r8 & 0x0) == 0) goto 16", "if ((r8 & 0x0) == 0) goto 2", "if ((r8 & 0x0) == 0) goto 256", "if ((r8 & 0x0) == 0) goto 32", "if ((r8 & 0x0) == 0) goto 4", "if ((r8 & 0x0) == 0) goto 64", "if ((r8 & 0x0) == 0) goto 8", "if ((r9 & 0x0) == 0) goto -2", "if ((r9 & 0x0) == 0) goto 0", "if ((r9 & 0x0) == 0) goto 128", "if ((r9 & 0x0) == 0) goto 16", "if ((r9 & 0x0) == 0) goto 2", "if ((r9 & 0x0) == 0) goto 256", "if ((r9 & 0x0) == 0) goto 32", "if ((r9 & 0x0) == 0) goto 4", "if ((r9 & 0x0) == 0) goto 64", "if ((r9 & 0x0) == 0) goto 8"]
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -41662,7 +41662,7 @@ encoding = ["1111111101100001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "modimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Compare a register masked by a modified immediate with zero and branch on inequality."
-notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Zero and nonzero results with conflicting input flags are requested in hw/followup5-b.json."
+notes = "Layout inferred from oracle decode probes and the full second-word sweep. Offset is a signed 16-bit field scaled by two. Modified immediate zero has four raw encodings; the assembler picks one for long branches. With zero mask and a short branch offset, it instead emits the single-bit-mask form testing bit 0; asm_wrong lists the observed probe texts. Hardware (hw/fm1-2026-10-24-v2): 12/12 cases; N/Z/C/V (psr bits 3..0) unchanged. Tests the register AND register/mask against zero directly, with no flag write. Follow-up (hw/fm1-2026-10-24-v2/followup5-b.jsonl): 2/2 cases confirm zero/nonzero masked results with conflicting input flags; flags remain unchanged."
 asm_wrong = ["if ((r0 & 0x0) != 0) goto -2", "if ((r0 & 0x0) != 0) goto 0", "if ((r0 & 0x0) != 0) goto 128", "if ((r0 & 0x0) != 0) goto 16", "if ((r0 & 0x0) != 0) goto 2", "if ((r0 & 0x0) != 0) goto 256", "if ((r0 & 0x0) != 0) goto 32", "if ((r0 & 0x0) != 0) goto 4", "if ((r0 & 0x0) != 0) goto 64", "if ((r0 & 0x0) != 0) goto 8", "if ((r1 & 0x0) != 0) goto -2", "if ((r1 & 0x0) != 0) goto 0", "if ((r1 & 0x0) != 0) goto 128", "if ((r1 & 0x0) != 0) goto 16", "if ((r1 & 0x0) != 0) goto 2", "if ((r1 & 0x0) != 0) goto 256", "if ((r1 & 0x0) != 0) goto 32", "if ((r1 & 0x0) != 0) goto 4", "if ((r1 & 0x0) != 0) goto 64", "if ((r1 & 0x0) != 0) goto 8", "if ((r11 & 0x0) != 0) goto -2", "if ((r11 & 0x0) != 0) goto 0", "if ((r11 & 0x0) != 0) goto 128", "if ((r11 & 0x0) != 0) goto 16", "if ((r11 & 0x0) != 0) goto 2", "if ((r11 & 0x0) != 0) goto 256", "if ((r11 & 0x0) != 0) goto 32", "if ((r11 & 0x0) != 0) goto 4", "if ((r11 & 0x0) != 0) goto 64", "if ((r11 & 0x0) != 0) goto 8", "if ((r15 & 0x0) != 0) goto -2", "if ((r15 & 0x0) != 0) goto 0", "if ((r15 & 0x0) != 0) goto 128", "if ((r15 & 0x0) != 0) goto 16", "if ((r15 & 0x0) != 0) goto 2", "if ((r15 & 0x0) != 0) goto 256", "if ((r15 & 0x0) != 0) goto 32", "if ((r15 & 0x0) != 0) goto 4", "if ((r15 & 0x0) != 0) goto 64", "if ((r15 & 0x0) != 0) goto 8", "if ((r2 & 0x0) != 0) goto -2", "if ((r2 & 0x0) != 0) goto 0", "if ((r2 & 0x0) != 0) goto 128", "if ((r2 & 0x0) != 0) goto 16", "if ((r2 & 0x0) != 0) goto 2", "if ((r2 & 0x0) != 0) goto 256", "if ((r2 & 0x0) != 0) goto 32", "if ((r2 & 0x0) != 0) goto 4", "if ((r2 & 0x0) != 0) goto 64", "if ((r2 & 0x0) != 0) goto 8", "if ((r4 & 0x0) != 0) goto -2", "if ((r4 & 0x0) != 0) goto 0", "if ((r4 & 0x0) != 0) goto 128", "if ((r4 & 0x0) != 0) goto 16", "if ((r4 & 0x0) != 0) goto 2", "if ((r4 & 0x0) != 0) goto 256", "if ((r4 & 0x0) != 0) goto 32", "if ((r4 & 0x0) != 0) goto 4", "if ((r4 & 0x0) != 0) goto 64", "if ((r4 & 0x0) != 0) goto 8", "if ((r5 & 0x0) != 0) goto -2", "if ((r5 & 0x0) != 0) goto 0", "if ((r5 & 0x0) != 0) goto 128", "if ((r5 & 0x0) != 0) goto 16", "if ((r5 & 0x0) != 0) goto 2", "if ((r5 & 0x0) != 0) goto 256", "if ((r5 & 0x0) != 0) goto 32", "if ((r5 & 0x0) != 0) goto 4", "if ((r5 & 0x0) != 0) goto 64", "if ((r5 & 0x0) != 0) goto 8", "if ((r8 & 0x0) != 0) goto -2", "if ((r8 & 0x0) != 0) goto 0", "if ((r8 & 0x0) != 0) goto 128", "if ((r8 & 0x0) != 0) goto 16", "if ((r8 & 0x0) != 0) goto 2", "if ((r8 & 0x0) != 0) goto 256", "if ((r8 & 0x0) != 0) goto 32", "if ((r8 & 0x0) != 0) goto 4", "if ((r8 & 0x0) != 0) goto 64", "if ((r8 & 0x0) != 0) goto 8", "if ((r9 & 0x0) != 0) goto -2", "if ((r9 & 0x0) != 0) goto 0", "if ((r9 & 0x0) != 0) goto 128", "if ((r9 & 0x0) != 0) goto 16", "if ((r9 & 0x0) != 0) goto 2", "if ((r9 & 0x0) != 0) goto 256", "if ((r9 & 0x0) != 0) goto 32", "if ((r9 & 0x0) != 0) goto 4", "if ((r9 & 0x0) != 0) goto 64", "if ((r9 & 0x0) != 0) goto 8"]
 status = "confirmed"
 sources = ["oracle", "hardware"]

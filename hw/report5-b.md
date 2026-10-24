@@ -1,137 +1,111 @@
 <!-- SPDX-FileCopyrightText: 2026 Julius Vitkauskas -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
-# Analyst B: run-2 branch and call semantics
+# Analyst B: final run-2 branch and call semantics
 
 ## Result
 
-All **94 assigned forms match every one of their 1,128 recorded cases** in
-`hw/fm1-2026-10-24-v2/results.jsonl`. `tools/hwtest/semantics/b2.py` models all 94,
-including flags, registers, sp, rets, exit and scratch effects through the format-2
-checker. The four existing `basic2.py` models are unchanged. The table has evidence
-updates for the 94 forms plus notes/source updates for `beqz` and `rts`.
+All **97 assigned forms match every recorded case**: the original 94 match
+**1,128/1,128** cases in `hw/fm1-2026-10-24-v2/results.jsonl`; the follow-up covers
+93 assigned forms and matches **433/433** cases. Together that is **1,561/1,561**
+assigned cases. The follow-up also includes two `beqz` cases and 16 nop calibrations:
+its entire **451/451** records match, across **95/95** tested forms.
 
-No inconsistent behavior was found. Models express the best reading of the recorded
-cases; the specific gaps below remain pending hardware follow-up.
+`tools/hwtest/semantics/b2.py` now models `call.l`, `goto.l` and `call.xl` as well as
+the original 94 forms. The original generator's wide-offset solver omitted those
+three from run 2; the lead fixed it as 4c11712 and appended 12 generated cases each
+to `hw/followup5-b-run.json`. This omission was a coverage gap, not hardware failure.
+The four existing `basic2.py` models are unchanged. No inconsistent behavior was
+found, and no further follow-ups are requested.
 
-## Conditions and flags
+## Corrections and settled follow-up findings
 
-- Integer `if` relational branches (`bge`, `blt`, `bgt`, `ble`, every assigned operand
-  shape) compare **unsigned 32-bit** values. `ifs` (`bges`, `blts`, `bgts`, `bles`)
-  compares **signed 32-bit** values. Neither comparison modifies psr.
-- Equality/inequality compares all 32 bits. Signed immediate fields are sign-extended
-  to 32 bits, unsigned fields zero-extended, and modified immediates decoded before
-  comparison. Masked branches test `(register & register/mask) == 0` or `!= 0`.
-- Float branches interpret register bits as binary32. Ordered `eq/ge/lt/gt/le` are
-  false for unordered operands; `une/uge/ult/ugt/ule` include unordered. Existing
-  NaN cases support that reading in 14 of the 20 forms. The other six have no NaN
-  observations: `bfge.rr`, `bfge.rr.l`, `bfle.rr`, `bfle.rr.l`, `bflt.rr.l`,
-  `bfugt.rr`. Their NaN behavior is a model prediction based on the condition family
-  and compiler evidence, explicitly identified as pending in the table.
-- `bc.eq`: Z; `bc.ne`: !Z; `bc.cs`: C; `bc.cc`: !C;
-  `bc.hi`: C && !Z; `bc.ls`: !C || Z;
-  `bc.ge`: N == V; `bc.lt`: N != V;
-  `bc.gt`: !Z && (N == V); `bc.le`: Z || (N != V).
-  Here **N Z C V are psr bits 3 2 1 0**. These are predicates of the supplied flags,
-  without an implicit register comparison. The observations cover 84 of the 160
-  possible form/flag combinations; follow-up fills the other 76.
-- `beqz`/`bnez` test the register, not Z. `dbnz.r` decrements modulo 2^32, then tests
-  the new register value; it preserves flags even though ordinary subtraction would
-  update them. All twelve recorded `dbnz.r` counters take the branch, so the zero
-  result and wraparound need explicit probes.
+The new evidence is `hw/fm1-2026-10-24-v2/followup5-b.jsonl`, with scratch patterns
+in `hw/fm1-2026-10-24-v2/followup5-b.patterns.json`. The lead ran all 435 requested
+cases plus 16 calibrations in eight batches, without a reset; calibration passed.
+The original 399 probes settle the following points; the extra 36 establish the
+previously omitted forms.
 
-All 1,128 assigned cases preserve all four input flags, including float comparisons,
-masked comparisons, calls, and `dbnz.r`. No assigned form changes sp or scratch.
-Only `dbnz.r` changes a general register; only calls change rets. The existing
-`beqz` and `rts` cases also preserve their flags and other state.
+- **Calls save instruction address + 2 -> calls save the next instruction address,
+  instruction address + instruction length.** The original `call.r` and `call.s`
+  are 2 bytes long, so their earlier observations remain valid. All 12 `call.l`
+  cases save `stub + 4`; all 12 `call.xl` cases save `stub + 6`. Every case takes
+  its target. For example, `call.l` at 0x01c284c0 saves 0x01c284c4, and `call.xl`
+  at 0x01c20310 saves 0x01c20316. No general register, sp or scratch changes.
+- **Long jump offset base unspecified -> instruction end + byte offset.** All 12
+  `goto.l` cases take the target and preserve `rets` and all other captured state.
+  The long calls also use that offset base. These cases use displacement +4;
+  they establish the base and effects without exercising displacement-range limits.
+- **Six float forms had provisional NaN conditions -> all 20 float forms have
+  direct NaN evidence.** Each form passes five probes: +0 versus -0, both orders
+  of adjacent 0x3f800000/0x3f800001, quiet NaN on the left, and signaling NaN on the
+  right. Ordered `eq/ge/lt/gt/le` reject both NaNs; `une/uge/ult/ugt/ule` accept
+  both. This settles `bfge.rr`, `bfge.rr.l`, `bfle.rr`, `bfle.rr.l`, `bflt.rr.l`
+  and `bfugt.rr`, whose clauses were previously family-based predictions. The
+  notes now cite observed results without the pending-NaN hedges.
+- **Adjacent integer boundaries unobserved -> strict/non-strict comparisons
+  confirmed.** All 50 integer forms pass 0 and 2 against 1 (100 cases), alongside
+  the original equality cases. Forty relational probes cross explicit sign or
+  immediate-extension boundaries: 0x7fffffff/0x80000000, register 0 versus signed
+  immediate -1, 0x7fffffff versus modified immediate 0x80000000, or 0xffffffff
+  versus unsigned immediate 0. Unsuffixed relational forms compare unsigned
+  32-bit values; `ifs` forms compare signed 32-bit values. Signed immediates are
+  extended before comparison; modified immediates use their decoded value.
+- **Partial `bc.*` truth tables -> complete truth tables.** The 76 follow-up cases
+  fill every previously missing flag row. All ten forms now have observations for
+  all 16 N/Z/C/V combinations, with the predicates below unchanged.
+- **`ifs2ns.c/.s` unknown in the original table -> r0 bit-0 clear/set tests,
+  independent of flags.** The 64 follow-up cases cross both bit states under all
+  16 flags values for both encodings, also varying r0 bit 31. They confirm the
+  round-1 interpretation despite the unusual oracle spelling.
+- **`dbnz.r` zero-result/wraparound unobserved -> confirmed.** Input 0 becomes
+  0xffffffff and branches; 1 becomes 0 and falls through; 2 becomes 1 and branches.
+  All three preserve input flags 15. It decrements modulo 2^32 before testing.
+- **Masked and zero tests with conflicting flags -> confirmed.** Twelve masked
+  probes produce both zero and nonzero AND results while flags suggest the
+  opposite outcome. Four `beqz`/`bnez` probes confirm they test the register
+  directly, independently of input Z. All preserve flags. The earlier correction
+  to `beqz` remains: an unpinned offset base is now instruction end + byte offset.
 
-## Corrections and newly settled details
+Earlier table corrections remain in place: unsigned signedness is explicit in
+unsuffixed relational summaries, and previously unspecified float conditions and
+inferred ARM-style flag names now have explicit hardware-supported predicates.
+`rts` continues at `rets` and preserves the captured state.
 
-1. `ifs2ns.c`, `ifs2ns.s`: **unknown meaning -> r0 bit-0 clear/set tests**.
-   The `(c)` encoding branches exactly when `(r0 & 1) == 0`; `(s)` exactly when
-   `(r0 & 1) != 0`, each 12/12. Identical flags can produce opposite exits:
-   `(c)` with flags 8 falls through for r0 = 0x40490fdb and branches for
-   r0 = 0x1d7accf4; `(s)` with flags 0 falls through for r0 = 0x20 and branches
-   for r0 = 0x55555555. These are operationally the fixed-r0, bit-0 cases in the
-   bit-test encoding family, despite the oracle's unusual spelling. The wider
-   meaning suggested by the name is not established. Follow-up crosses bit 0 with
-   every flags value and varies the r0 sign, so the model is not silently justified
-   by a flag correlation.
-2. `call.r`, `call.s`: **unspecified return-address value -> instruction address + 2**,
-   the first byte after the 2-byte call. Every call takes its target and writes
-   `rets = st.end`, retaining all flags, registers, sp and scratch. For example,
-   `call.r` at 0x01c28330 records rets = 0x01c28332, distinct from its target.
-3. `beqz`: **offset base described as unpinned -> instruction end + byte offset**.
-   This agrees with `docs/COMPILER.md`. All assigned relative branches/calls use
-   this base; recorded branch displacements are +4 to the generated taken label.
-   No claim is made that this run exercised long-range or backward displacement
-   boundaries. Its existing executable model is unchanged.
-4. `bc.*`: **names/ARM-style inference -> explicit tested N/Z/C/V predicates** above.
-   The old ARM-style reading is consistent with every observation; it was incomplete
-   as evidence and did not provide exact predicates in the summaries.
-5. Unsuffixed relational compare branches: **summaries omitting signedness -> explicit
-   unsigned comparison**. Signed `ifs` forms agree with their previous signed claim.
-   Every integer form has 4..6 equality observations, but none has operands differing
-   by exactly one. Equality evidence alone does not prove a strict/non-strict boundary.
-6. `bf*`: **generic floating comparison / unspecified NaN behavior -> explicit ordered
-   or unordered-inclusive binary32 condition**, supported by NaN observations in the
-   14 forms identified above. The six untested NaN clauses remain explicitly
-   provisional. Existing claims inferred from compiler output are now distinguished
-   from direct hardware evidence. No IEEE exception or NaN-payload behavior is inferred.
-7. All 96 edited entries cite `hardware` and `hw/fm1-2026-10-24-v2`, and state that
-   N/Z/C/V are preserved. `goto.r`, `goto.s`, `bnez`, `rts`, ordinary/masked compares,
-   and `dbnz.r` retain their previously stated value/control-flow meanings.
+## Flags and state
 
-Only `summary`, `notes` and `sources` changed in `isa/pi32v2.toml`; a structural
-comparison verified every other key against the original table. Encodings, syntax,
-fields, examples and status are untouched, including the `ifs2ns` spelling/IDs.
+N Z C V are psr bits 3 2 1 0. The complete `bc.*` predicates are:
 
-## Requested follow-up
+- `eq`: Z; `ne`: !Z; `cs`: C; `cc`: !C.
+- `hi`: C && !Z; `ls`: !C || Z.
+- `ge`: N == V; `lt`: N != V.
+- `gt`: !Z && (N == V); `le`: Z || (N != V).
 
-`hw/followup5-b.json` contains **399 cases**, built successfully with:
+Every assigned case in both files preserves all four input flags, including float
+and masked comparisons, calls and `dbnz.r`. No assigned form changes sp or scratch.
+Only `dbnz.r` changes a general register; only calls change `rets`. Every assigned
+conditional form has both taken and fall-through hardware observations.
 
-```
-python3 tools/hwtest/gen.py /tmp/hw5-b --cases hw/followup5-b.json
-```
-
-The seven batches contain 399 requested cases for 91 forms, plus 14 generated nop
-calibrations. No hardware, ssh, or generated run script was executed.
-
-- **76** cases supply every missing `bc.*` flags value, completing all ten truth
-  tables when combined with run 2.
-- **64** cases test both r0-bit-0 states for both `ifs2ns` encodings under all 16
-  flags values. Alternate flags rows also change r0 bit 31.
-- **100** cases put 0 and 2 against 1 for every one of the 50 integer equality and
-  relational forms. Existing cases provide equality; these add both immediate
-  neighbors with deliberately conflicting flags.
-- **40** cases put the relational forms across explicit signed/unsigned boundaries:
-  register pairs 0x7fffffff/0x80000000; signed immediate -1 against register 0;
-  modified immediate 0x80000000 against 0x7fffffff; unsigned immediate 0 against
-  0xffffffff. These distinguish sign interpretation and immediate extension.
-- **100** cases test each float form with +0/-0, the two orders of adjacent values
-  0x3f800000/0x3f800001, quiet NaN on the left, and signaling NaN on the right.
-  These cover the unobserved NaN predicates and important equality/order boundaries.
-  They do not exhaust every NaN class, sign and operand-position cross-product.
-- **12** masked cases deliberately produce zero/nonzero AND results with input
-  flags suggesting the opposite outcome. Single-bit masks use bit 0; register and
-  modified-immediate masks have value 1.
-- **3** `dbnz.r` cases use 0, 1, 2 to check wraparound, falling through after decrement
-  to zero, and the neighboring taken case while preserving flags = 15.
-- **4** cases test zero/nonzero `beqz` and `bnez` against conflicting input Z flags.
-
-No memory accesses, deliberate misalignment, or RESETS forms are requested. These
-are requested inputs, not new hardware evidence; results must be checked before
-claiming their boundaries fully settled.
+The tested operand boundaries and NaN conditions are settled. The probes do not
+exhaust every NaN payload/sign/operand-position combination, establish IEEE
+exception behavior, or exercise backward/maximum-range branch displacements.
+Those are scope limits, not outstanding requested follow-ups.
 
 ## Validation
 
 - `python3 -m pi32v2isa check`: **1,165 entries, 0 problems**.
 - `python3 -m unittest discover -s tests`: **120 tests, OK (13 skipped)**.
-- Original results: **352/352 modeled entries match**; 1 of 353 tested entries lacks
-  a model (outside this assignment).
-- Run-2 results: **104/104 modeled entries match**, including all 94 assigned forms;
-  222 of 326 tested entries lack models (outside this assignment).
-- Follow-up generation succeeds: **399 cases, 7 batches**.
-- `git diff --check` succeeds.
-- Follow-up audit: recorded exits plus predicted follow-up exits cover both outcomes
-  of every assigned conditional form; combined original/follow-up bc flags cover
-  all 16 input values for every form. Predictions are not hardware observations.
+- Original results: **352/352 modeled entries match**; 1 of 353 tested entries
+  lacks a model (outside this assignment).
+- Run-2 results: **104/104 modeled entries match**; 222 of 326 tested entries
+  lack models (outside this assignment); all 94 assigned forms present match.
+- Follow-up results: **95/95 modeled entries match, 451 cases, no missing models**.
+- `python3 tools/hwtest/gen.py /tmp/hw5-b --cases hw/followup5-b.json`:
+  **399 cases build in seven batches**, plus 14 generated calibrations.
+- Structural table audit against the previous commit: **96 entries changed**, only
+  `notes` and `sources`; encodings, syntax, fields, examples, status and all other
+  keys are unchanged. The new three forms now cite `hardware`.
+- Combined coverage audit confirms all 97 assigned forms, both exits of every
+  conditional form and every flag row for each `bc.*` predicate.
+- `git diff --check` passes. The lead's `check.py` change loading named follow-up
+  pattern files is retained. No hardware, ssh or generated run script was executed
+  by this analyst, and no new follow-up cases were added.

@@ -41,3 +41,11 @@ back in download mode with `m-flasher download-mode`). Run case by case:
 
 The cases of those batches that do not reset were run again as `batch-memfix-*` (with 12 new `ld.w.npc` cases,
 offsets multiples of 4), and the single-case probes as `batch-bis-*`; both are in `results.jsonl`.
+
+Analyst B's `followup5-b.jsonl` records 435 cases from `hw/followup5-b-run.json` plus 16 nop calibrations
+in eight batches, all completed without a reset; calibration passed. Its scratch patterns are in
+`followup5-b.patterns.json`. The 399 boundary/NaN/flag/decrement probes agree with the branch models. The
+additional 12 cases each of `call.l`, `goto.l` and `call.xl` cover forms omitted by the original generator's
+wide-offset solver: all take the target, calls save the next instruction address (`stub + 4` / `stub + 6`),
+and `goto.l` preserves `rets`. All 451 records match, including preserved N/Z/C/V. See
+[the analyst B report](../report5-b.md) for the evidence and remaining scope limits.

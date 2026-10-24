@@ -5,7 +5,8 @@
 All these forms preserve N/Z/C/V. Compare-and-branch tests its operands
 without publishing a subtraction/AND/float-compare result to psr.
 ifs2ns.c/s are the r0 bit-zero tests despite their unusual printed names.
-See hw/report5-b.md for evidence limits and follow-up boundaries.
+Calls save the next instruction address, independent of instruction length.
+See hw/report5-b.md for the original and follow-up hardware evidence.
 """
 
 MASK = 0xFFFFFFFF
@@ -85,7 +86,8 @@ def ifs2ns_s(R, f, o, st):
 
 
 MODELS = {
-    "call.r": call, "call.s": call, "goto.r": jump, "goto.s": jump,
+    "call.r": call, "call.s": call, "call.l": call, "call.xl": call,
+    "goto.r": jump, "goto.s": jump, "goto.l": jump,
     "bnez": bnez, "dbnz.r": dbnz, "ifs2ns.c": ifs2ns_c, "ifs2ns.s": ifs2ns_s,
 }
 for condition in ("eq", "ne", "cs", "cc", "hi", "ls", "ge", "lt", "gt", "le"):
