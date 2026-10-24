@@ -1897,7 +1897,7 @@ group = "shifts"
 summary = "Shift a register by a register, the <<< operation."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Meaning unknown; named after the symbol objdump prints."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only)."
 
 [[insn.example]]
 bytes = "08 1a"
@@ -1956,10 +1956,10 @@ syntax = "{d} >>>= {s}"
 encoding = ["000110101sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo" }
 group = "shifts"
-summary = "Arithmetic shift right (sign fill) by a register: rd >>>= rs (r0..r7). Proposed id: asr.rr."
+summary = "Arithmetic shift right (sign fill) by a register: rd >>>= rs (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). Meaning unknown; named after the symbol objdump prints. [compiler] signed `a >> b` with a variable count compiles to `r0 >>>= r1`; the compiler also clamps the count to 31 first (`ifs (r1 >= 31) { r1 = 31 }`) for `b >= 32 ? a >> 31 : a >> b`, so >=32 is not established."
+notes = "Layout from oracle fit: destination in bits 2..0, source in bits 6..4, bit 3 picks between the pair of operations (r0..r7 only). [compiler] signed `a >> b` with a variable count compiles to `r0 >>>= r1`; the compiler also clamps the count to 31 first (`ifs (r1 >= 31) { r1 = 31 }`) for `b >= 32 ? a >> 31 : a >> b`, so >=32 is not established."
 
 [[insn.example]]
 bytes = "88 1a"
@@ -3840,7 +3840,7 @@ group = "shifts"
 summary = "Write r0..r7 <<< 1..32 to r0..r7, as printed by objdump."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. Operation meaning unknown. The zero immediate encoding prints 32, not 0."
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The zero immediate encoding prints 32, not 0."
 
 [[insn.example]]
 bytes = "08 a0"
@@ -3909,10 +3909,10 @@ syntax = "{d} = {s} >>> {n}"
 encoding = ["101nnnnn1sss1ddd"]
 fields = { d = "gpr_lo", s = "gpr_lo", n = { kind = "uimm", zero_as = 32 } }
 group = "shifts"
-summary = "Arithmetic shift right (sign fill) by an immediate 1..32: rd = rs >>> n (r0..r7). Proposed id: asr.rri."
+summary = "Arithmetic shift right (sign fill) by an immediate 1..32: rd = rs >>> n (r0..r7)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. Operation meaning unknown. The zero immediate encoding prints 32, not 0. [compiler] signed `a >> 5` -> `r0 = r0 >>> 5`; `a >> 31` gives the sign mask (`r1 = r0 >>> 31` in `(long long)a` sign extension)."
+notes = "Layout from oracle fit over the 16-bit sweep, split by opcode bits to isolate this form. The zero immediate encoding prints 32, not 0. [compiler] signed `a >> 5` -> `r0 = r0 >>> 5`; `a >> 31` gives the sign mask (`r1 = r0 >>> 31` in `(long long)a` sign extension)."
 
 [[insn.example]]
 bytes = "88 a0"
@@ -5267,7 +5267,7 @@ syntax = "{r} = {s} >>> {n}"
 encoding = ["1110000111000000", "rrrr110nssssnnnn"]
 fields = { r = "gpr", s = "gpr", n = { kind = "uimm", zero_as = 32 } }
 group = "shifts"
-summary = "Arithmetic shift right (sign fill) by an immediate 1..32, 32-bit encoding that reaches r0..r15: rd = rs >>> n. Proposed id: asr.rri.l."
+summary = "Arithmetic shift right (sign fill) by an immediate 1..32, 32-bit encoding that reaches r0..r15: rd = rs >>> n."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding (raw amount 0 prints as 32). Not confirmed: for `>>> 32` the assembler emits the 16-bit asr.rri, which objdump prints as `>>> 0`. [compiler] with register pressure: `r6 = r11 >>> 2` for a signed `>> 2`."
@@ -5306,7 +5306,7 @@ group = "shifts"
 summary = "Rotate right by an immediate: rd = rs rotated right by n (32-bit)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> 5) | (a << 27)` -> `r0 = r0 <> 5`; `(a >> 16) | (a << 16)` -> `r0 = r0 <> 16`. Proposed id: ror.rri."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `(a >> 5) | (a << 27)` -> `r0 = r0 <> 5`; `(a >> 16) | (a << 16)` -> `r0 = r0 <> 16`."
 
 [[insn.example]]
 bytes = "c4 e1 00 00"
@@ -5483,7 +5483,7 @@ syntax = "{r} = {s} >>> {t}"
 encoding = ["1110000111001000", "rrrrttttssss0011"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "shifts"
-summary = "Arithmetic shift right (sign fill), three registers: rd = rs >>> rt (r0..r15). Proposed id: asr.rrr."
+summary = "Arithmetic shift right (sign fill), three registers: rd = rs >>> rt (r0..r15)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: with destination equal to the first source the assembler emits the 16-bit asr.rr, which the checker does not equate with `r0 = r0 >>> r1`. [compiler] `b >= 0 ? a >> b : a << -b` -> `r0 = r2 >>> r1`."
@@ -5522,7 +5522,7 @@ group = "shifts"
 summary = "Rotate right by a register: rd = rs rotated right by rt (32-bit)."
 status = "confirmed"
 sources = ["oracle", "compiler"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. Proposed id: ror.rrr. [compiler] also `(a >> n) | (a << (32 - n))` -> `r0 = r0 <> r1` directly, and `(a >> (n & 31)) | (a << (-n & 31))` -> `r1 = r1 & 0x1F` then `<>`."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] rotate left by b, `(a << b) | (a >> (32 - b))`, -> `r1 = 0x20 - r1` then `r0 = r0 <> r1`, so `<>` rotates right. [compiler] also `(a >> n) | (a << (32 - n))` -> `r0 = r0 <> r1` directly, and `(a >> (n & 31)) | (a << (-n & 31))` -> `r1 = r1 & 0x1F` then `<>`."
 
 [[insn.example]]
 bytes = "cc e1 00 00"
@@ -5684,7 +5684,7 @@ syntax = "{r} >>>= {n}"
 encoding = ["1110000111010000", "rrr011nn0000nnnn"]
 fields = { r = "pair", n = { kind = "uimm", zero_as = 64 } }
 group = "shifts"
-summary = "64-bit arithmetic shift right (sign fill) of a register pair by 1..64: p >>>= n. Proposed id: asr.pair.i."
+summary = "64-bit arithmetic shift right (sign fill) of a register pair by 1..64: p >>>= n."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> 7` -> `r1_r0 >>>= 7`, `>> 40` -> `>>>= 40`, `>> 63` -> `>>>= 63`."
@@ -5962,7 +5962,7 @@ syntax = "{r} >>>= {s}"
 encoding = ["1110000111011000", "rrr0ssss00000011"]
 fields = { r = "pair", s = "gpr" }
 group = "shifts"
-summary = "64-bit arithmetic shift right (sign fill) of a register pair by a register: p >>>= r. Proposed id: asr.pair.r."
+summary = "64-bit arithmetic shift right (sign fill) of a register pair by a register: p >>>= r."
 status = "confirmed"
 sources = ["oracle", "compiler"]
 notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long >> int` -> `r1_r0 >>>= r2` (also for `(int)(a >> n)`)."

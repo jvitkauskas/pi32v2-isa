@@ -30,7 +30,10 @@ Priorities from real code [fm1-firmware-stats]: one FM-1 factory firmware uses 5
 of its image decodes, and the undecodable words inside code are data (text, small constants), apart from one
 that decodes only with `+instrev3`. Forms it uses whose meaning is still open, most used first: `sti.r`,
 `shl3.rri` (`<<<`, 514 uses), `lockclr`, `lockset`, `cli.r`, `callns.r`, `gotoss.xl`, `btbclr`, then 86 DSP forms
-led by `smin`/`umin`/`smax`, halfword add/sub and saturating multiplies.
+led by `smin`/`umin`/`smax`, halfword add/sub and saturating multiplies. M-VAVE's 016 package (2026-10-21)
+gives the same picture: 598 forms used, all decoding as objdump does at `-mcpu=r3`; it uses the FPU far more
+(5090 FPU instructions, `madd.f.rrr` 111 times, which JieLi's compiler never emits), and with `+instrev3` it
+contains parallel twins of revision-3 forms the table does not have yet (`unpack4 ... #`, `sum(... *|*|*|* ...) #`).
 
 `confirmed` covers encoding and syntax only. The compiler showed what many instructions do (summaries and
 notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
