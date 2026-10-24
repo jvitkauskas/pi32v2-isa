@@ -22,17 +22,24 @@ Still open on the encoding side:
 
 ## Meaning (behaviour)
 
-`confirmed` covers encoding and syntax only. Unknown or unverified:
+`confirmed` covers encoding and syntax only. The compiler showed what many instructions do (summaries and
+notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
 
-- `<<<` and `>>>`: the compiler uses `>>>` for a signed `>>` (an arithmetic shift); `<<<` not yet seen.
-- `callns`, `rtns`, `rtss`, `rthw`, `ifs2ns`, `gotoss`, `npc`: look like secure/non-secure state handling
-  (ARMv8-M style); unknown.
-- `sevl`, `sevg`, `wfe`, `lockset`, `lockclr`, `testset`, `trigger`, `cli R` / `sti R`; special registers
-  `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
-- Floating point: format (IEEE single assumed), rounding of the plain operations, fused or not, exceptions.
-- DSP: saturation and averaging details, `(x2)`, `(rnd,...)`, lane order.
-- What a branch offset is relative to; what `if (...) {` blocks cover; parallel-issue pairing rules.
-- Flags: which instructions set `cc` and the flags `ifeq`..`ifle` test.
+- Instructions the compiler never emits: `<<<` (`shl3`), `<c>` (`cycc`), the register-count `rep`, `ifs2ns`,
+  `gotoss`, `ld.w.npc`, and the whole DSP/SIMD group (about 450 entries still say "meaning unknown").
+- Edge cases: shift counts of 32 or more, divide by zero, `abs` of 0x80000000, NaN in `fmin`/`fmax`.
+- Flags: which `psr` bits are sign, overflow and zero; which instructions write them.
+- `callns`, `rtns`, `rtss`, `rthw`, `npc`, `sevl`, `sevg`, `wfe`, `trigger`, `cli R` / `sti R`; special
+  registers `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
+- Floating point: format (IEEE single assumed), rounding of the plain operations, exceptions.
+- All of this needs tests on hardware (an FM-1 running small test programs) or other evidence.
+
+## Table defects to fix
+
+- The `if`, `ifs` and `iff` block openers (about 50 entries) mark the block-shape bits (second word, bits
+  15..12) as ignored. objdump prints the same opener line whatever they hold, so `confirm` cannot see them,
+  but an assembler must set them from the block's body. The format needs a field that is implied by the
+  block rather than printed (like `body` for `rep`).
 
 ## ABI and object files
 

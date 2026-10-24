@@ -44,8 +44,9 @@ with the same operation. Follow the existing entries:
 | stack: `push.`/`pop.` + what | `push.rl`, `pop.srl` |
 | parallel-issue (`#`) twin of an entry: the entry's id + `.p` | `add.rrr.p` |
 
-When an operation's meaning is not known, name it after what objdump prints (`<<<` is `shl3`, not a guess
-at "rotate"), and say so in `notes`. A name says what the instruction is, never where it was found.
+When an operation's meaning is not known, name it after what objdump prints (`<<<` is `shl3`, not a guess),
+and say so in `notes`; rename it once the meaning is established. Established so far: `>>>` is `asr`
+(arithmetic shift right) and `>>` is `lsr`, `<>` is `ror` (rotate right), `zcmp(...)` is `sgn`. A name says what the instruction is, never where it was found.
 
 ## Encoding strings
 

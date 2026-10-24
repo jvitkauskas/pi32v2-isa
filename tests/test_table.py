@@ -71,7 +71,7 @@ class RealTable(unittest.TestCase):
             ("and.invbit", {"r": 7, "b": 31}, "r7 &= 2147483647"),
             ("lsl.rri", {"d": 0, "s": 1, "n": 0}, "r0 = r1 << 32"),
             ("lsl.rri", {"d": 0, "s": 1, "n": 1}, "r0 = r1 << 1"),
-            ("shr3.rri", {"d": 7, "s": 0, "n": 31}, "r7 = r0 >>> 31"),
+            ("asr.rri", {"d": 7, "s": 0, "n": 31}, "r7 = r0 >>> 31"),
             ("pop.rl", {"l": 2}, "{r3, r2} = [sp++]"),
             ("pop.rl", {"l": 6}, "{r6-r4} = [sp++]"),
             ("push.rmask", {"m": 0b110110}, "[--sp] = {r5, r4, r2, r1}"),

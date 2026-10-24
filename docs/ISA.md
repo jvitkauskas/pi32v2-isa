@@ -83,9 +83,12 @@ Spellings found so far [oracle]:
 - Byte and halfword loads end in `(u)` (zero-extended) or `(s)`; the assembler accepts the line without it.
 - Constants print in decimal, except `li.modimm`'s, which print in hex.
 - A branch prints its offset followed by the target as `<symbol+offset : address >`.
-- Parallel issue: objdump prints two spaces and `#` after the instruction (`r0 = r1 + r2  #`); the assembler
-  takes `r0 = r1 + r2 #`. Writing a second instruction after the `#` (`... # r3 = r4`) was refused with
-  "invalid parallel-B instruction" in the cases tried.
+- Parallel issue: objdump prints two spaces and `#` after the first instruction of a pair
+  (`r0 = r1 + r2  #`); the second follows on the next line. The assembler takes `r0 = r1 + r2 #` and then
+  the second instruction on its own line; the first may be any ALU, move, multiply, divide, float or
+  bit-field form with a `.p` twin, the second must be a 16-bit load or store on `r0`..`r7` with a short
+  offset ("invalid parallel-B instruction" otherwise) [oracle]. The pair issues together: the second reads
+  registers as they were before the first writes them [compiler] ([COMPILER.md](COMPILER.md)).
 - Blocks: `rep` and `if (...) {` open a block that objdump prints indented, closed by a `}` line that takes no
   bytes. The assembler wants `rep r1 {` / `rep 3 {`, body, `}`, and works out the body's length itself.
 - Halves and lanes: `r1.l` and `r1.h` are a register's low and high 16 bits; `r1.b0`..`r1.b3` its bytes.
@@ -146,18 +149,27 @@ becomes `r1 += r2` where that form exists.
 
 ## 6. Execution model
 
-Known so far [oracle]:
+Known so far [oracle, compiler; evidence in [COMPILER.md](COMPILER.md)]:
+
+- Branch offsets are relative to the end of the branch instruction.
+- `if (cond) {` blocks are predication: the following 1..4 instructions run only if the condition holds,
+  optionally followed by `} else {` and 0..3 more that run otherwise. The shape is in the opener's second
+  word, bits 15..14 (then-count - 1) and 13..12 (else-count); objdump shows it only by where it prints `}`.
+- Flags: `add`/`sub` set the carry in `psr` bit 1 (set when there is no borrow); `addc` adds it, `subc`
+  subtracts its complement; a signed `<` tests `psr` bit 3 xor bit 0.
+- `if` compares are unsigned, `ifs` signed (no difference for `==`, `!=`), `iff` floating point; the `u`
+  floating conditions are also true when an operand is NaN.
 
 - `rep` repeats the block after it: `rep r1 {` takes the count from a register, `rep 3 {` from a number
   (1..32); the body is 2..32 bytes (1..16 words).
-- `if (cond) {` makes the following block conditional; the closing `}` takes no bytes, so the block's extent is
-  not encoded in the `if` word itself as far as objdump shows. Compare-and-branch forms jump instead.
+- The closing `}` of a block takes no bytes; a `rep` body's length is in the `rep` word, an `if` block's
+  shape in the opener's second word (above).
 - Shift amounts run 1..32 (1..64 for pairs); a zero amount field means 32 (64).
 - The vector compares `all`/`any`/`cmp(...) (v)` in F000..F7FF print without the `#` other twins carry.
 - `.pin` post-increment steps by the access size only (±4, ±2, ±1), the sign picked by one bit.
 
-**Pending:** what a branch offset is relative to (objdump prints the same offset at any address), parallel
-issue, `rep` hardware loops (`rep` takes a count register and covers the following
+**Pending:** which `psr` bits are sign, overflow and zero, and which instructions write the flags; `rep`
+hardware loops (`rep` takes a count register and covers the following
 instruction words [kagaimiq-jielie]), if/then/else blocks [virtualabs-ghidra], flags, delay slots if any.
 
 ## 7. Interrupts, exceptions and modes
@@ -193,8 +205,10 @@ Relocations seen in the FM-1 objects [oracle]:
 
 | Type | Used by |
 | --- | --- |
-| `R_PI32V2_MOV_ABS32` | `li.u32`, `li.sr_u32` with a symbol: the 32-bit constant |
-| `R_PI32V2_LONG_JUMP_23M2` | `call.l`, `goto.l` with a symbol: the 22-bit offset, in units of 2 |
+| `R_PI32V2_MOV_ABS32` (5) | `li.u32`, `li.sr_u32` with a symbol: the 32-bit constant |
+| `R_PI32V2_LONG_JUMP_23M2` (2) | `call.l`, `goto.l` with a symbol: the 22-bit offset, in units of 2 |
+| `R_PI32V2_ABS32` (8) | a 32-bit data word holding an address [compiler] |
+| `R_PI32V2_FUNCDESC` (11), `R_PI32V2_GOT16` (15) | position-independent code (`-fPIC`), with `r15` as the GOT pointer [compiler] |
 
 **Pending:** the other relocation types, their numbers and exact fields, section flags and symbol conventions,
 which the assembler needs to write objects JieLi's linker accepts.
