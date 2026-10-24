@@ -276,8 +276,9 @@ It takes 2 to 4 seconds of CPU time for Felucca's 566 KB firmware (JieLi's takes
 - JieLi's tool prints the part of its output that came before an error (a bad symbol index); this one prints
   nothing for the file.
 - Block bookkeeping beyond 5.7 (a block left open, nested openers inside a stuck block, `rep` bodies that start in the
-  middle of an instruction) was matched on random streams but not derived: of 1000 random objects 3 differ
-  (after the fixes in 5.7, see the validation numbers in section 8).
+  middle of an instruction) was matched on random streams but not derived: of 400 random instruction streams 2 differ
+  (a `rep` opener that closes a block when it is the second half of a pair prints its `} {` with the tab in one, and in
+  in the other a stuck `if` block ends after a chain of pairs where JieLi's closes it one instruction earlier).
 - `<unknown instruction>` depends on the table: a form JieLi decodes and the table lacks would show as unknown
   ([GAPS.md](GAPS.md)). None was found in the compiler's output, the FM-1 sources and the random streams.
 
@@ -301,8 +302,8 @@ Results (2026-10-24, toolchain 20260730.1):
 | 191 objects: the 11 FM-1 `.S` files assembled with JieLi's clang (m-bootloader 2, Felucca 4, felucca-bsp 5), the 50 files of `tests/corpus` at -O0/-O2/-Os (150), the 30 `tests/asm` snippets | the 8 standard sets | 1528 comparisons, all identical |
 | Felucca app (`felucca.elf`, 566 KB; `felucca.o` 1.1 MB) and update loader, built as `tools/build.py` does | the 8 sets, `-d -j .ram_text -j .c1_text`, `-h -j .text` | identical (`-d`: 124 409 lines) |
 | m-bootloader: `uboot.elf` (FM-1, SMK37), `installer.elf`, `loader.elf` (LTO and `--relax`) | the same | identical |
-| 81 executables linked with JieLi's `ld` from the objects above | `-d`, `-d -mcpu=r3`, `-D`, `-h`, `-t`, `-s`, `-d -r` | identical |
-| random objects: 800 instruction streams (table forms with random fields and noise, pairs and blocks, jump-table symbols, relocations), 300 well-formed `if` blocks, 40 symbol tables with every type, binding, visibility and section index, 30 relocation tables with every type | `-d -mcpu=r3 -r`, `-D`, `-t`, `-h`, `-r`, `-s` | see section 7 |
+| 81 executables linked with JieLi's `ld` from the objects above (the `-O2` corpus files and the `.S` objects) | `-d`, `-d -mcpu=r3`, `-D`, `-h`, `-t`, `-s`, `-d -r` | identical |
+| random objects: 400 instruction streams (table forms with random fields and noise, pairs, blocks, jump-table symbols, relocations), 180 well-formed `if`-block streams, 52 symbol tables with every type, binding, visibility and section index, 30 relocation tables with every type | `-d -mcpu=r3 -r`, `-d -r`, `-D`; the symbol and relocation ones `-t -h -r -s -d -r` | all identical except 2 of the 400 streams (section 7) |
 
 fm1-base's own build needs JieLi's AC79 SDK (`uboot.boot`), which is not available here, so its executable was not
 produced; it calls the same four commands on code the BSP objects above cover.
