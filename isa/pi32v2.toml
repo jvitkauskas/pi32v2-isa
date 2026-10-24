@@ -17751,10 +17751,10 @@ encoding = ["1110000111111111", "rrr-sss-nnnnnnnn"]
 fields = { r = "pair", s = "pair", n = "uimm" }
 group = "dsp"
 absent_on = ["generic"]
-summary = "Transform a source register pair under an 8-bit immediate control; numeric meaning unresolved."
+summary = "Control-dependent pair operation; numeric meaning and possible state dependence unresolved."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously meaning unknown beyond syntax. All 92 original and follow-up cases write only the destination pair and preserve low psr bits. The 80 follow-up cases cross five basis inputs with 16 controls. With zero input, control 0 gives even/odd 0x20000000/0, control 7 gives 0x80000000/0x80, and control 16 gives 0x3f800000/0x30800000. Controls 0/32/64/128 agree for all five inputs, as do 31/63/127/255; this supports ignoring control bits 7:5 for those sampled low modes, not a proof for every mode. Control 15 maps 0x40000000/0 to 0x35009019/0xfffffff5, but control 31 gives 0x3500901c/0x0b: bit 4 is significant. Nonlinear control-dependent numerical behavior remains unresolved; no lookup-table model. [hardware] hw/fm1-2026-10-24/results.jsonl and hw/fm1-2026-10-24/followup-q.jsonl (80 follow-up cases); conclusions apply to the tested AC791N."
+notes = "Previously meaning unknown beyond syntax; a pure source/control transform remains unestablished. All 364 cases across results.jsonl, followup-q.jsonl and followup-q2.jsonl write only the destination pair and preserve low psr bits. Mode = control & 31: upper masks 32/64/128/224 leave outputs unchanged for sampled modes 0/1/2/3/4/7/8/15 on source even/odd 0x10000000/0x08000000; earlier basis cases also agree for modes 0 and 31. Bit 4 matters in some modes: zero source gives 0x20000000/0 under control 0, but 0x3f800000/0x30800000 under control 16. Both source words can affect the result. Modes 11/12/13/14/27/28/29/30 copy all 32 source odd bits into destination odd in all 63 sampled cases; other output formulas remain unresolved. For modes 0..14, zero/all-ones old destinations and source/destination overlap agree with the ordinary destination on the common nonzero source. Mode 15 is the exception: followup-q2.jsonl lines 96 and 274 use identical instruction bytes ffe10f04, source 0x10000000/0x08000000 and flags 15, but yield 0x0d40240a/0x06a01206 versus 0x1c3b9230/0x19cb9f24; old destinations differ. Line 274 follows mode 14, whereas line 96 follows mode 15. Previous destination dependence and persistent internal state/history cannot be distinguished. The earlier mode-15/mode-31 residual differences therefore do not alone prove a bit-4 effect for that operation. No numerical or lookup-table model and no further follow-up request. [hardware] hw/fm1-2026-10-24/results.jsonl (12 cases), hw/fm1-2026-10-24/followup-q.jsonl (80), hw/fm1-2026-10-24/followup-q2.jsonl (272); tested AC791N only."
 
 [[insn.example]]
 bytes = "ff e1 00 00"
@@ -18050,7 +18050,7 @@ absent_on = ["r1", "r5"]
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with zero extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. hw/fm1-2026-10-24/followup-q2.jsonl adds three matching cases: mixed-sign bytes, zero and all ones, including overlap; old and revision-3 forms agree in the matched inputs and preserve low flags."
 
 [[insn.example]]
 bytes = "08 e4 00 00"
@@ -18082,7 +18082,7 @@ absent_on = ["r1", "r5"]
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with sign extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N."
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. hw/fm1-2026-10-24/followup-q2.jsonl adds three matching cases: mixed-sign bytes, zero and all ones, including overlap; old and revision-3 forms agree in the matched inputs and preserve low flags."
 
 [[insn.example]]
 bytes = "08 e4 01 00"
@@ -43747,7 +43747,7 @@ absent_on = ["r1", "r5"]
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with zero extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. Encoding comparison with unpackb.u.pr: word 0 is identical; after p/r renaming, word 1 differs only at bit 1 (set here, clear in unpackb). Consistent with this core ignoring that selector bit; the table fixes it and does not itself mark it ignored. No unpack cases were included in followup-q.jsonl."
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. Encoding comparison with unpackb.u.pr: word 0 is identical; after p/r renaming, word 1 differs only at bit 1 (set here, clear in unpackb). Consistent with this core ignoring that selector bit; the table fixes it and does not itself mark it ignored. hw/fm1-2026-10-24/followup-q2.jsonl adds three matching cases: mixed-sign bytes, zero and all ones, including overlap; old and revision-3 forms agree in the matched inputs and preserve low flags."
 
 [[insn.example]]
 bytes = "08 e4 02 00"
@@ -43781,7 +43781,7 @@ absent_on = ["r1", "r5"]
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with sign extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. Encoding comparison with unpackb.s.pr: word 0 is identical; after p/r renaming, word 1 differs only at bit 1 (set here, clear in unpackb). Consistent with this core ignoring that selector bit; the table fixes it and does not itself mark it ignored. No unpack cases were included in followup-q.jsonl."
+notes = "Previously lane layout unestablished. Byte 0 becomes the even destination register low halfword; byte 3 becomes the odd register high halfword. The revision-3 spelling behaves like unpackb on this chip. Low psr bits were preserved. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. Encoding comparison with unpackb.s.pr: word 0 is identical; after p/r renaming, word 1 differs only at bit 1 (set here, clear in unpackb). Consistent with this core ignoring that selector bit; the table fixes it and does not itself mark it ignored. hw/fm1-2026-10-24/followup-q2.jsonl adds three matching cases: mixed-sign bytes, zero and all ones, including overlap; old and revision-3 forms agree in the matched inputs and preserve low flags."
 
 [[insn.example]]
 bytes = "08 e4 03 00"

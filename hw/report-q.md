@@ -1,10 +1,151 @@
-# Analyst Q, round 2: DSP hardware meanings
+# Analyst Q, round 3: copex limits and final DSP results
+
+Evidence: `hw/fm1-2026-10-24/results.jsonl`, `followup-q.jsonl` and
+`followup-q2.jsonl` in that directory, AC791N in the FM-1. Branch `hw/q`.
+Previous rounds are commits `c481e13` and `b7a3ceb`; their findings remain below.
+
+## Final result
+
+**107/108 assigned forms have numerical models.** All **1567 modeled assigned
+cases** match every register and all four low psr bits: 1284 original, 271 first
+follow-up and 12 second follow-up. `copex.ppi` remains unresolved after **364
+cases** (12 + 80 + 272). There is no further copex request.
+
+The 288-record second follow-up has 272 copex cases, 12 unpack cases and four
+nop calibrations. All 284 instruction records exactly match the requested ids,
+raw fields, input registers and flags in `hw/followup-q2.json`; all four
+calibrations preserve registers and low flags. The lead reports both batches
+completed without a hang. The run is now noted in the evidence README and its
+JSONL file is committed with this report.
+
+The unpack models need no changes. Three controlled inputs per form confirm
+`unpackb.u.pr`/`unpack4.u.pr` and `unpackb.s.pr`/`unpack4.s.pr` agreement,
+including mixed byte signs, zero, all ones and overlapping source/destination.
+These four entries now cite `followup-q2.jsonl`. This strengthens the existing
+single-selector-bit alias observation; it makes no new claim about other
+revision-3 forms or other chips.
+
+## Copex: inputs and control
+
+All pairs below are written **even/odd**, in hexadecimal. Across all 364 cases,
+only the selected destination pair changes and the low four psr bits are
+preserved. No destination bit is globally constant across the complete sample.
+Both source words can affect the answer: control 1 maps source `0/0` to `0/0`,
+`1/0` to `00000005/0000001d`, and `0/1` to
+`0ffffffb/0000001d` (`followup-q.jsonl`). These are numerical effects, not a
+uniform copy, shift or no-op.
+
+The second follow-up covers every control 0..31 on six structured pairs. For
+source `10000000/08000000`, adding upper masks 32, 64, 128 or 224 to controls
+0, 1, 2, 3, 4, 7, 8 and 15 leaves the complete output unchanged (32 comparisons).
+The first follow-up also agrees across upper bits for low modes 0 and 31 on
+five basis pairs each. Thus all observed upper-control comparisons are
+consistent with ignoring bits 7:5, but this was not checked for all 32 low
+modes. Grouping all records by `(control & 31, source even, source odd)` gives
+26 repeated-input groups, of which only the mode-15 group below has conflicting
+outputs.
+
+Control bit 4 changes some operations: on zero source, control 0 yields
+`20000000/00000000`, whereas 16 yields `3f800000/30800000`
+(`followup-q.jsonl`). However, the round-2 claim that different residuals for
+controls 15 and 31 specifically demonstrate a bit-4 effect is **not established**:
+mode 15 now differs even with the same control. On the six structured inputs,
+11/27, 12/28, 13/29, 14/30 and 15/31 give pairwise-identical outputs; 17/18
+also agree on these six inputs. These are sampled agreements, not general
+operation equivalences.
+
+## Copex: output bits that are determined in the sample
+
+The following statements count all three files, grouping controls by their low
+five bits. They are measured constraints, not untested formulas:
+
+- Modes **11, 12, 13, 14, 27, 28, 29, 30** copy **all 32 bits of the source odd
+  word** into destination odd in every one of their **63 cases**, including
+  original random cases. This is independent of the old destination in the
+  tested variants. Their even result is not generally the input even word.
+- Modes **1 and 4** have destination odd either `00000000` or `0000001d`
+  in all **37 cases**; bits 31:5 and 1 are consequently zero (equivalently,
+  `odd & 0xffffffe2 == 0`).
+- Modes **2 and 5** have destination odd bits **31:8 zero** in all **28 cases**.
+  Mode **7** has odd equal to `00000018` or `00000080` in all **18 cases**.
+  Mode **8** has odd bits **31:5 zero** in all **18 cases**.
+- Modes **13 and 29** have even output drawn from `00000000`, `00000001`,
+  `80000000` in their **17 cases**; only bits 31 and 0 can be set in this sample.
+  This does not settle conversion, rounding, overflow or exception behavior.
+
+Other outputs show mode-dependent scaling and float-looking patterns, but no
+bit-exact general arithmetic model is justified. In particular the odd word is
+not universally a preserved operand, exponent, remainder or flag word.
+
+## Copex: previous destination versus state/history
+
+For the common source `10000000/08000000`, the second follow-up compares the
+ordinary old destination `13579bdf/12569ade` with zero, all ones, and a fully
+overlapping source/destination. **All 45 variants for modes 0..14 match their
+baselines**, including overlap. Mode 15 matches only two of its three variants:
+
+- `followup-q2.jsonl` **line 96**: instruction bytes `ffe10f04`, destination
+  r1_r0, source r5_r4, control 15, flags 15. Old destination
+  `13579bdf/12569ade`, source `10000000/08000000`, result
+  `0d40240a/06a01206`.
+- **Line 274**: identical bytes, source and flags; old destination `0/0`.
+  Result **`1c3b9230/19cb9f24`**.
+- **Line 275**: same bytes, source and flags; old destination `ffffffff/ffffffff`.
+  Result `0d40240a/06a01206` again. **Line 276**, with destination overlapping
+  r5_r4, also gives that baseline result.
+
+The conflicting results differ in even bits selected by `117bb63a` and odd bits
+selected by `1f6b8d22`. Across all eight occurrences of this source/low-mode pair
+(including upper controls), the remaining bits agree:
+`even & ee8449c5 == 0c000000` and `odd & e09472dd == 00801204`.
+These masks describe those recorded outputs only, not all possible executions.
+
+The exceptional line 274 follows an overlapping **mode-14** case (line 273).
+Line 96 and the two subsequent matching cases follow **mode-15** cases.
+The old destination and execution history vary together, so the data cannot
+identify which causes the difference. Previous-destination dependence is possible;
+persistent internal coprocessor state is also possible. The runner resets all
+sixteen GPRs and low flags before each case, but does not initialize any
+copex-specific state. Neither a particular hidden register nor a reset/update
+rule is established. Other GPRs and flags were not varied independently in these
+controlled cases (all controlled copex inputs use flags 15).
+
+A pure function of source and immediate is contradicted. A function of all
+captured input registers and control is **not** disproved, since the old
+destination differs. There is no repeated execution with identical complete
+captured inputs that establishes hidden state conclusively. Consequently no
+lookup table, partial numerical model or invented state machine is registered
+in `semantics/q.py`; its module notes explain the exclusion. Investigation
+stops here, with no new follow-up cases.
+
+## Changes and validation
+
+Round 3 changes only the summary/notes of `copex.ppi` and notes of the four
+unpack forms in the table. The previous source-transform implication and the
+mode-15 bit-4 inference are replaced by the limits above; previous numerical
+models and flag findings remain unchanged. No encodings, syntax, fields,
+examples, features or status were changed.
+
+- `python3 -m pi32v2isa check`: 1165 entries, 0 problems.
+- `python3 -m unittest discover -s tests`: 118 tests, OK (13 skipped).
+- `python3 tools/hwtest/check.py hw/fm1-2026-10-24/results.jsonl`:
+  113/113 modeled entries match, including all 107 assigned models (1284 cases).
+- Same checker on `followup-q.jsonl`: 98/98 modeled entries match,
+  including 97 assigned models (271 cases).
+- Same checker on `followup-q2.jsonl --missing`: 5/5 modeled entries match
+  (four unpack forms plus nop); 12 assigned cases and four calibrations pass.
+  `copex.ppi` is the only unmodeled entry in either follow-up.
+- Table diff audit against round 2: only allowed keys of five assigned entries
+  differ. The second follow-up input/calibration audit above also passes.
+- No hardware, ssh, push or further follow-up generation was performed.
+
+## Round 2 report (historical; the requested second follow-up is now completed)
 
 Evidence: `hw/fm1-2026-10-24/results.jsonl` and
 `hw/fm1-2026-10-24/followup-q.jsonl`, AC791N in the FM-1. Branch `hw/q`.
 The assignment contains 108 forms. Round 1 is commit `c481e13`.
 
-## Result and changes since round 1
+### Result and changes since round 1
 
 `tools/hwtest/semantics/q.py` still models **107/108 assigned forms**. All **1284
 original cases and 271 follow-up cases** of these forms match every register and
@@ -41,7 +182,7 @@ control/input structure establishes observations described below, but does not
 justify a general formula. `hw/followup-q2.json` requests 284 additional cases;
 none has been run by this analyst.
 
-## Revision-3 alias hypothesis
+### Revision-3 alias hypothesis
 
 All six assigned revision-3 forms behave like older operations, and their table
 encodings differ by one selector bit when dash bits are zero. Number bits within
@@ -77,7 +218,7 @@ unsupported revision-3 instruction, but a no-op alone does not identify an older
 operation alias. This report makes no claim about the other analysts' revision-3
 forms, parallel twins or memory forms. No encoding was changed.
 
-## Copex follow-up findings
+### Copex follow-up findings
 
 The new 80 cases cross controls `0,1,2,3,4,7,8,15,16,31,32,63,64,127,128,255`
 with even/odd basis inputs `0/0`, `1/0`, `0/1`, `0x40000000/0`, and
@@ -103,7 +244,7 @@ rounding or exceptional cases. No lookup table or forced numerical model was
 added. In particular, coincidental float-looking bit patterns are insufficient
 to establish a floating-point input/output convention.
 
-## Table changes: old claim to observed behavior
+### Table changes: old claim to observed behavior
 
 Across both rounds, table edits are restricted to `summary`, `notes`, and
 `sources` of the 108 assigned entries. Round 2 changes 100 notes and seven
@@ -196,7 +337,7 @@ syntax, examples, features and confirmation status are unchanged.
   control behavior but still does not establish a general formula. No lookup
   table or forced model was added.
 
-## Flags
+### Flags
 
 - Comparisons, abs/negs, all min/max, align, pack/unpack, mts, sad4, vector and
   halfword `xchg`, and `copex` preserve the input low four psr bits in every case.
@@ -212,7 +353,7 @@ syntax, examples, features and confirmation status are unchanged.
   Count zero preserves carry. Carry uses the original input even on saturation.
 - None of these observations establishes the general meaning of psr bit 0.
 
-## Next hardware request
+### Next hardware request
 
 `hw/followup-q2.json` contains **284 cases across five forms**, all raw field
 values, and was successfully built into two batches (182 and 106 cases including
@@ -244,7 +385,7 @@ The next hardware runner must choose its first slot according to the then-active
 runner; this local build does not claim that 0x01C28000 will still be the next
 safe slot. No hardware or ssh commands were run here.
 
-## Validation
+### Validation
 
 - `python3 -m pi32v2isa check`: 1165 entries, 0 problems.
 - `python3 -m unittest discover -s tests`: 118 tests, OK (13 skipped).

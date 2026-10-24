@@ -5,6 +5,11 @@
 Inputs are read before writes, including overlapping register pairs. The original
 results and followup-q.jsonl establish saturating abs/negs at signed minima and
 independent unsigned saturation of overflowing sad4 accumulator lanes.
+
+copex.ppi deliberately has no model: results.jsonl, followup-q.jsonl and
+followup-q2.jsonl contain 364 cases, including different outputs for identical
+source/control in mode 15. Old destination and instruction history are confounded;
+see hw/report-q.md for the determined bits and the unresolved state dependence.
 """
 import operator
 

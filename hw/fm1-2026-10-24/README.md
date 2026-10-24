@@ -31,3 +31,13 @@ shift boundaries, lane comparisons, and `copex` inputs/controls, plus four `nop`
 calibration cases. The lead built it with
 `python3 tools/hwtest/gen.py DIR --cases hw/followup-q.json --first-slot 0x01C28000`.
 Both batches completed without a hang, and their calibration cases passed.
+
+`followup-q2.jsonl` records analyst Q's second controlled follow-up: 272 `copex`
+cases covering all low-five-bit controls, upper control masks, previous destination
+values and overlapping pairs, plus 12 matched old/revision-3 unpack cases and four
+`nop` calibration cases (288 records total). The lead ran `hw/followup-q2.json`
+in two batches; neither hung, and both batches' calibration cases passed. All 284
+instruction records match the requested inputs and fields. The `copex` mode-15
+results leave previous destination versus internal state/history dependence
+unresolved; see [report-q.md](../report-q.md). No further `copex` follow-up is
+requested.
