@@ -41,24 +41,32 @@ the table). Both images now read the same with this repo's objdump as with JieLi
 `+instrev3`, apart from one block-nesting formatting quirk in 015.
 
 `confirmed` covers encoding and syntax only. Behaviour comes from the compiler ([COMPILER.md](COMPILER.md),
-source `compiler`) and from the FM-1 itself (source `hardware`, [hw/fm1-2026-10-24](../hw/fm1-2026-10-24/README.md)):
-every register-only form (353, including the FPU, division and the revision-3 forms) ran on the chip, and
-executable models of all but `copex.ppi` (`tools/hwtest/semantics/`) match every case, flags included. The
-`psr` flags (N, Z, C, V in bits 3..0, and which forms write which) are in [COMPILER.md](COMPILER.md). Still open:
+source `compiler`) and from the FM-1 itself (source `hardware`): 676 of the 803 forms (parallel twins not
+counted) ran on the chip, every register-only form in [run 1](../hw/fm1-2026-10-24/README.md) and the memory,
+stack, branch, call, jump, `rts` and special-register-read forms in [run 2](../hw/fm1-2026-10-24-v2/README.md).
+Executable models of all of them but `copex.ppi` (`tools/hwtest/semantics/`) match every case, flags, memory,
+`sp`, `rets` and the path taken included. The `psr` flags (N, Z, C, V in bits 3..0, and which forms write which)
+are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in [ISA.md](ISA.md). Still open:
 
-- Forms the runner cannot run blind, so untested on hardware: memory, stack and `sp` forms, branches
-  (including the flag branches `ifeq`..`ifle`, `bc.*`), `rep` and `if` blocks, parallel twins (`#`), special
-  registers and the control forms `callns`, `rtns`, `rtss`, `rthw`, `npc`, `sevl`, `sevg`, `wfe`, `trigger`,
-  `cli R` / `sti R`, `lockset` / `lockclr`; special registers `sr4`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`.
-  They need a runner that sets up memory and control state.
+- Not run on hardware: `if`/`iff`/`ifs` blocks and `rep` (they need their bodies laid out), the table branches
+  `tbb`/`tbh`, parallel twins (`#`), the returns `rti`/`rtx`/`rte`, `rtns`/`rtss`/`rthw`, `callns`, writes to
+  special registers (`mov.sr_r`, `li.sr_u32`, pops into special registers, the `usp`/`ssp`/`uspn`/`sspn` moves),
+  and the control forms `idle`, `cli`/`sti` (with and without a register), `swi`, `syscall`, `bkpt`, `hbkpt`,
+  `lockset`/`lockclr`, `sevl`/`sevg`, `wfe`, `ssync`, `btbclr`, `trigger`. Most change control state the runner
+  depends on (interrupts, stacks, events, the second core); they need the unit at hand to power-cycle.
 - `copex.ppi`: depends on something besides its operands (identical inputs gave different results in mode
   15); internal state or history is suspected ([report](../hw/report-q.md)).
 - Instruction revision 3 on this chip: it is not implemented as such. `popcnt.rr` does nothing, and the other
   revision-3 forms (`popcnt.r_pair`, `sat8.rr`, `vsat16`, `unpack4`, `sum` with `usat`/`ssat`/`msat`) behave
   exactly as an older form whose encoding differs by one selector bit. What they do on a revision-3 core is
   unknown.
-- Unnamed (`??`) conditions of the vector compares reset the chip; the `??` branch and `if` forms were not run.
-- A few edges no case reached: the 32-bit clamp of `madd.mul2.prhrhi.{ssat,usat}`.
+- Forms that reset the chip: the unnamed (`??`) conditions of the vector compares (the `??` branch and `if`
+  forms were not run), the six `mem2.hh.i` multiplies, and misaligned word loads. The `mem2.hh.rh` forms run, but
+  as 16 x 32 multiplies.
+- The `.c` pushes store exactly what the plain pushes do; what `c` changes is unknown. `reti` and `usp` read
+  values that stay fixed within a batch and differ between batches (ROM state, untested).
+- A few edges no case reached: the 32-bit clamp of `madd.mul2.prhrhi.{ssat,usat}`; `ld.w.npc.r` with the
+  instruction at 2 mod 4.
 
 ## ABI and object files
 

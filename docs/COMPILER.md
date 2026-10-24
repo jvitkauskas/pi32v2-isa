@@ -154,8 +154,12 @@ overflow results of every add/subtract form, shift counts, exact rounding ties) 
 - Settled by the second run: Z of the add and subtract family follows a zero result, and C and V were each reached
   in every form (add/sub/rsub/addc/subc/`add.brev.rr`, all shapes); counts with bits 8 and up set (0x100, 0x105) use
   only the low 8 bits; `shiftr` ties round as `up`/`even`/`round`/`zero` say (toward +inf, to even, away from zero,
-  toward zero) and `asr.ppi.rnd.vh` ties round toward +inf. Still unknown: the flags of the memory, multiply-accumulate,
-  DSP and floating-point forms that other analysts own.
+  toward zero) and `asr.ppi.rnd.vh` ties round toward +inf. The other groups, from the same
+  runs: the DSP lane forms leave the flags alone except the saturators (N, Z) and the 64-bit `lsr` and
+  `madd`/`msub` `.prr` forms (C, and N Z for `lsr`); `fcmp`, `fmin` and `fmax` set the comparison codes in
+  [Floating point on the FM-1](#floating-point-on-the-fm-1); no
+  load, store, branch, call, jump, push or pop changes the flags, except `testset.b` (bits 3..0 = the old byte's
+  bits 3..0) and a push that includes `psr`, which clears all four afterwards ([run 2](../hw/fm1-2026-10-24-v2/README.md)).
 
 ### Comparisons and branches
 
