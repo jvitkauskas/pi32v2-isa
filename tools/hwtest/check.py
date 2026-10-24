@@ -18,7 +18,7 @@ every other register is unchanged and (unless None) the flags agree.
 
 Results of record format 2 (hw/fm1-2026-10-24-v2: memory, stack, branches) also have sp, rets, the exit taken
 and the scratch words that changed. A model with a fourth parameter is called f(R, flags, op, st), where st is a
-State (sp, rets, stub, end = the address after the instruction, tgt = the stub's taken label, taken = hw_taken,
+State (sp, rets, stub, batch, end = the address after the instruction, tgt = the stub's taken label, taken = hw_taken,
 scratch, and load(address, size) for the scratch as it was before the case), and returns a dict with any of
 "regs" ({register: value}), "flags", "sp", "rets", "exit" (0 fell through, 1 taken) and "mem" ({word address:
 value} for every scratch word it changes). Keys it leaves out must be unchanged (exit: 0); "flags": None means not
@@ -82,6 +82,7 @@ class State:
         self.sp, self.rets, self.stub, self.tgt = rec["sp_in"], rec["rets_in"], rec["stub"], rec.get("tgt")
         self.end = rec["stub"] + len(rec["bytes"]) // 2
         self.taken, self.scratch = rec["hw_taken"], rec["scratch"]
+        self.batch = rec["batch"]
         self.words = list(pattern)
         k = (self.sp - 4 - self.scratch) // 4
         if 0 <= k < len(self.words):
