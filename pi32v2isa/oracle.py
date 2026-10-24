@@ -707,13 +707,14 @@ def objdumpcompare(oracle, path, options=(), table=None):
         sys.stdout, sys.stderr = saved, saved_err
     if code or status:
         return [] if bool(code) == bool(status) else [f"exit status: JieLi {code}, ours {status}"]
-    a, b = theirs.splitlines(), buf.getvalue().splitlines()
-    if a == b:
+    mine = buf.getvalue()
+    if theirs == mine:
         return []
+    a, b = theirs.splitlines(), mine.splitlines()
     diffs = []
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
         if tag == "equal":
             continue
         diffs.append(f"line {i1 + 1}: JieLi {a[i1:i2][:3]!r}{' ...' if i2 - i1 > 3 else ''}  ours {b[j1:j2][:3]!r}"
                      f"{' ...' if j2 - j1 > 3 else ''}")
-    return diffs
+    return diffs or ["the lines agree but the text ends differently"]

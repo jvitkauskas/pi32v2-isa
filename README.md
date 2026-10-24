@@ -18,12 +18,13 @@ linker and a compiler backend are later, separate projects that use this referen
 | [isa/pi32v2.toml](isa/pi32v2.toml) | The instruction table: one entry per instruction form, with encoding, syntax, status and sources |
 | [docs/TABLE-FORMAT.md](docs/TABLE-FORMAT.md) | The table's format |
 | [docs/ASSEMBLER.md](docs/ASSEMBLER.md) | The assembler: usage, syntax, directives, how it picks encodings, differences from JieLi's |
+| [docs/OBJDUMP.md](docs/OBJDUMP.md) | The objdump: `-d -D -h -t -r -s -j -mcpu` with the text of JieLi's, for the FM-1 builds |
 | [docs/ELF.md](docs/ELF.md) | The object files: sections, symbols, every relocation type, what JieLi's linker checks |
 | [docs/GAPS.md](docs/GAPS.md) | What is known to exist but is not documented yet |
 | [docs/SOURCES.md](docs/SOURCES.md) | Where each fact comes from, and the sources' licences |
 | [docs/ORACLE.md](docs/ORACLE.md) | How JieLi's toolchain is used as a black-box test oracle |
 | [AGENTS.md](AGENTS.md) | Rules for anyone (person or agent) amending the reference |
-| `pi32v2isa/` | Python package: table loader and checker, disassembler, assembler (`python3 -m pi32v2isa as`) and ELF writer |
+| `pi32v2isa/` | Python package: table loader and checker, disassembler, assembler (`python3 -m pi32v2isa as`), ELF writer and reader, objdump (`python3 -m pi32v2isa objdump`) |
 
 ## Status
 
@@ -43,11 +44,13 @@ Python 3.11 or later, no dependencies.
 python3 -m pi32v2isa check                 # validate the table
 python3 -m pi32v2isa disasm 80 00 01 00    # decode bytes (hex)
 python3 -m pi32v2isa as boot.S -o boot.o   # assemble (.S goes through cpp; docs/ASSEMBLER.md)
+python3 -m pi32v2isa objdump -d app.elf    # list, headers, symbols, relocations like JieLi's objdump (docs/OBJDUMP.md)
 python3 -m pi32v2isa oracle fetch          # get JieLi's toolchain, for checking entries (docs/ORACLE.md)
 python3 -m pi32v2isa oracle sweep          # see what the toolchain makes of every 16-bit word
 python3 -m pi32v2isa oracle confirm        # check entries against it
 python3 -m pi32v2isa oracle cc file.c      # what JieLi's compiler makes of some C
 python3 -m pi32v2isa oracle asmcompare boot.S   # our assembler against JieLi's, object by object
+python3 -m pi32v2isa oracle objdumpcompare app.elf   # our objdump against JieLi's, line by line
 python3 -m unittest discover -s tests      # run the tests
 ```
 

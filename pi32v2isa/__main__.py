@@ -169,7 +169,7 @@ def cmd_objdumpcompare(argv):
     options every standard set (-d, -d -mcpu=r3, -d -r, -D, -h, -t, -r, -s) is run. --show N, --release R."""
     from . import oracle
 
-    files, opts, show, release = [], [], 8, "20260730.1"
+    files, opts, show, release = [], [], 8, oracle.DEFAULT_RELEASE
     it = iter(argv)
     for a in it:
         if a == "--show":
@@ -177,7 +177,7 @@ def cmd_objdumpcompare(argv):
         elif a == "--release":
             release = next(it)
         elif a in ("-j", "-section"):
-            opts += [a, next(it)]
+            opts += [a, next(it, "")]
         elif a.startswith("-"):
             opts.append(a)
         else:

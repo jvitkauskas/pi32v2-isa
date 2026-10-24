@@ -29,7 +29,7 @@ OPTIONS_HELP = """usage: objdump [options] FILE...
 
 # Instruction forms JieLi's objdump decodes only when told the CPU has them (found with `oracle` probes of every
 # table example, docs/OBJDUMP.md): -mcpu=r3 / -mcpu=r4 / -mattr=+fprev1 enable the floating-point ones; -mcpu=r2
-# and r3 also enable the three SIMD-shift / copex forms.
+# and r3 also enable the six `copex` / `shiftr ... mode` forms.
 FPU_IDS = frozenset("""
 add.f.rrr add.f.rrr.p bfeq.rr bfeq.rr.l bfge.rr bfge.rr.l bfgt.rr bfgt.rr.l bfle.rr bfle.rr.l bflt.rr
 bflt.rr.l bfne.rr.l bford.rr.l bfueq.rr.l bfuge.rr bfuge.rr.l bfugt.rr bfugt.rr.l bfule.rr bfule.rr.l bfult.rr
@@ -73,6 +73,7 @@ class Decoder:
             m, v = insn.mask >> shift, insn.value >> shift
             self.by_mask.setdefault(m, {}).setdefault(v, []).append((n, insn))
         self.cache = {}
+        self.memo = {}
 
     def candidates(self, word):
         got = self.cache.get(word)
@@ -92,20 +93,29 @@ class Decoder:
         return 4
 
     def decode(self, data, off):
-        """(insn, values, length) for the instruction at data[off:], or None."""
+        """(insn, values, length, text) for the instruction at data[off:], or None. The first word decides the
+        length (2, 4 or 6 bytes), so the answer depends on those bytes alone and is remembered."""
         if off + 2 > len(data):
             return None
         word = data[off] | (data[off + 1] << 8)
+        size = self.length_of(word)
+        raw = bytes(data[off:off + size])
+        if len(raw) < size:
+            return None
+        got = self.memo.get(raw, 0)
+        if got != 0:
+            return got
+        got = None
         for insn in self.candidates(word):
-            n = len(insn.words)
-            if off + 2 * n > len(data):
-                continue
             value = 0
-            for k in range(n):
-                value = (value << 16) | data[off + 2 * k] | (data[off + 2 * k + 1] << 8)
+            for k in range(size // 2):
+                value = (value << 16) | raw[2 * k] | (raw[2 * k + 1] << 8)
             if value & insn.mask == insn.value:
-                return insn, codec.fields_of(insn, data, off), 2 * n
-        return None
+                values = codec.fields_of(insn, raw)
+                got = (insn, values, size, codec.format(insn, values))
+                break
+        self.memo[raw] = got
+        return got
 
 
 def decoder_for(tab, mcpu=None, mattr=()):
@@ -134,7 +144,10 @@ class File:
             raise ObjdumpError(f"'{path}': {e.strerror}")
         if self.data[:4] != b"\x7fELF":
             raise ObjdumpError(f"'{path}': The file was not recognized as a valid object file")
-        self.obj = elf.read(self.data)
+        try:
+            self.obj = elf.read(self.data)
+        except (ValueError, IndexError, struct.error):
+            raise ObjdumpError(f"'{path}': The file was not recognized as a valid object file")
         self.sections = self.obj.sections
         self.symbols = self.obj.symbols
         self.machine = self.obj.e_machine
@@ -152,7 +165,7 @@ def format_name(f):
 
 
 def section_kinds(s):
-    """('TEXT'|'DATA'|'BSS' words as the section table prints them)."""
+    """(text, data, bss): the words `-h` prints for a section and `-D` goes by (docs/OBJDUMP.md, 4.1)."""
     text = bool(s.flags & elf.SHF_EXECINSTR)
     loaded = bool(s.flags & (elf.SHF_ALLOC | elf.SHF_WRITE))
     data = s.type == elf.SHT_PROGBITS and loaded
@@ -307,11 +320,12 @@ BRACE_PAD = " " * 31
 
 
 class Block:
-    """An open `rep` or `if` block: how much of its body is left (rep: bytes; if: instructions)."""
-    __slots__ = ("kind", "left", "else_left", "in_else", "overdue")
+    """An open `if` block: the instructions left in its then-part and else-part (a parallel pair counts as one);
+    `overdue` is set when a compare-and-branch used the last of them without closing the block."""
+    __slots__ = ("left", "else_left", "in_else", "overdue")
 
-    def __init__(self, kind, left, else_left=0):
-        self.kind, self.left, self.else_left, self.in_else, self.overdue = kind, left, else_left, False, False
+    def __init__(self, left, else_left):
+        self.left, self.else_left, self.in_else, self.overdue = left, else_left, False, False
 
 
 class Symbols:
@@ -365,6 +379,7 @@ class Disassembler:
         self.rep = None               # open blocks and the pair state go on across labels and sections
         self.cond = None
         self.second = False
+        self.reach = 0
         self.out = []
         self.syms = Symbols(f)
 
@@ -460,7 +475,7 @@ class Disassembler:
 
     @staticmethod
     def hexb(raw):
-        return "".join(f"{b:02x} " for b in raw)
+        return raw.hex(" ") + " " if raw else ""
 
     def code(self, s, data, lo, hi):
         w = self.out.append
@@ -478,10 +493,9 @@ class Disassembler:
                 index += n
                 self.reach = index + n
                 continue
-            insn, values, n = got
+            insn, values, n, text = got
             self.size = n
             word = data[index] | (data[index + 1] << 8)
-            text = codec.format(insn, values)
             if insn.id in TRAILING_SPACE:
                 text += " "
             depth = (self.rep is not None) + (self.cond is not None)
@@ -554,7 +568,7 @@ class Disassembler:
             def cnt(key):
                 f = insn.fields[insn.block[key]]
                 return codec.value(f, values[insn.block[key]], len(insn.field_bits(insn.block[key])))
-            self.cond = Block("if", cnt("then"), cnt("else"))
+            self.cond = Block(cnt("then"), cnt("else"))
         return closers
 
 
@@ -579,6 +593,10 @@ def run_file(f, opts, tab):
     return "".join(out)
 
 
+def _missing(option):
+    raise ObjdumpError(f"option {option} needs a value")
+
+
 def parse_args(argv):
     opts = {"files": [], "sections": [], "mattr": []}
     it = iter(argv)
@@ -596,7 +614,7 @@ def parse_args(argv):
         elif a in ("-s", "--full-contents"):
             opts["s"] = True
         elif a == "-j" or a == "-section":
-            opts["sections"].append(next(it))
+            opts["sections"].append(next(it, None) or _missing(a))
         elif a.startswith("-j") and len(a) > 2:
             opts["sections"].append(a[2:])
         elif a.startswith(("-section=", "--section=")):

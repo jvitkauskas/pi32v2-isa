@@ -152,6 +152,17 @@ symbols. It prints nothing but "identical" when they agree. `linkcompare` links 
 (undefined symbols get `--defsym` values) and compares the loaded sections. The assembler and its checks are
 described in [ASSEMBLER.md](ASSEMBLER.md); the object format they establish is in [ELF.md](ELF.md).
 
+## Checking the objdump
+
+```sh
+python3 -m pi32v2isa oracle objdumpcompare FILE... [-d -D -h -t -r -s -j SECTION -mcpu=r3]
+```
+
+`objdumpcompare` runs JieLi's objdump and this repo's ([OBJDUMP.md](OBJDUMP.md)) on each file with the same options
+and compares the output line by line. Without options it runs the standard sets (`-d`, `-d -mcpu=r3`, `-d -r`, `-D`,
+`-h`, `-t`, `-r`, `-s`). It prints one line per file and set: `identical`, or the number of differing places and the
+first few (`--show N` for more).
+
 ## Rules
 
 - Black box only: inputs and outputs. Do not extract tables or strings from the toolchain's binaries.
