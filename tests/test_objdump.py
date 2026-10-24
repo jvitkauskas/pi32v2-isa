@@ -305,3 +305,24 @@ class Live(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChipNotes(unittest.TestCase):
+    def test_chip_annotation_and_default(self):
+        import contextlib
+        import io
+        import tempfile
+        from pi32v2isa import asm
+        obj = asm.assemble_source("\t.text\n\tr0 = popcnt(r1)\n\tr2 = r3 + r4\n", "x.s", features={"instrev3"})
+        with tempfile.NamedTemporaryFile(suffix=".o") as f:
+            f.write(obj)
+            f.flush()
+            outs = []
+            for extra in (["--chip=ac791n"], []):
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    self.assertEqual(objdump.main(["-d", "-mattr=+instrev3", *extra, f.name]), 0)
+                outs.append(buf.getvalue())
+        self.assertIn("r0 = popcnt(r1)\t; ac791n: does nothing\n", outs[0])
+        self.assertNotIn("ac791n", outs[1])
+        self.assertEqual(outs[0].replace("\t; ac791n: does nothing", ""), outs[1])

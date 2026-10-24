@@ -42,6 +42,7 @@ brief asked for them. To switch a build over, call `python3 -m pi32v2isa objdump
 | `-s` | contents of each section, hex and ASCII |
 | `-j NAME`, `-section=NAME` | only these sections (repeat for several); `-h`, `-d`, `-D`, `-s` and `-r` (which matches the `.rela...` section's name) obey it, `-t` does not |
 | `-mcpu=r3` (or `r4`), `-mattr=+fprev1` | also decode the floating-point forms ([5.9](#59-cpu-options)) |
+| `--chip=ac791n` | not JieLi's: append `; ac791n: resets the chip` (or `does nothing`, `runs as ID`, `gives unpredictable results`) to forms the table's `hw` key marks ([TABLE-FORMAT.md](TABLE-FORMAT.md#hardware-behaviour)); the output is otherwise unchanged |
 
 Anything else (`-print-imm-hex`, `-start-address`, `-stop-address`, `-no-show-raw-insn`, `-no-leading-addr`,
 `-source`, `-g`, `-line-numbers`, the Mach-O options) is refused with `objdump: unsupported option` and status 1.

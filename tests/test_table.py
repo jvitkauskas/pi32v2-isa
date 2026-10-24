@@ -119,6 +119,23 @@ class CpuModels(unittest.TestCase):
         self.assertTrue(any("unknown CPU model" in p for p in problems(e)))
 
 
+class HardwareBehaviour(unittest.TestCase):
+    def test_hw_notes(self):
+        t = table.load()
+        self.assertEqual(table.hw_note(t.by_id("popcnt.rr"), "ac791n"), "does nothing")
+        self.assertEqual(table.hw_note(t.by_id("sat8.u.rr"), "ac791n"), "runs as sat16.u.rr")
+        self.assertEqual(table.hw_note(t.by_id("madd.mem2.hh.i.u"), "ac791n"), "resets the chip")
+        self.assertIsNone(table.hw_note(t.by_id("add.rrr"), "ac791n"))
+
+    def test_hw_values_are_checked(self):
+        hw = dict(sources=["kagaimiq-jielie", "hardware"])
+        for bad, why in (({"ac000": "nop"}, "unknown chip"), ({"ac791n": "explodes"}, "is not one of"),
+                         ({"ac791n": "as:nothing"}, "names no other entry"), ({"ac791n": "as:t"}, "names no other")):
+            self.assertTrue(any(why in p for p in table.check(Table(format=1, insns=[insn(hw=bad, **hw)]),
+                                                              sources=SOURCES | {"hardware"})), bad)
+        self.assertTrue(any("needs the source 'hardware'" in p for p in problems(insn(hw={"ac791n": "nop"}))))
+
+
 class Checks(unittest.TestCase):
     def test_overlap(self):
         a = insn(id="a", words=["000000001100xxxx"], fields={"x": "gpr"}, syntax="a {x}")

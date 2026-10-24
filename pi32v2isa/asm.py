@@ -830,8 +830,10 @@ class Block:
 
 
 class _Core:
-    def __init__(self, tab=None, include=(), features=None):
+    def __init__(self, tab=None, include=(), features=None, chip=None, chip_errors=False):
         self.features = None if features is None else set(features)     # None: every entry is allowed
+        self.chip, self.chip_errors = chip, chip_errors     # warn (or refuse) forms the table's hw marks on chip
+        self.hw_warnings = {}                               # message -> None (ordered, once per line and form)
         self.table = tab or _default_table()
         self.isa = _isa_for(self.table)
         self.include = [str(p) for p in include]
@@ -1168,6 +1170,12 @@ class _Core:
                     if raw is None:
                         return None
                     values[name] = raw
+        note = self.chip and tbl.hw_note(insn, self.chip)
+        if note:
+            msg = f"{item.loc}: {insn.id} {note} on the {self.chip} (isa/pi32v2.toml, hw)"
+            if self.chip_errors:
+                raise AsmError(msg)
+            self.hw_warnings[msg] = None        # the encoder runs once per relaxation pass: keep each once
         data = bytearray(codec.encode(insn, values))
         if getattr(cand, "twin", False):
             data[1] |= 0x10
@@ -1545,8 +1553,8 @@ def parse_string(text):
 class Assembler(_Core):
     """Assemble preprocessed source text. Typical use: `Assembler().assemble(text, "x.s")` then `.finish()`."""
 
-    def __init__(self, tab=None, include=(), features=None):
-        super().__init__(tab, include, features)
+    def __init__(self, tab=None, include=(), features=None, chip=None, chip_errors=False):
+        super().__init__(tab, include, features, chip, chip_errors)
         self.stopped = False
         self.cur_file = "<input>"
 
@@ -2047,12 +2055,18 @@ class Assembler(_Core):
         self.cur_file = saved
 
 
-def assemble_source(text, filename="<input>", include=(), tab=None, features=None):
+def assemble_source(text, filename="<input>", include=(), tab=None, features=None, chip=None, chip_errors=False,
+                    warnings=None):
     """Assemble preprocessed source text; returns the ELF object as bytes. `features` (e.g. {"instrev3"})
-    restricts the entries to those whose `requires` it covers; by default every entry is allowed."""
-    a = Assembler(tab, include, features)
+    restricts the entries to those whose `requires` it covers; by default every entry is allowed. With `chip`
+    (e.g. "ac791n"), forms the table's `hw` key marks on that chip are reported: appended to `warnings` (a list),
+    or refused with `chip_errors`."""
+    a = Assembler(tab, include, features, chip, chip_errors)
     a.assemble(text, filename)
-    return a.finish()
+    data = a.finish()
+    if warnings is not None:
+        warnings.extend(a.hw_warnings)
+    return data
 
 
 def preprocess(path, include=(), defines=()):
@@ -2069,7 +2083,8 @@ def preprocess(path, include=(), defines=()):
 
 
 def main(args):
-    """Entry for `python3 -m pi32v2isa as IN.s -o OUT.o [--cpp] [-I DIR] [-D NAME[=VALUE]]`."""
+    """Entry for `python3 -m pi32v2isa as IN.s -o OUT.o [--cpp] [-I DIR] [-D NAME[=VALUE]] [--chip NAME
+    [--chip-errors]]`."""
     path = args.input
     include = [os.path.dirname(os.path.abspath(path))] + list(args.include)
     if args.cpp or path.endswith(".S"):
@@ -2080,11 +2095,16 @@ def main(args):
         else:
             with open(path) as f:
                 text = f.read()
+    warnings = []
     try:
-        data = assemble_source(text, path, include, features=args.feature or None)
+        data = assemble_source(text, path, include, features=args.feature or None,
+                               chip=getattr(args, "chip", None), chip_errors=getattr(args, "chip_errors", False),
+                               warnings=warnings)
     except AsmError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+    for w in warnings:
+        print(f"warning: {w}", file=sys.stderr)
     out = args.output or (os.path.splitext(os.path.basename(path))[0] + ".o")
     with open(out, "wb") as f:
         f.write(data)

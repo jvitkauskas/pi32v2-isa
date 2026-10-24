@@ -6145,6 +6145,7 @@ encoding = ["1110000001101100", "rrrrsss000000000"]
 fields = { r = "gpr", s = "pair" }
 group = "bitops"
 requires = ["instrev3"]
+hw = { ac791n = "as:mov.half" }
 summary = "Population count of a register pair, as the syntax says; the FM-1's chip instead copies the low halfword of the pair's low register into the low halfword of rd."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -6270,6 +6271,7 @@ encoding = ["1110000001110000", "rrrrssss11000000"]
 fields = { r = "gpr", s = "gpr" }
 group = "bitops"
 requires = ["instrev3"]
+hw = { ac791n = "nop" }
 summary = "Population count of a register, as the syntax says; the FM-1's chip does not execute it: it changed no register and no flag in 19 cases."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
@@ -7010,6 +7012,7 @@ encoding = ["111010010111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -7057,6 +7060,7 @@ encoding = ["111010010111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -7196,6 +7200,7 @@ encoding = ["111010011111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -7243,6 +7248,7 @@ encoding = ["111010011111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -7382,6 +7388,7 @@ encoding = ["111011000111mmmm", "rrr0ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -7429,6 +7436,7 @@ encoding = ["111011000111mmmm", "rrr1ttttssssnnnn"]
 fields = { r = "pair", s = "gpr", n = { kind = "simm", scale = 2 }, t = "gpr", m = { kind = "simm", scale = 2 } }
 group = "multiply"
 requires = ["instrev3"]
+hw = { ac791n = "resets" }
 summary = "Resets the AC791N in the FM-1; no returned arithmetic result."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14448,6 +14456,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14497,6 +14506,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14546,6 +14556,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14595,6 +14606,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14644,6 +14656,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -14693,6 +14706,7 @@ block = { then = "t", else = "e" }
 group = "branches"
 asm_rejects = ["iff (r0 != r0) {", "iff (r0 != r1) {", "iff (r0 != r10) {", "iff (r0 != r11) {", "iff (r0 != r12) {", "iff (r0 != r13) {", "iff (r0 != r14) {", "iff (r0 != r15) {", "iff (r0 != r2) {", "iff (r0 != r3) {", "iff (r0 != r4) {", "iff (r0 != r5) {", "iff (r0 != r6) {", "iff (r0 != r7) {", "iff (r0 != r8) {", "iff (r0 != r9) {", "iff (r1 != r0) {", "iff (r1 != r1) {", "iff (r1 != r10) {", "iff (r1 != r11) {", "iff (r1 != r12) {", "iff (r1 != r13) {", "iff (r1 != r14) {", "iff (r1 != r15) {", "iff (r1 != r2) {", "iff (r1 != r3) {", "iff (r1 != r4) {", "iff (r1 != r5) {", "iff (r1 != r6) {", "iff (r1 != r7) {", "iff (r1 != r8) {", "iff (r1 != r9) {", "iff (r10 != r0) {", "iff (r10 != r1) {", "iff (r10 != r10) {", "iff (r10 != r11) {", "iff (r10 != r12) {", "iff (r10 != r13) {", "iff (r10 != r14) {", "iff (r10 != r15) {", "iff (r10 != r2) {", "iff (r10 != r3) {", "iff (r10 != r4) {", "iff (r10 != r5) {", "iff (r10 != r6) {", "iff (r10 != r7) {", "iff (r10 != r8) {", "iff (r10 != r9) {", "iff (r11 != r0) {", "iff (r11 != r1) {", "iff (r11 != r10) {", "iff (r11 != r11) {", "iff (r11 != r12) {", "iff (r11 != r13) {", "iff (r11 != r14) {", "iff (r11 != r15) {", "iff (r11 != r2) {", "iff (r11 != r3) {", "iff (r11 != r4) {", "iff (r11 != r5) {", "iff (r11 != r6) {", "iff (r11 != r7) {", "iff (r11 != r8) {", "iff (r11 != r9) {", "iff (r12 != r0) {", "iff (r12 != r1) {", "iff (r12 != r10) {", "iff (r12 != r11) {", "iff (r12 != r12) {", "iff (r12 != r13) {", "iff (r12 != r14) {", "iff (r12 != r15) {", "iff (r12 != r2) {", "iff (r12 != r3) {", "iff (r12 != r4) {", "iff (r12 != r5) {", "iff (r12 != r6) {", "iff (r12 != r7) {", "iff (r12 != r8) {", "iff (r12 != r9) {", "iff (r13 != r0) {", "iff (r13 != r1) {", "iff (r13 != r10) {", "iff (r13 != r11) {", "iff (r13 != r12) {", "iff (r13 != r13) {", "iff (r13 != r14) {", "iff (r13 != r15) {", "iff (r13 != r2) {", "iff (r13 != r3) {", "iff (r13 != r4) {", "iff (r13 != r5) {", "iff (r13 != r6) {", "iff (r13 != r7) {", "iff (r13 != r8) {", "iff (r13 != r9) {", "iff (r14 != r0) {", "iff (r14 != r1) {", "iff (r14 != r10) {", "iff (r14 != r11) {", "iff (r14 != r12) {", "iff (r14 != r13) {", "iff (r14 != r14) {", "iff (r14 != r15) {", "iff (r14 != r2) {", "iff (r14 != r3) {", "iff (r14 != r4) {", "iff (r14 != r5) {", "iff (r14 != r6) {", "iff (r14 != r7) {", "iff (r14 != r8) {", "iff (r14 != r9) {", "iff (r15 != r0) {", "iff (r15 != r1) {", "iff (r15 != r10) {", "iff (r15 != r11) {", "iff (r15 != r12) {", "iff (r15 != r13) {", "iff (r15 != r14) {", "iff (r15 != r15) {", "iff (r15 != r2) {", "iff (r15 != r3) {", "iff (r15 != r4) {", "iff (r15 != r5) {", "iff (r15 != r6) {", "iff (r15 != r7) {", "iff (r15 != r8) {", "iff (r15 != r9) {", "iff (r2 != r0) {", "iff (r2 != r1) {", "iff (r2 != r10) {", "iff (r2 != r11) {", "iff (r2 != r12) {", "iff (r2 != r13) {", "iff (r2 != r14) {", "iff (r2 != r15) {", "iff (r2 != r2) {", "iff (r2 != r3) {", "iff (r2 != r4) {", "iff (r2 != r5) {", "iff (r2 != r6) {", "iff (r2 != r7) {", "iff (r2 != r8) {", "iff (r2 != r9) {", "iff (r3 != r0) {", "iff (r3 != r1) {", "iff (r3 != r10) {", "iff (r3 != r11) {", "iff (r3 != r12) {", "iff (r3 != r13) {", "iff (r3 != r14) {", "iff (r3 != r15) {", "iff (r3 != r2) {", "iff (r3 != r3) {", "iff (r3 != r4) {", "iff (r3 != r5) {", "iff (r3 != r6) {", "iff (r3 != r7) {", "iff (r3 != r8) {", "iff (r3 != r9) {", "iff (r4 != r0) {", "iff (r4 != r1) {", "iff (r4 != r10) {", "iff (r4 != r11) {", "iff (r4 != r12) {", "iff (r4 != r13) {", "iff (r4 != r14) {", "iff (r4 != r15) {", "iff (r4 != r2) {", "iff (r4 != r3) {", "iff (r4 != r4) {", "iff (r4 != r5) {", "iff (r4 != r6) {", "iff (r4 != r7) {", "iff (r4 != r8) {", "iff (r4 != r9) {", "iff (r5 != r0) {", "iff (r5 != r1) {", "iff (r5 != r10) {", "iff (r5 != r11) {", "iff (r5 != r12) {", "iff (r5 != r13) {", "iff (r5 != r14) {", "iff (r5 != r15) {", "iff (r5 != r2) {", "iff (r5 != r3) {", "iff (r5 != r4) {", "iff (r5 != r5) {", "iff (r5 != r6) {", "iff (r5 != r7) {", "iff (r5 != r8) {", "iff (r5 != r9) {", "iff (r6 != r0) {", "iff (r6 != r1) {", "iff (r6 != r10) {", "iff (r6 != r11) {", "iff (r6 != r12) {", "iff (r6 != r13) {", "iff (r6 != r14) {", "iff (r6 != r15) {", "iff (r6 != r2) {", "iff (r6 != r3) {", "iff (r6 != r4) {", "iff (r6 != r5) {", "iff (r6 != r6) {", "iff (r6 != r7) {", "iff (r6 != r8) {", "iff (r6 != r9) {", "iff (r7 != r0) {", "iff (r7 != r1) {", "iff (r7 != r10) {", "iff (r7 != r11) {", "iff (r7 != r12) {", "iff (r7 != r13) {", "iff (r7 != r14) {", "iff (r7 != r15) {", "iff (r7 != r2) {", "iff (r7 != r3) {", "iff (r7 != r4) {", "iff (r7 != r5) {", "iff (r7 != r6) {", "iff (r7 != r7) {", "iff (r7 != r8) {", "iff (r7 != r9) {", "iff (r8 != r0) {", "iff (r8 != r1) {", "iff (r8 != r10) {", "iff (r8 != r11) {", "iff (r8 != r12) {", "iff (r8 != r13) {", "iff (r8 != r14) {", "iff (r8 != r15) {", "iff (r8 != r2) {", "iff (r8 != r3) {", "iff (r8 != r4) {", "iff (r8 != r5) {", "iff (r8 != r6) {", "iff (r8 != r7) {", "iff (r8 != r8) {", "iff (r8 != r9) {", "iff (r9 != r0) {", "iff (r9 != r1) {", "iff (r9 != r10) {", "iff (r9 != r11) {", "iff (r9 != r12) {", "iff (r9 != r13) {", "iff (r9 != r14) {", "iff (r9 != r15) {", "iff (r9 != r2) {", "iff (r9 != r3) {", "iff (r9 != r4) {", "iff (r9 != r5) {", "iff (r9 != r6) {", "iff (r9 != r7) {", "iff (r9 != r8) {", "iff (r9 != r9) {"]
 decode_requires = ["fprev1"]
+hw = { ac791n = "unpredictable" }
 summary = "Conditional block on a floating-point compare that objdump prints as `iff (a != b)`; on the FM-1 it is not plain `!=` (open, see notes)."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -17762,6 +17776,7 @@ encoding = ["1110000111111111", "rrr-sss-nnnnnnnn"]
 fields = { r = "pair", s = "pair", n = "uimm" }
 group = "dsp"
 absent_on = ["generic"]
+hw = { ac791n = "unpredictable" }
 summary = "Control-dependent pair operation; numeric meaning and possible state dependence unresolved."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26469,6 +26484,7 @@ encoding = ["1110100011101001", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:mul.mem2.hw.rh.u" }
 summary = "Multiply unsigned 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26511,6 +26527,7 @@ encoding = ["1110100011101001", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:mul.mem2.hw.rh.s" }
 summary = "Multiply signed 16 x 32-bit operands into a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26635,6 +26652,7 @@ encoding = ["1110100011101101", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:madd.mem2.hw.rh.u" }
 summary = "Add the product of unsigned 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26677,6 +26695,7 @@ encoding = ["1110100011101101", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:madd.mem2.hw.rh.s" }
 summary = "Add the product of signed 16 x 32-bit operands to a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26801,6 +26820,7 @@ encoding = ["1110100011101111", "rrr0uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:msub.mem2.hw.rh.u" }
 summary = "Subtract the product of unsigned 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -26843,6 +26863,7 @@ encoding = ["1110100011101111", "rrr1uuuusssstttt"]
 fields = { r = "pair", s = "gpr", t = "gpr", u = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
+hw = { ac791n = "as:msub.mem2.hw.rh.s" }
 summary = "Subtract the product of signed 16 x 32-bit operands from a 64-bit register pair, with memory post-increment."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42009,6 +42030,7 @@ encoding = ["1110010100111000", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42085,6 +42107,7 @@ encoding = ["1110010100111000", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42161,6 +42184,7 @@ encoding = ["1110010100111001", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42237,6 +42261,7 @@ encoding = ["1110010100111001", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42313,6 +42338,7 @@ encoding = ["1110010100111010", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42389,6 +42415,7 @@ encoding = ["1110010100111010", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42465,6 +42492,7 @@ encoding = ["1110010100111011", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42541,6 +42569,7 @@ encoding = ["1110010100111011", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42617,6 +42646,7 @@ encoding = ["1110010100111100", "rrr-ttt-sss-01--"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42693,6 +42723,7 @@ encoding = ["1110010100111100", "rrr-ttt-sss-111-"]
 fields = { r = "pair", s = "pair", t = "pair" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42769,6 +42800,7 @@ encoding = ["1110010100111101", "rrrrttttssss01--"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -42845,6 +42877,7 @@ encoding = ["1110010100111101", "rrrrttttssss111-"]
 fields = { r = "gpr", s = "gpr", t = "gpr" }
 group = "dsp"
 absent_on = ["r1", "r5"]
+hw = { ac791n = "resets" }
 summary = "Objdump prints a vector comparison with an unnamed condition; on the FM-1 it resets the chip."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43486,6 +43519,7 @@ fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
+hw = { ac791n = "as:sat16.u.rr" }
 summary = "Saturate a 32-bit register to the unsigned 16-bit range."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43520,6 +43554,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:packb.rpe" }
 summary = "Pack four consecutive 16-bit pair lanes into four bytes, with unsigned saturation to 8 bits."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43620,6 +43655,7 @@ fields = { r = "gpr", s = "gpr" }
 group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
+hw = { ac791n = "as:sat16.s.rr" }
 summary = "Saturate a 32-bit register to the signed 16-bit range."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43654,6 +43690,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:packb.rpe" }
 summary = "Pack four consecutive 16-bit pair lanes into four bytes, with signed saturation to 8 bits."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43755,6 +43792,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:unpackb.u.pr" }
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with zero extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43789,6 +43827,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:unpackb.s.pr" }
 summary = "Extend four source bytes to four consecutive 16-bit pair lanes with sign extension."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43823,6 +43862,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:add4.rrr.rnd.uavg" }
 summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43862,6 +43902,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:add4.rrr.rnd.uavg" }
 summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
 sources = ["oracle", "hardware"]
@@ -43901,6 +43942,7 @@ group = "dsp"
 requires = ["instrev3"]
 decode_requires = ["instrev3"]
 absent_on = ["r1", "r5"]
+hw = { ac791n = "as:add4.rrr.rnd.uavg" }
 summary = "On the FM-1 this encoding executes exactly as add4.rrr.rnd.uavg: rd gets, per byte, (a + b + 1) >> 1 of the bytes of rs and rt, unsigned; the old rd is not read and the mode letter makes no difference."
 status = "confirmed"
 sources = ["oracle", "hardware"]
