@@ -2,11 +2,19 @@
 
 Status: proposal, nothing built or run yet.
 
-The download-mode runner (`runner.S`, `run-ram`) cannot test what needs an application's environment: its
-exceptions and interrupts go to the mask ROM, which has no handlers for them, so traps and events reset or hang
-the unit (`hw/fm1-2026-10-24-v4/README.md`). The open cases are in `docs/GAPS.md`, "Meaning (behaviour)". This
-design runs the same cases from a small application that installs its own handlers, keeps the results in
-retained RAM, and hands them to the existing download-mode tools.
+Run 5 (`hw/fm1-2026-10-24-v5/README.md`) showed that the download-mode runner can install its own handlers in
+the RAM vector table, so `syscall`, `bkpt` and `hbkpt` are now captured there. What download mode still cannot do:
+
+- configure the interrupt controller and a timer without disturbing the ROM's USB handling, so interrupt
+  delivery, `cli`/`sti`, `icfg` bit 8, `swi` delivery and events cannot be observed;
+- survive a reset or hang: `idle` reset the unit, and four uploads after a debug return hung, each costing a
+  power cycle and giving no result;
+- start from a known state: the ROM leaves RAM (vector 2's word, for one) different after each recovery, and
+  `copex` depends on history that the runs could not control.
+
+The open cases are in `docs/GAPS.md`, "Meaning (behaviour)". This design runs the same cases from a small
+application that owns the whole chip, keeps the results in retained RAM, and hands them to the existing
+download-mode tools.
 
 Facts below come from the FM-1 firmware trees (fm1-base `bsp/chip/`, MPL-2.0; Felucca `firmware/hal/`,
 GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from m-bootloader's
@@ -19,7 +27,8 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
   (fm1-base `crt0.S`). The application runs from flash (XIP) and sets up its own stacks.
 - **Vectors.** A RAM table at `0x01C7FE00`, 128 words, one handler address per source; installing a handler is
   a store, no base register (fm1-base `bsp/chip/fm1_irq.h`; SDK `include_lib/driver/cpu/wl82/asm/hwi.h`).
-  Slot 2 overlaps the boot object at `0x01C7FE08` and slot 126 the second core's entry word.
+  Slot 2 overlaps the boot object at `0x01C7FE08` and slot 126 the second core's entry word. Run 5 confirmed
+  on hardware that the ROM follows slots 0, 1 and 2 of this table.
 - **Sources.** 0 debug (SDTAP), 1 every CPU exception, 2 system call, 3..127 peripherals, 120..127 soft
   interrupts (raised by setting an `ILAT_SET` bit). The cause of an exception is in `EMU_MSG` (`0x1EEF0D4`:
   misaligned, illegal instruction, divide by zero, stack overflow, watchpoint, FPU) and `DBG_MSG` (`0x1EEE244`,
@@ -32,7 +41,8 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
   doing a soft reset (power-control bit 4) (SPEC §4.2). That is how the stock firmware's soft key works.
 - **Retained RAM.** fm1-base keeps a crash record in a `.noinit` area at `0x01C7C000` that survives a reset, and
   `0x01C7FD80` onward is the boot/update/application communication area (SPEC §6.1). Whether the mask ROM's
-  download mode leaves `0x01C7C000` alone is **not known**; step 1 below checks it.
+  download mode leaves `0x01C7C000` alone is **not known**; step 1 below checks it. Run 5 saw some RAM words
+  differ after each recovery, so "retained" has to be measured, not assumed.
 - **Packaging.** M-Flasher installs `.fwsc` packages, M-VAVE's or custom ones in the same format (fm1-base
   `fm1pkg.py` builds them; format in SPEC §5). m-bootloader stays installed, so download mode, and with it
   restoring a backup, keeps working whatever the application does.
@@ -45,8 +55,11 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
    RAM and run there, as in the download-mode runs, so the results compare directly.
 2. **Handlers.** Every vector slot points at a recording handler: it stores the vector number, `EMU_MSG`,
    `DBG_MSG`, `reti`, `rete`, `retx`, `rets`, `psr`, `icfg`, `sp` and the registers into the current case's
-   result, clears the cause bits, sets `reti` to the stub's resume label and returns with `csync; rti`. The case
-   then ends normally, so one trap costs one case, not the run. Which sources are enabled, and at which
+   result, clears the cause bits, sets the return register to the stub's resume label and returns. The case
+   then ends normally, so one trap costs one case, not the run. Run 5's `hw_probe_handler` is the starting
+   point. The debug route (slot 0) must return through `rete`/`rte`: returning from it with `rti` left the unit
+   unable to take the next upload. `hbkpt` leaves `rete` at the instruction itself, so its handler must step
+   past it; `syscall` and `bkpt` leave the address after the instruction. Which sources are enabled, and at which
    priority, is part of each case's set-up (for the interrupt-control forms).
 3. **Progress and recovery.** Before each case the application writes the case number to retained RAM; after it,
    the result. The watchdog is armed in reset mode with a short timeout, so a hang becomes a reset. On start
@@ -67,7 +80,8 @@ GPL-3.0) and JieLi's AC79 SDK headers (Apache-2.0), used as facts only, and from
    `0x01C7FD80`.., or one the ROM is shown to leave alone) before going on.
 2. **Harness check.** The self-test and a sample of register-only cases from run 1 through the application.
    Results must equal run 1's for the same inputs; this proves the handoff, the stub copy and the read-back.
-3. **Handlers.** The trap and event forms from `docs/GAPS.md`, one per case, with the recording handlers.
+3. **Handlers.** The trap and event forms still open in `docs/GAPS.md`, one per case, with the recording
+   handlers, the soft-interrupt sources enabled, and the watchdog armed.
 4. **Interrupt control.** `cli`/`sti` (with and without a register) and `icfg` bit 8 against a timer interrupt
    whose handler counts: does it fire, is it held pending, at which priority.
 
