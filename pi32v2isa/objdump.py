@@ -130,6 +130,8 @@ def decoder_for(tab, mcpu=None, mattr=()):
         raise ObjdumpError(f"unsupported -mcpu={mcpu}")
     if any(a.lstrip("+") == "fprev1" for a in mattr):
         off = off - FPU_IDS
+    given = {a.lstrip("+") for a in mattr}
+    off = off | {i.id for i in tab.insns if set(i.decode_requires) - given}   # e.g. sat8 without +instrev3
     return Decoder(tab, off)
 
 

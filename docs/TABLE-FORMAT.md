@@ -12,7 +12,8 @@ syntax = "{r} = [sp{+n}]"           # JieLi's assembly syntax, see below
 encoding = ["001ooooo00p0rrrr"]     # one string per 16-bit word, see below
 fields = { r = "gpr", n = { kind = "uimm", letters = "po", scale = 4 } }
 group = "memory"                    # optional: a heading for docs/ISA.md
-requires = []                       # CPU features needed, e.g. ["fprev1"]
+requires = []                       # CPU features the assembler needs for it, e.g. ["instrev3"]
+decode_requires = []                # optional: features without which JieLi's objdump does not show it
 summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"                # guessed | documented | confirmed
 sources = ["oracle"]                # ids from docs/SOURCES.md

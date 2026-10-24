@@ -73,7 +73,8 @@ class Insn:
     status: str
     sources: list[str]
     group: str = ""
-    requires: list[str] = field(default_factory=list)
+    requires: list[str] = field(default_factory=list)          # features the assembler needs for it
+    decode_requires: list[str] = field(default_factory=list)   # features without which objdump does not show it
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
     asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
@@ -149,6 +150,7 @@ def load(path=TABLE):
             sources=list(e.get("sources", [])),
             group=e.get("group", ""),
             requires=list(e.get("requires", [])),
+            decode_requires=list(e.get("decode_requires", [])),
             notes=e.get("notes", ""),
             examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
                       for x in e.get("example", [])],

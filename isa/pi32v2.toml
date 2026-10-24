@@ -42955,3 +42955,269 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "bf f4 ff ff"
 text = "r15.h = r15.h - 255 (ssat)  #"
 origin = "oracle:objdump+clang:20260730.1"
+
+# ==== instruction revision 3 forms (found with -mattr=+instrev3) ====
+
+[[insn]]
+id = "sat8.u.rr"
+syntax = "{r} = sat8({s}) (u)"
+encoding = ["11100000011111--", "rrrrssss00000000"]
+fields = { r = "gpr", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register to the unsigned 8-bit range; instruction revision 3."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "7c e0 00 00"
+text = "r0 = sat8(r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 00 f0"
+text = "r15 = sat8(r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 00 0f"
+text = "r0 = sat8(r15) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 00 ff"
+text = "r15 = sat8(r15) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "vsat16.u.rp"
+syntax = "{r} = vsat16({p}) (u)"
+encoding = ["1110010000000111", "rrrrppp--------0"]
+fields = { r = "gpr", p = "pair" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register pair to unsigned 16-bit lanes into one register (as printed); instruction revision 3; meaning not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "07 e4 00 00"
+text = "r0 = vsat16(r1_r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 00 0e"
+text = "r0 = vsat16(r15_r14) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 00 f0"
+text = "r15 = vsat16(r1_r0) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 00 fe"
+text = "r15 = vsat16(r15_r14) (u)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sat8.u.rr.p"
+syntax = "{r} = sat8({s}) (u)  #"
+encoding = ["11110000011111--", "rrrrssss00000000"]
+fields = { r = "gpr", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register to the unsigned 8-bit range (parallel twin); instruction revision 3."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "7c f0 00 00"
+text = "r0 = sat8(r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 00 f0"
+text = "r15 = sat8(r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 00 0f"
+text = "r0 = sat8(r15) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 00 ff"
+text = "r15 = sat8(r15) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "vsat16.u.rp.p"
+syntax = "{r} = vsat16({p}) (u)  #"
+encoding = ["1111010000000111", "rrrrppp--------0"]
+fields = { r = "gpr", p = "pair" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register pair to unsigned 16-bit lanes into one register (as printed) (parallel twin); instruction revision 3; meaning not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "07 f4 00 00"
+text = "r0 = vsat16(r1_r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 00 0e"
+text = "r0 = vsat16(r15_r14) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 00 f0"
+text = "r15 = vsat16(r1_r0) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 00 fe"
+text = "r15 = vsat16(r15_r14) (u)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sat8.s.rr"
+syntax = "{r} = sat8({s}) (s)"
+encoding = ["11100000011111--", "rrrrssss00000001"]
+fields = { r = "gpr", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register to the signed 8-bit range; instruction revision 3."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "7c e0 01 00"
+text = "r0 = sat8(r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 01 f0"
+text = "r15 = sat8(r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 01 0f"
+text = "r0 = sat8(r15) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c e0 01 ff"
+text = "r15 = sat8(r15) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "vsat16.s.rp"
+syntax = "{r} = vsat16({p}) (s)"
+encoding = ["1110010000000111", "rrrrppp--------1"]
+fields = { r = "gpr", p = "pair" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register pair to signed 16-bit lanes into one register (as printed); instruction revision 3; meaning not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "07 e4 01 00"
+text = "r0 = vsat16(r1_r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 01 0e"
+text = "r0 = vsat16(r15_r14) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 01 f0"
+text = "r15 = vsat16(r1_r0) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 e4 01 fe"
+text = "r15 = vsat16(r15_r14) (s)"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "sat8.s.rr.p"
+syntax = "{r} = sat8({s}) (s)  #"
+encoding = ["11110000011111--", "rrrrssss00000001"]
+fields = { r = "gpr", s = "gpr" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register to the signed 8-bit range (parallel twin); instruction revision 3."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "7c f0 01 00"
+text = "r0 = sat8(r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 01 f0"
+text = "r15 = sat8(r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 01 0f"
+text = "r0 = sat8(r15) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "7c f0 01 ff"
+text = "r15 = sat8(r15) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "vsat16.s.rp.p"
+syntax = "{r} = vsat16({p}) (s)  #"
+encoding = ["1111010000000111", "rrrrppp--------1"]
+fields = { r = "gpr", p = "pair" }
+group = "dsp"
+requires = ["instrev3"]
+decode_requires = ["instrev3"]
+summary = "Saturate a register pair to signed 16-bit lanes into one register (as printed) (parallel twin); instruction revision 3; meaning not established."
+status = "confirmed"
+sources = ["oracle"]
+notes = "objdump decodes it only with -mattr=+instrev3, which the earlier sweeps never passed; layout from second-word sweeps with +instrev3."
+
+[[insn.example]]
+bytes = "07 f4 01 00"
+text = "r0 = vsat16(r1_r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 01 0e"
+text = "r0 = vsat16(r15_r14) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 01 f0"
+text = "r15 = vsat16(r1_r0) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "07 f4 01 fe"
+text = "r15 = vsat16(r15_r14) (s)  #"
+origin = "oracle:objdump+clang:20260730.1"

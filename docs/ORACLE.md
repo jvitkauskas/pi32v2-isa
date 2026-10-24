@@ -28,7 +28,10 @@ python3 -m pi32v2isa oracle encode "rts" "call r5"     # what JieLi's assembler 
 - **Decode** assembles the bytes as `.byte` data with the toolchain's clang and runs
   `objdump -d -mcpu=r3` on the object.
 - **Encode** assembles the lines with `clang -target pi32v2 -mcpu=r3 -c` and reads the bytes back.
-- `--feature fprev1` adds `-mfprev1` to both (an entry's `requires` does this automatically).
+- `--feature fprev1` adds `-mfprev1` to clang and `-mattr=+fprev1` to objdump (an entry's `requires` does this
+  automatically). objdump hides forms of a feature it is not told about: `sat8` and `vsat16` decode only with
+  `-mattr=+instrev3`. Sweeps before 2026-10-24 never passed a feature to objdump, which is how those forms were
+  missed.
 
 Both are needed: the disassembler may print the same text for different encodings, and the assembler may
 pick one encoding of several.

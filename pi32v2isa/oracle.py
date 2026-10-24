@@ -86,7 +86,9 @@ class Oracle:
             code, _, err = self._run([self.clang, "-target", "pi32v2", f"-mcpu={CPU}", *flags, "-c", s, "-o", o])
             if code:
                 return None, err.strip()
-            code, out, err = self._run([self.objdump, "-d", f"-mcpu={CPU}", o])
+            # objdump hides forms of a feature it is not told about (e.g. sat8 without +instrev3)
+            attrs = [f"-mattr={','.join('+' + f for f in features)}"] if features else []
+            code, out, err = self._run([self.objdump, "-d", f"-mcpu={CPU}", *attrs, o])
             if code:
                 raise OracleError(f"objdump failed: {err.strip()}")
             return out, ""

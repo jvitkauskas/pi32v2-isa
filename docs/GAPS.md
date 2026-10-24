@@ -14,6 +14,10 @@ form and a `.modimm` form ([audit](audits/2026-10-round2-coverage.md)).
 
 Still open on the encoding side:
 
+- Instruction revision 3: objdump shows some forms only with `-mattr=+instrev3`, and the sweeps above ran
+  without it. A first-word sweep with it found `sat8` and `vsat16` (now in the table); a second-word sweep of
+  every 32/48-bit first word with it is the remaining check.
+
 - Forms objdump prints with `??` as the condition, and four floating-point conditions (`!=`, `u==`, `uno`,
   `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`; whether the
   hardware treats them as instructions is unknown.
@@ -21,6 +25,12 @@ Still open on the encoding side:
   exist (every first word there is 16-bit).
 
 ## Meaning (behaviour)
+
+Priorities from real code [fm1-firmware-stats]: one FM-1 factory firmware uses 562 of the table's forms; 97%
+of its image decodes, and the undecodable words inside code are data (text, small constants), apart from one
+that decodes only with `+instrev3`. Forms it uses whose meaning is still open, most used first: `sti.r`,
+`shl3.rri` (`<<<`, 514 uses), `lockclr`, `lockset`, `cli.r`, `callns.r`, `gotoss.xl`, `btbclr`, then 86 DSP forms
+led by `smin`/`umin`/`smax`, halfword add/sub and saturating multiplies.
 
 `confirmed` covers encoding and syntax only. The compiler showed what many instructions do (summaries and
 notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
