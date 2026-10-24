@@ -252,6 +252,10 @@ def main(argv=None):
     a.add_argument("-D", dest="define", action="append", default=[], help="macro definition for cpp")
     a.add_argument("-m", dest="feature", action="append", default=[],
                    help="CPU feature the code may use (instrev3, fprev1); without any -m every instruction is allowed")
+    a.add_argument("--chip", choices=sorted(table.CHIPS),
+                   help="warn about forms that reset, do nothing, run as another form or are unpredictable on this "
+                        "chip (the table's hw key)")
+    a.add_argument("--chip-errors", action="store_true", help="with --chip: refuse those forms instead of warning")
     a.set_defaults(func=cmd_as)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
     o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare", "linkcompare", "ldcompare"])

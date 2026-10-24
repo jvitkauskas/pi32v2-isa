@@ -15,6 +15,7 @@ group = "memory"                    # optional: a heading for docs/ISA.md
 requires = []                       # CPU features the assembler needs for it, e.g. ["instrev3"]
 decode_requires = []                # optional: features without which JieLi's objdump does not show it
 absent_on = []                      # optional: CPU models whose objdump does not show it, see "CPU models"
+hw = { ac791n = "resets" }          # optional: what it does on a chip when that is not what the syntax says
 summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"                # guessed | documented | confirmed
 sources = ["oracle"]                # ids from docs/SOURCES.md
@@ -133,6 +134,23 @@ JieLi's objdump decodes according to `-mcpu` (one of `r1`..`r5`, `r2v3`, `r3v3`,
 entry's examples: 642 entries show everywhere; 91 floating-point forms need `fprev1`; 426 are absent on `r1` and
 `r5`; 6 (`copex`, `shiftr ... mode`) are absent without `-mcpu`. On `r1` and `r5` some of those words decode as
 other instructions, which the table does not describe (only `r3`, the FM-1's, was swept).
+
+## Hardware behaviour
+
+`hw` records, per chip, a form whose behaviour on real hardware is not what its syntax says, so that tools can
+warn about it and a compiler can leave it out. Keys are chips (`pi32v2isa.table.CHIPS`: `ac791n`, the FM-1's
+AC791N, from the runs under `hw/`); values are
+
+| Value | Meaning |
+| --- | --- |
+| `resets` | executing it resets the chip (every case tried) |
+| `nop` | it changes nothing |
+| `unpredictable` | its result does not follow from its operands (state, or an unknown rule) |
+| `as:<id>` | it does exactly what entry `<id>` does (typically a form one encoding bit away; the notes say which mode) |
+
+The evidence is in the entry's notes and needs the source `hardware`. Forms that work but surprise (flags,
+saturation, NaN results) are not `hw`; their notes describe them. The assembler warns about `hw` forms with
+`--chip ac791n` (and refuses them with `--chip-errors`); objdump notes them with `--chip=ac791n`.
 
 ## Status
 

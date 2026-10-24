@@ -25,6 +25,8 @@ OPTIONS_HELP = """usage: objdump [options] FILE...
   -j NAME, -section=NAME    only these sections (repeatable)
   -mcpu=NAME                r3 and r4 enable the floating-point forms; none or r2 leave them out
   -mattr=+fprev1            enable the floating-point forms
+  --chip=NAME               not in JieLi's objdump: note forms that misbehave on that chip (ac791n),
+                            from the table's hw key (`; ac791n: resets the chip`)
 """
 
 # Instruction forms JieLi's objdump decodes only when told the CPU has them (found with `oracle` probes of every
@@ -500,6 +502,10 @@ class Disassembler:
             elif insn.id in ANNOTATED_IMM:
                 v = int(re.search(r"= (-?\d+)", text).group(1))
                 ann = self.syms.annotation(v & ~1, s.index)
+            chip = self.opts.get("chip")
+            note = chip and tablemod.hw_note(insn, chip)
+            if note:
+                text += f"\t; {chip}: {note}"
             w(f"{addr:8x}:    {self.hexb(data[index:index + n]):<{HEX_BYTES}}{pad}{text}")
             for c in closers:       # a rep's closer has a tab even after the second of a pair
                 w("\n" + (" " * 32 if second and not c.endswith("\0") else BRACE_PAD + "\t") + c.replace("\0", ""))
@@ -607,6 +613,10 @@ def parse_args(argv):
             opts["mcpu"] = a.split("=", 1)[1]
         elif a.startswith("-mattr="):
             opts["mattr"] += a.split("=", 1)[1].split(",")
+        elif a.startswith("--chip="):
+            opts["chip"] = a.split("=", 1)[1]
+            if opts["chip"] not in tablemod.CHIPS:
+                raise ObjdumpError(f"unknown chip {opts['chip']} (known: {', '.join(tablemod.CHIPS)})")
         elif a.startswith("-"):
             raise ObjdumpError(f"unsupported option {a}")
         else:

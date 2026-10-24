@@ -138,6 +138,11 @@ symbol itself with the constant as addend; the symbol table has no section symbo
 
 ## 7. Differences from JieLi's assembler
 
+Added: `--chip ac791n` warns about every line whose form the table's `hw` key marks on that chip (it resets the
+chip, does nothing, runs as another form or is unpredictable; [TABLE-FORMAT.md](TABLE-FORMAT.md#hardware-behaviour)),
+and `--chip-errors` makes those lines errors. Without `--chip` nothing changes.
+
+
 Deliberate, so as not to reproduce its bugs:
 
 - `r = r | 0`, `r = r ^ 0`, `r = r & 0xFFFFFFFF` give the modified-immediate form (the table's `asm_wrong`); JieLi's gives a bit-0

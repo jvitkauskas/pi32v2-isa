@@ -16,6 +16,10 @@ STATUSES = ("guessed", "documented", "confirmed")
 CPU_MODELS = ("generic", "r1", "r2", "r3", "r4", "r5", "r2v3", "r3v3", "r4v3", "r4v3s")
 CPU_FEATURES = {"r3": ("fprev1",), "r4": ("fprev1",), "r5": ("fprev1",), "r3v3": ("fprev1",),
                 "r4v3": ("fprev1",), "r4v3s": ("fprev1",)}
+# Chips whose behaviour the table records with `hw` (docs/TABLE-FORMAT.md, "Hardware behaviour"): what a form
+# does on that chip when it is not what its syntax says.
+CHIPS = {"ac791n": "JieLi AC791N (M-VAVE FM-1), hardware runs hw/fm1-2026-10-24*"}
+HW_KINDS = {"resets": "resets the chip", "nop": "does nothing", "unpredictable": "gives unpredictable results"}
 WORD_CHARS = re.compile(r"^[01a-z-]{16}$")
 # In syntax: {x} is field x, {+x} prints "+value" or nothing when the value is 0, {{ and }} are literal braces.
 SYNTAX_TOKEN = re.compile(r"\{\{|\}\}|\{(\+?)([a-z])\}")
@@ -88,6 +92,7 @@ class Insn:
     asm_syntax: str = ""    # how the assembler wants the line, when it differs from objdump's syntax
     body: str = ""          # a block opener: the field whose value is the body's length in bytes
     block: dict[str, str] = field(default_factory=dict)  # if-block opener: {"then": f, "else": f} implied fields
+    hw: dict[str, str] = field(default_factory=dict)     # chip -> "resets", "nop", "unpredictable" or "as:<id>"
 
     @property
     def nbits(self):
@@ -166,6 +171,7 @@ def load(path=TABLE):
             asm_syntax=e.get("asm_syntax", ""),
             body=e.get("body", ""),
             block=dict(e.get("block", {})),
+            hw=dict(e.get("hw", {})),
         ))
     return Table(format=raw.get("format", 0), insns=insns)
 
@@ -222,6 +228,7 @@ def check(table, sources=None):
     if table.format != 1:
         errors.append(f"format is {table.format!r}, expected 1")
     seen = set()
+    ids = {i.id for i in table.insns}
     for i in table.insns:
         where = i.id or "<no id>"
         for key in ("id", "syntax", "words", "summary", "status", "sources"):
@@ -289,6 +296,16 @@ def check(table, sources=None):
         for cpu in i.absent_on:
             if cpu not in CPU_MODELS:
                 errors.append(f"{where}: unknown CPU model {cpu!r} in absent_on")
+        for chip, what in i.hw.items():
+            if chip not in CHIPS:
+                errors.append(f"{where}: unknown chip {chip!r} in hw")
+            if what.startswith("as:"):
+                if what[3:] not in ids or what[3:] == i.id:
+                    errors.append(f"{where}: hw {chip} = {what!r} names no other entry")
+            elif what not in HW_KINDS:
+                errors.append(f"{where}: hw {chip} = {what!r} is not one of {sorted(HW_KINDS)} or as:<id>")
+            if "hardware" not in i.sources:
+                errors.append(f"{where}: hw needs the source 'hardware'")
         if i.status not in STATUSES:
             errors.append(f"{where}: unknown status {i.status!r}")
         for s in i.sources:
@@ -323,6 +340,15 @@ def check(table, sources=None):
                 errors.append(f"{i.id}: example {x.bytes.hex(' ')} prints {codec.format(i, got[1])!r}, "
                               f"the example says {x.text!r}")
     return errors
+
+
+def hw_note(insn, chip):
+    """What `insn` does on `chip` when that is not what its syntax says ("resets the chip", "runs as add4..."), or
+    None."""
+    what = insn.hw.get(chip)
+    if what is None:
+        return None
+    return f"runs as {what[3:]}" if what.startswith("as:") else HW_KINDS[what]
 
 
 def shown_by_objdump(insn, cpu="generic", features=()):

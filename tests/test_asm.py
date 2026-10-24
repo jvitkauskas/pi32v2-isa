@@ -511,3 +511,19 @@ class Live(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChipWarnings(unittest.TestCase):
+    SRC = "\t.text\n\tr0 = popcnt(r1)\n\tr2 = r3 + r4\n"
+
+    def test_warns_once_per_line(self):
+        warnings = []
+        asm.assemble_source(self.SRC, "x.s", features={"instrev3"}, chip="ac791n", warnings=warnings)
+        self.assertEqual(warnings, ["x.s:2: popcnt.rr does nothing on the ac791n (isa/pi32v2.toml, hw)"])
+
+    def test_errors_and_default(self):
+        with self.assertRaises(asm.AsmError):
+            asm.assemble_source(self.SRC, "x.s", features={"instrev3"}, chip="ac791n", chip_errors=True)
+        warnings = []
+        asm.assemble_source(self.SRC, "x.s", features={"instrev3"}, warnings=warnings)
+        self.assertEqual(warnings, [])
