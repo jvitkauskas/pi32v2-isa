@@ -591,10 +591,69 @@ def asmcompare(oracle, path, flags=(), include=(), define=(), table=None):
         except asm.AsmError as e:
             mine, mine_err = None, str(e)
         if not ref_ok and mine is None:
-            return []                       # both refuse
+            first = err.strip().splitlines()[0] if err.strip() else "?"
+            return [f"both assemblers refuse it (JieLi: {first}; ours: {mine_err})"]
         if not ref_ok:
             return [f"JieLi's assembler refuses it ({err.strip().splitlines()[0] if err.strip() else '?'}) "
                     f"but ours assembled it"]
         if mine is None:
             return [f"ours refuses it: {mine_err}"]
         return diff_objects(_describe(elf.read(ref_obj.read_bytes())), _describe(elf.read(mine)))
+
+
+def link_objects(oracle, objects, defsyms=None):
+    """Link relocatable objects (bytes) with JieLi's ld (pi32v2/bin/ld) using its default script. Undefined
+    symbols are given distinct addresses with --defsym (`defsyms` {name: address}; by default every undefined
+    global gets 0x60000 + 0x100 * k). Returns the linked file's bytes. Black box: objects in, ELF out."""
+    from . import elf
+
+    ld = oracle.path / "pi32v2" / "bin" / "ld"
+    with tempfile.TemporaryDirectory() as d:
+        files = []
+        for n, data in enumerate(objects):
+            f = Path(d) / f"in{n}.o"
+            f.write_bytes(data)
+            files.append(f)
+        if defsyms is None:
+            defined, undef = set(), []
+            for data in objects:
+                obj = elf.read(data)
+                for s in obj.symbols[1:]:
+                    if s.bind != elf.STB_LOCAL and s.shndx == elf.SHN_UNDEF and s.name not in undef:
+                        undef.append(s.name)
+                    elif s.shndx != elf.SHN_UNDEF:
+                        defined.add(s.name)
+            defsyms = {name: 0x60000 + 0x100 * k for k, name in enumerate(n for n in undef if n not in defined)}
+        out = Path(d) / "out.elf"
+        code, text, err = oracle._run([ld, "-o", out, *files, *[f"--defsym={k}={v:#x}" for k, v in defsyms.items()]])
+        if code:
+            raise OracleError(f"ld failed: {(err or text).strip()}")
+        return out.read_bytes()
+
+
+def linkcompare(oracle, path, flags=(), include=(), define=(), table=None):
+    """Assemble a source with JieLi's clang and with this repo's assembler, link each with JieLi's ld and
+    compare the loaded sections (name, address, contents). Returns a list of differences."""
+    from . import asm, elf
+
+    path = Path(path)
+    incs = [str(p) for p in include]
+    with tempfile.TemporaryDirectory() as d:
+        text = asm.preprocess(path, incs, define) if path.suffix == ".S" else path.read_text()
+        src, ref = Path(d) / "in.s", Path(d) / "ref.o"
+        src.write_text(text)
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", "-c", "-x", "assembler",
+                                    *[f"-I{p}" for p in [path.parent, *incs]], src, "-o", ref])
+        if code:
+            raise OracleError(f"JieLi's assembler: {err.strip()}")
+        theirs = ref.read_bytes()
+        mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table)
+        a = elf.read(link_objects(oracle, [theirs]))
+        b = elf.read(link_objects(oracle, [mine]))
+    secs = lambda o: {s.name: (s.addr, bytes(s.data), s.length) for s in o.sections if s.addr or s.type == elf.SHT_PROGBITS}
+    sa, sb = secs(a), secs(b)
+    diffs = []
+    for name in sorted(set(sa) | set(sb)):
+        if sa.get(name) != sb.get(name):
+            diffs.append(f"linked section {name}: JieLi {sa.get(name, ('-',))[0]} vs ours {sb.get(name, ('-',))[0]}, contents differ")
+    return diffs

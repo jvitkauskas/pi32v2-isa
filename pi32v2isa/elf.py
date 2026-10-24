@@ -40,6 +40,7 @@ class Section:
     entsize: int = 0
     data: bytearray = field(default_factory=bytearray)   # contents (NOBITS: only the size matters)
     size: int = 0                                        # NOBITS size
+    addr: int = 0                                        # sh_addr (read from linked files)
     relocs: list = field(default_factory=list)           # (offset, type, symbol name, addend)
     index: int = 0
 
@@ -56,7 +57,7 @@ class Symbol:
     bind: int = STB_LOCAL
     type: int = STT_NOTYPE
     other: int = 0
-    shndx: int = SHN_UNDEF      # section index, SHN_ABS, SHN_COMMON or SHN_UNDEF
+    shndx: object = SHN_UNDEF   # section index, SHN_ABS, SHN_COMMON, SHN_UNDEF, or (for write) a section name
 
 
 def _align(n, a):
@@ -64,26 +65,26 @@ def _align(n, a):
 
 
 class StringTable:
-    """A string table; a string that ends another one shares its bytes."""
+    """A string table laid out like JieLi's assembler does: the strings sorted by their reversed spelling,
+    largest first, with a string that ends the previous one sharing its bytes."""
 
     def __init__(self):
-        self.names = []
+        self.names = set()
 
     def add(self, name):
-        if name and name not in self.names:
-            self.names.append(name)
+        if name:
+            self.names.add(name)
 
     def layout(self):
-        """(bytes, {name: offset}); a string that ends another one shares its bytes."""
-        out, where, placed = bytearray(b"\0"), {"": 0}, []
-        for name in sorted(set(self.names), key=lambda s: (-len(s), self.names.index(s))):
-            host = next((h for h in placed if h.endswith(name)), None)
-            if host is not None:
-                where[name] = where[host] + len(host) - len(name)
+        """(bytes, {name: offset})."""
+        out, where, prev = bytearray(b"\0"), {"": 0}, None
+        for name in sorted(self.names, key=lambda n: n.encode()[::-1], reverse=True):
+            if prev is not None and prev.endswith(name):
+                where[name] = where[prev] + len(prev) - len(name)
                 continue
             where[name] = len(out)
-            placed.append(name)
             out += name.encode() + b"\0"
+            prev = name
         return bytes(out), where
 
 
@@ -104,11 +105,16 @@ def write(sections, symbols, e_flags=0):
         names.add(sym.name)
     strtab, where = names.layout()
 
-    # section numbering: 0 null, 1 .strtab, user sections, rela sections, .symtab
-    for n, s in enumerate(sections):
-        s.index = 2 + n
-    rela_index = {id(s): 2 + len(sections) + n for n, s in enumerate(rela)}
-    symtab_index = 2 + len(sections) + len(rela)
+    # section numbering: 0 null, 1 .strtab, then each user section followed by its .rela section, .symtab last
+    rela_index, index = {}, 2
+    for s in sections:
+        s.index = index
+        index += 1
+        if s.relocs:
+            rela_index[id(s)] = index
+            index += 1
+    symtab_index = index
+    by_name = {s.name: s.index for s in sections}
     symbol_number = {sym.name: n + 1 for n, sym in enumerate(symbols)}
     nlocal = 1 + sum(1 for sym in symbols if sym.bind == STB_LOCAL)
 
@@ -132,7 +138,8 @@ def write(sections, symbols, e_flags=0):
     symdata = bytearray(16)
     for sym in symbols:
         symdata += struct.pack("<IIIBBH", where[sym.name], sym.value, sym.size,
-                               (sym.bind << 4) | sym.type, sym.other, sym.shndx)
+                               (sym.bind << 4) | sym.type, sym.other,
+                               by_name[sym.shndx] if isinstance(sym.shndx, str) else sym.shndx)
     place("symtab", bytes(symdata), 4)
     for s in rela:
         data = bytearray()
@@ -148,9 +155,9 @@ def write(sections, symbols, e_flags=0):
     for s in sections:
         off = offsets[id(s)]
         headers.append(struct.pack("<10I", where[s.name], s.type, s.flags, 0, off, s.length, 0, 0, s.align, s.entsize))
-    for s in rela:
-        headers.append(struct.pack("<10I", where[".rela" + s.name], SHT_RELA, 0, 0, offsets[("rela", id(s))],
-                                   12 * len(s.relocs), symtab_index, s.index, 4, 12))
+        if s.relocs:
+            headers.append(struct.pack("<10I", where[".rela" + s.name], SHT_RELA, 0, 0, offsets[("rela", id(s))],
+                                       12 * len(s.relocs), symtab_index, s.index, 4, 12))
     headers.append(struct.pack("<10I", where[".symtab"], SHT_SYMTAB, 0, 0, offsets["symtab"], len(symdata),
                                1, nlocal, 4, 16))
     for h in headers:
@@ -185,9 +192,9 @@ def read(data):
 
     strbase = raw[shstrndx][4] if shnum else 0
     sections = []
-    for k, (name, typ, flg, _, off, size, link, info, align, entsize) in enumerate(raw):
+    for k, (name, typ, flg, addr, off, size, link, info, align, entsize) in enumerate(raw):
         s = Section(cstr(name, strbase) if k else "", typ, flg, align, entsize)
-        s.index = k
+        s.index, s.addr = k, addr
         if typ == SHT_NOBITS:
             s.size = size
         elif typ != SHT_NULL:

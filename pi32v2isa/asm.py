@@ -122,9 +122,11 @@ def tokenize(text):
 
 
 class ExprParser:
-    def __init__(self, asm, text):
+    def __init__(self, asm, text, dots=None):
         self.asm, self.toks, self.i = asm, tokenize(text), 0
         self.text = text
+        self.dots = dots            # number of `.` tokens before this expression on its line, or None
+        self.seen = 0
 
     def peek(self):
         return self.toks[self.i] if self.i < len(self.toks) else (None, None)
@@ -170,6 +172,10 @@ class ExprParser:
                 return ("num", CHAR_ESC[c])
             return ("num", ord(body[:1]))
         if kind == "id":
+            if val == ".":
+                self.seen += 1
+                key = None if self.dots is None else (self.dots + self.seen - 1)
+                return ("sym", self.asm.here(key))
             return self.asm.symref(val)
         if val == "(":
             node = self.binary(1)
@@ -180,8 +186,16 @@ class ExprParser:
         raise AsmError(f"unexpected {val!r} in expression {self.text!r}")
 
 
+# @-suffixes after a symbol that the assembler accepts (docs/ELF.md): they only change the relocation type
+VARIANTS = {"GOT", "GOTOFF", "GOTPCREL", "GOTTPOFF", "INDNTPOFF", "NTPOFF", "PLT", "TLSGD", "TLSLD", "TLSLDM",
+            "TPOFF", "DTPOFF", "PCREL", "PI32V2GOT", "PI32V2GOTFUNCDESC", "PI32V2FUNCDESC"}
+
+
+DOT = re.compile(r"(?<![A-Za-z0-9_.$@])\.(?![A-Za-z0-9_.$@])")
+
+
 def walk_syms(node):
-    if node[0] == "sym":
+    if node[0] in ("sym", "symv"):
         yield node[1]
     elif node[0] == "un":
         yield from walk_syms(node[2])
@@ -194,7 +208,7 @@ def walk_syms(node):
 
 SR_NUMBER = {name: n for n, name in enumerate(codec.SR_NAMES)}
 SR_NUMBER.update({f"sr{n}": n for n in range(16)})
-REGISTER_WORDS = set(SR_NUMBER) | {f"r{n}" for n in range(16)} | {"cc", "npc", "c"}
+REGISTER_WORDS = set(SR_NUMBER) | {f"r{n}" for n in range(16)}
 
 _MODIMM = {}
 
@@ -211,8 +225,8 @@ class Num:
     """A numeric operand whose value is known only at layout time (`neg`: the text was written with the
     sign of an `x - n` alias of an add form)."""
 
-    def __init__(self, node, neg=False):
-        self.node, self.neg = node, neg
+    def __init__(self, node, neg=False, dots=0):
+        self.node, self.neg, self.dots = node, neg, dots      # dots: standalone `.` tokens before it on the line
 
 
 def fit_num(fld, width, v, kind=None):
@@ -462,6 +476,9 @@ def alias_syntaxes(insn, syntax):
     m = re.fullmatch(r"(.*) \+(=?) \{(\w)\}", syntax)
     if m and insn.fields[m.group(3)].kind in NUMERIC_KINDS:
         out.append((f"{m.group(1)} -{m.group(2)} {{{m.group(3)}}}", ("neg", m.group(3))))
+        m2 = re.fullmatch(r"\{(\w)\} \+= \{(\w)\}", syntax)
+        if m2:
+            out.append((f"{{{m2.group(1)}}} = {{{m2.group(1)}}} - {{{m2.group(2)}}}", ("neg", m2.group(2))))
     return out
 
 
@@ -533,7 +550,9 @@ class Isa:
         self.ifblock = {i.id: i.syntax.endswith("{{") and not i.body and i.words[1].startswith("----")
                         for i in self.insns if len(i.words) == 2}
         self.abs32 = {i.id: abs32_field(i) for i in self.insns}
-        for order, insn in enumerate(self.insns):
+        position = {i.id: n for n, i in enumerate(self.insns)}
+        for insn in self.insns:
+            order = position.get(insn.id.removesuffix(".p"), position[insn.id])    # a twin ranks as its base
             main = insn.asm_syntax or insn.syntax
             self.matchers.append(Matcher(insn, order, main, u_optional=True))
             for sx, alias in alias_syntaxes(insn, main):
@@ -585,7 +604,7 @@ class Isa:
                 return None
             fld = insn.fields[name]
             if fld.kind in NUMERIC_KINDS:
-                ops[name] = Num(text, name == m.negate)
+                ops[name] = Num(text, name == m.negate, len(DOT.findall(got.string[:got.start(group)])))
             else:
                 raw = operand_raw(insn, name, text)
                 if raw is None:
@@ -657,6 +676,7 @@ class Data(Item):
         return self.width
 
     def emit(self, asm, sec, off, out):
+        asm.variant = None
         sym, add = asm.ev(self.node, self.loc)
         if sym is None:
             lo, hi = -(1 << (8 * self.width - 1)), (1 << (8 * self.width)) - 1
@@ -668,7 +688,8 @@ class Data(Item):
         if self.width not in types:
             raise AsmError(f"{self.loc}: a {self.width}-byte relocation is not supported")
         sym = asm.reloc_symbol(sym)
-        out.relocs.append((off, types[self.width], sym.name, add))
+        rtype = 11 if asm.variant and self.width == 4 else types[self.width]
+        out.relocs.append((off, rtype, sym.name, add))
         out.data += bytes(self.width)
 
 
@@ -832,8 +853,12 @@ class _Core:
         self.syms = {}
         self.cur = None
         self.stack = []
+        self.prev = None
         self.file_name = None
-        self.local_count = {}        # numeric label -> instances defined
+        self.local = {}              # numeric label -> {"def": last definition, "pending": forward reference}
+        self.tmp_id = 0              # .Ltmp<n> temporaries (anonymous labels)
+        self.stmt_serial = 0
+        self.dot_cache = {}
         self.counter = 0             # \@ macro counter
         self.macros = {}
         self.blocks = []
@@ -841,11 +866,11 @@ class _Core:
         self.cond = []               # conditional assembly stack: (active, taken, parent_active)
         self.loc = "<input>"
         self.sizes = []
-        self.dot_count = 0
         self.switch(".text")
         self.search_dirs = ["."]
         self.warnings = []
         self._prov = False
+        self.variant = None
 
     # -- sections ------------------------------------------------------------------------------------------
     def switch(self, name, type_=None, flags=None, entsize=0):
@@ -868,6 +893,8 @@ class _Core:
             sec = Sec(name, type_, flags or 0, align, entsize)
             self.sections[name] = sec
             self.order.append(sec)
+        if self.cur is not sec:
+            self.prev = self.cur
         self.cur = sec
         return sec
 
@@ -899,32 +926,49 @@ class _Core:
         return ("num", int(t))
 
     def local_ref(self, n, direction):
-        count = self.local_count.get(n, 0)
+        slot = self.local.setdefault(n, {"def": None, "pending": None})
         if direction == "b":
-            if count == 0:
+            if slot["def"] is None:
                 raise AsmError(f"{self.loc}: undefined backward reference {n}b")
-            name = f".L{n}\x01{count}"
+            s = slot["def"]
         else:
-            name = f".L{n}\x01{count + 1}"
-        s = self.sym(name)
-        s.temp = True
+            if slot["pending"] is None:
+                slot["pending"] = self.new_tmp()
+            s = slot["pending"]
+        s.used = True
         return ("sym", s)
 
     def symref(self, name):
         if name == ".":
             return ("sym", self.here())
+        if "@" in name:
+            name, _, var = name.partition("@")
+            if var.upper() not in VARIANTS:
+                raise AsmError(f"{self.loc}: invalid variant '{var}'")
+            return ("symv", self.symref(name)[1], var.upper())
         if name in REGISTER_WORDS or re.fullmatch(r"(?:r\d+(?:_r\d+)?|sr\d+)(?:\.\w+)?", name):
             raise AsmError(f"register name {name} in an expression")
         s = self.sym(name)
         s.used = True
         return ("sym", s)
 
-    def here(self):
-        """An anonymous label at the current location."""
-        self.dot_count += 1
-        s = self.syms[f".Ldot{self.dot_count}"] = Sym(f".Ldot{self.dot_count}")
+    def new_tmp(self):
+        """A temporary symbol named like LLVM's: .Ltmp0, .Ltmp1, ..."""
+        s = Sym(f".Ltmp{self.tmp_id}")
+        self.tmp_id += 1
         s.temp = True
+        self.syms[s.name] = s
+        return s
+
+    def here(self, key=None):
+        """An anonymous label at the current location. `key` (the index of this `.` among those on the
+        statement's line) makes the several readings of one instruction share one label."""
+        if key is not None and (self.stmt_serial, key) in self.dot_cache:
+            return self.dot_cache[(self.stmt_serial, key)]
+        s = self.new_tmp()
         self.define_label(s)
+        if key is not None:
+            self.dot_cache[(self.stmt_serial, key)] = s
         return s
 
     def define_label(self, s):
@@ -959,6 +1003,12 @@ class _Core:
         t = node[0]
         if t == "num":
             return None, node[1]
+        if t == "symv":
+            r = self.ev(("sym", node[1]), loc, provisional)
+            if r[0] is None:
+                return r
+            self.variant = node[2]
+            return r
         if t == "sym":
             s = node[1]
             if s.kind == "abs":
@@ -1035,11 +1085,14 @@ class _Core:
         finally:
             self._prov = False
 
-    def parse_expr(self, text):
+    def parse_expr(self, text, dots=None):
         text = text.strip()
         if not text:
             raise AsmError(f"{self.loc}: missing expression")
-        return ExprParser(self, text).parse()
+        node = ExprParser(self, text, dots).parse()
+        if node[0] != "num" and self.is_pure(node):         # a constant keeps the value it has now (.set may change it)
+            return ("num", self.ev(node, self.loc)[1])
+        return node
 
     def const_expr(self, text, what="expression"):
         """Evaluate an expression that must be a constant right now."""
@@ -1069,6 +1122,7 @@ class _Core:
                 values[name] = op
                 continue
             try:
+                self.variant = None
                 sym, add = self.ev(op.node, item.loc)
             except AsmError as e:
                 item.error = item.error or e
@@ -1099,7 +1153,7 @@ class _Core:
                 continue
             if sym is not None:
                 if name == isa.abs32[insn.id]:
-                    reloc = (5, self.reloc_symbol(sym), add)
+                    reloc = ({"PI32V2GOT": 9, "PI32V2GOTFUNCDESC": 10}.get(self.variant, 5), self.reloc_symbol(sym), add)
                     values[name] = 0
                     continue
                 return None
@@ -1136,6 +1190,7 @@ class _Core:
     # -- statements ----------------------------------------------------------------------------------------
     def instruction(self, text):
         line = canon(text)
+        self.stmt_serial += 1
         opens = line.endswith("{")
         par = line.endswith("#")
         good, err = self.parsed_candidates(line)
@@ -1159,6 +1214,12 @@ class _Core:
             cands = [c for c in cands if c.insn.id in PARALLEL_B]
         # parse-time constness of the numeric operands
         fixed = all(self.is_pure(op.node) for c in cands for op in c.ops.values() if isinstance(op, Num))
+        if not fixed:
+            # a constant that was not known when the line was read (a later .equ, a label difference) is
+            # assembled like a symbol: the 32-bit form
+            wide = [c for c in cands if self.isa.abs32.get(c.insn.id)]
+            if wide:
+                cands = wide
         cands.sort(key=lambda c: (c.size, c.alias, TIE.get(c.insn.id.removesuffix('.p'), 0), c.order))
         item = Insn(cands, self.loc, fixed)
         item.cur = cands[0].size
@@ -1190,8 +1251,9 @@ class _Core:
         good, err = [], None
         for c in self.isa.candidates(line):
             try:
-                c.ops = {k: (Num(("un", "-", self.parse_expr(v.node)) if v.neg else self.parse_expr(v.node))
-                             if isinstance(v, Num) else v) for k, v in c.ops.items()}
+                c.ops = {k: (Num(("un", "-", self.parse_expr(v.node, v.dots)) if v.neg
+                                 else self.parse_expr(v.node, v.dots)) if isinstance(v, Num) else v)
+                         for k, v in c.ops.items()}
             except AsmError as e:
                 err = err or e
                 continue
@@ -1218,12 +1280,10 @@ class _Core:
         self.define_label(b.end_label)
 
     def label(self, name):
-        m = re.fullmatch(r"\d+", name)
-        if m:
-            n = int(name)
-            self.local_count[name] = self.local_count.get(name, 0) + 1
-            s = self.sym(f".L{name}\x01{self.local_count[name]}")
-            s.temp = True
+        if re.fullmatch(r"\d+", name):
+            slot = self.local.setdefault(name, {"def": None, "pending": None})
+            s = slot["pending"] or self.new_tmp()
+            slot["pending"], slot["def"] = None, s
             self.define_label(s)
             return
         s = self.sym(name)
@@ -1275,6 +1335,9 @@ class _Core:
             raise AsmError(f"{self.loc}: block not closed with }}")
         if self.cond:
             raise AsmError(f"{self.loc}: .if without .endif")
+        for n, slot in self.local.items():
+            if slot["pending"] is not None:
+                raise AsmError(f"directional label {n}f is never defined")
         self.layout()
         outs = {}
         for sec in self.order:
@@ -1282,10 +1345,11 @@ class _Core:
             for idx, item in enumerate(sec.items):
                 off = sec.offs[idx]
                 if sec.type == elf.SHT_NOBITS:
-                    if isinstance(item, (Space, Align, Org)):
-                        pass
-                    elif isinstance(item, Data) or isinstance(item, Raw):
-                        pass
+                    if isinstance(item, Data) or isinstance(item, Raw):      # only zeros fit in a NOBITS section
+                        scratch = OutSec()
+                        item.emit(self, sec, off, scratch)
+                        if any(scratch.data) or scratch.relocs:
+                            raise AsmError(f"{item.loc}: can't put non-zero data in the NOBITS section {sec.name}")
                     continue
                 item.emit(self, sec, off, o)
             outs[sec.name] = o
@@ -1296,15 +1360,16 @@ class _Core:
                 continue
             if s.temp and not s.reloc_ref:
                 continue
-            if s.kind == "label" and s.name.startswith(".Ldot"):
-                continue
             symbols.append(s)
-        secidx = {sec.name: n + 2 for n, sec in enumerate(self.order)}
         result = []
         for s in symbols:
             e = elf.Symbol(s.name, bind=s.bind, type=s.type, other=s.other)
-            if s.size_node is not None:
-                sym, v = self.ev(s.size_node, None)
+            size_node = s.size_node
+            if size_node is None and s.kind == "alias":      # an alias has its base symbol's size
+                base = self.ev(s.node, None)[0]
+                size_node = base.size_node if base is not None else None
+            if size_node is not None:
+                sym, v = self.ev(size_node, None)
                 e.size = v & M32
             if s.common:
                 e.shndx, e.value, e.size = elf.SHN_COMMON, s.common[1], s.common[0]
@@ -1318,7 +1383,7 @@ class _Core:
                 p = self.sym_pos(s)
                 if p is None:
                     raise AsmError(f"symbol {s.name} refers to an undefined symbol")
-                e.shndx, e.value = secidx[p[0].name], p[1]
+                e.shndx, e.value = p[0].name, p[1]
             elif s.kind == "abs":
                 e.shndx, e.value = elf.SHN_ABS, s.value & M32
             elif s.kind == "undef" and s.bind == elf.STB_LOCAL:
@@ -1623,7 +1688,7 @@ class Assembler(_Core):
         fn(rest)
 
     def add(self, item):
-        if self.cur.type == elf.SHT_NOBITS and isinstance(item, (Data, Raw, Insn, Leb)):
+        if self.cur.type == elf.SHT_NOBITS and isinstance(item, (Insn, Leb)):
             raise AsmError(f"{self.loc}: can't emit initialised data into the NOBITS section {self.cur.name}")
         item.loc = self.loc
         self.cur.items.append(item)
@@ -1688,8 +1753,8 @@ class Assembler(_Core):
         self.cur = self.stack.pop()
 
     def d_previous(self, rest):
-        if self.stack:
-            self.cur = self.stack.pop()
+        if self.prev is not None:
+            self.prev, self.cur = self.cur, self.prev
 
     def d_subsection(self, rest):
         pass

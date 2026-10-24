@@ -110,6 +110,16 @@ def cmd_oracle(args):
                 print(d)
         print(", ".join(f"{n} {k}" for k, n in total.items()) or "no code found")
         return 1 if total["different"] or total["not in table"] else 0
+    if args.action == "linkcompare":
+        t = table.load(args.table)
+        bad = 0
+        for path in args.items:
+            diffs = oracle.linkcompare(o, path, args.flag, args.include, args.define, t)
+            print(f"{path}: " + ("linked sections identical" if not diffs else f"{len(diffs)} differences"))
+            for d in diffs:
+                print(f"  {d}")
+            bad += bool(diffs)
+        return 1 if bad else 0
     if args.action == "asmcompare":
         t = table.load(args.table)
         bad = 0
@@ -167,7 +177,7 @@ def main(argv=None):
     a.add_argument("-D", dest="define", action="append", default=[], help="macro definition for cpp")
     a.set_defaults(func=cmd_as)
     o = sub.add_parser("oracle", help="use JieLi's toolchain as a black-box oracle (docs/ORACLE.md)")
-    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare"])
+    o.add_argument("action", choices=["fetch", "decode", "encode", "vary", "sweep", "fit", "coverage", "compare", "cc", "confirm", "asmcompare", "linkcompare"])
     o.add_argument("items", nargs="*", help="decode: hex bytes; encode: lines; vary: TEMPLATE name=values...; sweep: [FIRST WORD]; fit: REGEX [FIRST WORD]; coverage: [LO-HI hex]; cc: FILE.c or - ; compare: objects; confirm: ids; asmcompare: FILE.S (or .s, .c) [more files]")
     o.add_argument("--release", default="20260730.1", help="toolchain release")
     o.add_argument("--feature", action="append", default=[], help="extra -m feature, e.g. fprev1")
