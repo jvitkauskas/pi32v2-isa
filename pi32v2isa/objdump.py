@@ -279,6 +279,21 @@ all.unknown14to15.rrr.v any.unknown4to7.ppp.v any.unknown14to15.ppp.v any.unknow
 any.unknown14to15.rrr.v cmp.unknown4to7.ppp.v cmp.unknown14to15.ppp.v cmp.unknown4to7.rrr.v
 cmp.unknown14to15.rrr.v bunknown.ri.l.4to7.modimm bunknown.ri.l.14to15.modimm bfunknown.rr.l
 """.split())
+# Parallel-pair first instructions that do not close a stuck block (see advance()): the vector compares.
+NO_FLUSH = frozenset("""
+all.eq.ppp.v.p all.ne.ppp.v.p all.ge.ppp.v.p all.lt.ppp.v.p all.gt.ppp.v.p all.le.ppp.v.p alls.ge.ppp.v.p
+alls.lt.ppp.v.p alls.gt.ppp.v.p alls.le.ppp.v.p all.eq.rrr.v.p all.ne.rrr.v.p all.ge.rrr.v.p all.lt.rrr.v.p
+all.gt.rrr.v.p all.le.rrr.v.p alls.ge.rrr.v.p alls.lt.rrr.v.p alls.gt.rrr.v.p alls.le.rrr.v.p any.eq.ppp.v.p
+any.ne.ppp.v.p any.ge.ppp.v.p any.lt.ppp.v.p any.gt.ppp.v.p any.le.ppp.v.p anys.ge.ppp.v.p anys.lt.ppp.v.p
+anys.gt.ppp.v.p anys.le.ppp.v.p any.eq.rrr.v.p any.ne.rrr.v.p any.ge.rrr.v.p any.lt.rrr.v.p any.gt.rrr.v.p
+any.le.rrr.v.p anys.ge.rrr.v.p anys.lt.rrr.v.p anys.gt.rrr.v.p anys.le.rrr.v.p cmp.eq.ppp.v.p cmp.ne.ppp.v.p
+cmp.ge.ppp.v.p cmp.lt.ppp.v.p cmp.gt.ppp.v.p cmp.le.ppp.v.p cmps.ge.ppp.v.p cmps.lt.ppp.v.p cmps.gt.ppp.v.p
+cmps.le.ppp.v.p cmp.eq.rrr.v.p cmp.ne.rrr.v.p cmp.ge.rrr.v.p cmp.lt.rrr.v.p cmp.gt.rrr.v.p cmp.le.rrr.v.p
+cmps.ge.rrr.v.p cmps.lt.rrr.v.p cmps.gt.rrr.v.p cmps.le.rrr.v.p all.unknown4to7.ppp.v.p
+all.unknown14to15.ppp.v.p all.unknown4to7.rrr.v.p all.unknown14to15.rrr.v.p any.unknown4to7.ppp.v.p
+any.unknown14to15.ppp.v.p any.unknown4to7.rrr.v.p any.unknown14to15.rrr.v.p cmp.unknown4to7.ppp.v.p
+cmp.unknown14to15.ppp.v.p cmp.unknown4to7.rrr.v.p cmp.unknown14to15.rrr.v.p
+""".split())
 BRANCH_FIELD = re.compile(r"(?:goto|gotoss|call) \{(\w)\}")
 TRAILING_SPACE = frozenset(("ld.w", "ld.w.pi", "ld.w.pin"))   # `r1 = [r1+0] `: the text keeps a space after `]`
 HEX_BYTES = 18
@@ -341,7 +356,7 @@ class Disassembler:
         self.dec = dec
         self.opts = opts
         self.size = 1                 # the length the decoder last reported: it stays when a decode fails early
-        self.reps = []                # open blocks and the pair state go on across labels and sections
+        self.rep = None               # open blocks and the pair state go on across labels and sections
         self.cond = None
         self.second = False
         self.out = []
@@ -355,16 +370,18 @@ class Disassembler:
     def section(self, s):
         f = self.f
         w = self.out.append
-        if s.length == 0 or s.type == elf.SHT_NOBITS:
+        text, is_data, _ = section_kinds(s)
+        if s.length == 0 or (s.type == elf.SHT_NOBITS and not self.opts.get("D")):
             return
         w(f"Disassembly of section {s.name}:\n")
+        exec_section = text
         syms = [x for x in f.symbols if x.shndx == s.index and x.type != elf.STT_FILE and not x.name.startswith(".L")]
         pairs = sorted(((x.value, x.name, x.type) for x in syms), key=lambda p: (p[0], p[1]))
         start = s.addr
         if not pairs or pairs[0][0] != start:
             pairs.insert(0, (start, s.name, elf.STT_NOTYPE))
         self.syms.set_section(s.index, pairs)
-        data = bytes(s.data)
+        data = bytes(s.data) if s.type != elf.SHT_NOBITS else self.f.data[s.offset:s.offset + s.length]
         size = s.length
         first = True
         rel = list(s.relocs)
@@ -383,10 +400,13 @@ class Disassembler:
                 w(("" if first else "\n") + f"{name}:\n")
             first = False
             self.reach = 0                         # relocation records below this offset belong to the block
-            if table_entry:
+            if not exec_section:                   # -D on a data section: text in 4-byte pieces
+                if is_data:
+                    self.strings(s, data, lo, hi)
+            elif table_entry:
                 self.table(s, lo, hi, table_entry)
             else:
-                if typ in (elf.STT_OBJECT, elf.STT_COMMON):
+                if typ in (elf.STT_OBJECT, elf.STT_COMMON) and not self.opts.get("D"):
                     self.hexdump(s, data, lo, hi)
                     self.reach = hi
                 else:
@@ -396,6 +416,19 @@ class Disassembler:
                     while rel and rel[0][0] < self.reach:
                         off, rtype = rel.pop(0)[:2]
                         w(f"\t\t\t{off:08x}:  {RELOC_NAMES.get(rtype, 'Unknown')}\tUnknown\n")
+
+    @staticmethod
+    def escape(b):
+        simple = {0: "\\0", 8: "\\b", 9: "\\t", 10: "\\n", 13: "\\r"}
+        if b in simple:
+            return simple[b]
+        return chr(b) if 0x20 <= b <= 0x7E else f"\\x{b & 15:02x}"
+
+    def strings(self, s, data, lo, hi):
+        w = self.out.append
+        for a in range(lo, hi, 4):
+            chunk = data[a:min(a + 4, hi)]
+            w(f"{s.addr + a:8x}:    {self.hexb(chunk):<16}\"{''.join(self.escape(b) for b in chunk)}\"\n")
 
     def table(self, s, lo, hi, step):
         w = self.out.append
@@ -430,8 +463,9 @@ class Disassembler:
             addr = s.addr + index
             got = self.dec.decode(data, index)
             if got is None:
-                if index + 2 <= len(data) and index + self.dec.length_of(data[index] | (data[index + 1] << 8)) <= len(data):
-                    self.size = 2
+                if index + 2 <= len(data):      # a word to read: 2 bytes if the instruction fits, else 1
+                    fits = index + self.dec.length_of(data[index] | (data[index + 1] << 8)) <= len(data)
+                    self.size = 2 if fits else 1
                 n = self.size
                 w(f"{addr:8x}:    {self.hexb(self.raw(s, index, n)):<{HEX_BYTES}} <unknown instruction>\n")
                 index += n
@@ -443,13 +477,16 @@ class Disassembler:
             text = codec.format(insn, values)
             if insn.id in TRAILING_SPACE:
                 text += " "
-            depth = len(self.reps) + (self.cond is not None)
+            depth = (self.rep is not None) + (self.cond is not None)
             if second:      # the second of a parallel pair: one more tab and a space, but two spaces in an if block
                 pad = "\t" * (depth + 1) + ("  " if self.cond is not None else "\t ")
             else:
                 pad = "\t" * (depth + 1)
             first_of_pair = 0xC000 <= word <= 0xDFFF or 0xF000 <= word <= 0xF7FF
             closers = self.advance(insn, values, n, second, first_of_pair)
+            if closers and insn.body:      # a `rep` that closes a block puts its `{` after the `}`
+                text = text[:-2]
+                closers[-1] = closers[-1].replace("\0", "") + " {\0"
             ann = ""
             if insn.id in ANNOTATED_BRANCH:
                 m = BRANCH_FIELD.search(insn.syntax)
@@ -459,20 +496,20 @@ class Disassembler:
                 v = int(re.search(r"= (-?\d+)", text).group(1))
                 ann = self.syms.annotation(v & ~1, s.index)
             w(f"{addr:8x}:    {self.hexb(data[index:index + n]):<{HEX_BYTES}}{pad}{text}")
-            for c in closers:
-                w("\n" + (" " * 32 if second else BRACE_PAD + "\t") + c)
+            for c in closers:       # a rep's closer has a tab even after the second of a pair
+                w("\n" + (" " * 32 if second and not c.endswith("\0") else BRACE_PAD + "\t") + c.replace("\0", ""))
             w(ann + "\n")
             self.second = first_of_pair
             index += n
             self.reach = index + n
 
     def advance(self, insn, values, n, second, first_of_pair):
-        """Account for one printed instruction in the open blocks; return the brace lines it closes. The first
-        instruction of a parallel pair leaves any closing to the second one. A `rep` nests (its body is counted
-        in bytes); an `if` is one block at a time: a new one replaces the open one, and it counts
-        instructions, a parallel pair as one. A compare-and-branch that completes an `if` body does not close
-        it; the block then stays open until a parallel pair starts, which closes it."""
-        reps, cond = self.reps, self.cond
+        """Account for one printed instruction in the open blocks; return the brace lines it closes. There is
+        at most one `rep` (its body counted in bytes) and one `if` (counted in instructions, a parallel pair as
+        one) open at a time; a new one replaces the open one of its kind. The first instruction of a parallel
+        pair leaves any closing to the second one. A compare-and-branch that completes an `if` body does not
+        close it; the block then stays open until a parallel pair starts, which closes it."""
+        cond = self.cond
         closers = []
 
         def finish_cond():
@@ -483,29 +520,29 @@ class Disassembler:
                 self.cond = None
                 closers.append("}")
 
-        if cond is not None and cond.overdue and first_of_pair and not second and not cond.in_else:
+        if (cond is not None and cond.overdue and first_of_pair and not second and insn.id not in NO_FLUSH
+                and (cond.else_left if cond.in_else else cond.left) == 0):
             finish_cond()
             cond.overdue = False
-        for k in range(len(reps)):
-            reps[k] -= n
+        if self.rep is not None:
+            self.rep -= n
         if cond is not None and not second:
             if cond.in_else:
                 cond.else_left -= 1
             else:
                 cond.left -= 1
-        if not first_of_pair and self.cond is not None:
+        if not first_of_pair and self.cond is not None and not insn.block:    # an `if` opener replaces the open one
             done = cond.else_left == 0 if cond.in_else else cond.left == 0
             if done and insn.id in NO_CLOSE:
                 cond.overdue = True
             elif done:
                 finish_cond()
-        if not first_of_pair and insn.id not in NO_CLOSE:
-            while reps and reps[-1] <= 0:
-                reps.pop()
-                closers.append("}")
+        if self.rep is not None and self.rep <= 0:
+            self.rep = None
+            closers.append("}\0")
         if insn.body:
             f = insn.fields[insn.body]
-            reps.append(codec.value(f, values[insn.body], len(insn.field_bits(insn.body))))
+            self.rep = codec.value(f, values[insn.body], len(insn.field_bits(insn.body)))
         elif insn.block:
             def cnt(key):
                 f = insn.fields[insn.block[key]]
