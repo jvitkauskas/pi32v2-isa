@@ -17,6 +17,7 @@ summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"                # guessed | documented | confirmed
 sources = ["oracle"]                # ids from docs/SOURCES.md
 notes = "objdump omits the offset when it is 0 ([sp])."   # optional
+asm_no_syntax = false               # optional: no known assembler syntax; all printed texts produce no instruction
 asm_rejects = []                    # optional: texts objdump prints that JieLi's assembler refuses
 asm_wrong = []                      # optional: texts JieLi's assembler is known to mis-assemble
 asm_syntax = ""                     # optional: how the assembler wants the line, if not as objdump prints it
@@ -51,7 +52,8 @@ at "rotate"), and say so in `notes`. A name says what the instruction is, never 
 - Each string is one 16-bit instruction word, written most significant bit first. Words are listed in
   memory order. Each word is stored little-endian (low byte first).
 - Characters: `0` and `1` are fixed bits; `-` is a bit the decoder ignores and the assembler writes as `0`;
-  a lowercase letter is a bit of an operand field.
+  a lowercase letter is a bit of an operand field. With `asm_no_syntax`, `-` describes identical decoded
+  text only: no assembler encoding or equal hardware behavior is implied.
 - Bits with the same letter are read in the order they appear, across words, most significant first.
 
 ## Fields
@@ -124,7 +126,11 @@ New kinds are added here and in `pi32v2isa/table.py` and `pi32v2isa/codec.py` to
 | `confirmed` | Checked against the oracle | `oracle` in `sources` and examples covering every field ([ORACLE.md](ORACLE.md)) |
 
 `confirmed` covers the **encoding and the syntax**: JieLi's tools decode and assemble the entry exactly as the
-table says. It says nothing about **behaviour**: the `summary` still rests on the other sources (and `notes`
+table says, allowing equivalent encodings selected by the assembler. With `asm_no_syntax = true`,
+confirmation instead checks decoding and that every probed printed text fails to produce an instruction
+(an assembler error or empty output). Examples then use `oracle:objdump+clang-reject:<release>`. This key
+cannot be combined with `asm_syntax`, `asm_rejects` or `asm_wrong`, and does not establish that no possible
+spelling exists. It says nothing about **behaviour**: the `summary` still rests on the other sources (and `notes`
 says so where it is an assumption) until it is tested on hardware.
 
 ## Checks

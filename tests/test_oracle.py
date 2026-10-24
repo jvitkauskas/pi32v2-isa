@@ -82,6 +82,79 @@ class Aliases(unittest.TestCase):
         self.assertEqual(preferred, {})
 
 
+class NoAssemblerSyntax(unittest.TestCase):
+    def setUp(self):
+        from pi32v2isa import codec
+        self.i = table.Insn(id="unknown", syntax="unknown {n}", words=["000000000000000n"],
+                            fields={"n": table.Field("uimm", "n")}, summary="s", status="confirmed",
+                            sources=["oracle"], asm_no_syntax=True,
+                            examples=[table.Example(bytes((n, 0)), f"unknown {n}",
+                                                    "oracle:objdump+clang-reject:fake") for n in range(2)])
+        self.t = table.Table(format=1, insns=[self.i])
+        outer = self
+
+        class Fake:
+            accepts = False
+            wrong_decode = False
+
+            def decode(self, probes, features=(), pad=oracle.PAD):
+                return [(p, "wrong" if self.wrong_decode else codec.format(outer.i, codec.fields_of(outer.i, p)))
+                        for p in probes]
+
+            def encode(self, texts, features=()):
+                return [bytes(2) if self.accepts else "refused" for _ in texts]
+
+            def origin(self, tool):
+                return f"oracle:{tool}:fake"
+
+        self.o = Fake()
+
+    def test_confirmation_checks_decode_and_rejection(self):
+        problems, examples, count, _ = oracle.confirm(self.o, self.t, self.i)
+        self.assertEqual(problems, [])
+        self.assertEqual(count, 2)
+        self.assertTrue(all(x[2] == "oracle:objdump+clang-reject:fake" for x in examples))
+        self.o.accepts = True
+        self.assertTrue(any("asm_no_syntax" in p for p in oracle.confirm(self.o, self.t, self.i)[0]))
+        self.o.accepts = False
+        self.o.wrong_decode = True
+        self.assertTrue(any("objdump prints" in p for p in oracle.confirm(self.o, self.t, self.i)[0]))
+
+    def test_recorded_examples_keep_checking_rejection(self):
+        self.assertEqual(oracle.check_examples(self.o, self.t), [])
+        self.o.accepts = True
+        self.assertTrue(any("asm_no_syntax" in p for p in oracle.check_examples(self.o, self.t)))
+
+
+class AlwaysPreferredAlias(unittest.TestCase):
+    def test_every_probe_may_choose_an_equivalent_entry(self):
+        from pi32v2isa import codec
+        base = table.Insn(id="base", syntax="t {n}", words=["000000000000000n"],
+                          fields={"n": table.Field("uimm", "n")}, summary="s", status="guessed", sources=["oracle"])
+        alias = copy.deepcopy(base)
+        alias.id, alias.words = "alias", ["100000000000000n"]
+        t = table.Table(format=1, insns=[base, alias])
+
+        class Fake:
+            wrong = False
+
+            def decode(self, probes, features=(), pad=oracle.PAD):
+                return [(p, codec.format(alias, codec.fields_of(alias, p))) for p in probes]
+
+            def encode(self, texts, features=()):
+                return [codec.encode(base, {"n": int(text.split()[1]) ^ self.wrong}) for text in texts]
+
+            def origin(self, tool):
+                return "oracle:fake"
+
+        o = Fake()
+        problems, _, count, preferred = oracle.confirm(o, t, alias)
+        self.assertEqual(problems, [])
+        self.assertEqual(preferred, {"base": count})
+        o.wrong = True
+        self.assertTrue(any("assembler gives" in p for p in oracle.confirm(o, t, alias)[0]))
+
+
 class BlockEncoding(unittest.TestCase):
     def test_block_opener_gets_body_and_brace(self):
         """`if (r0 == r1) {` is assembled with a nop body and a closing brace, and the body is dropped from the answer."""

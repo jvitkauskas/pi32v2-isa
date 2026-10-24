@@ -76,13 +76,19 @@ These cases are not mismatches:
 - **The assembler prefers another form.** `call 0` assembles to the 16-bit `call.s`, not `call.l`. When the
   bytes the assembler gives decode, with this table, to another entry that means the same, `confirm`
   accepts it and says which entries it preferred. "Means the same" is: numbers compared by 32-bit value
-  (`0xFF` and `255`), `x op= y` equal to `x = x op y`, and the operands of `+ * | ^ &` in either order. If
-  the assembler never once picks the entry being checked, that is a mismatch.
+  (`0xFF` and `255`), `x op= y` equal to `x = x op y`, and the operands of `+ * | ^ &` in either order. The
+  assembler may always prefer another entry: decoding still checks every probed encoding against objdump,
+  and assembly must give an equivalent, fully decoded instruction for every accepted text.
 - **Another encoding of the same entry.** A modified immediate has several raw values for some numbers
   (0 is raw `000`, `100`, `200` and `300`); the assembler picks one, which is no mismatch.
 - **The assembler refuses a text objdump prints.** objdump prints an empty register list as `{}`, which the
   assembler rejects. An entry lists such texts in `asm_rejects`, and `confirm` checks they really are refused.
   A field whose values the assembler only partly accepts says so with `asm_range`.
+- **No known assembler syntax for an entry.** `asm_no_syntax = true` requires every probed printed text
+  to produce an assembler error or no instruction. `confirm` still checks every decode probe and records
+  examples with origin `oracle:objdump+clang-reject:<release>`; the example regression checks rejection too.
+  This records tool behavior (for example `??` conditions), not hardware validity or an exhaustive proof
+  that no alternative spelling exists.
 - **The assembler gets it wrong.** JieLi's assembler turns `r0 = r0 | 0x0` into `r0 |= 1`. An entry lists
   such texts in `asm_wrong`; `confirm` checks they are still mis-assembled, so a fixed toolchain shows up.
 

@@ -3,7 +3,9 @@
 
 import copy
 import re
+import tempfile
 import unittest
+from pathlib import Path
 
 from pi32v2isa import codec, table
 from pi32v2isa.table import Example, Insn, Table
@@ -156,6 +158,16 @@ class Checks(unittest.TestCase):
         self.assertTrue(any("belongs to no field" in p for p in problems(e)))
         e = insn(words=["000000000000xxxx"], fields={"x": "gpr"}, syntax="t")
         self.assertTrue(any("never appears in syntax" in p for p in problems(e)))
+
+    def test_asm_no_syntax_is_boolean_and_exclusive(self):
+        self.assertEqual(problems(insn(asm_no_syntax=True)), [])
+        self.assertTrue(any("must be a boolean" in p for p in problems(insn(asm_no_syntax="yes"))))
+        for key, value in (("asm_syntax", "t"), ("asm_rejects", ["t"]), ("asm_wrong", ["t"])):
+            self.assertTrue(any("cannot be combined" in p for p in problems(insn(asm_no_syntax=True, **{key: value}))))
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "t.toml"
+            path.write_text('format = 1\n[[insn]]\nid = "t"\nasm_no_syntax = true\n')
+            self.assertIs(table.load(path).insns[0].asm_no_syntax, True)
 
     def test_unknown_source_and_status(self):
         e = insn(sources=["nowhere"], status="maybe")
