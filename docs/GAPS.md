@@ -3,21 +3,22 @@
 What is known to exist but is not documented yet, roughly in the order it matters. When a gap is closed, move
 the facts into the table or [ISA.md](ISA.md) and delete the line here.
 
-## Encodings: nearly done
+## Encodings: done
 
-All 1017 entries are confirmed against JieLi's objdump and assembler. `oracle coverage` (first words, each
-followed by zero words): 0000-1FFF 7200/7200, 2000-BFFF 37632/37888, C000-DFFF 2650/2650, E000-EFFF
-2500/2500, F000-FFFF 2577/2671. Left:
+Every word objdump decodes as an instruction's first word is in the table (`oracle coverage`: all five
+regions complete), and all entries are confirmed against JieLi's objdump and assembler. Every
+(first word, second word) pair was swept for E000-EFFF and F000-FFFF (with samples of third words for the
+48-bit forms) and compared with the table's decoding; the sweep of F000-FFFF found ten long
+compare-with-immediate branches whose first-word bit 5 had been taken as ignored, now split into a signed
+form and a `.modimm` form ([audit](audits/2026-10-round2-coverage.md)).
 
-- 256 words of `R += N` (2000-BFFF, `001.....11000...`): the assembler writes `r1 = r1 + n` for them.
-- About 20 parallel twins (`F000`..`F7FF`) of region-C entries that were confirmed last, and two mask
-  branches at `FF60`/`FF61`.
-- Words objdump prints with `??` for the condition (`if (R ?? N) goto`, `if (R ?? R) {`, some vector
-  compares): no assembler syntax produces them, so whether the hardware treats them as instructions is open.
-- Four floating-point branch conditions (`!=`, `u==`, `uno`, `ord` at `FF44`..`FF47`) that objdump prints and
-  the assembler does not round-trip.
-- Second words: coverage counts first words. Region C's sweep of every second word matched objdump on all
-  but 0.45% of pairs (the `??` forms); regions B and D were checked by `confirm` probes, not full sweeps.
+Still open on the encoding side:
+
+- Forms objdump prints with `??` as the condition, and four floating-point conditions (`!=`, `u==`, `uno`,
+  `ord`) the assembler does not round-trip: they are in the table with `asm_no_syntax`; whether the
+  hardware treats them as instructions is unknown.
+- 16-bit words were swept completely; 32-bit and 48-bit second and third words outside E000-FFFF do not
+  exist (every first word there is 16-bit).
 
 ## Meaning (behaviour)
 
@@ -46,6 +47,8 @@ followed by zero words): 0000-1FFF 7200/7200, 2000-BFFF 37632/37888, C000-DFFF 2
   bit 0 (`asm_wrong` on `or.modimm.rri`, `xor.modimm.rri`, `and.nmodimm.rri`).
 - It accepts `d[r++=n]` offsets only from -512 to 508, while objdump decodes -1024..1020 (`ld.d.pin.l`).
 - objdump prints an empty register list as `{}`, which the assembler refuses.
+- With a zero mask and a near target, the mask branch `if ((r & 0) == 0) goto` is assembled as the
+  single-bit form testing bit 0 (`asm_wrong` on the FF60/FF61 entries).
 - The compiler crashes on `__builtin_frame_address(0)` at -O0, -O2 and -Os ([ABI.md](ABI.md) §9).
 
 ## Known to exist, not needed yet

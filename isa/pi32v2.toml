@@ -26296,13 +26296,13 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn]]
 id = "beq.ri.l"
 syntax = "if ({r} == {i}) goto {n}"
-encoding = ["1111111100-00000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100000000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register == a signed 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "00 ff 00 00 00 00"
@@ -26330,15 +26330,51 @@ text = "if (r15 == -1) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "beq.ri.l.modimm"
+syntax = "if ({r} == {i}) goto {n}"
+encoding = ["1111111100100000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register == a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "20 ff 00 00 00 00"
+text = "if (r0 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ff ff 0f 00 00"
+text = "if (r0 == 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ff 00 00 ff ff"
+text = "if (r0 == 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ff 00 f0 00 00"
+text = "if (r15 == 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "20 ff ff ff ff ff"
+text = "if (r15 == 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bne.ri.l"
 syntax = "if ({r} != {i}) goto {n}"
-encoding = ["1111111100-00001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100000001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register != a signed 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "01 ff 00 00 00 00"
@@ -26366,15 +26402,51 @@ text = "if (r15 != -1) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "bne.ri.l.modimm"
+syntax = "if ({r} != {i}) goto {n}"
+encoding = ["1111111100100001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register != a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "21 ff 00 00 00 00"
+text = "if (r0 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "21 ff ff 0f 00 00"
+text = "if (r0 != 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "21 ff 00 00 ff ff"
+text = "if (r0 != 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "21 ff 00 f0 00 00"
+text = "if (r15 != 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "21 ff ff ff ff ff"
+text = "if (r15 != 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bge.ri.l"
 syntax = "if ({r} >= {i}) goto {n}"
-encoding = ["1111111100-00010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100000010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "02 ff 00 00 00 00"
@@ -26402,15 +26474,51 @@ text = "if (r15 >= 4095) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "bge.ri.l.modimm"
+syntax = "if ({r} >= {i}) goto {n}"
+encoding = ["1111111100100010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register >= a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "22 ff 00 00 00 00"
+text = "if (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "22 ff ff 0f 00 00"
+text = "if (r0 >= 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "22 ff 00 00 ff ff"
+text = "if (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "22 ff 00 f0 00 00"
+text = "if (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "22 ff ff ff ff ff"
+text = "if (r15 >= 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "blt.ri.l"
 syntax = "if ({r} < {i}) goto {n}"
-encoding = ["1111111100-00011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100000011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "03 ff 00 00 00 00"
@@ -26438,15 +26546,51 @@ text = "if (r15 < 4095) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "blt.ri.l.modimm"
+syntax = "if ({r} < {i}) goto {n}"
+encoding = ["1111111100100011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register < a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "23 ff 00 00 00 00"
+text = "if (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "23 ff ff 0f 00 00"
+text = "if (r0 < 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "23 ff 00 00 ff ff"
+text = "if (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "23 ff 00 f0 00 00"
+text = "if (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "23 ff ff ff ff ff"
+text = "if (r15 < 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bgt.ri.l"
 syntax = "if ({r} > {i}) goto {n}"
-encoding = ["1111111100-01000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "08 ff 00 00 00 00"
@@ -26474,15 +26618,51 @@ text = "if (r15 > 4095) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "bgt.ri.l.modimm"
+syntax = "if ({r} > {i}) goto {n}"
+encoding = ["1111111100101000", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register > a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "28 ff 00 00 00 00"
+text = "if (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "28 ff ff 0f 00 00"
+text = "if (r0 > 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "28 ff 00 00 ff ff"
+text = "if (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "28 ff 00 f0 00 00"
+text = "if (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "28 ff ff ff ff ff"
+text = "if (r15 > 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "ble.ri.l"
 syntax = "if ({r} <= {i}) goto {n}"
-encoding = ["1111111100-01001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "uimm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a unsigned 12-bit immediate."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "09 ff 00 00 00 00"
@@ -26510,15 +26690,51 @@ text = "if (r15 <= 4095) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "ble.ri.l.modimm"
+syntax = "if ({r} <= {i}) goto {n}"
+encoding = ["1111111100101001", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register <= a modified immediate."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "29 ff 00 00 00 00"
+text = "if (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "29 ff ff 0f 00 00"
+text = "if (r0 <= 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "29 ff 00 00 ff ff"
+text = "if (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "29 ff 00 f0 00 00"
+text = "if (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "29 ff ff ff ff ff"
+text = "if (r15 <= 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bges.ri.l"
 syntax = "ifs ({r} >= {i}) goto {n}"
-encoding = ["1111111100-01010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register >= a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "0a ff 00 00 00 00"
@@ -26546,15 +26762,51 @@ text = "ifs (r15 >= -1) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "bges.ri.l.modimm"
+syntax = "ifs ({r} >= {i}) goto {n}"
+encoding = ["1111111100101010", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register >= a modified immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "2a ff 00 00 00 00"
+text = "ifs (r0 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2a ff ff 0f 00 00"
+text = "ifs (r0 >= 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2a ff 00 00 ff ff"
+text = "ifs (r0 >= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2a ff 00 f0 00 00"
+text = "ifs (r15 >= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2a ff ff ff ff ff"
+text = "ifs (r15 >= 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "blts.ri.l"
 syntax = "ifs ({r} < {i}) goto {n}"
-encoding = ["1111111100-01011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register < a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "0b ff 00 00 00 00"
@@ -26582,15 +26834,51 @@ text = "ifs (r15 < -1) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "blts.ri.l.modimm"
+syntax = "ifs ({r} < {i}) goto {n}"
+encoding = ["1111111100101011", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register < a modified immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "2b ff 00 00 00 00"
+text = "ifs (r0 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2b ff ff 0f 00 00"
+text = "ifs (r0 < 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2b ff 00 00 ff ff"
+text = "ifs (r0 < 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2b ff 00 f0 00 00"
+text = "ifs (r15 < 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2b ff ff ff ff ff"
+text = "ifs (r15 < 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bgts.ri.l"
 syntax = "ifs ({r} > {i}) goto {n}"
-encoding = ["1111111100-01100", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001100", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register > a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "0c ff 00 00 00 00"
@@ -26618,15 +26906,51 @@ text = "ifs (r15 > -1) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "bgts.ri.l.modimm"
+syntax = "ifs ({r} > {i}) goto {n}"
+encoding = ["1111111100101100", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register > a modified immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "2c ff 00 00 00 00"
+text = "ifs (r0 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2c ff ff 0f 00 00"
+text = "ifs (r0 > 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2c ff 00 00 ff ff"
+text = "ifs (r0 > 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2c ff 00 f0 00 00"
+text = "ifs (r15 > 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2c ff ff ff ff ff"
+text = "ifs (r15 > 510) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
 id = "bles.ri.l"
 syntax = "ifs ({r} <= {i}) goto {n}"
-encoding = ["1111111100-01101", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+encoding = ["1111111100001101", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
 fields = { r = "gpr", i = "simm", n = { kind = "simm", scale = 2 } }
 group = "branches"
 summary = "Branch by -65536..65534 bytes when a register <= a signed 12-bit immediate in a signed comparison."
 status = "confirmed"
 sources = ["oracle"]
-notes = "Layout from oracle sweep ff00 and immediate/offset vary probes. First-word bit 5 does not change the decoded text; the assembler writes it as zero."
+notes = "Layout from oracle sweeps of FF00..FF0F. First-word bit 5 is 0 here; set, it selects the modified-immediate form (the .modimm entry). Corrected after the full second-word sweep of round 2, which showed bit 5 is not ignored."
 
 [[insn.example]]
 bytes = "0d ff 00 00 00 00"
@@ -26651,6 +26975,42 @@ origin = "oracle:objdump+clang:20260730.1"
 [[insn.example]]
 bytes = "0d ff ff ff ff ff"
 text = "ifs (r15 <= -1) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "bles.ri.l.modimm"
+syntax = "ifs ({r} <= {i}) goto {n}"
+encoding = ["1111111100101101", "rrrriiiiiiiiiiii", "nnnnnnnnnnnnnnnn"]
+fields = { r = "gpr", i = { kind = "modimm", decimal = true }, n = { kind = "simm", scale = 2 } }
+group = "branches"
+summary = "Branch by -65536..65534 bytes when a register <= a modified immediate in a signed comparison."
+status = "confirmed"
+sources = ["oracle"]
+notes = "First-word bit 5 set: the constant is a 12-bit modified immediate printed in decimal (round 2 sweep of FF20..FF2F)."
+
+[[insn.example]]
+bytes = "2d ff 00 00 00 00"
+text = "ifs (r0 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2d ff ff 0f 00 00"
+text = "ifs (r0 <= 510) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2d ff 00 00 ff ff"
+text = "ifs (r0 <= 0) goto -2"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2d ff 00 f0 00 00"
+text = "ifs (r15 <= 0) goto 0"
+origin = "oracle:objdump+clang:20260730.1"
+
+[[insn.example]]
+bytes = "2d ff ff ff ff ff"
+text = "ifs (r15 <= 510) goto -2"
 origin = "oracle:objdump+clang:20260730.1"
 
 # ---- 48-bit register compare and branch ----

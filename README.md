@@ -25,11 +25,11 @@ linker and a compiler backend are later, separate projects that use this referen
 
 ## Status
 
-The table holds 1017 forms, all confirmed against JieLi's toolchain (encoding and syntax): every
-decodable 16-bit word and every 32-bit first word in E000-EFFF, and all but 94 first words in F000-FFFF.
-The disassembler reads the FM-1 projects' assembly exactly as JieLi's objdump does. What the instructions do
-is documented only as far as the syntax and the compiler show it; the assembler is not written yet.
-[docs/GAPS.md](docs/GAPS.md) lists what comes next.
+The table holds every instruction form JieLi's objdump decodes, all confirmed against JieLi's toolchain
+(encoding and syntax). The disassembler reads the FM-1 projects' assembly exactly as JieLi's objdump does.
+The C ABI is in [docs/ABI.md](docs/ABI.md). What instructions do is documented only as far as the syntax
+and the compiler show it; the assembler is being written. [docs/GAPS.md](docs/GAPS.md) lists what comes
+next.
 
 ## Use
 

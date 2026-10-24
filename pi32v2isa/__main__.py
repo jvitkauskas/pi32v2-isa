@@ -119,7 +119,10 @@ def cmd_oracle(args):
             if len(problems) > args.show:
                 print(f"  ... {len(problems) - args.show} more")
             continue
+        own = preferred.pop(oracle.SELF, None)
         also = "; assembler prefers " + ", ".join(f"{k} ({n})" for k, n in preferred.items()) if preferred else ""
+        if own == 0 and preferred:
+            also += "; it never picks this form itself"
         print(f"{insn_id}: {checked} encodings agree both ways{also}")
         if args.write:
             table.record_confirmation(args.table, insn_id, examples)

@@ -276,6 +276,9 @@ def chosen_examples(insn, values_list):
     return out
 
 
+SELF = "(this entry)"
+
+
 def confirm(oracle, table, insn):
     """Check one entry both ways. Returns (problems, examples, encodings checked, preferred) where examples
     are (bytes, text, origin) and preferred counts the other entries the assembler chose for the same text."""
@@ -310,7 +313,11 @@ def confirm(oracle, table, insn):
         out_of_range.append(bad)
     for data, text, got, refused in zip(encodings, texts, assembled, out_of_range):
         if text in insn.asm_wrong:
-            if got == data:
+            # a known mis-assembly: the bytes must mean something else than the text (an encoding of the
+            # same meaning, even a different one, would be right)
+            other = None if isinstance(got, str) else codec.decode(table, got)
+            if got == data or (other and other[2] == len(got)
+                               and same_meaning(codec.format(other[0], other[1]), text)):
                 problems.append(f"encode {text!r}: listed in asm_wrong, but the assembler now gets it right")
         elif refused:
             if not isinstance(got, str):
@@ -330,6 +337,9 @@ def confirm(oracle, table, insn):
                 # for one value); the assembler picks one, which is no disagreement
             else:
                 problems.append(f"encode {text!r}: assembler gives {got.hex(' ')}, table says {data.hex(' ')}")
+    # how often the assembler chose this very entry (informational: an entry it never picks is still
+    # checked in the decode direction, and its texts mean the same as what the assembler chose)
+    preferred[SELF] = sum(1 for data, got in zip(encodings, assembled) if got == data)
     examples = []
     for v in chosen_examples(insn, values_list):
         tool = "objdump+clang-reject" if insn.asm_no_syntax else "objdump+clang"

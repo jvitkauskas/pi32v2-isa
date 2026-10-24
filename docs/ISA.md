@@ -115,13 +115,12 @@ and use C comments), directives, and how parallel issue is written (reported as 
   first (`li.u32`, `li.sr_u32`).
 - Small immediates are often split across the word, and offsets are scaled by the access size (words by 4,
   branch targets by 2); each entry's `fields` gives the exact layout.
-- **Pending:** the SSTIC paper's group numbering, and most of the 16-bit map: about 1000 distinct shapes
-  decode, of which the table so far has the ones the FM-1 sources need ([GAPS.md](GAPS.md)).
+- Every decodable word is in the table; see [GAPS.md](GAPS.md) for the few forms with no assembler syntax.
 
 ## 5. Instruction groups
 
-The table's `group` keys. Counts are entries (forms), as of the merge of the four region passes; a
-parallel twin counts as its own entry:
+The table's `group` keys. Counts are entries (forms) as of the first merge (1017 entries; the table has
+grown since, see `python3 -m pi32v2isa stats`); a parallel twin counts as its own entry:
 
 | Group | Entries | What is in it |
 | --- | --- | --- |
@@ -154,6 +153,7 @@ Known so far [oracle]:
 - `if (cond) {` makes the following block conditional; the closing `}` takes no bytes, so the block's extent is
   not encoded in the `if` word itself as far as objdump shows. Compare-and-branch forms jump instead.
 - Shift amounts run 1..32 (1..64 for pairs); a zero amount field means 32 (64).
+- The vector compares `all`/`any`/`cmp(...) (v)` in F000..F7FF print without the `#` other twins carry.
 - `.pin` post-increment steps by the access size only (±4, ±2, ±1), the sign picked by one bit.
 
 **Pending:** what a branch offset is relative to (objdump prints the same offset at any address), parallel

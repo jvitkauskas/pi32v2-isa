@@ -79,6 +79,7 @@ class Aliases(unittest.TestCase):
 
         problems, _, _, preferred = oracle.confirm(Fake(), t, i)
         self.assertEqual(problems, [])
+        preferred.pop(oracle.SELF, None)
         self.assertEqual(preferred, {})
 
 
@@ -150,6 +151,7 @@ class AlwaysPreferredAlias(unittest.TestCase):
         o = Fake()
         problems, _, count, preferred = oracle.confirm(o, t, alias)
         self.assertEqual(problems, [])
+        self.assertEqual(preferred.pop(oracle.SELF), 0)
         self.assertEqual(preferred, {"base": count})
         o.wrong = True
         self.assertTrue(any("assembler gives" in p for p in oracle.confirm(o, t, alias)[0]))
