@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import copy
+import collections
 import os
 import tempfile
 import unittest
@@ -262,6 +263,25 @@ class Live(unittest.TestCase):
             if i.status == "confirmed":
                 problems, _, _, _ = oracle.confirm(self.o, self.t, i)
                 self.assertEqual(problems, [], i.id)
+
+    def test_compiled_corpus_reads_like_objdump(self):
+        """tests/corpus/*.c, compiled by JieLi's clang at -O0/-O2/-Os: the table disassembles every
+        instruction exactly as JieLi's objdump does (needs a stock readelf and objcopy)."""
+        import glob, shutil, tempfile
+        if not (shutil.which("readelf") and shutil.which("objcopy")):
+            self.skipTest("needs GNU readelf and objcopy")
+        total = collections.Counter()
+        with tempfile.TemporaryDirectory() as d:
+            for c in sorted(glob.glob(str(Path(__file__).parent / "corpus" / "*.c"))):
+                for opt in ("-O0", "-O2", "-Os"):
+                    obj = Path(d) / (Path(c).stem + opt + ".o")
+                    code, _, err = self.o._run([self.o.clang, "-target", "pi32v2", "-mcpu=r3", "-minstrev3",
+                                                opt, "-c", c, "-o", obj])
+                    self.assertEqual(code, 0, err)
+                    counts, diffs = oracle.compare(self.o, self.t, obj)
+                    self.assertEqual(diffs, [])
+                    total.update(counts)
+        self.assertGreater(total["identical"], 10000)
 
     def test_swapped_fields_are_caught(self):
         wrong = copy.deepcopy(self.t.by_id("mov.rr"))

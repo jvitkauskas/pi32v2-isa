@@ -131,7 +131,10 @@ python3 -m pi32v2isa oracle compare build/*.o
 `compare` disassembles each object's code sections with the table and with JieLi's objdump and reports every
 instruction where they differ. It needs a stock `readelf` and `objcopy` (GNU binutils). On 2026-10-23 the
 assembly of m-bootloader, Felucca and felucca-bsp (11 objects, assembled with JieLi's clang) gave 674
-identical instructions and 2 data words objdump does not decode either.
+identical instructions and 2 data words objdump does not decode either. On 2026-10-24 the 50 C files in
+`tests/corpus/`, compiled by JieLi's clang at -O0, -O2 and -Os (150 objects), gave 17586 identical
+instructions and 80 jump-table entries (which objdump prints as `< n : 0xN >`, data); the unit tests repeat
+this when the toolchain is present.
 
 ## Rules
 

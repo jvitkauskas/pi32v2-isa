@@ -1,0 +1,22 @@
+int z(void);
+int z0(void){return __builtin_pi32v2_zcmp(0x0);}
+int z1(void){return __builtin_pi32v2_zcmp(0x1);}
+int z2(void){return __builtin_pi32v2_zcmp(0x2);}
+int z3(void){return __builtin_pi32v2_zcmp(0x3);}
+int z4(void){return __builtin_pi32v2_zcmp(0x12);}
+int z5(void){return __builtin_pi32v2_zcmp(0x7f);}
+int z6(void){return __builtin_pi32v2_zcmp(0x80);}
+int z7(void){return __builtin_pi32v2_zcmp(0xff);}
+int z8(void){return __builtin_pi32v2_zcmp(0x100);}
+int z9(void){return __builtin_pi32v2_zcmp(0x1234);}
+int z10(void){return __builtin_pi32v2_zcmp(0x12345678);}
+int z11(void){return __builtin_pi32v2_zcmp(0x12340078);}
+int z12(void){return __builtin_pi32v2_zcmp(0x12003456);}
+int z13(void){return __builtin_pi32v2_zcmp(0x345678);}
+int z14(void){return __builtin_pi32v2_zcmp(0xff000000);}
+int z15(void){return __builtin_pi32v2_zcmp(0xffffffff);}
+int z16(void){return __builtin_pi32v2_zcmp(0x80000000);}
+int z17(void){return __builtin_pi32v2_zcmp(0x7fffffff);}
+int z18(void){return __builtin_pi32v2_zcmp(0x10000);}
+int z19(void){return __builtin_pi32v2_zcmp(0x1010101);}
+int z20(void){return __builtin_pi32v2_zcmp(0x1000001);}

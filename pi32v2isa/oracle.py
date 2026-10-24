@@ -29,6 +29,7 @@ PAD = b"\x00\x00\x00\x00"   # two nops after each probe: a probe misread as long
 LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*(.*)$")
 ANNOTATION = re.compile(r"\s+<[^<>]*>$")      # objdump's "<symbol+offset : address >" after a branch target
 UNKNOWN = "<unknown instruction>"
+JUMP_TABLE = re.compile(r"^< -?\d+ : 0x[0-9A-F]+ >$")   # objdump's line for a tbb/tbh table entry
 
 
 class OracleError(Exception):
@@ -400,6 +401,9 @@ def compare(oracle, table, obj):
         for addr, (expect, text) in sorted(lines.items()):
             if text == UNKNOWN:
                 counts["unknown to objdump"] += 1
+                continue
+            if JUMP_TABLE.match(text):          # a switch table's byte or halfword, printed as data
+                counts["jump-table data"] += 1
                 continue
             got = codec.decode(table, data, addr)
             mine = codec.format(got[0], got[1]) if got else None
