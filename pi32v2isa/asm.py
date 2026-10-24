@@ -7,7 +7,6 @@ Instruction matchers are built from the table's `syntax` and `asm_syntax` string
 fit, branches relaxed to a fixed point). Directives follow the LLVM-style assembler JieLi's toolchain contains.
 """
 
-import math
 import os
 import re
 import struct
@@ -229,14 +228,15 @@ class Num:
         self.node, self.neg, self.dots = node, neg, dots      # dots: standalone `.` tokens before it on the line
 
 
-def fit_num(fld, width, v, kind=None):
-    """The raw field value for number v in a uimm/simm field, or None if it does not fit."""
+def fit_num(fld, width, v, kind=None, wrap=True):
+    """The raw field value for number v in a uimm/simm field, or None if it does not fit. Numbers are 32-bit
+    like JieLi's assembler's (`wrap`): 0xFFFFFFFF is -1, 0x100000000 is 0."""
     kind = kind or fld.kind
     v32 = v & M32
     cands = [v]
-    if v32 != v:
+    if wrap and v32 != v:
         cands.append(v32)
-    if v32 >= 1 << 31:
+    if wrap and v32 >= 1 << 31:
         cands.append(v32 - (1 << 32))
     for value in cands:
         if fld.asm_range and not fld.asm_range[0] <= value <= fld.asm_range[1]:
@@ -449,8 +449,8 @@ class Matcher:
             else:
                 parts.append(re.escape(ch))
         pattern = "".join(parts)
-        if u_optional and pattern.endswith(re.escape("(u)")):
-            pattern = pattern[:-len(re.escape("(u)"))] + r"(?:\(u\))?"
+        if u_optional:
+            pattern = re.sub(r"\\\(u\\\)((?:\\#)?)$", r"(?:\\(u\\))?\1", pattern)
         self.template = text
         self.regex = re.compile(pattern + "$", re.S)
         self.groups = groups
@@ -554,9 +554,10 @@ class Isa:
         for insn in self.insns:
             order = position.get(insn.id.removesuffix(".p"), position[insn.id])    # a twin ranks as its base
             main = insn.asm_syntax or insn.syntax
-            self.matchers.append(Matcher(insn, order, main, u_optional=True))
+            u_opt = insn.id.removesuffix(".p") not in U_REQUIRED
+            self.matchers.append(Matcher(insn, order, main, u_optional=u_opt))
             for sx, alias in alias_syntaxes(insn, main):
-                self.matchers.append(Matcher(insn, order, sx, alias=alias, u_optional=True))
+                self.matchers.append(Matcher(insn, order, sx, alias=alias, u_optional=u_opt))
         # index by the literal prefix before the first placeholder
         for m in self.matchers:
             self.by_key.setdefault(self._prefix(m.template), []).append(m)
@@ -570,10 +571,6 @@ class Isa:
                 break
             out.append(ch)
         return "".join(out).rstrip(" ")
-
-    def _skeleton(self, line):
-        s = re.sub(r"(?<![A-Za-z0-9_.$@])(?:0[xX][0-9a-fA-F]+|\d+)(?![A-Za-z0-9_.$@])", "N", line)
-        return s
 
     def candidates(self, line):
         """All (insn, operands) readings of a canonical instruction line; operand values are raw ints or Num."""
@@ -637,7 +634,6 @@ class Sym:
         self.reloc_ref = False       # used by a relocation: must be in the symbol table
         self.used = False
         self.temp = name.startswith(".L")
-        self.file = False
 
 
 class Sec:
@@ -818,16 +814,32 @@ class OutSec:
 
 # --- the assembler -----------------------------------------------------------------------------------------
 
-DEFAULT_SECTIONS = {
-    ".text": (elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_EXECINSTR, 2),
-    ".data": (elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_WRITE, 1),
-    ".bss": (elf.SHT_NOBITS, elf.SHF_ALLOC | elf.SHF_WRITE, 1),
-    ".rodata": (elf.SHT_PROGBITS, elf.SHF_ALLOC, 1),
+AX, WA = elf.SHF_ALLOC | elf.SHF_EXECINSTR, elf.SHF_ALLOC | elf.SHF_WRITE
+# What `.section NAME` (no flags) gives for the names JieLi's assembler knows: (type, flags, entry size). Other
+# names get PROGBITS and no flags (`.note*` gets SHT_NOTE).
+KNOWN_SECTIONS = {
+    ".text": (elf.SHT_PROGBITS, AX, 0), ".data": (elf.SHT_PROGBITS, WA, 0), ".bss": (elf.SHT_NOBITS, WA, 0),
+    ".rodata": (elf.SHT_PROGBITS, elf.SHF_ALLOC, 0), ".init": (elf.SHT_PROGBITS, AX, 0),
+    ".fini": (elf.SHT_PROGBITS, AX, 0), ".tbss": (elf.SHT_NOBITS, WA | elf.SHF_TLS, 0),
+    ".tdata": (elf.SHT_PROGBITS, WA | elf.SHF_TLS, 0), ".data.rel.ro": (elf.SHT_PROGBITS, WA, 0),
+    ".eh_frame": (elf.SHT_PROGBITS, WA, 0), ".gcc_except_table": (elf.SHT_PROGBITS, elf.SHF_ALLOC, 0),
+    ".init_array": (14, 0, 0), ".fini_array": (15, 0, 0), ".preinit_array": (16, 0, 0),
+    ".debug_str": (elf.SHT_PROGBITS, elf.SHF_MERGE | elf.SHF_STRINGS, 1),
 }
+for _n in (4, 8, 16, 32):
+    KNOWN_SECTIONS[f".rodata.cst{_n}"] = (elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_MERGE, _n)
+
+
+def default_section(name):
+    if name in KNOWN_SECTIONS:
+        return KNOWN_SECTIONS[name]
+    return (7 if name.startswith(".note") else elf.SHT_PROGBITS), 0, 0
+
+
 SECTION_TYPES = {"progbits": elf.SHT_PROGBITS, "nobits": elf.SHT_NOBITS, "note": 7, "init_array": 14,
                  "fini_array": 15, "preinit_array": 16}
 SECTION_FLAGS = {"a": elf.SHF_ALLOC, "w": elf.SHF_WRITE, "x": elf.SHF_EXECINSTR, "M": elf.SHF_MERGE,
-                 "S": elf.SHF_STRINGS, "T": elf.SHF_TLS, "G": elf.SHF_GROUP}
+                 "S": elf.SHF_STRINGS, "T": elf.SHF_TLS}
 SYMBOL_TYPES = {"function": elf.STT_FUNC, "object": elf.STT_OBJECT, "notype": elf.STT_NOTYPE,
                 "tls_object": elf.STT_TLS, "common": elf.STT_COMMON, "STT_FUNC": elf.STT_FUNC,
                 "STT_OBJECT": elf.STT_OBJECT, "STT_NOTYPE": elf.STT_NOTYPE, "STT_TLS": elf.STT_TLS,
@@ -865,9 +877,7 @@ class _Core:
         self.pending_pair = False
         self.cond = []               # conditional assembly stack: (active, taken, parent_active)
         self.loc = "<input>"
-        self.sizes = []
         self.switch(".text")
-        self.search_dirs = ["."]
         self.warnings = []
         self._prov = False
         self.variant = None
@@ -877,20 +887,8 @@ class _Core:
         sec = self.sections.get(name)
         if sec is None:
             if type_ is None:
-                type_, flags, align = DEFAULT_SECTIONS.get(name, (elf.SHT_PROGBITS, 0, 1))
-                if flags == 0 and name.startswith(".text"):
-                    flags = elf.SHF_ALLOC | elf.SHF_EXECINSTR
-                elif flags == 0 and name.startswith(".data"):
-                    flags = elf.SHF_ALLOC | elf.SHF_WRITE
-                elif flags == 0 and name.startswith(".bss"):
-                    type_, flags = elf.SHT_NOBITS, elf.SHF_ALLOC | elf.SHF_WRITE
-                elif flags == 0 and name.startswith(".rodata"):
-                    flags = elf.SHF_ALLOC
-            else:
-                align = 1
-                if name == ".text":
-                    align = 2
-            sec = Sec(name, type_, flags or 0, align, entsize)
+                type_, flags, entsize = default_section(name)
+            sec = Sec(name, type_, flags or 0, 2 if name == ".text" else 1, entsize)
             self.sections[name] = sec
             self.order.append(sec)
         if self.cur is not sec:
@@ -907,11 +905,8 @@ class _Core:
 
     def number(self, text):
         t = text.lower()
-        if re.fullmatch(r"[0-9]+[fb]", t) and not (t.endswith("b") and re.fullmatch(r"[01]+b", t) and False):
-            n = t[:-1]
-            if t.endswith("b") and re.fullmatch(r"0[bB][01]+", text):
-                pass
-            return self.local_ref(n, t[-1])
+        if re.fullmatch(r"[0-9]+[fb]", t):                     # 1f, 1b: the next / previous numeric label 1
+            return self.local_ref(t[:-1], t[-1])
         if t.startswith("0x"):
             return ("num", int(t, 16))
         if t.startswith("0b") and re.fullmatch(r"0b[01]+", t):
@@ -972,7 +967,7 @@ class _Core:
         return s
 
     def define_label(self, s):
-        if s.kind not in ("undef",) and not (s.kind == "abs" and not s.pure and False):
+        if s.kind != "undef":
             raise AsmError(f"{self.loc}: symbol {s.name} is already defined")
         s.kind = "label"
         s.section = self.cur
@@ -1146,7 +1141,7 @@ class _Core:
                         continue
                 if disp % 2:
                     raise AsmError(f"{item.loc}: branch displacement {disp} is odd")
-                raw = fit_num(fld, width, disp, "simm")
+                raw = fit_num(fld, width, disp, "simm", wrap=False)
                 if raw is None:
                     return None
                 values[name] = raw
@@ -1225,8 +1220,10 @@ class _Core:
         item.cur = cands[0].size
         item.chosen = cands[0]
         counts_toward = self.blocks[-1] if self.blocks and self.blocks[-1].kind == "if" else None
-        if self.blocks and any(c.insn.syntax.endswith("{{") for c in cands) and self.blocks[-1].kind == "if":
-            raise AsmError(f"{self.loc}: invalid location of it block")
+        if opens and self.blocks:
+            is_if = any(self.isa.ifblock.get(c.insn.id) for c in cands)
+            if (is_if and any(b.kind == "if" for b in self.blocks)) or (not is_if and self.blocks):
+                raise AsmError(f"{self.loc}: invalid location of {'it block' if is_if else 'REP'}")
         if counts_toward is not None and not self.pending_pair:
             counts_toward.counts[counts_toward.in_else] += 1
         self.pending_pair = par and not opens
@@ -1389,6 +1386,9 @@ class _Core:
             elif s.kind == "undef" and s.bind == elf.STB_LOCAL:
                 e.bind = elf.STB_GLOBAL
             result.append(e)
+        for sec in self.order:             # JieLi's assembler also emits a symbol named after each TLS section
+            if sec.flags & elf.SHF_TLS and sec.name not in self.syms:
+                result.append(elf.Symbol(sec.name, type=elf.STT_TLS, shndx=sec.name))
         result.sort(key=lambda e: (e.bind != elf.STB_LOCAL, e.name.encode()))
         if self.file_name is not None:
             result.insert(0, elf.Symbol(self.file_name, bind=elf.STB_LOCAL, type=elf.STT_FILE, shndx=elf.SHN_ABS))
@@ -1407,6 +1407,14 @@ class _Core:
 
 # When several entries encode a line in the same number of bytes, JieLi's assembler picks the lowest value here
 # (default 0, then table order). Found with `oracle encode`; see docs/ASSEMBLER.md.
+# `(u)` at the end of a line is optional (unsigned is the default) except for these entries (found by leaving it
+# off every entry's examples): JieLi's assembler refuses the line without it.
+U_REQUIRED = {
+    "madd.mem2.hh.i.u", "madd.mem2.hh.rh.u", "madd.mul4.u.prr", "msub.mem2.hh.i.u", "msub.mem2.hh.rh.u",
+    "mul.mem2.hh.i.u", "mul.mem2.hh.rh.u", "mul4.u.prr", "sum.acc.u.prhrhrhrh", "sum.nacc.u.prhrhrhrh",
+    "sum.u.prhrhrhrh",
+}
+
 # The instructions that may follow a parallel-issue (`#`) instruction: JieLi's assembler refuses any other with
 # "invalid parallel-B instruction" (found by trying every entry's examples after `r0 += r7 #`).
 PARALLEL_B = {
@@ -1515,7 +1523,6 @@ class Assembler(_Core):
 
     def __init__(self, tab=None, include=()):
         super().__init__(tab, include)
-        self.depth = 0
         self.stopped = False
         self.cur_file = "<input>"
 
@@ -1621,7 +1628,7 @@ class Assembler(_Core):
         if active:
             while True:
                 m = LABEL.match(text)
-                if not m or text.startswith("."+"if"):
+                if not m:
                     break
                 self.label(m.group(1))
                 text = text[m.end():].strip()
@@ -1717,15 +1724,7 @@ class Assembler(_Core):
         if len(args) > 2 and args[2]:
             type_s = args[2].lstrip("@%")
         if flags_s is None:
-            exact = {".text": None, ".data": None, ".bss": None, ".rodata": None}
-            if name in DEFAULT_SECTIONS or name in (".init", ".fini"):
-                if name in (".init", ".fini"):
-                    self.switch(name, elf.SHT_PROGBITS, elf.SHF_ALLOC | elf.SHF_EXECINSTR)
-                else:
-                    self.switch(name)
-            else:
-                t = 7 if name.startswith(".note") else elf.SHT_PROGBITS
-                self.switch(name, t, 0)
+            self.switch(name)
             return
         flags = 0
         for ch in flags_s:
@@ -1740,9 +1739,7 @@ class Assembler(_Core):
             if len(args) < 4:
                 raise AsmError(f"{self.loc}: mergeable section needs an entry size")
             entsize = self.const_expr(args[3], "entry size")
-        sec = self.switch(name, typ, flags, entsize)
-        if name in self.sections and sec.flags != flags and False:
-            raise AsmError(f"{self.loc}: conflicting section flags for {name}")
+        self.switch(name, typ, flags, entsize)
 
     def d_pushsection(self, rest):
         self.d_section(rest, push=True)

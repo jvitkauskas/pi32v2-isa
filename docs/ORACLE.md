@@ -127,6 +127,20 @@ instruction where they differ. It needs a stock `readelf` and `objcopy` (GNU bin
 assembly of m-bootloader, Felucca and felucca-bsp (11 objects, assembled with JieLi's clang) gave 674
 identical instructions and 2 data words objdump does not decode either.
 
+## Checking the assembler
+
+```sh
+python3 -m pi32v2isa oracle asmcompare FILE.S -I include [-D NAME]   # also .s and .c files
+python3 -m pi32v2isa oracle linkcompare FILE.S -I include
+```
+
+`asmcompare` assembles the file with JieLi's `clang` and with this repo's assembler (`.S` goes through the system
+`cpp` first, so both read the same text; `.c` is compiled to assembly by JieLi's clang) and compares the two
+objects: header, then each section's type, flags, alignment, entry size, size, contents and relocations, then the
+symbols. It prints nothing but "identical" when they agree. `linkcompare` links both objects with JieLi's `ld`
+(undefined symbols get `--defsym` values) and compares the loaded sections. The assembler and its checks are
+described in [ASSEMBLER.md](ASSEMBLER.md); the object format they establish is in [ELF.md](ELF.md).
+
 ## Rules
 
 - Black box only: inputs and outputs. Do not extract tables or strings from the toolchain's binaries.
