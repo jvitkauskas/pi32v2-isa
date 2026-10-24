@@ -524,3 +524,166 @@ def check_examples(oracle, table):
                 if not (other and other[2] == len(got) and same_meaning(codec.format(other[0], other[1]), x.text)):
                     problems.append(f"{i.id}: {x.text!r} assembles to {got.hex(' ')}, example says {x.bytes.hex(' ')}")
     return problems
+
+
+# --- comparing the repo's assembler with JieLi's ------------------------------------------------------------
+
+def _describe(obj):
+    """A comparable summary of an ELF object: header fields, sections, symbols, relocations."""
+    from . import elf
+
+    sections = {}
+    for s in obj.sections[1:]:
+        if s.type in (elf.SHT_SYMTAB, elf.SHT_STRTAB, elf.SHT_RELA):
+            continue
+        sections[s.name] = {"type": s.type, "flags": s.flags, "align": s.align, "entsize": s.entsize,
+                            "size": s.length, "data": bytes(s.data), "relocs": sorted(s.relocs, key=lambda r: (r[0], r[1]))}
+    names = {s.index: s.name for s in obj.sections}
+    symbols = {}
+    for sym in obj.symbols[1:]:
+        where = names.get(sym.shndx, {elf.SHN_ABS: "ABS", elf.SHN_COMMON: "COMMON", 0: "UND"}.get(sym.shndx, sym.shndx))
+        symbols[sym.name] = (where, sym.value, sym.size, sym.bind, sym.type, sym.other)
+    return {"machine": obj.e_machine, "flags": obj.e_flags, "sections": sections, "symbols": symbols,
+            "order": [s.name for s in obj.sections[1:] if s.type not in (elf.SHT_SYMTAB, elf.SHT_STRTAB, elf.SHT_RELA)],
+            "symorder": [s.name for s in obj.symbols[1:]]}
+
+
+def diff_objects(ref, mine):
+    """Differences between two _describe() summaries (ref = JieLi's, mine = this repo's), as text lines."""
+    from . import elf
+
+    out = []
+    if ref["machine"] != mine["machine"] or ref["flags"] != mine["flags"]:
+        out.append(f"header: machine/flags {ref['machine']:#x}/{ref['flags']:#x} vs {mine['machine']:#x}/{mine['flags']:#x}")
+    if ref["order"] != mine["order"]:
+        out.append(f"section order: {ref['order']} vs {mine['order']}")
+    for name in sorted(set(ref["sections"]) | set(mine["sections"])):
+        a, b = ref["sections"].get(name), mine["sections"].get(name)
+        if a is None or b is None:
+            out.append(f"section {name}: only in {'JieLi' if b is None else 'ours'}")
+            continue
+        for key in ("type", "flags", "align", "entsize", "size"):
+            if a[key] != b[key]:
+                out.append(f"section {name}: {key} {a[key]:#x} vs {b[key]:#x}")
+        if a["data"] != b["data"]:
+            at = next((i for i in range(min(len(a["data"]), len(b["data"]))) if a["data"][i] != b["data"][i]),
+                      min(len(a["data"]), len(b["data"])))
+            out.append(f"section {name}: contents differ first at +{at:#x}: JieLi {a['data'][at:at + 8].hex(' ')} "
+                       f"vs ours {b['data'][at:at + 8].hex(' ')}")
+        if a["relocs"] != b["relocs"]:
+            ra, rb = set(a["relocs"]), set(b["relocs"])
+            for r in sorted(ra - rb):
+                out.append(f"section {name}: reloc only in JieLi's: +{r[0]:#x} {elf.RELOCS.get(r[1], r[1])} {r[2]}{r[3]:+d}")
+            for r in sorted(rb - ra):
+                out.append(f"section {name}: reloc only in ours: +{r[0]:#x} {elf.RELOCS.get(r[1], r[1])} {r[2]}{r[3]:+d}")
+    for name in sorted(set(ref["symbols"]) | set(mine["symbols"])):
+        a, b = ref["symbols"].get(name), mine["symbols"].get(name)
+        if a != b:
+            out.append(f"symbol {name}: JieLi {a} vs ours {b}")
+    if ref["symorder"] != mine["symorder"] and set(ref["symorder"]) == set(mine["symorder"]):
+        out.append("symbol order differs")
+    return out
+
+
+def asmcompare(oracle, path, flags=(), include=(), define=(), table=None, features=()):
+    """Assemble a source file with JieLi's clang and with this repo's assembler and compare the objects'
+    sections, symbols and relocations. `.S` files are preprocessed by the system cpp first (so both
+    assemblers read the same text); `.c` files are compiled to assembly by JieLi's clang (`flags` are extra
+    clang flags). Returns a list of differences (empty when the objects agree)."""
+    from . import asm, elf
+
+    path = Path(path)
+    incs = [str(p) for p in include]
+    with tempfile.TemporaryDirectory() as d:
+        work = Path(d)
+        if path.suffix == ".S":
+            text = asm.preprocess(path, incs, define)
+        elif path.suffix == ".c":
+            code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *flags,
+                                        *[f"-m{f}" for f in features],
+                                        *[f"-I{p}" for p in incs], *[f"-D{p}" for p in define],
+                                        "-S", path, "-o", work / "c.s"])
+            if code:
+                raise OracleError(f"compile failed: {err.strip()}")
+            text = (work / "c.s").read_text()
+        else:
+            text = path.read_text()
+        src, ref_obj = work / "in.s", work / "ref.o"
+        src.write_text(text)
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *[f"-m{f}" for f in features],
+                                    "-c", "-x", "assembler", *[f"-I{p}" for p in [path.parent, *incs]], src,
+                                    "-o", ref_obj])
+        ref_ok = code == 0
+        try:
+            mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table, features=set(features))
+            mine_err = None
+        except asm.AsmError as e:
+            mine, mine_err = None, str(e)
+        if not ref_ok and mine is None:
+            first = err.strip().splitlines()[0] if err.strip() else "?"
+            return [f"both assemblers refuse it (JieLi: {first}; ours: {mine_err})"]
+        if not ref_ok:
+            return [f"JieLi's assembler refuses it ({err.strip().splitlines()[0] if err.strip() else '?'}) "
+                    f"but ours assembled it"]
+        if mine is None:
+            return [f"ours refuses it: {mine_err}"]
+        return diff_objects(_describe(elf.read(ref_obj.read_bytes())), _describe(elf.read(mine)))
+
+
+def link_objects(oracle, objects, defsyms=None):
+    """Link relocatable objects (bytes) with JieLi's ld (pi32v2/bin/ld) using its default script. Undefined
+    symbols are given distinct addresses with --defsym (`defsyms` {name: address}; by default every undefined
+    global gets 0x60000 + 0x100 * k). Returns the linked file's bytes. Black box: objects in, ELF out."""
+    from . import elf
+
+    ld = oracle.path / "pi32v2" / "bin" / "ld"
+    with tempfile.TemporaryDirectory() as d:
+        files = []
+        for n, data in enumerate(objects):
+            f = Path(d) / f"in{n}.o"
+            f.write_bytes(data)
+            files.append(f)
+        if defsyms is None:
+            defined, undef = set(), []
+            for data in objects:
+                obj = elf.read(data)
+                for s in obj.symbols[1:]:
+                    if s.bind != elf.STB_LOCAL and s.shndx == elf.SHN_UNDEF and s.name not in undef:
+                        undef.append(s.name)
+                    elif s.shndx != elf.SHN_UNDEF:
+                        defined.add(s.name)
+            defsyms = {name: 0x60000 + 0x100 * k for k, name in enumerate(n for n in undef if n not in defined)}
+        out = Path(d) / "out.elf"
+        code, text, err = oracle._run([ld, "-o", out, *files, *[f"--defsym={k}={v:#x}" for k, v in defsyms.items()]])
+        if code:
+            raise OracleError(f"ld failed: {(err or text).strip()}")
+        return out.read_bytes()
+
+
+def linkcompare(oracle, path, flags=(), include=(), define=(), table=None, features=()):
+    """Assemble a source with JieLi's clang and with this repo's assembler, link each with JieLi's ld and
+    compare the loaded sections (name, address, contents). Returns a list of differences."""
+    from . import asm, elf
+
+    path = Path(path)
+    incs = [str(p) for p in include]
+    with tempfile.TemporaryDirectory() as d:
+        text = asm.preprocess(path, incs, define) if path.suffix == ".S" else path.read_text()
+        src, ref = Path(d) / "in.s", Path(d) / "ref.o"
+        src.write_text(text)
+        code, _, err = oracle._run([oracle.clang, "-target", "pi32v2", f"-mcpu={CPU}", *[f"-m{f}" for f in features],
+                                    "-c", "-x", "assembler", *[f"-I{p}" for p in [path.parent, *incs]], src,
+                                    "-o", ref])
+        if code:
+            raise OracleError(f"JieLi's assembler: {err.strip()}")
+        theirs = ref.read_bytes()
+        mine = asm.assemble_source(text, str(path), [str(path.parent), *incs], table, features=set(features))
+        a = elf.read(link_objects(oracle, [theirs]))
+        b = elf.read(link_objects(oracle, [mine]))
+    secs = lambda o: {s.name: (s.addr, bytes(s.data), s.length) for s in o.sections if s.addr or s.type == elf.SHT_PROGBITS}
+    sa, sb = secs(a), secs(b)
+    diffs = []
+    for name in sorted(set(sa) | set(sb)):
+        if sa.get(name) != sb.get(name):
+            diffs.append(f"linked section {name}: JieLi {sa.get(name, ('-',))[0]} vs ours {sb.get(name, ('-',))[0]}, contents differ")
+    return diffs

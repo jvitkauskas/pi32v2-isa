@@ -1,0 +1,15 @@
+	.section .a,"ax"
+a1:	nop
+	goto a1
+	goto b1
+	.section .b,"ax"
+b1:	nop
+	goto a1
+	goto b1
+	.section .a
+	goto a1
+1:	nop
+	goto 1b
+	.section .b
+	goto 1f
+1:	nop

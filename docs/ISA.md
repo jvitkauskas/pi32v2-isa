@@ -96,8 +96,9 @@ Spellings found so far [oracle]:
 - Modifiers in parentheses after an operation: `(u)`/`(s)` unsigned/signed, `(usat)`/`(ssat)` saturating,
   `(uavg)`/`(savg)`, `(rnd,...)`, `(x2)`, `(v)` (vector), `(f)` (floating point).
 
-**Pending:** the assembler's comment syntax (the projects run their `.S` files through the C preprocessor
-and use C comments), directives, and how parallel issue is written (reported as `ins1 # ins2`
+Comments are `/* */`, `//`, `;`, and `#` at the start of a line; there is no statement separator; directives
+are listed in [ASSEMBLER.md](ASSEMBLER.md) (there is no `.word`, `.half` or `.hword`). **Pending:** how
+parallel issue is written (reported as `ins1 # ins2`
 [kagaimiq-jielie]; objdump prints a trailing `#` on such 16-bit words [oracle]).
 
 ## 4. Encoding
@@ -199,16 +200,7 @@ through helper functions (software); `float` uses the FPU instructions.
 
 ## 10. ELF object files
 
-e_machine `0xF1` [kagaimiq-jielie]; objdump calls the format `ELF32-pi32v2` [oracle].
-
-Relocations seen in the FM-1 objects [oracle]:
-
-| Type | Used by |
-| --- | --- |
-| `R_PI32V2_MOV_ABS32` (5) | `li.u32`, `li.sr_u32` with a symbol: the 32-bit constant |
-| `R_PI32V2_LONG_JUMP_23M2` (2) | `call.l`, `goto.l` with a symbol: the 22-bit offset, in units of 2 |
-| `R_PI32V2_ABS32` (8) | a 32-bit data word holding an address [compiler] |
-| `R_PI32V2_FUNCDESC` (11), `R_PI32V2_GOT16` (15) | position-independent code (`-fPIC`), with `r15` as the GOT pointer [compiler] |
-
-**Pending:** the other relocation types, their numbers and exact fields, section flags and symbol conventions,
-which the assembler needs to write objects JieLi's linker accepts.
+[ELF.md](ELF.md) documents the object format: e_machine `0xF1` [kagaimiq-jielie], `e_flags` 0, RELA
+relocations naming the symbol itself, the relocation types 1..8 the assembler emits (`LONG_JUMP_23M2` = 2,
+`MOV_ABS32` = 5, `ABS32` = 8, ...) with the bits each patches, and the conventions JieLi's linker checks
+[oracle]. The repo's assembler writes these objects ([ASSEMBLER.md](ASSEMBLER.md)).

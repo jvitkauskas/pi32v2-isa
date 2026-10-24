@@ -38,8 +38,8 @@ notes cite `compiler`; [COMPILER.md](COMPILER.md)). Still open:
 
 - The C ABI is in [ABI.md](ABI.md); its §9 lists what it could not determine (alignment the linker
   guarantees, some bitfield combinations, other interrupt conventions).
-- ELF: relocation types beyond `MOV_ABS32` and `LONG_JUMP_23M2`, their numbers and fields, `e_flags`,
-  section and symbol conventions.
+- ELF: documented in [ELF.md](ELF.md) as JieLi's assembler writes it and its linker accepts it; debug
+  sections (`-g`, `.cfi_*`, `.loc`) are not covered.
 
 ## Known toolchain bugs and quirks (keep)
 
