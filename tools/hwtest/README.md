@@ -124,3 +124,10 @@ it cannot verify the effects of unknown instructions. See `cases_from_file` in `
 
 A case that hangs the unit (a trap, a missing instruction) leaves the batch without an `.out` file: power-cycle,
 note the batch, and split it (`--batch`) to find the case.
+
+App4 adds a boot-time/persistent CPU1 profile (`app/dual*.S`) and a separately linked RAM worker
+(`app/peer.S`). See [CPU1 startup/stop](../../docs/CPU1.md) for the tested sequence and its late-restart
+limit, [APP.md](APP.md) for packaging/journal details, and the
+[run report](../../hw/fm1-2026-10-24-app4/README.md) for finite event/lock/ordering observations.
+Use `appcollect.py --journal-words 64` for that profile and `app4verify.py OUTDIR` to check its protocol
+as well as `appverify.py`'s explicit expectations; the default collector remains the 48-word app2/app3 journal.

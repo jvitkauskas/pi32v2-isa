@@ -32,7 +32,7 @@ Still open on the encoding side:
 Priorities from real code [fm1-firmware-stats]: one FM-1 factory firmware uses 562 of the table's forms; 97%
 of its image decodes, and the undecodable words inside code are data (text, small constants), apart from one
 that decodes only with `+instrev3`. Frequently used forms whose control or mode effects remain open include
-`lockclr`, `lockset`, `callns.r`, `gotoss.xl` and `btbclr`; `cli.r`/`sti.r` now have hardware evidence for
+`callns.r`, `gotoss.xl` and `btbclr`; `cli.r`/`sti.r` now have hardware evidence for
 their icfg-bit-9 effects (`shl3` and the 86 DSP forms it uses are also settled on hardware). M-VAVE's 016 package (2026-10-21)
 gives the same picture: 598 forms used, all decoding as objdump does at `-mcpu=r3`; it uses the FPU far more
 (5090 FPU instructions, `madd.f.rrr` 111 times, which JieLi's compiler never emits), and with `+instrev3` it
@@ -58,7 +58,12 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
 - Control effects still open: `callns.r` selects rets/reti/retx/rete by the encoded field low two bits
   in controlled [run-5](../hw/fm1-2026-10-24-v5/README.md) probes of all sixteen fields, with flags 0 and 15;
   its mode effects, mode changes of the return variants and
-  `gotoss.xl`, icfg bits other than bits 8/9, event delivery/consumption, lock exclusion and barrier ordering.
+  `gotoss.xl`, icfg bits other than bits 8/9, event delivery/consumption, recursive/non-owner lock behavior and barrier ordering.
+  [Run app4](../hw/fm1-2026-10-24-app4/README.md) demonstrates shared lock exclusion: CPU1 waits
+  until CPU0 releases, and two locked concurrent counter runs retain all 2000 increments; the unlocked
+  control retains 1455. Implicit ordering, fairness and every ownership edge are not established.
+  Its 1000-iteration message-passing/store-buffering probes see no stale payload/both-zero result with
+  or without the optional test fences; their common protocol synchronizes, so csync guarantees remain open.
   The rete-only pops and a multi-register `pop.srmask` sequence initially hung, then completed on a
   motherboard USB port; the earlier failures are not established as instruction traps. `hbkpt` hung
   again on that port, then reset in a final retry using the other RAM slot. [Run 4](../hw/fm1-2026-10-24-v4/README.md) separates captures from failures.
@@ -81,8 +86,15 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
   including 128 executions after SEVL or SEVG, while enabled IDLE waits for TIMER5. Masked IDLE reaches
   watchdog recovery with no result. A verified second core executes event and WFE commands after one
   startup, but no blocking WFE receiver was found, so event delivery/routing/consumption remains open.
-  Per-batch second-core restarts were unreliable (13 ready-poll timeouts); the successful sequence avoids
-  them. Other event-enable, power and interrupt configurations remain untested.
+  App3's per-batch restarts had thirteen ready-poll timeouts. App4 establishes nine successful boot-time
+  starts and a live worker reused over nine batches, with nonce, core/stack identity and heartbeat checks.
+  Its late-release diagnostic still times out with CPU1 sampled in ROM; warm restart remains open.
+  [CPU1.md](CPU1.md) records the tested lifecycle and source comparison. App4 also completes unprimed
+  two-WFE/128-WFE peer sequences and main waits before a timestamped delayed peer SEVG, with all four
+  icfg bit-8/9 combinations tested on CPU1. No blocking WFE receiver was found. Other event-enable,
+  power and interrupt configurations remain untested. Peer SEVL/SEVG does not wake CPU0 IDLE early
+  before its TIMER5 handler; CPU0 SEVL/SEVG leaves CPU1 sampled at IDLE with no ACK at icfg 0/0x300,
+  as in the controls. These identify tested non-wake contexts, not a universal event-routing rule.
 - Not tried: `rep` with a count of 0, a block or pair whose B is not a 16-bit load or store, nested blocks.
 - `copex.ppi`: run 5 reproduces different mode-15 outputs after restoring all GPR inputs and flags,
   including the old destination, and inserting waits. Unobserved state/history remains unresolved

@@ -5,7 +5,8 @@ Steps 3–4 (`hw/fm1-2026-10-24-app2`) verified watchdog skip/restart, recording
 0..7, timer masking/pending retention through icfg bits 8/9, and timer priorities 0/3/7. At that point event
 blocking/consumption and other power modes remained open. Application run app3 then verified software pending
 retention and selected priority-nesting combinations, and ran a single-start second-core sequence;
-blocked-event reception and reliable CPU1 restart remain open (details below).
+blocked-event reception and reliable late CPU1 restart remain open. Run app4 establishes boot-time CPU1
+startup and persistent dispatch, with shared-lock exclusion tests (details below).
 
 Tools: `fm1app.py` (assemble, link at `0x02000120`, pack a `.fwsc`; `--plugin` for RAM images),
 `app/probe.S` (step 1), `app/driver.S` with `gen.py --app` (runs batches), `app/reset.S` (starts the installed
@@ -205,3 +206,40 @@ order, depth, bounded unsigned counter deltas, protocol acknowledgements, unaffe
 stack/scratch preservation. semantics/app3.py supplies a numerical model for the deterministic nesting
 programs. Timing-dependent programs and copex remain separate from ordinary opcode models. Copex repeats
 its eight-result sequence across two application launches, but its numerical/history rule remains unknown.
+
+## Application run app4: boot-time CPU1 and shared memory
+
+[Run app4](../../hw/fm1-2026-10-24-app4/README.md) compares app3 with fetched fm1-base and its pinned
+felucca-bsp before further uploads. The independent dual profile holds CPU1 before clearing shared RAM,
+uses the source-described stop order and bus-cause cleanup, clears CPU1 IRQ sources, temporarily opens
+the startup PC/top-write guards, explicitly sets ssp, and uses a nonce and separate request/reply lines.
+Core-specific fault records cannot resume CPU1 through CPU0's case continuation.
+
+Nine whole-chip software-reset starts succeed, and nine batches reuse one live worker. Later stop/release
+within the same boot still fails: a diagnostic samples CPU1 in ROM at 0x01E0005A with no ready reply or
+heartbeat. Use one startup during application initialization, then dispatch jobs; this is not a demonstrated
+late-restart API. [CPU1.md](../../docs/CPU1.md) gives the tested start/stop sequence and pinned sources for
+compiler/RTOS work.
+
+Build the RAM worker separately from app/peer.S at 0x01C10000 using fm1app.py --plugin, pad its bytes to
+four, then provide app4_worker_blob as a length word followed by those bytes. Link that blob with the
+chosen app/dual.S, app/dual-persist.S or app/dual-reboot.S, generated app.S and plan.S (mode 3). The persistent
+profile starts once and checks heartbeat progress before each later batch. The reboot profile deliberately
+resets the whole chip between batches and clears the active journal marker before doing so. An earlier
+version omitted that clear: eight journals became unfinished despite successful startup; no outputs are
+extracted from them. Attempts preserve that earlier source separately.
+
+appcollect.py --journal-words 64 captures app4's extended journal. From +112: startup mode (0 failure,
+1 initial, 3 live), elapsed counter, held/released C1_CON, nonce, core identity and usp/ssp/sp, sampled PC,
+reserved, heartbeat before hold, two heartbeat window samples, two live-reuse heartbeat samples, startup
+DBG_MSG, reserved, held flag, and final sampled PC. +192..255 snapshot peer mailbox +32..95. The mailbox
+starts at 0x01C7CE00; CPU0 owns +0..31, CPU1 +32..95, and shared litmus locations occupy separate lines at
++128 and +160. Each command carries a sequence; the reply includes a matching phase sequence and ACK.
+Do not interpret a bounded missing ACK as completed peer work. app4verify.py checks the lifecycle protocol
+and expectations.json; the ordinary instruction checker still verifies the calibration and preservation models.
+
+The paired-core lock probes show acquisition waiting until the other core releases, and two locked counter
+runs retain every update. WFE remains nonblocking on both cores in the tested gate configurations; a
+completed command is not proof of event delivery. Peer SEVL/SEVG gives no early CPU0 IDLE wake before
+TIMER5; CPU0 SEVL/SEVG leaves CPU1 at IDLE at icfg 0/0x300 during bounded polling. The report separates these results from the event and
+ordering properties still open, and records the one failed multi-batch handover without guessing its reached case.

@@ -27,6 +27,9 @@ app_entry:
 #ifdef HW_APP_EXPERIMENT
 	sp = 0x01C0D000
 	ssp = 0x01C0F000
+#ifdef HW_APP_DUAL
+	call app4_early
+#endif
 	call app_initialize
 #else
 	r4 = RECORD
@@ -100,6 +103,9 @@ copied:
 	r4 = RECORD
 	[r4+8] = r10
 	r8 = r8 + 12
+#ifdef HW_APP_BATCH_RESET
+	if (r10 != r9) goto app4_boot_again
+#endif
 	goto next_batch
 
 done:

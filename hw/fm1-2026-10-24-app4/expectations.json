@@ -1,0 +1,1805 @@
+{
+  "batch-lifecycle-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-lifecycle-001": {
+    "status": 3
+  },
+  "batch-lifecycle-002": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-lifecycle-003": {
+    "status": 3
+  },
+  "batch-lifecycle-004": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-lifecycle-005": {
+    "status": 3
+  },
+  "batch-lifecycle-006": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-lifecycle-007": {
+    "status": 3
+  },
+  "batch-lifecycle-008": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-hold-diagnostic-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-hold-diagnostic-001": {
+    "status": 3
+  },
+  "batch-boot-starts-000": {
+    "status": 3
+  },
+  "batch-boot-starts-001": {
+    "status": 3
+  },
+  "batch-boot-starts-002": {
+    "status": 3
+  },
+  "batch-boot-starts-003": {
+    "status": 3
+  },
+  "batch-boot-starts-004": {
+    "status": 3
+  },
+  "batch-boot-starts-005": {
+    "status": 3
+  },
+  "batch-boot-starts-006": {
+    "status": 3
+  },
+  "batch-boot-starts-007": {
+    "status": 3
+  },
+  "batch-boot-starts-008": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-001": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-002": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-003": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-004": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-005": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-006": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-007": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-persistent-cycles-008": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-001": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-002": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-003": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-004": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-005": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-006": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-007": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-boot-verified-008": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "preserved": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "flags": 5
+  },
+  "batch-peer-waits-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-001": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-002": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-003": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-004": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-005": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-006": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-peer-waits-007": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1
+      ],
+      [
+        13,
+        3
+      ]
+    ],
+    "equal": [
+      [
+        14,
+        15
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-cross-control-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        15,
+        2
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-cross-local-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        15,
+        2
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-cross-global-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        15,
+        2
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-cross-wait-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        15,
+        2
+      ]
+    ],
+    "delta": [
+      [
+        10,
+        11,
+        0,
+        10
+      ],
+      [
+        11,
+        12,
+        0,
+        200
+      ]
+    ]
+  },
+  "batch-cross-delayed-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        11,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        10
+      ],
+      [
+        9,
+        10,
+        0,
+        10
+      ]
+    ],
+    "greater": [
+      [
+        12,
+        10
+      ]
+    ]
+  },
+  "batch-cross-delayed-local-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        11,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        10
+      ],
+      [
+        9,
+        10,
+        0,
+        10
+      ]
+    ],
+    "greater": [
+      [
+        12,
+        10
+      ]
+    ]
+  },
+  "batch-cross-delayed-global-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        11,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        0,
+        10
+      ],
+      [
+        9,
+        10,
+        0,
+        10
+      ]
+    ],
+    "greater": [
+      [
+        12,
+        10
+      ]
+    ]
+  },
+  "batch-lock-control-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        2
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-lock-protected-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        2
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-counter-unlocked-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        0
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        1000,
+        1999
+      ]
+    ]
+  },
+  "batch-counter-locked-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        2000
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-counter-repeat-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        2000
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-mp-unfenced-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        10,
+        0
+      ],
+      [
+        11,
+        1000
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-mp-fenced-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        10,
+        0
+      ],
+      [
+        11,
+        1000
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-sb-unfenced-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1000
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-sb-fenced-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        9,
+        1000
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ]
+  },
+  "batch-idle-main-control-000": {
+    "status": 2,
+    "handler_count": 1,
+    "unchanged_frame": true,
+    "vector": 63,
+    "out_values": [
+      [
+        10,
+        1
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        200000,
+        300000
+      ]
+    ],
+    "greater": [
+      [
+        9,
+        13
+      ],
+      [
+        12,
+        8
+      ],
+      [
+        13,
+        12
+      ]
+    ]
+  },
+  "batch-idle-main-local-000": {
+    "status": 2,
+    "handler_count": 1,
+    "unchanged_frame": true,
+    "vector": 63,
+    "out_values": [
+      [
+        10,
+        1
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        200000,
+        300000
+      ]
+    ],
+    "greater": [
+      [
+        9,
+        13
+      ],
+      [
+        12,
+        8
+      ],
+      [
+        13,
+        12
+      ]
+    ]
+  },
+  "batch-idle-main-global-000": {
+    "status": 2,
+    "handler_count": 1,
+    "unchanged_frame": true,
+    "vector": 63,
+    "out_values": [
+      [
+        10,
+        1
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "delta": [
+      [
+        8,
+        9,
+        200000,
+        300000
+      ]
+    ],
+    "greater": [
+      [
+        9,
+        13
+      ],
+      [
+        12,
+        8
+      ],
+      [
+        13,
+        12
+      ]
+    ]
+  },
+  "batch-idle-peer-0-csync-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  },
+  "batch-idle-peer-0-sevl-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  },
+  "batch-idle-peer-0-sevg-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  },
+  "batch-idle-peer-300-csync-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  },
+  "batch-idle-peer-300-sevl-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  },
+  "batch-idle-peer-300-sevg-000": {
+    "status": 2,
+    "handler_count": 0,
+    "unchanged_frame": true,
+    "out_values": [
+      [
+        8,
+        1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        1
+      ]
+    ],
+    "samples": [
+      [
+        19,
+        29426022
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        30,
+        0
+      ]
+    ]
+  }
+}

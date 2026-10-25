@@ -72,8 +72,17 @@ clear_sources:
 	r0 = 255
 	[r1+0] = r0
 	r1 = 0x01EEE240
+#ifdef HW_APP_DUAL
+	r0 = [r1+0]
+	r2 = 1
+	r0 = r0 & r2
+	if (r0 != 0) goto app4_debug_unlocked
+#endif
 	r0 = 0xE7
 	[r1+0] = r0
+#ifdef HW_APP_DUAL
+app4_debug_unlocked:
+#endif
 	r1 = 0x01EEE248
 	r0 = -1
 	[r1+0] = r0
@@ -207,6 +216,9 @@ app_prepare:
 	r0 = 0x4019
 	[r1+0] = r0
 sources_ready:
+#ifdef HW_APP_DUAL
+	call app4_prepare
+#endif
 #ifdef HW_APP_ADVANCED
 	call app3_prepare
 #endif
@@ -227,6 +239,9 @@ app_finish:
 	{pc} = [sp++]
 app_quiesce:
 	[--sp] = {rets}
+#ifdef HW_APP_DUAL
+	call app4_quiesce
+#endif
 #ifdef HW_APP_ADVANCED
 	call app3_quiesce
 #endif
@@ -243,6 +258,10 @@ app_quiesce:
 	{pc} = [sp++]
 
 app_trap:
+#ifdef HW_APP_DUAL
+	goto app4_trap
+app4_regular_trap:
+#endif
 	/* All GPRs/rets and flags have already been saved by the vector stub. */
 	r1 = RECORD
 	r1 = [r1+36]

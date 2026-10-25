@@ -313,6 +313,10 @@ class AppExperiments(unittest.TestCase):
             for k,c in enumerate(m['cases']):
                 struct.pack_into('<53I',ram,m['results']-0x1c30000+k*212,*c['in_values'],c['flags'],
                                  c['sp_in'],0,c['rets_in'],0,*[0]*32)
+            struct.pack_into('<I',ram,0x4c200+252,0x12345678)
+            _,extended,_,_=appcollect.collect(d,bytes(ram),12345,64)
+            self.assertEqual(extended[1]['samples'][-1],0x12345678)
+            self.assertEqual(len(extended[1]['samples']),36)
             _,obs,pats,records=appcollect.collect(d,bytes(ram),12345)
             self.assertEqual([o['status'] for o in obs],[3,2])
             self.assertEqual(len(records),3)
@@ -336,6 +340,25 @@ class AppExperiments(unittest.TestCase):
             symbols={n:v for n,v,*_ in exe['symbols'] if n}
             for name in ('app3_cpu1_entry','app3_cpu1_main','app3_soft','app3_trace'):
                 self.assertTrue(0x02000120<=symbols[name]<0x02000120+len((d/'app.bin').read_bytes()))
+
+    def test_dual_profile_links_worker_and_lifecycle_hooks(self):
+        import appplan
+        with tempfile.TemporaryDirectory() as directory:
+            d=Path(directory)
+            cases=d/'probe.json'
+            cases.write_text(json.dumps([{'id':'csync','values':{},'in':list(range(16)),'force':True}]))
+            subprocess.run([sys.executable,str(HW/'gen.py'),str(d),'--cases',str(cases),'--batch','1','--app'],
+                           check=True,capture_output=True)
+            (d/'plan.S').write_text(appplan.plan(d,0x4000,[3],3))
+            worker,*_=fm1app.build([HW/'app/peer.S'],d,0x1c78000,0x1c10000)
+            worker+=b'\0'*(-len(worker)%4)
+            (d/'worker.bin').write_bytes(worker)
+            (d/'blob.S').write_text('.section .rodata\n.globl app4_worker_blob\napp4_worker_blob:\n.4byte '+
+                                   str(len(worker))+'\n.incbin "'+str(d/'worker.bin')+'"\n')
+            for profile in ('dual','dual-persist','dual-reboot'):
+                image,entry,*_=fm1app.build([HW/('app/'+profile+'.S'),d/'app.S',d/'plan.S',d/'blob.S'],d,0x1c78000)
+                self.assertEqual(entry,0x02000120)
+                self.assertIn(worker,image)
 
     def test_temporal_verifier_rejects_wrong_nesting_and_ack(self):
         import appverify
