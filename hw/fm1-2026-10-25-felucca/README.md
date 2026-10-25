@@ -53,3 +53,12 @@ rotation at -Oz. m-bootloader 1.2: FM-1 13284 -> 13168 bytes, SMK-37 14340 -> 14
 Felucca's start-up panel commands those of JieLi's build in the simulator. On the FM-1 (bootloader and Felucca):
 menu, REC startup key, Felucca's screen, keys and sound work (owner's check). The SMK-37 bootloader is built, not
 yet installed.
+
+## SLOOP (Felucca's groovebox fork, two cores)
+
+SLOOP 2.8.1 (github.com/isod89/sloop-fm1, d893642) built with fork a58e2444e through the same directory: app image
+563688 bytes (JieLi's toolchain, same source: 567564), update loader 8504 (8156); the build's own checks pass, the
+same list as with JieLi's (the second core's loop in RAM among them); no wrong if-block (1687 blocks). In the
+simulator `lcd_init` sends the same panel traffic as JieLi's build (one more write of the SPI baud register, the
+source's two). On the FM-1 with the LLVM m-bootloader: screen, keys, sound and playing patterns work (owner's
+check).
