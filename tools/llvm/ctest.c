@@ -162,3 +162,12 @@ int f_idioms(int a, int b) {
   r ^= (u32)(signed char)b + (u32)(short)a * 7 + (unsigned char)(a >> 3) + (unsigned short)b;
   return (int)(r * 1000 + (x & 0x3ff));
 }
+
+/* JieLi's builtins (not popcount: the AC791N runs popcnt as a nop, so JieLi's build differs on purpose) */
+int f_builtins(int a, int b) {
+  int r = __builtin_pi32v2_clz(a) + __builtin_pi32v2_cls(b) * 3 + __builtin_pi32v2_zcmp(a - b) * 7;
+  r ^= __builtin_pi32v2_rev8(a ^ b) + __builtin_pi32v2_uextra(a, 4, 8) + __builtin_pi32v2_sextra(b, 3, 9);
+  r += __builtin_pi32v2_uextra(b, 28, 8) + __builtin_pi32v2_sextra(a, 16, 16);
+  int lo = a < b ? a : b, hi = (unsigned)a > (unsigned)b ? a : b;
+  return r + lo * 5 + hi;
+}
