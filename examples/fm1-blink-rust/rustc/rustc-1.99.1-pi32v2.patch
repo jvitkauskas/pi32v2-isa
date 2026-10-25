@@ -1,0 +1,103 @@
+diff -ruN a/compiler/rustc_llvm/build.rs b/compiler/rustc_llvm/build.rs
+--- a/compiler/rustc_llvm/build.rs	2026-10-25 13:40:19.886217575 +0000
++++ b/compiler/rustc_llvm/build.rs	2026-10-25 13:40:19.887295099 +0000
+@@ -14,6 +14,7 @@
+     "aarch64",
+     "amdgpu",
+     "avr",
++    "pi32v2",
+     "loongarch",
+     "m68k",
+     "csky",
+diff -ruN a/compiler/rustc_llvm/src/lib.rs b/compiler/rustc_llvm/src/lib.rs
+--- a/compiler/rustc_llvm/src/lib.rs	2026-10-25 13:40:19.890666169 +0000
++++ b/compiler/rustc_llvm/src/lib.rs	2026-10-25 13:40:19.891766825 +0000
+@@ -128,6 +128,14 @@
+         LLVMInitializeAVRAsmParser
+     );
+     init_target!(
++        llvm_component = "pi32v2",
++        LLVMInitializePI32V2TargetInfo,
++        LLVMInitializePI32V2Target,
++        LLVMInitializePI32V2TargetMC,
++        LLVMInitializePI32V2AsmPrinter,
++        LLVMInitializePI32V2AsmParser
++    );
++    init_target!(
+         llvm_component = "m68k",
+         LLVMInitializeM68kTargetInfo,
+         LLVMInitializeM68kTarget,
+diff -ruN a/compiler/rustc_target/src/callconv/mod.rs b/compiler/rustc_target/src/callconv/mod.rs
+--- a/compiler/rustc_target/src/callconv/mod.rs	2026-10-25 13:40:19.895144197 +0000
++++ b/compiler/rustc_target/src/callconv/mod.rs	2026-10-25 13:40:19.896271444 +0000
+@@ -23,6 +23,7 @@
+ mod mips64;
+ mod msp430;
+ mod nvptx64;
++mod pi32v2;
+ mod powerpc;
+ mod powerpc64;
+ mod riscv;
+@@ -725,6 +726,8 @@
+             Arch::RiscV32 | Arch::RiscV64 => riscv::compute_abi_info(cx, self),
+             Arch::Wasm32 | Arch::Wasm64 => wasm::compute_abi_info(cx, self),
+             Arch::Bpf => bpf::compute_abi_info(cx, self),
++            // JieLi pi32v2 (a JSON target spec with "arch": "pi32v2")
++            Arch::Other(name) if name == "pi32v2" => pi32v2::compute_abi_info(cx, self),
+             arch @ (Arch::SpirV | Arch::Other(_)) => {
+                 panic!("no lowering implemented for {arch}")
+             }
+diff -ruN a/compiler/rustc_target/src/callconv/pi32v2.rs b/compiler/rustc_target/src/callconv/pi32v2.rs
+--- a/compiler/rustc_target/src/callconv/pi32v2.rs	1970-01-01 00:00:00.000000000 +0000
++++ b/compiler/rustc_target/src/callconv/pi32v2.rs	2026-10-25 13:40:19.898067286 +0000
+@@ -0,0 +1,50 @@
++// JieLi pi32v2 C calling convention, as LLVM's clang lowers it for the pi32v2 target
++// (clang/lib/CodeGen/Targets/PI32V2.cpp in the pi32v2-llvm fork; observed ABI: pi32v2-isa docs/ABI.md):
++// - aggregates, as arguments and as results, are passed by reference to a caller-made copy (not `byval`),
++//   a result through a hidden pointer argument (sret);
++// - scalars are passed directly; integers narrower than 32 bits are extended to 32 (the backend promotes
++//   i1/i8/i16 to i32, and passes i32/f32 in r0..r3, then on the stack; i64/f64 take two slots).
++
++use rustc_abi::TyAbiInterface;
++
++use crate::callconv::{ArgAbi, FnAbi};
++
++fn classify_ret<Ty>(ret: &mut ArgAbi<'_, Ty>) {
++    if !ret.layout.is_sized() {
++        return;
++    }
++    if ret.layout.is_aggregate() {
++        ret.make_indirect();
++    } else {
++        ret.extend_integer_width_to(32);
++    }
++}
++
++fn classify_arg<'a, Ty, C>(cx: &C, arg: &mut ArgAbi<'a, Ty>)
++where
++    Ty: TyAbiInterface<'a, C> + Copy,
++{
++    if !arg.layout.is_sized() {
++        return;
++    }
++    if arg.layout.pass_indirectly_in_non_rustic_abis(cx) || arg.layout.is_aggregate() {
++        arg.make_indirect();
++    } else {
++        arg.extend_integer_width_to(32);
++    }
++}
++
++pub(crate) fn compute_abi_info<'a, Ty, C>(cx: &C, fn_abi: &mut FnAbi<'a, Ty>)
++where
++    Ty: TyAbiInterface<'a, C> + Copy,
++{
++    if !fn_abi.ret.is_ignore() {
++        classify_ret(&mut fn_abi.ret);
++    }
++    for arg in fn_abi.args.iter_mut() {
++        if arg.is_ignore() {
++            continue;
++        }
++        classify_arg(cx, arg);
++    }
++}

@@ -34,3 +34,4 @@ before every write and stay with the owner; no flash image, RAM dump or vendor f
 | [fm1-2026-10-25-ctest2](fm1-2026-10-25-ctest2/README.md) | The size-tuned code generator and the hardware FPU, at -O2 and -Os |
 | [fm1-2026-10-25-open-firmware](fm1-2026-10-25-open-firmware/README.md) | m-bootloader 1.2 (FM-1 and SMK-37 Pro) and fm1-base built with the LLVM toolchain |
 | [fm1-2026-10-25-felucca](fm1-2026-10-25-felucca/README.md) | Felucca and SLOOP built with the LLVM toolchain; the if-block fault it found (a call inside a block) and its fix; the code-size changes |
+| [fm1-2026-10-25-rust](fm1-2026-10-25-rust/README.md) | Rust: an interrupt-driven blink and a picture on the screen, from rustc with the pi32v2 patch on the fork's LLVM |

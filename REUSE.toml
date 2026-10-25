@@ -8,6 +8,24 @@ SPDX-License-Identifier = "MIT-0"
 
 # Documentation, the instruction table and the hardware results are CC0-1.0.
 [[annotations]]
-path = ["*.md", "docs/**", "isa/**", "hw/**"]
+path = ["*.md", "docs/**", "isa/**", "hw/**", "examples/**/*.md", "tools/**/*.md"]
 SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
+SPDX-License-Identifier = "CC0-1.0"
+
+# The Rust example's manifests and target specification are MIT-0, like the code.
+[[annotations]]
+path = ["examples/fm1-blink-rust/Cargo.toml", "examples/fm1-blink-rust/Cargo.lock", "examples/fm1-blink-rust/pi32v2-none.json"]
+SPDX-FileCopyrightText = "2026 Julius Vitkauskas"
+SPDX-License-Identifier = "MIT-0"
+
+# A patch to rustc is under rustc's licence.
+[[annotations]]
+path = ["examples/fm1-blink-rust/rustc/**"]
+SPDX-FileCopyrightText = ["The Rust Project Contributors", "2026 Julius Vitkauskas"]
+SPDX-License-Identifier = "MIT OR Apache-2.0"
+
+# Ferris the Rustacean (rustacean.net): its author waived all rights.
+[[annotations]]
+path = ["examples/fm1-blink-rust/assets/ferris.png"]
+SPDX-FileCopyrightText = "Karen Rustad Tölva"
 SPDX-License-Identifier = "CC0-1.0"

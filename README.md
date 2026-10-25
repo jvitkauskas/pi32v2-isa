@@ -30,12 +30,16 @@ Pro uses the same chip family.
   | SLOOP 2.8.1 (Felucca's groovebox fork, both cores) | 563688 (567564) | FM-1: screen, keys, sound, patterns |
 
   Its output is checked against JieLi's compiler in a simulator on every change ([docs/LLVM.md](docs/LLVM.md)).
+- **Rust (proof of concept):** rustc 1.99.1 with a small patch ([jvitkauskas/pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust)),
+  on the same LLVM, builds `no_std` firmware: [examples/fm1-blink-rust](examples/fm1-blink-rust/) runs on the FM-1
+  (a timer interrupt, Ferris on the screen).
 
 ## Start here
 
 | If you want to | Read |
 | --- | --- |
 | build firmware for the FM-1 with the open toolchain | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md), then [examples/fm1-blink](examples/fm1-blink/), the C conventions in [docs/ABI.md](docs/ABI.md) |
+| write it in Rust | [examples/fm1-blink-rust](examples/fm1-blink-rust/) |
 | build an existing FM-1 firmware without JieLi's assembler and linker | [docs/BUILDING-OPEN.md](docs/BUILDING-OPEN.md) |
 | work on the LLVM backend | [docs/LLVM.md](docs/LLVM.md), [docs/COMPILER.md](docs/COMPILER.md) (what JieLi's compiler emits), [tools/llvm/](tools/llvm/) |
 | look up an instruction | [docs/ISA.md](docs/ISA.md), the table [isa/pi32v2.toml](isa/pi32v2.toml) ([format](docs/TABLE-FORMAT.md)), `python3 -m pi32v2isa disasm` |
@@ -55,6 +59,7 @@ Pro uses the same chip family.
 | `tools/hwtest/` | The hardware test harness: test images run in RAM or installed as applications, and their analysis |
 | `hw/` | The hardware runs and their results ([index](hw/README.md)) |
 | `examples/fm1-blink/` | An FM-1 application built with clang and `ld.lld` alone: start-up code, linker script, a timer interrupt in C |
+| `examples/fm1-blink-rust/` | The same in Rust, with the screen; the rustc patch |
 | `tests/` | Unit tests |
 
 ## Use
@@ -85,4 +90,5 @@ python3 -m pi32v2isa oracle objdumpcompare app.elf   # our objdump against JieLi
 
 Code is [MIT-0](LICENSES/MIT-0.txt). Documentation and the instruction table are
 [CC0-1.0](LICENSES/CC0-1.0.txt). Each file's licence is given by its SPDX header or by
-[REUSE.toml](REUSE.toml). The LLVM fork is under LLVM's licence (Apache-2.0 with LLVM exceptions).
+[REUSE.toml](REUSE.toml); the rustc patch is under Rust's licence (MIT OR Apache-2.0) and Ferris is CC0. The LLVM
+fork is under LLVM's licence (Apache-2.0 with LLVM exceptions), the Rust fork under Rust's.

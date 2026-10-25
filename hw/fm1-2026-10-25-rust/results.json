@@ -1,0 +1,17 @@
+{
+  "run": "fm1-blink-rust --features autotest",
+  "package_sha256": "3460427d23cfb461681b28130ab048b4df96dd3cbf85af66f38005631db11fdd",
+  "app_bytes": 520,
+  "record_0x01C7C000": {
+    "magic": "4b4e4c42",
+    "ticks": 300,
+    "crystal_counts": 72000008,
+    "pa_out": "00000010",
+    "tag": "54535552"
+  },
+  "ticks_in_bss_0x01C40000": 300,
+  "seconds": 3.0000003333333334,
+  "ferris_package_sha256": "19bf06518592271f24f15441ecfc42271c11e2343baeb152dadd562d98a24504",
+  "ferris_app_bytes": 116484,
+  "ferris_screen": "shown (owner's check)"
+}

@@ -1,0 +1,22 @@
+[package]
+name = "fm1-blink-rust"
+version = "0.1.0"
+edition = "2024"
+license = "MIT-0"
+publish = false
+
+[features]
+autotest = []
+
+[[bin]]
+name = "blink"
+path = "src/main.rs"
+test = false
+bench = false
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false

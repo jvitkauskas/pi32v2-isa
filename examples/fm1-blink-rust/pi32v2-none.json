@@ -1,0 +1,23 @@
+{
+  "arch": "pi32v2",
+  "llvm-target": "pi32v2",
+  "cpu": "ac791n",
+  "data-layout": "e-m:e-p:32:32-i1:32-i64:32-f64:32-n8:16:32-a:0:32-S32",
+  "target-pointer-width": 32,
+  "max-atomic-width": 32,
+  "atomic-cas": true,
+  "panic-strategy": "abort",
+  "relocation-model": "static",
+  "linker": "ld.lld",
+  "linker-flavor": "gnu-lld",
+  "executables": true,
+  "emit-debug-gdb-scripts": false,
+  "eh-frame-header": false,
+  "crt-objects-fallback": "false",
+  "metadata": {
+    "description": "JieLi pi32v2 (AC791N), bare metal, through the pi32v2-llvm fork",
+    "host_tools": false,
+    "std": false,
+    "tier": 3
+  }
+}
