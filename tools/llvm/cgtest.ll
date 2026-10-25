@@ -212,3 +212,46 @@ a: ret i32 100
 b: ret i32 -200
 c: ret i32 70000
 d: ret i32 9 }
+
+; variadic: the unused argument registers continue the stack arguments
+define i32 @vsum(i32 %n, ...) nounwind noinline {
+entry:
+  %ap = alloca ptr
+  call void @llvm.va_start(ptr %ap)
+  br label %head
+head:
+  %i = phi i32 [ 0, %entry ], [ %i1, %body ]
+  %s = phi i32 [ 0, %entry ], [ %s1, %body ]
+  %c = icmp slt i32 %i, %n
+  br i1 %c, label %body, label %done
+body:
+  %v = va_arg ptr %ap, i32
+  %k = add i32 %i, 1
+  %w = mul i32 %v, %k
+  %s1 = add i32 %s, %w
+  %i1 = add i32 %i, 1
+  br label %head
+done:
+  call void @llvm.va_end(ptr %ap)
+  ret i32 %s }
+define i32 @t_vsum(i32 %x, i32 %y) nounwind {
+  %a = call i32 (i32, ...) @vsum(i32 6, i32 %x, i32 2, i32 3, i32 4, i32 %y, i32 6)
+  %b = call i32 (i32, ...) @vsum(i32 2, i32 %y, i32 %x)
+  %r = add i32 %a, %b
+  ret i32 %r }
+; a 64-bit value through ... : split between r3 and the stack
+define i64 @v64(i32 %a, i32 %b, i32 %c, ...) nounwind noinline {
+  %ap = alloca ptr
+  call void @llvm.va_start(ptr %ap)
+  %v = va_arg ptr %ap, i64
+  call void @llvm.va_end(ptr %ap)
+  ret i64 %v }
+define i64 @t_v64(i32 %lo, i32 %hi) nounwind {
+  %l = zext i32 %lo to i64
+  %h = zext i32 %hi to i64
+  %hs = shl i64 %h, 32
+  %v = or i64 %hs, %l
+  %r = call i64 (i32, i32, i32, ...) @v64(i32 1, i32 2, i32 3, i64 %v)
+  ret i64 %r }
+declare void @llvm.va_start(ptr)
+declare void @llvm.va_end(ptr)

@@ -111,6 +111,12 @@ def tests():
         out.append(("t_shl64", [a & M, a >> 32], r & M, r >> 32))
     for x, r in ((0, 100), (1, -200), (7, 70000), (3, 9), (-1, 9)):
         out.append(("t_switch", [x], r))
+    def vsum(*v):
+        return sum(x * (k + 1) for k, x in enumerate(v))
+    for x, y in ((10, 20), (-5, 7)):
+        out.append(("t_vsum", [x, y], vsum(x, 2, 3, 4, y, 6) + vsum(y, x)))
+    for lo, hi in ((0x11111111, 0x22222222), (M, 0x80000000)):
+        out.append(("t_v64", [lo, hi], lo, hi))
     return [(f, [v & M for v in args] + [0] * (4 - len(args)), e & M, (rest[0] & M) if rest else None)
             for f, args, e, *rest in out]
 
