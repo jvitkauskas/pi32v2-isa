@@ -90,8 +90,51 @@ class CPU:
             self.cache[pc] = got
         return got
 
+    def effect(self, insn, raw, pc, size, R):
+        """The model's result for one instruction at pc on registers R (not applied)."""
+        op = check.operands(insn, raw)
+        model = self.models.get(insn.id)
+        if model is None:
+            raise RuntimeError(f"{pc:#x}: {insn.id} has no model")
+        disp = op.get(branch_field(insn)) if branch_field(insn) else None
+        tgt = pc + size + disp if disp is not None else None
+        st = State(self, pc, size, tgt)
+        if check.takes_state(model):
+            return model(list(R), self.flags, op, st), op, tgt
+        w, fl = model(list(R), self.flags, op)
+        return {"regs": w, "flags": fl}, op, tgt
+
+    def pair(self, insn, raw, size):
+        """`A #` then B (hw/fm1-2026-10-24-v3): B reads the registers as they were before A; when both write a
+        register, A's result stays, except that a half A writes merges with what B loaded."""
+        from semantics.v3 import half_mask
+        base = self.tab.by_id(insn.id[:-2]) if insn.id.endswith(".p") else insn
+        a_res, _, _ = self.effect(base, raw, self.pc, size, self.R)
+        b_insn, b_raw, b_size = self.decode(self.pc + size)
+        b_res, b_op, b_tgt = self.effect(b_insn, b_raw, self.pc + size, b_size, self.R)
+        regs = dict(b_res.get("regs", {}))
+        mask = half_mask(codec.format(insn, raw))
+        for r, v in a_res.get("regs", {}).items():
+            if mask is not None and r in regs:
+                v = (regs[r] & ~mask) | (v & mask)
+            regs[r] = v
+        res = dict(b_res)
+        res["regs"] = regs
+        res["flags"] = a_res.get("flags", b_res.get("flags"))
+        return res, b_insn, b_op, b_tgt, self.pc + size + b_size
+
     def step(self):
         insn, raw, size = self.decode(self.pc)
+        if insn.id.endswith(".p"):
+            res, b_insn, b_op, tgt, end = self.pair(insn, raw, size)
+            before = list(self.R)
+            self.apply(res)
+            if b_insn.id.startswith("pop.pc"):
+                self.pc = self.mem_word(self.sp - 4) & 0xFFFFFFFE
+            else:
+                self.pc = end
+            self.steps += 1
+            return
         op = check.operands(insn, raw)
         before = list(self.R)
         model = self.models.get(insn.id)
@@ -128,6 +171,20 @@ class CPU:
         else:
             self.pc = end
         self.steps += 1
+
+    def mem_word(self, a):
+        return int.from_bytes(self.mem.read(a & M, 4), "little")
+
+    def apply(self, res):
+        for r, v in res.get("regs", {}).items():
+            self.R[r] = v & M
+        if res.get("flags") is not None:
+            self.flags = res["flags"] & 0xF
+        for a, v in res.get("mem", {}).items():
+            a = int(a, 16) if isinstance(a, str) else a
+            self.mem.write(a, struct.pack("<I", v & M))
+        self.sp = res.get("sp", self.sp) & M
+        self.rets = res.get("rets", self.rets) & M
 
     def call(self, address, args, limit=2_000_000):
         self.R[:len(args)] = [a & M for a in args]
