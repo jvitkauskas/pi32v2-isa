@@ -11,11 +11,17 @@ what the hardware runs showed for the arithmetic ones (docs/COMPILER.md) and saf
 ALU = """add.rrr.l sub.rrr.l and.rrr or.rrr xor.rrr lsl.rrr lsr.rrr asr.rrr lsl.rri.l lsr.rri.l asr.rri.l mul.rrr
 div.u.rrr div.s.rrr add.s14.rri and.modimm.rri or.modimm.rri xor.modimm.rri sub.modimm.rri add.modimm.rri
 rsub.modimm.rri mul.u.prr mul.s.prr""".split()
-MOVES = "mov.rr li.s16 li.u32 li.modimm add.r_sp_i.l".split()
+MOVES = "mov.rr mov.pair li.s16 li.u32 li.modimm add.r_sp_i.l".split()
 LOADS = "ld.w.l ld.bu.l ld.bs.l ld.hu.l ld.hs.l ld.w.sp.l ld.bu.sp.l ld.bs.sp.l ld.hu.sp.l ld.hs.sp.l".split()
 STORES = "st.w.l st.b.l st.h.l st.w.sp.l st.b.sp.l st.h.sp.l".split()
-BRANCHES = [f"{c}.rr{l}" for c in ("beq", "bne", "bge", "blt", "bgt", "ble", "bges", "blts", "bgts", "bles")
-            for l in ("", ".l")]
+BRANCHES = [f"{c}.{k}{l}" for c in ("beq", "bne", "bge", "blt", "bgt", "ble", "bges", "blts", "bgts", "bles")
+            for k in ("rr", "ri") for l in ("", ".l")]
+# float compares (iff): the ten conditions the hardware runs confirmed, in both lengths (bfne, bfueq, bfuno and
+# bford reset the unit, docs/ISA.md); psr is unchanged
+BRANCHES += [f"bf{c}.rr{l}" for c in ("eq", "une", "uge", "lt", "ugt", "le", "ge", "ult", "gt", "ule")
+             for l in ("", ".l")]
+# float arithmetic and conversions in general registers: psr survives (hardware runs)
+FLOAT = "add.f.rrr sub.f.rrr mul.f.rrr div.f.rrr itof.rr utof.rr ftoi.trunc.rr ftou.trunc.rr".split()
 
 
 def flags():
@@ -25,9 +31,11 @@ def flags():
         out[i] = ["let hasSideEffects = 0;", "let Defs = [PSR];"]
     out["addc.rrr"] = ["let hasSideEffects = 0;", "let Defs = [PSR];", "let Uses = [PSR];"]
     out["subc.rrr"] = ["let hasSideEffects = 0;", "let Defs = [PSR];", "let Uses = [PSR];"]
+    for i in FLOAT:
+        out[i] = ["let hasSideEffects = 0;"]
     for i in MOVES:
         out[i] = ["let hasSideEffects = 0;", "let isMoveImm = 1;" if i.startswith("li.") else
-                  "let isMoveReg = 1;" if i == "mov.rr" else "let Uses = [SP];"]
+                  "let isMoveReg = 1;" if i.startswith("mov.") else "let Uses = [SP];"]
     out["li.s16"] += ["let isReMaterializable = 1;", "let isAsCheapAsAMove = 1;"]
     for i in LOADS:
         out[i] = ["let hasSideEffects = 0;", "let mayLoad = 1;"] + (["let Uses = [SP];"] if ".sp." in i else [])

@@ -300,6 +300,7 @@ def main():
     p.add_argument("--opt", default="2")
     p.add_argument("--cases", type=int, default=40)
     p.add_argument("--only-jieli", action="store_true")
+    p.add_argument("--mcpu", default=oracle.CPU, help="the LLVM build's -mcpu (default: JieLi's, r3: hardware float)")
     p.add_argument("--builtins", type=Path, action="append", default=[],
                    help="libraries linked into the LLVM build: libclang_rt.builtins and libpi32v2 for pi32v2 "
                         "(tools/llvm/build_builtins.sh); repeatable")
@@ -322,7 +323,7 @@ def main():
         builds["jieli"] = link(jobj, d)
         if not a.only_jieli:
             lobj = Path(d) / "llvm.o"
-            code, err = run([str(a.bin / "clang"), "--target=pi32v2", f"-O{a.opt}", "-c",
+            code, err = run([str(a.bin / "clang"), "--target=pi32v2", f"-mcpu={a.mcpu}", f"-O{a.opt}", "-c",
                              str(HERE / "ctest.c"), "-o", str(lobj)])
             if code:
                 raise SystemExit(f"clang failed: {err.decode()[:2000]}")

@@ -144,3 +144,9 @@ int g_atomic(int a, int b) {
   __atomic_fetch_or(&shared, 0x100, __ATOMIC_SEQ_CST);
   return shared ^ r ^ __atomic_load_n(&shared, __ATOMIC_SEQ_CST);
 }
+
+/* tail calls: a call whose result is returned becomes a goto (in the LLVM build) */
+__attribute__((noinline)) static int tailee(int a, int b) { return a * 3 - b; }
+int f_tail(int a, int b) { return b > 0 ? tailee(a, b) : tailee(b ^ a, a); }
+__attribute__((noinline)) static i64 tailee64(int a, int b) { return (i64)a * b; }
+i64 l_tail(int a, int b) { return tailee64(a + 1, b); }
