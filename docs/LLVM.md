@@ -1,7 +1,8 @@
 # LLVM backend
 
-An LLVM target for pi32v2 (`-triple=pi32v2`), on LLVM 23.1.4, in a fork of llvm-project (branch `pi32v2`,
-not published yet). Its instruction descriptions and assembler tables are generated from this repo's table
+An LLVM target for pi32v2 (`-triple=pi32v2`), on LLVM 23.1.4, in a fork of llvm-project: branch `pi32v2` of
+[jvitkauskas/pi32v2-llvm](https://github.com/jvitkauskas/pi32v2-llvm) (private for now). Its first commit is the
+unmodified llvmorg-23.1.4 tree (upstream's history is not in it); the target's commits follow. Its instruction descriptions and assembler tables are generated from this repo's table
 and assembler by `tools/llvm/`, so the table stays the one source. This page says what exists, how it is built
 and how it is checked.
 
@@ -25,7 +26,7 @@ and how it is checked.
 ## Building
 
 ```sh
-git clone --depth 1 --branch llvmorg-23.1.4 https://github.com/llvm/llvm-project.git   # then the pi32v2 branch
+git clone --branch pi32v2 https://github.com/jvitkauskas/pi32v2-llvm.git LLVM
 python3 tools/llvm/gen_td.py LLVM/llvm/lib/Target/PI32V2 --tests LLVM/llvm/test/MC   # after a table change
 cmake -G Ninja LLVM/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON \
       -DLLVM_TARGETS_TO_BUILD="" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=PI32V2
