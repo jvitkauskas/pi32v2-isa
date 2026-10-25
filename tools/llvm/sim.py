@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+"""A small pi32v2 simulator built on the instruction models fitted to the FM-1 (tools/hwtest/semantics), for
+testing compiled code without the unit.
+
+    python3 tools/llvm/sim.py OUTDIR            # the tests of cgtest.py build OUTDIR, run in the simulator
+
+Each instruction is decoded with the table (pi32v2isa.codec) and its effect on registers, flags, sp, rets and
+memory is the model's, the same models that agree with every hardware result in hw/. Control flow is the
+simulator's own: a branch or call goes to the end of the instruction plus its displacement, call.r and goto.r to
+the register, rts to rets, a pop into pc to the popped word. A form without a model stops the run.
+"""
+import json
+import struct
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools" / "hwtest"))
+from pi32v2isa import codec, table  # noqa: E402
+from pi32v2isa.oracle import read_exec  # noqa: E402
+import check  # noqa: E402
+
+M = 0xFFFFFFFF
+RETURN = 0x01C70000          # where a test call returns to: stops the run (survives rets' bits 26..1)
+STACK_TOP = 0x01C7B000
+
+
+class Memory:
+    def __init__(self):
+        self.pages = {}
+
+    def _page(self, a):
+        p = self.pages.get(a >> 12)
+        if p is None:
+            p = self.pages[a >> 12] = bytearray(4096)
+        return p
+
+    def read(self, a, n):
+        return bytes(self._page(a + k)[(a + k) & 0xFFF] for k in range(n))
+
+    def write(self, a, data):
+        for k, b in enumerate(data):
+            self._page(a + k)[(a + k) & 0xFFF] = b
+
+
+class State:
+    """What a model of a format-2 case gets (check.State), backed by the whole memory."""
+
+    def __init__(self, cpu, pc, size, tgt):
+        self.sp, self.rets, self.stub, self.end, self.tgt = cpu.sp, cpu.rets, pc, pc + size, tgt
+        self.taken = 0xFFFFFFFF          # never a real return address: pops report the word themselves
+        self.scratch, self.batch, self.rec = 0, "sim", {"text": ""}
+        self.mem = cpu.mem
+
+    def load(self, address, size=4):
+        return int.from_bytes(self.mem.read(address & M, size), "little")
+
+
+class CPU:
+    def __init__(self):
+        self.tab = table.load()
+        self.models = check.load_models()
+        self.mem = Memory()
+        self.R = [0] * 16
+        self.flags = 0
+        self.sp = STACK_TOP
+        self.rets = 0
+        self.pc = 0
+        self.steps = 0
+        self.cache = {}
+
+    def load_elf(self, data):
+        exe = read_exec(data)
+        for s in exe["sections"]:
+            if s["flags"] & 2 and s["addr"]:                 # allocated: at its address
+                body = s["data"] if s["type"] == 1 else bytes(s.get("size", len(s["data"])))
+                self.mem.write(s["addr"], body)
+        return {name: value for name, value, *_ in exe["symbols"] if name}
+
+    def decode(self, pc):
+        got = self.cache.get(pc)
+        if got is None:
+            got = codec.decode(self.tab, self.mem.read(pc, 6))
+            if got is None:
+                raise RuntimeError(f"{pc:#x}: no instruction decodes here")
+            self.cache[pc] = got
+        return got
+
+    def step(self):
+        insn, raw, size = self.decode(self.pc)
+        op = check.operands(insn, raw)
+        before = list(self.R)
+        model = self.models.get(insn.id)
+        if model is None:
+            raise RuntimeError(f"{self.pc:#x}: {insn.id} has no model")
+        disp = op.get(branch_field(insn)) if branch_field(insn) else None
+        tgt = self.pc + size + disp if disp is not None else None
+        st = State(self, self.pc, size, tgt)
+        if check.takes_state(model):
+            res = model(list(self.R), self.flags, op, st)
+        else:
+            w, fl = model(list(self.R), self.flags, op)
+            res = {"regs": w, "flags": fl}
+        for r, v in res.get("regs", {}).items():
+            self.R[r] = v & M
+        if res.get("flags") is not None:
+            self.flags = res["flags"] & 0xF
+        for a, v in res.get("mem", {}).items():
+            a = int(a, 16) if isinstance(a, str) else a
+            self.mem.write(a, struct.pack("<I", v & M))
+        old_sp = self.sp
+        self.sp = res.get("sp", self.sp) & M
+        self.rets = res.get("rets", self.rets) & M
+        end = self.pc + size
+        i = insn.id
+        if i in ("rts",):
+            self.pc = self.rets
+        elif i.startswith("pop.pc"):
+            self.pc = st.load(self.sp - 4) & 0xFFFFFFFE
+        elif i in ("call.r", "goto.r"):
+            self.pc = before[op["x"]]
+        elif tgt is not None:
+            self.pc = tgt if res.get("exit") else end
+        else:
+            self.pc = end
+        self.steps += 1
+
+    def call(self, address, args, limit=2_000_000):
+        self.R[:len(args)] = [a & M for a in args]
+        self.rets = RETURN
+        self.pc = address
+        start = self.steps
+        while self.pc != RETURN:
+            self.step()
+            if self.steps - start > limit:
+                raise RuntimeError("too many steps")
+        return self.R[0], self.R[1]
+
+
+def branch_field(insn, _cache={}):
+    if insn.id not in _cache:
+        from pi32v2isa import asm
+        _cache[insn.id] = asm.branch_field(insn)
+    return _cache[insn.id]
+
+
+def main():
+    out = Path(sys.argv[1])
+    meta = json.loads((out / "tests.json").read_text())
+    cpu = CPU()
+    syms = cpu.load_elf((out / "cgtest.elf").read_bytes())
+    bad = 0
+    for f, args, e0, e1 in meta["tests"]:
+        try:
+            r0, r1 = cpu.call(syms[f], args)
+        except RuntimeError as e:
+            bad += 1
+            print(f"STOP {f}({', '.join(hex(a) for a in args)}): {e}")
+            continue
+        if r0 != e0 or (e1 is not None and r1 != e1):
+            bad += 1
+            print(f"FAIL {f}({', '.join(hex(a) for a in args)}): got {r0:#x} {r1:#x}, expected {e0:#x}"
+                  + (f" {e1:#x}" if e1 is not None else ""))
+    n = len(meta["tests"])
+    print(f"{n - bad}/{n} tests give the expected result in the simulator ({cpu.steps} instructions)")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
