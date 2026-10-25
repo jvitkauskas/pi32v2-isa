@@ -126,7 +126,7 @@ MODELS["rev16.rr"] = _nz("r", lambda R, o: ((R[o["s"]] & 0x00FF00FF) << 8) | ((R
 MODELS["revs.rr"] = _nz("r", lambda R, o: s32((((R[o["s"]] & 0xFF) << 8) | ((R[o["s"]] >> 8) & 0xFF)) ^ 0x8000) - 0x8000)
 
 
-# constants and moves: no flags
+# constants and moves leave the flags alone (hw/fm1-2026-10-24: every case)
 def _half_ins(old, new, high):
     return (old & 0x0000FFFF) | (new << 16) if high else (old & 0xFFFF0000) | new
 
@@ -134,25 +134,25 @@ def _half_ins(old, new, high):
 @model("li.byte")
 def li_byte(R, fl, o):
     sh = 8 * o["raw"]["n"]
-    return {o["r"]: (R[o["r"]] & ~(0xFF << sh)) | (o["m"] << sh)}, None
+    return {o["r"]: (R[o["r"]] & ~(0xFF << sh)) | (o["m"] << sh)}, fl
 
 
 @model("li.half")
 def li_half(R, fl, o):
-    return {o["r"]: _half_ins(R[o["r"]], o["m"], o["raw"]["n"])}, None
+    return {o["r"]: _half_ins(R[o["r"]], o["m"], o["raw"]["n"])}, fl
 
 
 for _i in ("li.modimm", "li.neg5", "li.s16", "li.u32"):
-    MODELS[_i] = lambda R, fl, o: ({o["r"]: o["n"]}, None)
-MODELS["li.zero_hi"] = lambda R, fl, o: ({o["r"]: 0}, None)
-MODELS["li.zero_pair"] = lambda R, fl, o: ({o["p"]: 0, o["p"] + 1: 0}, None)
-MODELS["mov.pair"] = lambda R, fl, o: ({o["d"]: R[o["s"]], o["d"] + 1: R[o["s"] + 1]}, None)
+    MODELS[_i] = lambda R, fl, o: ({o["r"]: o["n"]}, fl)
+MODELS["li.zero_hi"] = lambda R, fl, o: ({o["r"]: 0}, fl)
+MODELS["li.zero_pair"] = lambda R, fl, o: ({o["p"]: 0, o["p"] + 1: 0}, fl)
+MODELS["mov.pair"] = lambda R, fl, o: ({o["d"]: R[o["s"]], o["d"] + 1: R[o["s"] + 1]}, fl)
 
 
 @model("mov.half")
 def mov_half(R, fl, o):
     src = (R[o["s"]] >> 16 if o["raw"]["m"] else R[o["s"]]) & 0xFFFF
-    return {o["r"]: _half_ins(R[o["r"]], src, o["raw"]["n"])}, None
+    return {o["r"]: _half_ins(R[o["r"]], src, o["raw"]["n"])}, fl
 
 
 # bit fields: p is the lowest bit, l the width; a field that would pass bit 31 is cut off there

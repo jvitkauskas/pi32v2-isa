@@ -72,6 +72,7 @@ class CPU:
         self.pc = 0
         self.steps = 0
         self.cache = {}
+        self.after_then = None      # inside an if-block's then-part: [instructions left, else-part to skip]
 
     def load_elf(self, data):
         exe = read_exec(data)
@@ -123,8 +124,51 @@ class CPU:
         res["flags"] = a_res.get("flags", b_res.get("flags"))
         return res, b_insn, b_op, b_tgt, self.pc + size + b_size
 
+    def skip(self, n):
+        """Move pc past n instructions (a parallel pair is one)."""
+        for _ in range(n):
+            insn, _, size = self.decode(self.pc)
+            self.pc += size
+            if insn.id.endswith(".p"):
+                self.pc += self.decode(self.pc)[2]
+
     def step(self):
         insn, raw, size = self.decode(self.pc)
+        if self.after_then is not None:
+            self.after_then[0] -= 1
+        if insn.block:
+            # if (...) { then } else { else }: t and e instructions after the opener (hw/fm1-2026-10-24-v3)
+            op = check.operands(insn, raw)
+            res, _, _ = self.effect(insn, raw, self.pc, size, self.R)
+            taken = res.get("regs", {}).get(8) == 0x100
+            self.pc += size
+            self.steps += 1
+            if taken:
+                self.after_then = [op["t"], op["e"]]
+            else:
+                self.skip(op["t"])
+            self.check_then()
+            return
+        if insn.id in ("tbb", "tbh"):
+            # a table of bytes (halfwords) after the instruction, the register its byte offset (tbh: the case
+            # number times 2): target = the instruction's end + 2 * entry (docs/COMPILER.md)
+            op = check.operands(insn, raw)
+            end = self.pc + size
+            w = 1 if insn.id == "tbb" else 2
+            entry = int.from_bytes(self.mem.read(end + self.R[op["x"]], w), "little")
+            self.pc = end + 2 * entry
+            self.steps += 1
+            return
+        self.step1(insn, raw, size)
+        self.check_then()
+
+    def check_then(self):
+        if self.after_then is not None and self.after_then[0] <= 0:
+            e = self.after_then[1]
+            self.after_then = None
+            self.skip(e)
+
+    def step1(self, insn, raw, size):
         if insn.id.endswith(".p"):
             res, b_insn, b_op, tgt, end = self.pair(insn, raw, size)
             before = list(self.R)

@@ -170,7 +170,7 @@ def main():
         builds["jieli"] = link(jobj, d)
         if not a.only_jieli:
             lobj = Path(d) / "llvm.o"
-            code, err = run([str(a.bin / "clang"), "--target=pi32v2", "-mcpu=r3", f"-O{a.opt}", "-c",
+            code, err = run([str(a.bin / "clang"), "--target=pi32v2", f"-O{a.opt}", "-c",
                              str(HERE / "ctest.c"), "-o", str(lobj)])
             if code:
                 raise SystemExit(f"clang failed: {err.decode()[:2000]}")
