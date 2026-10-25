@@ -132,3 +132,15 @@ i64 l_udiv(int a, int b, int c, int d) {
   u64 x = (u64)(u32)a << 32 | (u32)b, y = (u64)(u32)c << 32 | (u32)d;
   return y ? (i64)(x / y ^ x % y) : 3;
 }
+
+/* atomics: __sync_* calls (the LLVM build links tools/llvm/runtime/sync.c) */
+static int shared;
+int g_atomic(int a, int b) {
+  shared = a;
+  int r = __atomic_fetch_add(&shared, b, __ATOMIC_SEQ_CST);
+  r ^= __atomic_exchange_n(&shared, r + 1, __ATOMIC_SEQ_CST);
+  int expect = r + 1;
+  __atomic_compare_exchange_n(&shared, &expect, b, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+  __atomic_fetch_or(&shared, 0x100, __ATOMIC_SEQ_CST);
+  return shared ^ r ^ __atomic_load_n(&shared, __ATOMIC_SEQ_CST);
+}

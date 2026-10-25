@@ -20,8 +20,12 @@ and how it is checked.
 | `clang`: target info (type sizes, `__PI32V2__`), ABI (aggregates by pointer, sret), driver (`-mcpu`, links with `ld.lld`) | done |
 | Runtime: compiler-rt's builtins (soft float, 64-bit multiply/divide), `tools/llvm/build_builtins.sh` | done: all 120 generic sources |
 | Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | done: the corpus below |
+| Interrupt handlers (`__attribute__((interrupt))`: `psr`, `reti` and the registers used saved, `rti`) | done: on the FM-1 |
+| Atomics: loads, stores, fences inline; read-modify-write as `__sync_*` calls (`tools/llvm/runtime`, interrupts masked) | done, single core |
+| Inline assembly (`r` constraint), a frame pointer (`r7`) for dynamic stack | done |
+| An FM-1 application from this toolchain alone (`examples/fm1-blink`) | done: on the FM-1 |
 | `llvm-objdump` branch targets as symbols | not yet |
-| Atomics, `byval`, a frame pointer for dynamic stack, `-mcpu` features in code generation | not yet |
+| `byval`, `-mcpu` features in code generation, atomics across both cores | not yet |
 
 ## Building
 
@@ -102,13 +106,24 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
   in Python; `build` makes a test application for the FM-1 (`tools/hwtest/app/cgdriver.S`), `check` compares its
   results. `sim.py OUTDIR` runs the same calls in the simulator: all 255 agree (2026-10-25).
 - `tools/llvm/ctest.py`: `ctest.c` compiled by JieLi's clang and by ours, both run in the simulator on the same
-  inputs, the results compared (integer, 64-bit, float and double code; the LLVM build linked with the builtins
-  above, JieLi's with the helpers done in Python). As of 2026-10-25 they agree on all 1728 calls at -O0, -O1, -O2
-  and -Os. The test found one code generator bug: the popping return did not keep the result registers live.
+  inputs, the results compared (integer, 64-bit, float and double code, atomics; the LLVM build linked with the
+  builtins above and `libpi32v2.a`, JieLi's with the helpers done in Python). As of 2026-10-25 they agree on all
+  2112 calls at -O0, -O1, -O2 and -Os. The test found one code generator bug: the popping return did not keep the result registers live.
 - `ld.lld` and this repo's linker (which matches JieLi's, [LINKER.md](LINKER.md)) give the same loaded bytes for 97
   of 100 links of the corpus compiled by JieLi's clang; the other three differ in where they place an orphan
   section or merged constants, not in relocations. The test application built with clang, its integrated
   assembler and `ld.lld` alone is byte-identical to the one built with this repo's assembler and linker.
+- On the FM-1: the IR test (255/255, `hw/fm1-2026-10-25-cgtest`), `ctest.c` (960/960, `hw/fm1-2026-10-25-ctest`)
+  and `examples/fm1-blink`, a timer interrupt handled in C at 100 Hz (`hw/fm1-2026-10-25-blink`).
 
-Code size: on `ctest.c` at -O2 the LLVM target's `.text` is 1208 bytes, JieLi's 842 (-Os: 1094 and 826). JieLi's
+## The runtime
+
+`tools/llvm/build_builtins.sh BIN LLVM OUT` builds `libclang_rt.builtins-pi32v2.a` (compiler-rt's generic builtins)
+and `libpi32v2.a` from `tools/llvm/runtime`: the `__sync_*` functions of 1, 2 and 4 bytes, each with interrupts
+masked (`cli`/`sti` of the previous state). That is atomic on one core only; with the second core running they
+need a hardware lock, not done yet.
+
+## Code size
+
+On `ctest.c` (before `g_atomic` was added) at -O2 the LLVM target's `.text` is 1208 bytes, JieLi's 842 (-Os: 1094 and 826). JieLi's
 compiler uses forms this one does not yet: compare-with-constant branches, 16-bit push/pop lists, `if` blocks.

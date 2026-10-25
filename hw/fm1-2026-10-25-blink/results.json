@@ -1,0 +1,14 @@
+{
+  "application": "examples/fm1-blink, -DAUTOTEST, clang --target=pi32v2 -O2 and ld.lld (LLVM fork 0684755c0)",
+  "app.bin bytes": 872,
+  "record at 0x01C7C000": {
+    "magic": "BLNK",
+    "ticks": 300,
+    "timer4 crystal counts over the ticks": 72001202,
+    "expected": 72000000,
+    "port A outputs": "0x10"
+  },
+  "ticks variable (.bss, 0x01C40000)": 300,
+  "returned to download mode": true,
+  "firmware restored": "backup fm1-20261025-095307 (sha256 identical to fm1-20261025-091527), flash CRC32 verified, unit back as FM-1"
+}

@@ -116,6 +116,8 @@ def helper(name, cpu):
             q = (abs(x) // abs(y)) * (1 if (x < 0) == (y < 0) else -1) if y else 0
             r = x - q * y
         ret64(q if "div" in name else r)
+    elif name.startswith("__sync_"):
+        sync_helper(name, cpu)
     elif name in FLOAT_HELPERS:
         float_helper(name, cpu)
     elif name == "memcpy" or name == "memmove":
@@ -124,6 +126,30 @@ def helper(name, cpu):
         cpu.mem.write(R[0], bytes([R[1] & 0xFF]) * R[2])
     else:
         raise RuntimeError(f"library helper {name} is not in the simulator")
+
+
+def sync_helper(name, cpu):
+    """GCC's __sync_* functions on one core: old value back, the new one stored."""
+    R = cpu.R
+    m = re.fullmatch(r"__sync_(\w+)_([124])", name)
+    if not m:
+        raise RuntimeError(f"library helper {name} is not in the simulator")
+    op, n = m.group(1), int(m.group(2))
+    mask, bits = (1 << 8 * n) - 1, 8 * n
+    old = int.from_bytes(cpu.mem.read(R[0], n), "little")
+    v = R[1] & mask
+
+    def s(x):
+        return x - (1 << bits) if x >> (bits - 1) else x
+    if op == "val_compare_and_swap":
+        new = R[2] & mask if old == v else old
+    else:
+        new = {"fetch_and_add": old + v, "fetch_and_sub": old - v, "fetch_and_and": old & v,
+               "fetch_and_or": old | v, "fetch_and_xor": old ^ v, "fetch_and_nand": ~(old & v),
+               "fetch_and_max": old if s(old) > s(v) else v, "fetch_and_min": old if s(old) < s(v) else v,
+               "fetch_and_umax": max(old, v), "fetch_and_umin": min(old, v), "lock_test_and_set": v}[op]
+    cpu.mem.write(R[0], (new & mask).to_bytes(n, "little"))
+    R[0] = old
 
 
 def _f(bits):
@@ -274,7 +300,9 @@ def main():
     p.add_argument("--opt", default="2")
     p.add_argument("--cases", type=int, default=40)
     p.add_argument("--only-jieli", action="store_true")
-    p.add_argument("--builtins", type=Path, help="libclang_rt.builtins for pi32v2, linked into the LLVM build")
+    p.add_argument("--builtins", type=Path, action="append", default=[],
+                   help="libraries linked into the LLVM build: libclang_rt.builtins and libpi32v2 for pi32v2 "
+                        "(tools/llvm/build_builtins.sh); repeatable")
     a = p.parse_args()
     global BIN
     BIN = a.bin
@@ -298,7 +326,7 @@ def main():
                              str(HERE / "ctest.c"), "-o", str(lobj)])
             if code:
                 raise SystemExit(f"clang failed: {err.decode()[:2000]}")
-            builds["llvm"] = link(lobj, d, [a.builtins] if a.builtins else [])
+            builds["llvm"] = link(lobj, d, a.builtins)
         got = {}
         for k, (e, stubs) in builds.items():
             got[k], steps = results(e, stubs, tests)

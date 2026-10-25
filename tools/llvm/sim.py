@@ -72,6 +72,7 @@ class CPU:
         self.pc = 0
         self.steps = 0
         self.cache = {}
+        self.icfg = 0x02050500      # as m-bootloader leaves it (hw/fm1-2026-10-24-app)
         self.after_then = None      # inside an if-block's then-part: [instructions left, else-part to skip]
 
     def load_elf(self, data):
@@ -166,6 +167,21 @@ class CPU:
             entry = int.from_bytes(self.mem.read(end + self.R[op["x"]], w), "little")
             self.pc = end + 2 * entry
             self.steps += 1
+            return
+        if insn.id in ("cli", "sti", "cli.r", "sti.r"):
+            # icfg bit 9 is the interrupt mask cli/sti change (hw/fm1-2026-10-24-v4, isa/pi32v2.toml)
+            op = check.operands(insn, raw)
+            if insn.id == "cli.r":
+                self.R[op["x"]] = self.icfg
+            if insn.id.startswith("cli"):
+                self.icfg &= ~0x200
+            elif insn.id == "sti":
+                self.icfg |= 0x200
+            else:
+                self.icfg = (self.icfg & ~0x200) | (self.R[op["x"]] & 0x200)
+            self.pc += size
+            self.steps += 1
+            self.check_then()
             return
         if insn.id in ("push.srl", "pop.srl", "push.srmask", "pop.srmask"):
             self.special_list(insn, raw, size)

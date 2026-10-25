@@ -21,6 +21,11 @@ OUT.bin (app.bin) and OUT.elf are written beside the package.
 
 With --plugin ADDR everything is linked at ADDR instead, as a flat RAM image for m-flasher run-ram (a download-mode
 plug-in, its entry at the first byte), and no package is made.
+
+    python3 tools/hwtest/fm1app.py OUT.fwsc --from-elf APP.elf
+
+packs an application linked elsewhere (ld.lld with its own script, examples/fm1-blink): app.bin is what its loadable
+segments put in the flash window (by load address, so .data's initial values too), the entry the ELF's.
 """
 import argparse
 import struct
@@ -161,16 +166,43 @@ SECTIONS {{
     return bytes(image), base, syms, elf
 
 
+def from_elf(path):
+    """app.bin and the entry of a linked application: its PT_LOAD contents by physical (load) address."""
+    data = Path(path).read_bytes()
+    exe = read_exec(data)
+    base, image = FLASH_WINDOW + APP_AT, bytearray()
+    for typ, off, vaddr, paddr, filesz, memsz, flags, align in exe["phdrs"]:
+        if typ != 1 or not filesz:
+            continue
+        if not (base <= paddr and paddr + filesz <= base + APP_MAX):
+            raise SystemExit(f"{path}: a segment loads at {paddr:#x}..{paddr + filesz:#x}, outside the flash window")
+        at = paddr - base
+        image[len(image):at] = b"\xFF" * max(0, at - len(image))
+        image[at:at + filesz] = data[off:off + filesz]
+    if exe["entry"] != base:
+        raise SystemExit(f"{path}: entry {exe['entry']:#x}, not {base:#x}")
+    return bytes(image), base
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("out", type=Path)
-    p.add_argument("sources", type=Path, nargs="+")
+    p.add_argument("sources", type=Path, nargs="*")
     p.add_argument("--key", type=lambda s: int(s, 0), default=0x980F, help="the unit's chip key (FM-1: 0x980F)")
     p.add_argument("--identity", default="FM-1_901", help="the package identity M-Flasher checks the model of")
     p.add_argument("--ram", type=lambda s: int(s, 0), default=0x01C78000, help="where .data and .bss go")
     p.add_argument("--plugin", type=lambda s: int(s, 0), help="a download-mode RAM image linked at this address")
+    p.add_argument("--from-elf", type=Path, help="pack this linked application instead of building one")
     a = p.parse_args()
     out = a.out
+    if a.from_elf:
+        image, entry = from_elf(a.from_elf)
+        out.with_suffix(".bin").write_bytes(image)
+        out.write_bytes(package(flash_image(image, entry, a.key), a.identity))
+        print(f"{out}: app.bin {len(image)} bytes, entry {entry:#x}, key {a.key:#06x}, identity {a.identity}")
+        return
+    if not a.sources:
+        p.error("no sources")
     image, entry, syms, elf = build(a.sources, out.parent, a.ram, a.plugin)
     out.with_suffix(".bin").write_bytes(image)
     elf.replace(out.with_suffix(".elf"))

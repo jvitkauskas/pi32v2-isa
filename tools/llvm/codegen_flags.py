@@ -48,6 +48,8 @@ def flags():
     out["push.rmask"] = ["let mayStore = 1;", "let Uses = [SP];", "let Defs = [SP];"]
     out["pop.rmask"] = ["let mayLoad = 1;", "let Uses = [SP];", "let Defs = [SP];"]
     out["pop.rets_rmask"] = ["let mayLoad = 1;", "let Uses = [SP];", "let Defs = [SP, RETS];"]
+    out["push.srl"] = ["let mayStore = 1;", "let Uses = [SP, PSR, RETI];", "let Defs = [SP];"]
+    out["pop.srl"] = ["let mayLoad = 1;", "let Uses = [SP];", "let Defs = [SP, PSR, RETI];"]
     out["add.sp_i.l"] = ["let Uses = [SP];", "let Defs = [SP];"]
     out["add.sp_i"] = ["let Uses = [SP];", "let Defs = [SP];"]
     return out
