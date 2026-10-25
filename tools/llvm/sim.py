@@ -73,6 +73,7 @@ class CPU:
         self.steps = 0
         self.cache = {}
         self.icfg = 0x02050500      # as m-bootloader leaves it (hw/fm1-2026-10-24-app)
+        self.seq = 0                # the instruction after the current one, if it does not jump
         self.after_then = None      # inside an if-block's then-part: [instructions left, else-part to skip]
 
     def load_elf(self, data):
@@ -143,8 +144,15 @@ class CPU:
 
     def step(self):
         insn, raw, size = self.decode(self.pc)
+        self.seq = self.pc + size                  # where the next instruction is when this one does not jump
+        if insn.id.endswith(".p"):
+            self.seq += self.decode(self.seq)[2]
         if self.after_then is not None:
             self.after_then[0] -= 1
+            # a call returns to the instruction after it, which then runs whatever the condition was: JieLi's
+            # compiler puts a call only last in a block (an else part after it broke Felucca on the FM-1)
+            if insn.id.startswith(("call", "callns")) and (self.after_then[0] > 0 or self.after_then[1] > 0):
+                raise RuntimeError(f"{self.pc:#x}: a call before the end of an if block")
         if insn.block:
             # if (...) { then } else { else }: t and e instructions after the opener (hw/fm1-2026-10-24-v3)
             op = check.operands(insn, raw)
@@ -228,9 +236,15 @@ class CPU:
         self.steps += 1
 
     def check_then(self):
-        if self.after_then is not None and self.after_then[0] <= 0:
-            e = self.after_then[1]
-            self.after_then = None
+        if self.after_then is None:
+            return
+        if self.after_then[0] > 0:
+            if self.pc != self.seq:
+                raise RuntimeError(f"{self.pc:#x}: a jump out of an if block before its last instruction")
+            return
+        e = self.after_then[1]
+        self.after_then = None
+        if self.pc == self.seq:                    # (a goto or a return at the end has left the block)
             self.skip(e)
 
     def step1(self, insn, raw, size):

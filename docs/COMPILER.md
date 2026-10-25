@@ -217,6 +217,13 @@ word is `01`, `41`, `81`, `c1`; with an else part it is `11`, `51`, `31`, `b1`, 
 part ("if-clause out of range") and 4 in an else part. An instruction counts once however many words it has (a 48-bit `li.u32` is one). The
 `}` takes no bytes.
 
+A call in a block is always the block's last instruction (36 of 36 in JieLi's build of Felucca, then part
+without an else part, or else part): it returns to the instruction after it, which then runs as if outside the
+block. On the FM-1 a call followed by an else part (`if (n) { ...; call f } else { n = 0 }`, from the LLVM
+target before the fix) ran the else part after every call: Felucca's panel set-up went wrong (`hw/fm1-2026-10-25-felucca`).
+A `goto` in a block is always the 32-bit `goto.l`, even when the 16-bit form would reach (`goto -66` inside a
+block, `goto.s` reaches +-2040 outside); 16-bit `rts` and `goto rN` do appear in blocks.
+
 ### Parallel issue (`#`)
 
 The compiler does emit the parallel forms, at -O2 and at -O0: `A #` immediately followed by `B` is issued as one

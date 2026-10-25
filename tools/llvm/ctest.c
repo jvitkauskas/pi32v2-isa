@@ -207,3 +207,27 @@ int g_negconst(int a, int b) {
   float y = fx(b) / -2.0f;
   return fbits(x + y) ^ note_ra(a) ^ (int)retaddr_seen;
 }
+
+/* a call in a conditional block (Felucca's panel set-up on the FM-1): a table of commands, each with its count of
+   data bytes, the data sent only when there is some. The call must end the block: it returns to the instruction
+   after it, which then runs whatever the condition was */
+unsigned char cmdtab[] = {0x01, 0, 0x11, 0, 0x3A, 1, 0x55, 0x36, 1, 0x00, 0x21, 0, 0x2A, 4, 0, 0, 0, 239};
+static unsigned sent;
+__attribute__((noinline)) static void send(const unsigned char *p, unsigned n) {
+  while (n--)
+    sent = sent * 31u + *p++;
+}
+__attribute__((noinline)) static void cmd(unsigned c) { sent = sent * 7u + c; }
+int f_tablecall(int a, int b) {
+  unsigned r, n;
+  sent = (unsigned)a;
+  for (r = 0; r < sizeof cmdtab; r += 2u + (n & 255u)) {
+    n = cmdtab[r + 1u];
+    if ((unsigned)b >> (r & 31) & 1)
+      continue;
+    cmd(cmdtab[r]);
+    if (n)
+      send(cmdtab + r + 2u, n);
+  }
+  return (int)sent;
+}
