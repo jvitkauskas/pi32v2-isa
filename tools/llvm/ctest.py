@@ -29,7 +29,7 @@ import sim  # noqa: E402
 
 M = 0xFFFFFFFF
 M64 = (1 << 64) - 1
-STUBS = 0x03000000
+STUBS = 0x02100000          # library helpers: within reach of call.l from .text
 EDGE = [0, 1, 2, 3, 7, 15, 16, 31, 32, 63, 100, 255, 256, 0x7FFF, 0x8000, 0xFFFF, 0x10000, 0x7FFFFFFF,
         0x80000000, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFF00, 0x12345678, 0x87654321]
 
