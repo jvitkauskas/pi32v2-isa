@@ -15,9 +15,9 @@ and how it is checked.
 | Code emitter, fixups, branch relaxation, ELF writer | done |
 | Assembler (`llvm-mc`), JieLi's syntax and choices | done: the corpus below |
 | Code generator (`llc`): integers, memory, branches, calls, frames, varargs | first version: the tests below |
-| Shorter forms, as JieLi's assembler picks them (`MCTargetDesc/PI32V2CompressGen.inc`) | written, not yet built |
-| `clang`: target info (type sizes, `__PI32V2__`), ABI (aggregates by pointer, sret) | written, building |
-| Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | written, not yet built |
+| Shorter forms, as JieLi's assembler picks them (`MCTargetDesc/PI32V2CompressGen.inc`) | done: -25% code |
+| `clang`: target info (type sizes, `__PI32V2__`), ABI (aggregates by pointer, sret) | done: `-mcpu` not yet in the driver |
+| Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | done: the corpus below |
 | `llvm-objdump` branch targets as symbols | not yet |
 | Floating point (library calls), atomics, `byval`, a frame pointer for dynamic stack | not yet |
 
@@ -100,4 +100,12 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
   in Python; `build` makes a test application for the FM-1 (`tools/hwtest/app/cgdriver.S`), `check` compares its
   results. `sim.py OUTDIR` runs the same calls in the simulator: all 255 agree (2026-10-25).
 - `tools/llvm/ctest.py`: `ctest.c` compiled by JieLi's clang and by ours, both run in the simulator on the same
-  inputs, the results compared. JieLi's build runs completely (748 calls).
+  inputs, the results compared. As of 2026-10-25 they agree on every call at -O0, -O1, -O2, -O3 and -Os (1188 to
+  1408 calls each).
+- `ld.lld` and this repo's linker (which matches JieLi's, [LINKER.md](LINKER.md)) give the same loaded bytes for 97
+  of 100 links of the corpus compiled by JieLi's clang; the other three differ in where they place an orphan
+  section or merged constants, not in relocations. The test application built with clang, its integrated
+  assembler and `ld.lld` alone is byte-identical to the one built with this repo's assembler and linker.
+
+Code size: on `ctest.c` at -O2 the LLVM target's `.text` is 1208 bytes, JieLi's 842 (-Os: 1094 and 826). JieLi's
+compiler uses forms this one does not yet: compare-with-constant branches, 16-bit push/pop lists, `if` blocks.
