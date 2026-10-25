@@ -23,6 +23,8 @@ BRANCHES = [f"{c}.{k}{l}" for c in ("beq", "bne", "bge", "blt", "bgt", "ble", "b
 # bford reset the unit, docs/ISA.md); psr is unchanged
 BRANCHES += [f"bf{c}.rr{l}" for c in ("eq", "une", "uge", "lt", "ugt", "le", "ge", "ult", "gt", "ule")
              for l in ("", ".l")]
+# bit tests: if ((r & bit) == 0) goto, the register and long modified-immediate forms; psr unchanged
+BRANCHES += "beq.and.ri bne.and.ri beq.and.rr bne.and.rr beq.and.modimm.ri.l bne.and.modimm.ri.l".split()
 # float arithmetic and conversions in general registers: psr survives (hardware runs)
 FLOAT = "add.f.rrr sub.f.rrr mul.f.rrr div.f.rrr itof.rr utof.rr ftoi.trunc.rr ftou.trunc.rr".split()
 
