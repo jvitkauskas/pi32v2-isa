@@ -1,0 +1,16 @@
+{
+  "compiler": "LLVM fork 87cd98aa5, clang --target=pi32v2 -mcpu=r3",
+  "runs": {
+    "-O2": {
+      "calls": 1140,
+      "agree": 1140,
+      "record": "HWCG, calls finished 1140, running 0"
+    },
+    "-Os": {
+      "calls": 1140,
+      "agree": 1140,
+      "record": "HWCG, calls finished 1140, running 0"
+    }
+  },
+  "firmware restored": "backup fm1-20261025-110631 (sha256 identical to the earlier backups), flash CRC32 verified, unit back as FM-1"
+}

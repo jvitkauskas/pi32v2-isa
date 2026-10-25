@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT-0
 """Run tools/llvm/ctest.c, compiled by the LLVM target's clang, on the FM-1.
 
-    python3 tools/llvm/chwtest.py LLVM_BIN_DIR BUILTINS.a OUTDIR [--opt 2] [--cases 6]
+    python3 tools/llvm/chwtest.py LLVM_BIN_DIR BUILTINS.a OUTDIR [--opt 2] [--mcpu r3] [--lib LIB.a]... [--cases 6]
 
 Compiles ctest.c, links it with compiler-rt's builtins (tools/llvm/build_builtins.sh) and the test application
 tools/hwtest/app/cgdriver.S, and writes OUTDIR/cgtest.fwsc and OUTDIR/tests.json as cgtest.py does, so that the
@@ -35,12 +35,14 @@ def main():
     p.add_argument("outdir", type=Path)
     p.add_argument("--opt", default="2")
     p.add_argument("--cases", type=int, default=6)
+    p.add_argument("--mcpu", default="r3", help="r3: the hardware float, as ctest.py compares it")
+    p.add_argument("--lib", type=Path, action="append", default=[], help="another library (libpi32v2.a); repeatable")
     a = p.parse_args()
     out = a.outdir
     out.mkdir(parents=True, exist_ok=True)
     obj = out / "ctest.o"
-    subprocess.run([str(a.bin / "clang"), "--target=pi32v2", f"-O{a.opt}", "-c", str(HERE / "ctest.c"), "-o",
-                    str(obj)], check=True)
+    subprocess.run([str(a.bin / "clang"), "--target=pi32v2", f"-mcpu={a.mcpu}", f"-O{a.opt}", "-c",
+                    str(HERE / "ctest.c"), "-o", str(obj)], check=True)
     rng = random.Random(1)
     calls = []
     for name, n, wide in ctest.functions():
@@ -51,8 +53,8 @@ def main():
     lines += ["\t.bss", "\t.p2align 2", "\t.globl cg_results", f"cg_results:\t.space {8 * len(calls)}", ""]
     table = out / "cgtable.S"
     table.write_text("\n".join(lines))
-    image, entry, syms, elf = fm1app.build([HERE.parent / "hwtest" / "app" / "cgdriver.S", table, obj, a.builtins],
-                                           out, 0x01C78000)
+    image, entry, syms, elf = fm1app.build([HERE.parent / "hwtest" / "app" / "cgdriver.S", table, obj, *a.lib,
+                                            a.builtins], out, 0x01C78000)
     (out / "cgtest.bin").write_bytes(image)
     elf.replace(out / "cgtest.elf")
     # the expected results: the same calls in the simulator, on this very image

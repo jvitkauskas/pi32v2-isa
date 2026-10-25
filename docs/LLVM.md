@@ -117,8 +117,9 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
   of 100 links of the corpus compiled by JieLi's clang; the other three differ in where they place an orphan
   section or merged constants, not in relocations. The test application built with clang, its integrated
   assembler and `ld.lld` alone is byte-identical to the one built with this repo's assembler and linker.
-- On the FM-1: the IR test (255/255, `hw/fm1-2026-10-25-cgtest`), `ctest.c` (960/960, `hw/fm1-2026-10-25-ctest`)
-  and `examples/fm1-blink`, a timer interrupt handled in C at 100 Hz (`hw/fm1-2026-10-25-blink`).
+- On the FM-1: the IR test (255/255, `hw/fm1-2026-10-25-cgtest`), `ctest.c` (960/960, `hw/fm1-2026-10-25-ctest`;
+  after the code-size work with hardware float, 1140/1140 at -O2 and at -Os, `hw/fm1-2026-10-25-ctest2`) and
+  `examples/fm1-blink`, a timer interrupt handled in C at 100 Hz (`hw/fm1-2026-10-25-blink`).
 
 ## The runtime
 
