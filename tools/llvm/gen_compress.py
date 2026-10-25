@@ -110,10 +110,11 @@ def fit_expr(key):
         _, width, scale, add, zero_as, _ = key
         return (f"fitsNum(V, {int(kind == 'simm')}, {width}, {scale}, {add}, {int(zero_as is not None)}, "
                 f"{zero_as or 0})")
+    # a 32-bit value either way: code generation sign-extends (~8 is -9, 1 << 31 is -2147483648)
     if kind == "bit":
-        return "(uint64_t(V) >> 32) == 0 && llvm::isPowerOf2_32(uint32_t(V))"
+        return "(llvm::isUInt<32>(V) || llvm::isInt<32>(V)) && llvm::isPowerOf2_32(uint32_t(V))"
     if kind == "invbit":
-        return "(uint64_t(V) >> 32) == 0 && llvm::isPowerOf2_32(~uint32_t(V))"
+        return "(llvm::isUInt<32>(V) || llvm::isInt<32>(V)) && llvm::isPowerOf2_32(~uint32_t(V))"
     if kind == "modimm":
         return f"PI32V2::modImmRawFor(uint32_t(V){' ^ 0xFFFFFFFFu' if key[1] else ''}).has_value()"
     return "true"

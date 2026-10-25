@@ -64,6 +64,12 @@ after any change to `isa/pi32v2.toml` or `pi32v2isa/asm.py`.
 - **Branches** start in their smallest form and grow by relaxation to the next form that matches the same line,
   until the target is in reach or the form has a relocation. A branch to any non-weak label of the same section
   (global or not, an alias of one too) is resolved by the assembler, as JieLi's is.
+- **Calls between functions** are therefore 2 bytes only within one section: the 2-byte call has no relocation,
+  and the linker does not shrink calls. The fork's `ld.lld` generates LTO code without function sections: the
+  functions share `.text`, except those that may be dead (library functions LTO keeps for code generation that
+  nothing in the program uses, such as `__udivsi3` or an unused `memmove`, and local functions only they use),
+  which keep a section each for `--gc-sections`. `-Wl,-mllvm,-pi32v2-shared-text=false` gives every function its
+  section again. m-bootloader 1.2: 53 more 2-byte calls on the SMK-37.
 - **Blocks.** `rep ... {` takes its body's length in bytes from labels around the body; `if (...) {` takes the
   instruction counts of its two parts from symbols set at the closing `}`. Both are resolved by the assembler.
 
