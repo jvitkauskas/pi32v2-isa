@@ -24,11 +24,11 @@ and how it is checked.
 | Runtime: compiler-rt's builtins (soft float, 64-bit multiply/divide), `tools/llvm/build_builtins.sh` | done: all 120 generic sources |
 | Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | done: the corpus below |
 | Interrupt handlers (`__attribute__((interrupt))`: `psr`, `reti` and the registers used saved, `rti`) | done: on the FM-1 |
-| Atomics: loads, stores, fences inline; read-modify-write as `__sync_*` calls (`tools/llvm/runtime`, interrupts masked) | done, single core |
+| Atomics: loads, stores, fences inline; read-modify-write as `__sync_*` calls (`tools/llvm/runtime`: interrupts masked, the core lock held) | done |
 | Inline assembly (`r` constraint), a frame pointer (`r7`) for dynamic stack | done |
 | An FM-1 application from this toolchain alone (`examples/fm1-blink`) | done: on the FM-1 |
 | `llvm-objdump` branch targets as symbols | not yet |
-| `byval`, `-mcpu` features in code generation, atomics across both cores | not yet |
+| `byval`, 64-bit atomics | not yet |
 
 ## Building
 
@@ -123,9 +123,12 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
 ## The runtime
 
 `tools/llvm/build_builtins.sh BIN LLVM OUT` builds `libclang_rt.builtins-pi32v2.a` (compiler-rt's generic builtins)
-and `libpi32v2.a` from `tools/llvm/runtime`: the `__sync_*` functions of 1, 2 and 4 bytes, each with interrupts
-masked (`cli`/`sti` of the previous state). That is atomic on one core only; with the second core running they
-need a hardware lock, not done yet.
+and `libpi32v2.a` from `tools/llvm/runtime`: the `__sync_*` functions of 1, 2 and 4 bytes. Each runs with this
+core's interrupts masked (`cli`/`sti` of the previous state) and holding the shared core lock (`lockset`, csync,
+the access, csync, `lockclr`), which excludes the other core (hw/fm1-2026-10-24-app4: two cores' 1000 locked
+increments each gave 2000), as the AC79 SDK's critical sections take it. The lock is taken once per call, never
+nested (its recursion is not known). Aligned loads and stores of up to a word are single accesses, fences
+`csync`. The two-core use of the runtime itself has not been run on the FM-1 yet.
 
 ## Code size
 

@@ -183,6 +183,12 @@ class CPU:
             self.steps += 1
             self.check_then()
             return
+        if insn.id in ("lockset", "lockclr"):
+            # the shared core lock (hw/fm1-2026-10-24-app4): one core here, so it is always free
+            self.pc += size
+            self.steps += 1
+            self.check_then()
+            return
         if insn.id in ("push.srl", "pop.srl", "push.srmask", "pop.srmask"):
             self.special_list(insn, raw, size)
             self.check_then()
