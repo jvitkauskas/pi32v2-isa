@@ -1,5 +1,5 @@
 {
-  "application": "examples/fm1-blink, -DAUTOTEST, clang --target=pi32v2 -O2 and ld.lld (LLVM fork 0684755c0)",
+  "application": "examples/fm1-blink, -DAUTOTEST, clang --target=pi32v2 -O2 and ld.lld (LLVM fork 808aba01f)",
   "app.bin bytes": 872,
   "record at 0x01C7C000": {
     "magic": "BLNK",

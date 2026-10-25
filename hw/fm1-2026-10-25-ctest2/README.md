@@ -1,7 +1,7 @@
 # FM-1, 2026-10-25: C from the size-tuned code generator, hardware float
 
 `tools/llvm/ctest.c` as the second C run on this unit ([the first](../fm1-2026-10-25-ctest/README.md)), now compiled
-by the code generator after the code-size work (LLVM fork 87cd98aa5, [LLVM.md](../../docs/LLVM.md), code size)
+by the code generator after the code-size work (LLVM fork fedec8084, [LLVM.md](../../docs/LLVM.md), code size)
 with `-mcpu=r3`, at -O2 and at -Os: 1140 calls each (the functions of the first run plus atomics, tail calls,
 single-instruction idioms, JieLi's builtins and pointer walks), linked with compiler-rt's builtins and the
 `__sync_*` runtime, both compiled by the same clang.

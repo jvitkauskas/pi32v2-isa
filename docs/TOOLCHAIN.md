@@ -7,7 +7,7 @@ Nothing of JieLi's is needed to build firmware with it.
 ## Building the package
 
 ```sh
-git clone --branch pi32v2 https://github.com/jvitkauskas/pi32v2-llvm.git LLVM    # private for now
+git clone --branch pi32v2 https://github.com/jvitkauskas/pi32v2-llvm.git LLVM
 tools/llvm/package.sh LLVM BUILD /opt/pi32v2-llvm       # about an hour on 8 cores; PREFIX.tar.xz next to PREFIX
 ```
 

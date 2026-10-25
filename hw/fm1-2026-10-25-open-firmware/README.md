@@ -1,6 +1,6 @@
 # FM-1 and SMK-37, 2026-10-25: m-bootloader and fm1-base from the LLVM toolchain
 
-Both built with the LLVM fork's clang and ld.lld (fork c8c7aa380), nothing of JieLi's in the build: a
+Both built with the LLVM fork's clang and ld.lld (fork 3a1abdee0), nothing of JieLi's in the build: a
 JieLi-toolchain-shaped directory whose `pi32v2/bin/clang` and `ld` are ours (JieLi-only flags and LTO-plugin
 options dropped), `common/bin/objcopy` llvm-objcopy and `common/bin/objdump` this repo's (the builds parse its
 text).
