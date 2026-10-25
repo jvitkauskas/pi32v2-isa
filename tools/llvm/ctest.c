@@ -194,3 +194,16 @@ int f_walk(int a, int b) {
     s = s * 3 + *pw++ + *ph++ - *pc++;
   return s;
 }
+
+/* negative float constants, and the return address read in a branch (both were compiler errors once) */
+static unsigned retaddr_seen;
+__attribute__((noinline)) static int note_ra(int a) {
+  if (a & 1)
+    retaddr_seen = (unsigned)__builtin_return_address(0) != 0;
+  return a;
+}
+int g_negconst(int a, int b) {
+  float x = fx(a) * -0.5f - 3.25f;
+  float y = fx(b) / -2.0f;
+  return fbits(x + y) ^ note_ra(a) ^ (int)retaddr_seen;
+}
