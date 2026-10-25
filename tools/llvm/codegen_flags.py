@@ -10,7 +10,7 @@ what the hardware runs showed for the arithmetic ones (docs/COMPILER.md) and saf
 
 ALU = """add.rrr.l sub.rrr.l and.rrr or.rrr xor.rrr lsl.rrr lsr.rrr asr.rrr lsl.rri.l lsr.rri.l asr.rri.l mul.rrr
 div.u.rrr div.s.rrr add.s14.rri and.modimm.rri or.modimm.rri xor.modimm.rri sub.modimm.rri add.modimm.rri
-rsub.modimm.rri mul.u.prr mul.s.prr""".split()
+rsub.modimm.rri mul.u.prr mul.s.prr mul.modimm.rri clz.rr rev8.rr ror.rri ror.rrr uextra.rrii sextra.rrii""".split()
 MOVES = "mov.rr mov.pair li.s16 li.u32 li.modimm add.r_sp_i.l".split()
 LOADS = "ld.w.l ld.bu.l ld.bs.l ld.hu.l ld.hs.l ld.w.sp.l ld.bu.sp.l ld.bs.sp.l ld.hu.sp.l ld.hs.sp.l".split()
 STORES = "st.w.l st.b.l st.h.l st.w.sp.l st.b.sp.l st.h.sp.l".split()

@@ -150,3 +150,15 @@ __attribute__((noinline)) static int tailee(int a, int b) { return a * 3 - b; }
 int f_tail(int a, int b) { return b > 0 ? tailee(a, b) : tailee(b ^ a, a); }
 __attribute__((noinline)) static i64 tailee64(int a, int b) { return (i64)a * b; }
 i64 l_tail(int a, int b) { return tailee64(a + 1, b); }
+
+/* single-instruction idioms: clz, byte swap, rotates, bit fields, multiply by a constant */
+int f_idioms(int a, int b) {
+  u32 x = a, n = b & 31;
+  u32 r = (u32)__builtin_clz(x | 1) + __builtin_bswap32(x) * 3;
+  r ^= (x >> n) | (x << ((32 - n) & 31));
+  r += (x >> 5) | (x << 27);
+  r ^= (x >> 8) & 0xf;
+  r += (u32)((a << 20) >> 28) + (u32)((a << 3) >> 3);
+  r ^= (u32)(signed char)b + (u32)(short)a * 7 + (unsigned char)(a >> 3) + (unsigned short)b;
+  return (int)(r * 1000 + (x & 0x3ff));
+}

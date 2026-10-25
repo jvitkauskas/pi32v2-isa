@@ -32,7 +32,8 @@ def generate(tab, records, ops, header):
     for name, (insn, fixed, fields) in records.items():
         record_of[(insn.id, tuple(sorted(fixed.items())))] = name
     rules = {}           # (long record, short record, eq) -> program
-    used = codegen_flags.ALU + codegen_flags.MOVES + codegen_flags.LOADS + codegen_flags.STORES
+    used = (codegen_flags.ALU + codegen_flags.MOVES + codegen_flags.LOADS + codegen_flags.STORES +
+            codegen_flags.BRANCHES + ["add.sp_i.l"])
     for lid in used:
         L = tab.by_id(lid)
         lrec = record_of.get((lid, ()))
