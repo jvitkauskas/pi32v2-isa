@@ -112,7 +112,7 @@ def build(sources, workdir, ram, plugin=None):
     """Assemble and link; (image bytes, entry address, symbols, ELF path)."""
     objs = []
     for src in sources:
-        if Path(src).suffix == ".o":            # an object made elsewhere (llc, clang)
+        if Path(src).suffix in (".o", ".a"):    # an object or archive made elsewhere (llc, clang, llvm-ar)
             objs.append(str(src))
             continue
         text = subprocess.run(["cpp", "-P", str(src)], capture_output=True, text=True, check=True).stdout
