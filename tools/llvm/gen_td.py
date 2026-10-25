@@ -85,8 +85,8 @@ class Operands:
         if f.kind in REG_CLASS:
             return Operand(f.kind, f.kind, REG_CLASS[f.kind], None)
         target = branch_field(insn) == name
-        if target:
-            key = ("target", width, f.scale)
+        if target:              # a branch's target is a basic block, a call's a symbol
+            key = ("target", width, f.scale, "call" if re.search(r"\bcall\b", insn.syntax) else "goto")
         elif f.kind in ("uimm", "simm"):
             key = (f.kind, width, f.scale, f.add, f.zero_as, plus)
         elif f.kind == "modimm":
@@ -113,7 +113,8 @@ class Operands:
         name = re.sub(r"[^A-Za-z0-9_]", "_", name)
         dec, enc, prt = f"decode{name}", f"get{name}Value", f"print{name}"
         optype = "OPERAND_PCREL" if kind == "target" else "OPERAND_IMMEDIATE"
-        td = (f"def {name} : Operand<i32> {{\n  let DecoderMethod = \"{dec}\";\n  let EncoderMethod = \"{enc}\";\n"
+        vt = "OtherVT" if kind == "target" and key[3] == "goto" else "i32"
+        td = (f"def {name} : Operand<{vt}> {{\n  let DecoderMethod = \"{dec}\";\n  let EncoderMethod = \"{enc}\";\n"
               f"  let PrintMethod = \"{prt}\";\n  let OperandType = \"{optype}\";\n}}\n")
         return Operand(kind, key, name, td, dec, enc, prt)
 
@@ -129,7 +130,7 @@ class Operands:
         head = (f"static DecodeStatus {op.decoder}(MCInst &Inst, uint64_t Raw, uint64_t Address,\n"
                 f"    const MCDisassembler *Decoder) {{\n")
         if k[0] == "target":
-            _, width, scale = k
+            _, width, scale, _ = k
             body = (f"  int64_t V = SignExtend64<{width}>(Raw) * {scale};\n"
                     f"  Inst.addOperand(MCOperand::createImm(V));\n")
         elif k[0] in ("uimm", "simm"):
@@ -162,7 +163,7 @@ class Operands:
                 f"    SmallVectorImpl<MCFixup> &Fixups, const MCSubtargetInfo &STI) const {{\n"
                 f"  const MCOperand &MO = MI.getOperand(OpNo);\n")
         if k[0] == "target":
-            _, width, scale = k
+            _, width, scale, _ = k
             body = (f"  if (!MO.isImm())\n    return encodeTargetExpr(MI, OpNo, {width}, Fixups, STI);\n"
                     f"  return (uint64_t)(MO.getImm() / {scale}) & ((1ull << {width}) - 1);\n")
         elif k[0] in ("uimm", "simm"):
@@ -333,6 +334,11 @@ class Fixups:
 
 
 def generate(tab):
+    import codegen_flags
+    cg_flags = codegen_flags.flags()
+    unknown = set(cg_flags) - {i.id for i in tab.insns}
+    if unknown:
+        raise SystemExit(f"codegen_flags.py names no table form: {sorted(unknown)}")
     ops = Operands()
     fixups = Fixups()
     records = {}         # record name -> (insn, {enum field: value}, [field per MCInst operand])
@@ -407,7 +413,9 @@ def generate(tab):
                 rec.append(f"  let Predicates = [{', '.join(preds)}];")
             if insn.asm_no_syntax:
                 rec.append("  let AsmVariantName = \"disasm\";")
-            if branch_field(insn):
+            if insn.id in cg_flags:
+                rec += [f"  {x}" for x in cg_flags[insn.id]]
+            elif branch_field(insn):
                 rec.append("  let isBranch = 1;" if "goto" in insn.syntax else "  let isCall = 1;")
             rec.append("}")
             td.append("\n".join(rec) + "\n")

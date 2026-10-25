@@ -59,7 +59,7 @@ after any change to `isa/pi32v2.toml` or `pi32v2isa/asm.py`.
 ```sh
 python3 tools/llvm/check_mc.py BUILD/bin     # every example: disassembly, re-encoding, assembly
 python3 tools/llvm/check_objs.py BUILD/bin   # objects of tests/asm and of the C corpus (JieLi's clang -S)
-ninja check-llvm-mc-pi32v2                   # or: llvm-lit llvm/test/MC/PI32V2 llvm/test/MC/Disassembler/PI32V2
+llvm-lit LLVM/llvm/test/MC/PI32V2 LLVM/llvm/test/MC/Disassembler/PI32V2
 ```
 
 As of 2026-10-25: all 6093 examples disassemble to their text and re-encode to their bytes; all 5478 assemble

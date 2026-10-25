@@ -6,7 +6,7 @@
     python3 tools/hwtest/fm1app.py OUT.fwsc SOURCE.S... [--key 0x980F] [--identity FM-1_901] [--ram 0x01C78000]
     python3 tools/hwtest/fm1app.py OUT.bin SOURCE.S... --plugin 0x01C20000
 
-The sources are run through cpp, assembled and linked: .entry, .text and .rodata at 0x02000120 (the flash
+The sources are run through cpp, assembled (objects, .o, are taken as they are) and linked: .entry, .text and .rodata at 0x02000120 (the flash
 window, where m-bootloader calls the application), .data and .bss in RAM from --ram (the application copies
 .data itself: app_data_load, app_data_start, app_data_end; nothing does it for it). The entry symbol is the
 first byte of .entry.
@@ -112,6 +112,9 @@ def build(sources, workdir, ram, plugin=None):
     """Assemble and link; (image bytes, entry address, symbols, ELF path)."""
     objs = []
     for src in sources:
+        if Path(src).suffix == ".o":            # an object made elsewhere (llc, clang)
+            objs.append(str(src))
+            continue
         text = subprocess.run(["cpp", "-P", str(src)], capture_output=True, text=True, check=True).stdout
         o = Path(workdir) / (Path(src).stem + ".o")
         o.write_bytes(asm.assemble_source(text, str(src)))
