@@ -110,7 +110,12 @@ class CPU:
         register, A's result stays, except that a half A writes merges with what B loaded."""
         from semantics.v3 import half_mask
         base = self.tab.by_id(insn.id[:-2]) if insn.id.endswith(".p") else insn
-        a_res, _, _ = self.effect(base, raw, self.pc, size, self.R)
+        braw = raw
+        if base is not insn:        # the twin's fields, by their place in the syntax, are the base form's
+            tp, bp = table.placeholders(insn.syntax), table.placeholders(base.syntax)
+            braw = dict(zip(bp, (raw[f] for f in tp)))
+            braw.update({f: raw[f] for f in base.fields if f not in braw and f in raw})
+        a_res, _, _ = self.effect(base, braw, self.pc, size, self.R)
         b_insn, b_raw, b_size = self.decode(self.pc + size)
         b_res, b_op, b_tgt = self.effect(b_insn, b_raw, self.pc + size, b_size, self.R)
         regs = dict(b_res.get("regs", {}))
