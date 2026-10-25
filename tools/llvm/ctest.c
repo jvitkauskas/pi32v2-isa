@@ -171,3 +171,26 @@ int f_builtins(int a, int b) {
   int lo = a < b ? a : b, hi = (unsigned)a > (unsigned)b ? a : b;
   return r + lo * 5 + hi;
 }
+
+/* pointer walks: post-increment loads and stores of words, halves and signed bytes */
+static int wbuf[24];
+static short hbuf[24];
+static signed char cbuf[24];
+int f_walk(int a, int b) {
+  int n = (a & 15) + 8;
+  int *w = wbuf;
+  short *h = hbuf;
+  signed char *c = cbuf;
+  for (int i = 0; i < n; i++) {
+    *w++ = a + i * b;
+    *h++ = (short)(a ^ (i << 9));
+    *c++ = (signed char)(b + i * 37);
+  }
+  int s = 0;
+  const int *pw = wbuf;
+  const short *ph = hbuf;
+  const signed char *pc = cbuf;
+  for (int i = 0; i < n; i++)
+    s = s * 3 + *pw++ + *ph++ - *pc++;
+  return s;
+}

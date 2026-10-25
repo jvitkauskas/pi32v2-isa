@@ -13,8 +13,10 @@ div.u.rrr div.s.rrr add.s14.rri and.modimm.rri or.modimm.rri xor.modimm.rri sub.
 rsub.modimm.rri mul.u.prr mul.s.prr mul.modimm.rri clz.rr cls.rr rev8.rr smax.rrr smin.rrr umax.rrr umin.rrr ror.rri ror.rrr uextra.rrii sextra.rrii""".split()
 MOVES = "mov.rr mov.pair li.s16 li.u32 li.modimm add.r_sp_i.l".split()
 LOADS = """ld.w.l ld.bu.l ld.bs.l ld.hu.l ld.hs.l ld.w.sp.l ld.bu.sp.l ld.bs.sp.l ld.hu.sp.l ld.hs.sp.l
-ld.w.idx ld.w.idxs ld.hu.idx ld.hs.idx ld.hu.idxs ld.hs.idxs ld.bu.idx ld.bs.idx""".split()
-STORES = "st.w.l st.b.l st.h.l st.w.sp.l st.b.sp.l st.h.sp.l st.w.idx st.w.idxs st.h.idx st.h.idxs st.b.idx".split()
+ld.w.idx ld.w.idxs ld.hu.idx ld.hs.idx ld.hu.idxs ld.hs.idxs ld.bu.idx ld.bs.idx
+ld.w.pin.l ld.hu.pin.l ld.hs.pin.l ld.bu.pin.l ld.bs.pin.l""".split()
+STORES = """st.w.l st.b.l st.h.l st.w.sp.l st.b.sp.l st.h.sp.l st.w.idx st.w.idxs st.h.idx st.h.idxs st.b.idx
+st.w.pin.l st.h.pin.l st.b.pin.l""".split()
 BRANCHES = [f"{c}.{k}{l}" for c in ("beq", "bne", "bge", "blt", "bgt", "ble", "bges", "blts", "bgts", "bles")
             for k in ("rr", "ri") for l in ("", ".l")]
 # float compares (iff): the ten conditions the hardware runs confirmed, in both lengths (bfne, bfueq, bfuno and
