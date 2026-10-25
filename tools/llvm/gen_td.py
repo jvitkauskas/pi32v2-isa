@@ -13,6 +13,8 @@ Writes, into LLVM_TARGET_DIR (llvm/lib/Target/PI32V2 of the LLVM tree):
                            PI32V2_GEN_PRINTER_DECLS, PI32V2_GEN_PRINTERS)
   PI32V2InstrIds.txt       LLVM instruction name -> table id and enum values (for tests and tools)
   AsmParser/PI32V2ParserGen.inc   the assembler's templates (tools/llvm/gen_parser.py)
+  MCTargetDesc/PI32V2CompressGen.inc the shorter form JieLi's assembler would use for a code generator form
+                           (tools/llvm/gen_compress.py)
   MCTargetDesc/PI32V2RelaxGen.inc    branch relaxation: each branch form's next larger form (tools/llvm/gen_parser.py)
   MCTargetDesc/PI32V2FixupsGen.inc   the fixup kinds: where a branch target or a 32-bit constant is in each
                            instruction that can take a symbol, and its ELF relocation (docs/ELF.md section 5)
@@ -478,6 +480,9 @@ def main():
     parser_inc, relax_inc = gen_parser.generate(tab, records, HEADER)
     (a.target_dir / "AsmParser" / "PI32V2ParserGen.inc").write_text(parser_inc)
     (a.target_dir / "MCTargetDesc" / "PI32V2RelaxGen.inc").write_text(relax_inc)
+    import gen_compress
+    (a.target_dir / "MCTargetDesc" / "PI32V2CompressGen.inc").write_text(
+        gen_compress.generate(tab, records, ops, HEADER))
     (a.target_dir / "MCTargetDesc" / "PI32V2FixupsGen.inc").write_text(fix)
     (a.target_dir / "PI32V2InstrGen.td").write_text(td_text)
     (a.target_dir / "PI32V2OperandsGen.inc").write_text(inc)

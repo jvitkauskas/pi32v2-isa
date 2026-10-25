@@ -14,9 +14,12 @@ and how it is checked.
 | Disassembler, printer (JieLi's objdump syntax) | done: every table example |
 | Code emitter, fixups, branch relaxation, ELF writer | done |
 | Assembler (`llvm-mc`), JieLi's syntax and choices | done: the corpus below |
+| Code generator (`llc`): integers, memory, branches, calls, frames, varargs | first version: the tests below |
+| Shorter forms, as JieLi's assembler picks them (`MCTargetDesc/PI32V2CompressGen.inc`) | written, not yet built |
+| `clang`: target info (type sizes, `__PI32V2__`), ABI (aggregates by pointer, sret) | written, building |
+| Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | written, not yet built |
 | `llvm-objdump` branch targets as symbols | not yet |
-| Linker (`ld.lld`) | not yet ([LINKER.md](LINKER.md) has the relocation rules) |
-| Code generator (`llc`, `clang`) | not yet: next |
+| Floating point (library calls), atomics, `byval`, a frame pointer for dynamic stack | not yet |
 
 ## Building
 
@@ -25,7 +28,7 @@ git clone --depth 1 --branch llvmorg-23.1.4 https://github.com/llvm/llvm-project
 python3 tools/llvm/gen_td.py LLVM/llvm/lib/Target/PI32V2 --tests LLVM/llvm/test/MC   # after a table change
 cmake -G Ninja LLVM/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON \
       -DLLVM_TARGETS_TO_BUILD="" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=PI32V2
-ninja llvm-mc llvm-objdump llvm-readobj
+ninja llvm-mc llvm-objdump llvm-readobj llc   # add -DLLVM_ENABLE_PROJECTS="clang;lld" for clang and ld.lld
 ```
 
 The generated files are committed in the LLVM tree, each with a header naming the generator: `PI32V2InstrGen.td`
@@ -74,3 +77,27 @@ to `asm.py`'s bytes; `llvm-mc`'s objects have the same sections, contents, reloc
 - `@` relocation variants (`sym@PI32V2GOT`) are not parsed yet.
 - The object layout (section and symbol order, string table) is LLVM's; the checks compare contents, not layout.
 - `--chip ac791n` warnings (the table's `hw` key) are not given yet; the feature `ac791n` exists for them.
+
+## The code generator
+
+It follows JieLi's C convention ([ABI.md](ABI.md)): arguments are words of one stream, `r0`..`r3` and then at
+`sp`; results in `r0` and `r1`; `r4`..`r15` preserved. A frame is what JieLi's compiler makes: one push of `rets`
+and the saved registers (`[--sp] = {rets, r15-r4}`), `sp += -n`, and the matching pop into `pc`, which returns; a
+function that saves nothing returns with `rts`. Stack slots use the `[sp+n]` forms. A variadic function first
+pushes the argument registers its named arguments left unused, so they continue the stack arguments. Clang passes
+every aggregate as a pointer to a copy and returns one through a hidden pointer in `r0`.
+
+The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
+must know about them: loads, stores, branches, calls, `psr`); the emitter then puts each in the shortest form
+JieLi's assembler would choose for its line. Branches start short and grow by relaxation.
+
+## Testing compiled code
+
+- `tools/llvm/sim.py`: a simulator whose instructions are the models fitted to the FM-1 (`tools/hwtest/semantics`,
+  which agree with every hardware result in `hw/`); control flow is its own, parallel pairs follow the hardware's
+  rules, library helpers are done in Python.
+- `tools/llvm/cgtest.py`: 255 calls of functions in LLVM IR (`cgtest.ll`), compiled by `llc`, with results computed
+  in Python; `build` makes a test application for the FM-1 (`tools/hwtest/app/cgdriver.S`), `check` compares its
+  results. `sim.py OUTDIR` runs the same calls in the simulator: all 255 agree (2026-10-25).
+- `tools/llvm/ctest.py`: `ctest.c` compiled by JieLi's clang and by ours, both run in the simulator on the same
+  inputs, the results compared. JieLi's build runs completely (748 calls).
