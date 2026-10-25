@@ -15,6 +15,7 @@ import os
 import random
 import re
 import signal
+import struct
 import subprocess
 import sys
 import tempfile
@@ -45,7 +46,10 @@ def run(cmd, timeout=120):
     return p.returncode, err
 
 
-def link(obj, workdir):
+BUILTINS = None     # a library of compiler-rt's builtins for the LLVM build (--builtins)
+
+
+def link(obj, workdir, libs=()):
     """obj linked alone at 0x02000000 (data at 0x01C40000); undefined symbols get stub addresses. (ELF bytes,
     {stub address: name})."""
     o = elf.read(Path(obj).read_bytes())
@@ -61,10 +65,27 @@ SECTIONS {
 }
 """)
     out = Path(workdir) / (Path(obj).stem + ".elf")
-    args = ["-T", str(script), str(obj), "-o", str(out)] + [f"--defsym={n}={a:#x}" for a, n in stubs.items()]
+    args = ["-T", str(script), str(obj), *map(str, libs), "-o", str(out)]
+    if libs:                # helpers the library has are not stubs
+        undef = [n for n in undef if n not in library_symbols(libs)]
+        stubs = {STUBS + 16 * k: n for k, n in enumerate(undef)}
+    args += [f"--defsym={n}={a:#x}" for a, n in stubs.items()]
     if ld.main(type("A", (), {"argv": args})()):
         raise SystemExit(f"link of {obj} failed")
     return out.read_bytes(), stubs
+
+
+def library_symbols(libs):
+    """The symbols an archive's members define (llvm-nm)."""
+    out = set()
+    for lib in libs:
+        p = subprocess.run([str(Path(BIN) / "llvm-nm"), "--defined-only", "-g", str(lib)], capture_output=True,
+                           text=True)
+        out |= {ln.split()[-1] for ln in p.stdout.splitlines() if len(ln.split()) == 3}
+    return out
+
+
+BIN = None
 
 
 def helper(name, cpu):
@@ -95,12 +116,112 @@ def helper(name, cpu):
             q = (abs(x) // abs(y)) * (1 if (x < 0) == (y < 0) else -1) if y else 0
             r = x - q * y
         ret64(q if "div" in name else r)
+    elif name in FLOAT_HELPERS:
+        float_helper(name, cpu)
     elif name == "memcpy" or name == "memmove":
         cpu.mem.write(R[0], cpu.mem.read(R[1], R[2]))
     elif name == "memset":
         cpu.mem.write(R[0], bytes([R[1] & 0xFF]) * R[2])
     else:
         raise RuntimeError(f"library helper {name} is not in the simulator")
+
+
+def _f(bits):
+    return struct.unpack("<f", struct.pack("<I", bits & M))[0]
+
+
+def _fb(x):
+    return struct.unpack("<I", struct.pack("<f", x))[0]       # rounds to nearest, ties to even
+
+
+def _d(lo, hi):
+    return struct.unpack("<d", struct.pack("<II", lo & M, hi & M))[0]
+
+
+def _db(x):
+    return struct.unpack("<II", struct.pack("<d", x))
+
+
+def _cmp(name, x, y):
+    """libgcc's comparison helpers: <0, 0 or >0, and the unordered value per helper."""
+    if x != x or y != y:
+        return {"eq": 1, "ne": 1, "lt": 1, "le": 1, "gt": -1, "ge": -1, "unord": 1}[name]
+    if name == "unord":
+        return 0
+    return -1 if x < y else (1 if x > y else 0)
+
+
+def _toint(x, bits, signed):
+    if x != x:
+        return 0
+    v = int(x)                                     # truncates toward zero
+    lo, hi = (-(1 << (bits - 1)), (1 << (bits - 1)) - 1) if signed else (0, (1 << bits) - 1)
+    return max(lo, min(hi, v))
+
+
+FLOAT_HELPERS = set()
+for _op in ("add", "sub", "mul", "div"):
+    FLOAT_HELPERS |= {f"__{_op}sf3", f"__{_op}df3"}
+for _c in ("eq", "ne", "lt", "le", "gt", "ge", "unord"):
+    FLOAT_HELPERS |= {f"__{_c}sf2", f"__{_c}df2"}
+FLOAT_HELPERS |= {"__fixsfsi", "__fixunssfsi", "__fixdfsi", "__fixunsdfsi", "__fixsfdi", "__fixdfdi",
+                  "__fixunssfdi", "__fixunsdfdi", "__floatsisf", "__floatunsisf", "__floatsidf", "__floatunsidf",
+                  "__floatdisf", "__floatdidf", "__floatundisf", "__floatundidf", "__extendsfdf2", "__truncdfsf2"}
+
+
+def float_helper(name, cpu):
+    """IEEE helpers in Python: single precision through double, then rounded (exact for + - * /)."""
+    import operator
+    R = cpu.R
+    ops = {"add": operator.add, "sub": operator.sub, "mul": operator.mul,
+           "div": lambda x, y: x / y if y else (float("nan") if x == 0 or x != x else
+                                               (float("inf") if (x > 0) == (str(y)[0] != "-") else -float("inf")))}
+    m = re.fullmatch(r"__(add|sub|mul|div)(sf|df)3", name)
+    if m:
+        op = ops[m.group(1)]
+        if m.group(2) == "sf":
+            R[0] = _fb(op(_f(R[0]), _f(R[1])))
+        else:
+            R[0], R[1] = _db(op(_d(R[0], R[1]), _d(R[2], R[3])))
+        return
+    m = re.fullmatch(r"__(eq|ne|lt|le|gt|ge|unord)(sf|df)2", name)
+    if m:
+        x, y = (_f(R[0]), _f(R[1])) if m.group(2) == "sf" else (_d(R[0], R[1]), _d(R[2], R[3]))
+        R[0] = _cmp(m.group(1), x, y) & M
+        return
+    m = re.fullmatch(r"__fix(uns)?(sf|df)(si|di)", name)
+    if m:
+        x = _f(R[0]) if m.group(2) == "sf" else _d(R[0], R[1])
+        v = _toint(x, 32 if m.group(3) == "si" else 64, not m.group(1))
+        R[0], R[1] = v & M, (v >> 32) & M
+        return
+    m = re.fullmatch(r"__float(un)?(si|di)(sf|df)", name)
+    if m:
+        v = R[0] if m.group(2) == "si" else R[0] | R[1] << 32
+        bits = 32 if m.group(2) == "si" else 64
+        if not m.group(1) and v >> (bits - 1):
+            v -= 1 << bits
+        if m.group(3) == "sf":
+            from fractions import Fraction
+            R[0] = _fb(float(Fraction(v))) if abs(v) < (1 << 53) else _round_single(v)
+        else:
+            R[0], R[1] = _db(float(v))
+        return
+    if name == "__extendsfdf2":
+        R[0], R[1] = _db(_f(R[0]))
+    elif name == "__truncdfsf2":
+        R[0] = _fb(_d(R[0], R[1]))
+
+
+def _round_single(v):
+    """An integer of more than 53 bits to single precision, rounded once (to nearest, ties to even)."""
+    neg, v = v < 0, abs(v)
+    shift = v.bit_length() - 24
+    q, r = divmod(v, 1 << shift)
+    half = 1 << (shift - 1)
+    if r > half or (r == half and q & 1):
+        q += 1
+    return _fb((-1 if neg else 1) * float(q * (1 << shift)))
 
 
 class StubCPU(sim.CPU):
@@ -121,7 +242,7 @@ def functions():
     """[(name, number of int arguments, returns long long)] from ctest.c."""
     text = (HERE / "ctest.c").read_text()
     out = []
-    for m in re.finditer(r"^(int|i64) ([fl]_\w+)\(([^)]*)\)", text, re.M):
+    for m in re.finditer(r"^(int|i64) ([fgl]_\w+)\(([^)]*)\)", text, re.M):
         args = [a for a in m.group(3).split(",") if a.strip() and a.strip() != "void"]
         out.append((m.group(2), len(args), m.group(1) == "i64"))
     return out
@@ -153,7 +274,10 @@ def main():
     p.add_argument("--opt", default="2")
     p.add_argument("--cases", type=int, default=40)
     p.add_argument("--only-jieli", action="store_true")
+    p.add_argument("--builtins", type=Path, help="libclang_rt.builtins for pi32v2, linked into the LLVM build")
     a = p.parse_args()
+    global BIN
+    BIN = a.bin
     rng = random.Random(1)
     tests = []
     for name, n, wide in functions():
@@ -174,7 +298,7 @@ def main():
                              str(HERE / "ctest.c"), "-o", str(lobj)])
             if code:
                 raise SystemExit(f"clang failed: {err.decode()[:2000]}")
-            builds["llvm"] = link(lobj, d)
+            builds["llvm"] = link(lobj, d, [a.builtins] if a.builtins else [])
         got = {}
         for k, (e, stubs) in builds.items():
             got[k], steps = results(e, stubs, tests)

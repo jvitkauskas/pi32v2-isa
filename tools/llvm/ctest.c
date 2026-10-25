@@ -108,3 +108,27 @@ int l_cmp(int a, int b, int c, int d) {
   i64 x = (i64)a << 32 | (u32)b, y = (i64)c << 32 | (u32)d;
   return (x < y) | (x == y) << 1 | ((u64)x < (u64)y) << 2;
 }
+
+/* floating point and 64-bit multiply/divide: library helpers (compiler-rt's for the LLVM build) */
+static float fx(int a) { return (float)(a >> 6) / 64.0f; }
+static int fbits(float f) { union { float f; int i; } u = {f}; return u.i; }
+int g_fadd(int a, int b) { return fbits(fx(a) + fx(b)); }
+int g_fsub(int a, int b) { return fbits(fx(a) - fx(b)); }
+int g_fmul(int a, int b) { return fbits(fx(a) * fx(b)); }
+int g_fdiv(int a, int b) { float d = fx(b); return fbits(fx(a) / (d == 0.0f ? 1.0f : d)); }
+int g_fcmp(int a, int b) { float x = fx(a), y = fx(b); return (x < y) | (x <= y) << 1 | (x == y) << 2 | (x > y) << 3; }
+int g_fconv(int a) { float x = fx(a); return (int)x + (int)(unsigned)(x < 0 ? -x : x) * 3; }
+int g_dmix(int a, int b) {
+  double x = (double)a / 7.0, y = (double)b * 0.25;
+  double z = x * y + x - y;
+  return (int)(z / 4294967296.0) ^ (int)(float)x;   /* in range: an int overflow would be undefined */
+}
+i64 l_mul(int a, int b, int c, int d) { return ((i64)a << 32 | (u32)b) * ((i64)c << 32 | (u32)d); }
+i64 l_div(int a, int b, int c, int d) {
+  i64 x = (i64)a << 32 | (u32)b, y = (i64)c << 32 | (u32)d;
+  return (y == 0 || (y == -1 && x == (i64)0x8000000000000000ull)) ? 5 : x / y + x % y;
+}
+i64 l_udiv(int a, int b, int c, int d) {
+  u64 x = (u64)(u32)a << 32 | (u32)b, y = (u64)(u32)c << 32 | (u32)d;
+  return y ? (i64)(x / y ^ x % y) : 3;
+}

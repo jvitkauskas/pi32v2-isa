@@ -100,9 +100,12 @@ class CPU:
         disp = op.get(branch_field(insn)) if branch_field(insn) else None
         tgt = pc + size + disp if disp is not None else None
         st = State(self, pc, size, tgt)
-        if check.takes_state(model):
-            return model(list(R), self.flags, op, st), op, tgt
-        w, fl = model(list(R), self.flags, op)
+        try:
+            if check.takes_state(model):
+                return model(list(R), self.flags, op, st), op, tgt
+            w, fl = model(list(R), self.flags, op)
+        except (KeyError, ValueError) as e:      # a model that needs its hardware run's context
+            raise RuntimeError(f"{pc:#x}: {insn.id}: its model needs the hardware run's context ({e})") from None
         return {"regs": w, "flags": fl}, op, tgt
 
     def pair(self, insn, raw, size):
@@ -164,8 +167,43 @@ class CPU:
             self.pc = end + 2 * entry
             self.steps += 1
             return
+        if insn.id in ("push.srl", "pop.srl", "push.srmask", "pop.srmask"):
+            self.special_list(insn, raw, size)
+            self.check_then()
+            return
         self.step1(insn, raw, size)
         self.check_then()
+
+    def special_list(self, insn, raw, size):
+        """Push or pop special registers: register n at the n-th lowest address (as the run-4 model,
+        tools/hwtest/semantics/v4.py). Only rets (3), psr (5, its flags) and pc (15, a return) are kept here."""
+        mask = raw.get("m", raw.get("n"))
+        regs = [k for k in range(16) if mask >> k & 1]
+        if insn.id.startswith("push"):
+            vals = {3: self.rets, 5: self.flags}
+            self.sp -= 4 * len(regs)
+            for k, r in enumerate(regs):
+                if r not in vals:
+                    raise RuntimeError(f"{self.pc:#x}: push of special register {r}")
+                self.mem.write(self.sp + 4 * k, struct.pack("<I", vals[r] & M))
+            self.pc += size
+        else:
+            a = self.sp
+            new_pc = self.pc + size
+            for r in regs:
+                v = self.mem_word(a)
+                a += 4
+                if r == 3:
+                    self.rets = v & 0x07FFFFFE            # rets keeps bits 26..1 (hw/fm1-2026-10-24-v2)
+                elif r == 5:
+                    self.flags = v & 0xF
+                elif r == 15:
+                    new_pc = v & 0xFFFFFFFE
+                else:
+                    raise RuntimeError(f"{self.pc:#x}: pop of special register {r}")
+            self.sp = a
+            self.pc = new_pc
+        self.steps += 1
 
     def check_then(self):
         if self.after_then is not None and self.after_then[0] <= 0:
@@ -184,19 +222,8 @@ class CPU:
                 self.pc = end
             self.steps += 1
             return
-        op = check.operands(insn, raw)
         before = list(self.R)
-        model = self.models.get(insn.id)
-        if model is None:
-            raise RuntimeError(f"{self.pc:#x}: {insn.id} has no model")
-        disp = op.get(branch_field(insn)) if branch_field(insn) else None
-        tgt = self.pc + size + disp if disp is not None else None
-        st = State(self, self.pc, size, tgt)
-        if check.takes_state(model):
-            res = model(list(self.R), self.flags, op, st)
-        else:
-            w, fl = model(list(self.R), self.flags, op)
-            res = {"regs": w, "flags": fl}
+        res, op, tgt = self.effect(insn, raw, self.pc, size, self.R)
         for r, v in res.get("regs", {}).items():
             self.R[r] = v & M
         if res.get("flags") is not None:
@@ -212,7 +239,7 @@ class CPU:
         if i in ("rts",):
             self.pc = self.rets
         elif i.startswith("pop.pc"):
-            self.pc = st.load(self.sp - 4) & 0xFFFFFFFE
+            self.pc = self.mem_word(self.sp - 4) & 0xFFFFFFFE
         elif i in ("call.r", "goto.r"):
             self.pc = before[op["x"]]
         elif tgt is not None:
