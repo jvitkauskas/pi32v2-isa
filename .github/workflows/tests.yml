@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+# The table check and the unit tests. The tests that need JieLi's toolchain (oracle/) skip themselves: it is
+# not part of the repository and is not fetched here.
+name: tests
+on:
+  push:
+  pull_request:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Table check
+        run: python3 -m pi32v2isa check
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests

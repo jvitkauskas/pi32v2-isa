@@ -4,8 +4,9 @@ An open reference for the **pi32v2** instruction set (JieLi's CPU core, used in 
 chips), with a machine-readable instruction table and an assembler and disassembler built from it.
 
 The first target is the core in the M-VAVE FM-1 (AC791N, `-mcpu=r3` with the `fprev1` FPU). The goal is to
-build firmware for it without JieLi's closed tools: this repo covers the ISA, assembly and disassembly; a
-linker and a compiler backend are later, separate projects that use this reference.
+build firmware for it without JieLi's closed tools: this repo covers the ISA, assembly, disassembly and
+linking, and drives an LLVM backend (clang, `ld.lld`) whose tables are generated from this reference
+([docs/LLVM.md](docs/LLVM.md), [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)).
 
 > Unofficial: not affiliated with JieLi. Everything here comes from public sources and from observing how
 > JieLi's freely downloadable toolchain behaves; see [docs/SOURCES.md](docs/SOURCES.md).
@@ -24,6 +25,10 @@ linker and a compiler backend are later, separate projects that use this referen
 | [docs/GAPS.md](docs/GAPS.md) | What is known to exist but is not documented yet |
 | [docs/SOURCES.md](docs/SOURCES.md) | Where each fact comes from, and the sources' licences |
 | [docs/ORACLE.md](docs/ORACLE.md) | How JieLi's toolchain is used as a black-box test oracle |
+| [docs/LLVM.md](docs/LLVM.md) | The LLVM backend: status, how the table maps to it, how it is checked, code size against JieLi's compiler |
+| [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | The toolchain package: building it, compiling and linking FM-1 firmware with it |
+| `tools/llvm/` | The backend's generators (TableGen, assembler and compression tables), its checks, a simulator, the runtime and the packaging |
+| `examples/fm1-blink/` | An FM-1 application built with clang and `ld.lld` alone: start-up code, linker script, a timer interrupt in C |
 | [AGENTS.md](AGENTS.md) | Rules for anyone (person or agent) amending the reference |
 | `pi32v2isa/` | Python package: table loader and checker, disassembler, assembler (`python3 -m pi32v2isa as`), ELF writer and reader, objdump (`python3 -m pi32v2isa objdump`) |
 
