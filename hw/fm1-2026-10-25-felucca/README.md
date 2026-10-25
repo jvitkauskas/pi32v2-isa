@@ -37,3 +37,10 @@ blocks, none wrong; LLVM before the fix 2640, 92 wrong; after 2550, none; m-boot
 with the fix, none.
 
 Backups were taken before every write; images stay on the desktop.
+
+## m-bootloader 1.2 rebuilt with the fix
+
+Both units got m-bootloader 1.2 rebuilt with fork 8cfa7af09 (FM-1 payload 13284 bytes, SMK-37 14340 of 14368),
+through M-Flasher's boot-area write (the units' configuration kept, CRC32 verified): both boot to their firmware
+(the FM-1 to the LLVM Felucca above), the menu and the startup keys into download mode (FM-1 REC, SMK-37 SEQ REC)
+work (owner's check).
