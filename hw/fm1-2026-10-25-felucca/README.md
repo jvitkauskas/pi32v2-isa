@@ -44,3 +44,12 @@ Both units got m-bootloader 1.2 rebuilt with fork 8cfa7af09 (FM-1 payload 13284 
 through M-Flasher's boot-area write (the units' configuration kept, CRC32 verified): both boot to their firmware
 (the FM-1 to the LLVM Felucca above), the menu and the startup keys into download mode (FM-1 REC, SMK-37 SEQ REC)
 work (owner's check).
+
+## Size changes (fork a58e2444e)
+
+More 16-bit forms, shared bases for neighbouring peripheral registers, and-not with a modified immediate, loop
+rotation at -Oz. m-bootloader 1.2: FM-1 13284 -> 13168 bytes, SMK-37 14340 -> 14200 (slot 14368); Felucca 511028
+-> 508672; fm1-base 80132 -> 79908. ctest 1200/1200 at -O2, -Os and -Oz; no wrong if-block in any of the builds;
+Felucca's start-up panel commands those of JieLi's build in the simulator. On the FM-1 (bootloader and Felucca):
+menu, REC startup key, Felucca's screen, keys and sound work (owner's check). The SMK-37 bootloader is built, not
+yet installed.
