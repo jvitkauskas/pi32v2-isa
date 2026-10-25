@@ -15,9 +15,12 @@ and how it is checked.
 | Disassembler, printer (JieLi's objdump syntax) | done: every table example |
 | Code emitter, fixups, branch relaxation, ELF writer | done |
 | Assembler (`llvm-mc`), JieLi's syntax and choices | done: the corpus below |
-| Code generator (`llc`): integers, memory, branches, calls, frames, varargs | first version: the tests below |
-| Shorter forms, as JieLi's assembler picks them (`MCTargetDesc/PI32V2CompressGen.inc`) | done: -25% code |
+| Code generator (`llc`): integers, memory, branches, calls, frames, varargs, tail calls, 64-bit carry and pair multiply | done: the tests below |
+| Hardware float (`-mcpu=r3`, `ac791n`): single precision in the `(f)` forms, `iff` compares, as JieLi's compiler | done |
+| `if (...) {` blocks: selects, and short conditional code (the `PI32V2IfBlocks` pass) | done |
+| Shorter forms, as JieLi's assembler picks them (`MCTargetDesc/PI32V2CompressGen.inc`, push/pop ranges, extensions) | done |
 | `clang`: target info (type sizes, `__PI32V2__`), ABI (aggregates by pointer, sret), driver (`-mcpu`, links with `ld.lld`) | done |
+| `clang`: JieLi's `__builtin_pi32v2_*` (the bit operations as generic IR, the others as the instruction) | done |
 | Runtime: compiler-rt's builtins (soft float, 64-bit multiply/divide), `tools/llvm/build_builtins.sh` | done: all 120 generic sources |
 | Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | done: the corpus below |
 | Interrupt handlers (`__attribute__((interrupt))`: `psr`, `reti` and the registers used saved, `rti`) | done: on the FM-1 |
@@ -105,10 +108,11 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
 - `tools/llvm/cgtest.py`: 255 calls of functions in LLVM IR (`cgtest.ll`), compiled by `llc`, with results computed
   in Python; `build` makes a test application for the FM-1 (`tools/hwtest/app/cgdriver.S`), `check` compares its
   results. `sim.py OUTDIR` runs the same calls in the simulator: all 255 agree (2026-10-25).
-- `tools/llvm/ctest.py`: `ctest.c` compiled by JieLi's clang and by ours, both run in the simulator on the same
-  inputs, the results compared (integer, 64-bit, float and double code, atomics; the LLVM build linked with the
-  builtins above and `libpi32v2.a`, JieLi's with the helpers done in Python). As of 2026-10-25 they agree on all
-  2112 calls at -O0, -O1, -O2 and -Os. The test found one code generator bug: the popping return did not keep the result registers live.
+- `tools/llvm/ctest.py`: `ctest.c` compiled by JieLi's clang and by ours (both `-mcpu=r3`), both run in the
+  simulator on the same inputs, the results compared (integer, 64-bit, float and double code, atomics, tail
+  calls, the single-instruction idioms and builtins; the LLVM build linked with the builtins above and
+  `libpi32v2.a`, JieLi's with the helpers done in Python). As of 2026-10-25 they agree on all 2368 calls at -O0,
+  -O1, -O2 and -Os. The test found one code generator bug: the popping return did not keep the result registers live.
 - `ld.lld` and this repo's linker (which matches JieLi's, [LINKER.md](LINKER.md)) give the same loaded bytes for 97
   of 100 links of the corpus compiled by JieLi's clang; the other three differ in where they place an orphan
   section or merged constants, not in relocations. The test application built with clang, its integrated
@@ -125,5 +129,20 @@ need a hardware lock, not done yet.
 
 ## Code size
 
-On `ctest.c` (before `g_atomic` was added) at -O2 the LLVM target's `.text` is 1208 bytes, JieLi's 842 (-Os: 1094 and 826). JieLi's
-compiler uses forms this one does not yet: compare-with-constant branches, 16-bit push/pop lists, `if` blocks.
+`tools/llvm/sizes.py LLVM_BIN [--opt s]` compiles `ctest.c` and `tests/corpus/*.c` with both compilers (JieLi's with
+`-mcpu=r3`, ours with the same) and compares every function's size. As of 2026-10-25, over 909 functions, the LLVM
+target's code is 0.5% larger than JieLi's at -Os (12602 bytes against 12542) and 0.6% smaller at -O2 (13584
+against 13670). It was 40% larger before; what closed the gap, in order of bytes:
+
+- the 16-bit push/pop range forms and `sp += n` in its short form (both were rules the compression lacked);
+- tail calls (`goto f` after the epilogue) and the hardware float of `-mcpu=r3`;
+- compare-with-constant branches, branches compressed to their short forms (relaxation grows them), `if` blocks
+  for selects and short conditional code;
+- the carry chain (`addc`/`subc`) and the pair multiply for 64-bit arithmetic, bit-field extracts and the
+  `.b0`/`.l` extensions, `clz`/`cls`/`rev8`/rotates/min/max, indexed addressing, multiply by a constant;
+- a division by a constant stays a division when optimizing for size (JieLi's compiler always divides);
+- `memcpy` inlined only as wide as both ends' alignment allows (a misaligned copy is a call).
+
+Left: 64-bit compares through the flags (`sub; subc; psr`), pair shifts and rotates, post-increment loads and
+stores, memory read-modify-write forms (`[r+n] |= r`), SIMD byte lanes. `__builtin_pi32v2_popcount` is computed in
+software on purpose: the AC791N runs `popcnt` as a nop.
