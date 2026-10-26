@@ -1803,3 +1803,36 @@ or runtime implementation could use hardware internally.
 - The table's existing short-immediate-add gap accounts for all 67 unknown
   instruction lines in these probes; no contradictory entry encoding or text
   was found. No instruction entries, ISA overview or gap list were changed.
+
+
+## 10. Inline assembly register constraints
+
+Black-box probes with JieLi 20260730.1 (`clang -target pi32v2 -mcpu=r3 -O2 -S`) establish:
+
+- `r`: a word register for `short`, `int` and `float`; an aligned pair for `long long` and `double`.
+- `w`: r0..r7. `W`: r8..r15.
+- `d`: r1_r0, r3_r2, r5_r4, r7_r6. `D`: r9_r8, r11_r10, r13_r12, r15_r14.
+
+Each was probed as an input, output and tied read/write operand. A probe with eight distinct early-clobber
+word outputs fills the selected bank; nine outputs fail. Four pair outputs fill a pair bank; five fail.
+Sixteen generic `r` word outputs fill r0..r15. This distinguishes bank restrictions from allocation order.
+For example the independently written input/output probe was:
+
+```c
+long long pair(long long x) {
+    long long y;
+    asm volatile("// result %0 input %1" : "=d"(y) : "d"(x));
+    return y;
+}
+```
+
+The oracle prints `result r1_r0 input r1_r0`. Changing both constraints to `D` selects r9_r8.
+Changing the type to `int` and the constraints to `w` selects r0; `W` selects r8.
+The comment lets the probe observe register selection without relying on an instruction's operand rules.
+The compiler was used only as a black box (**[compiler]**).
+
+The oracle also accepts constraints wider/narrower than the value: `d` with `short`, `int` or `float`
+prints a pair, while `w` with `long long` prints one word and returns zero in the upper result word.
+The `d` input probes zero the high word for `int`/`short`. Its `w`/`W` output/read-write `double` probes
+crash with an unsupported library-call error. These unusual width combinations are tool observations;
+the SDK uses word values with word constraints and 64-bit values with pair constraints.

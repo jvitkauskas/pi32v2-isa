@@ -25,7 +25,7 @@ and how it is checked.
 | Linker (`ld.lld`), relocations as JieLi's `ld` ([LINKER.md](LINKER.md) section 3) | done: the corpus below |
 | Interrupt handlers (`__attribute__((interrupt))`: `psr`, `reti` and the registers used saved, `rti`) | done: on the FM-1 |
 | Atomics: loads, stores, fences inline; read-modify-write as `__sync_*` calls (`tools/llvm/runtime`: interrupts masked, the core lock held) | done |
-| Inline assembly (`r` constraint), a frame pointer (`r7`) for dynamic stack | done |
+| Inline assembly (`r`, `w`/`W`, `d`/`D` constraints), a frame pointer (`r7`) for dynamic stack | done |
 | An FM-1 application from this toolchain alone (`examples/fm1-blink`) | done: on the FM-1 |
 | m-bootloader 1.2 (FM-1, SMK-37) and fm1-base's template from this toolchain alone | done: on the hardware (`hw/fm1-2026-10-25-open-firmware`) |
 | `llvm-objdump` branch targets as symbols | not yet |
