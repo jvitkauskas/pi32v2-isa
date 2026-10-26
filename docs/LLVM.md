@@ -30,7 +30,7 @@ and how it is checked.
 | m-bootloader 1.2 (FM-1, SMK-37) and fm1-base's template from this toolchain alone | done: on the hardware (`hw/fm1-2026-10-25-open-firmware`) |
 | `llvm-objdump` branch targets as symbols | not yet |
 | `byval` (a struct argument as JieLi's clang writes it: a pointer to the caller's copy) | done |
-| JieLi's bitcode (LLVM 4.0.1: the AC79 SDK's libraries), compiled by `llc` or `ld.lld`'s LTO (below) | done, but for inline-assembly forms not in the table yet |
+| JieLi's bitcode (LLVM 4.0.1: the AC79 SDK's libraries), compiled by `llc` or `ld.lld`'s LTO (below) | done: 4898 of the SDK's 4900 objects; JieLi's compiler rejects the other two |
 | 64-bit atomics | not yet |
 
 ## Building
@@ -123,8 +123,21 @@ they are linked. This LLVM reads it; on loading, three things are upgraded:
   shifted right to 32 bits (the `r = rp >> n (s)` forms, `lsr.s.rpi`/`lsr.s.rpr`). Calls become what clang emits
   for the builtins. A call to any other `llvm.*` function that is no intrinsic stops code generation.
 
-Its interrupt handlers carry the same `"interrupt"` attribute as clang's. As of 2026-10-26, `ld.lld -r` compiles
-4807 of the SDK's 4900 bitcode objects; the other 93 have inline assembly in forms the assembler lacks.
+Its interrupt handlers carry the same `"interrupt"` attribute as clang's; its inline assembly uses JieLi's
+constraints (`w`, `W`, `d`, `D`) and spellings the assembler accepts as aliases
+([audits/2026-10-sdk-inline-asm.md](audits/2026-10-sdk-inline-asm.md)). Where code written for JieLi's toolchain
+relies on what its older LLVM does, the target does the same:
+
+- **`-pi32v2-large-program`** (the SDK passes it to the compiler and to the linker's LTO): a call the assembler
+  leaves to the linker is the 6-byte `call.xl`, which reaches RAM code from flash; no call is a tail call.
+- **No `calloc` is formed.** A malloc and a memset of it are not folded into a `calloc` call: firmware has its
+  own allocator, and one whose `calloc` is that zalloc (fm1-base's) would call itself.
+- **`__attribute__((used))`** keeps a global from the compiler, not from `--gc-sections` (no `SHF_GNU_RETAIN`):
+  the SDK's BT libraries register handlers in tables of their own sections that a linker script need not place.
+
+As of 2026-10-26, `ld.lld -r` compiles 4898 of the SDK's 4900 bitcode objects; JieLi's compiler rejects the
+other two as well (their inline assembly, [GAPS.md](GAPS.md)). fm1-base's
+Bluetooth build (the SDK's BT libraries LTO-linked) builds with this toolchain alone; not yet run on the FM-1.
 
 The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
 must know about them: loads, stores, branches, calls, `psr`); the emitter then puts each in the shortest form
