@@ -41,6 +41,7 @@ Pro uses the same chip family.
 | build firmware for the FM-1 with the open toolchain | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md), then [examples/fm1-blink](examples/fm1-blink/), the C conventions in [docs/ABI.md](docs/ABI.md) |
 | write it in Rust | [examples/fm1-blink-rust](examples/fm1-blink-rust/) |
 | build an existing FM-1 firmware without JieLi's assembler and linker | [docs/BUILDING-OPEN.md](docs/BUILDING-OPEN.md) |
+| build the AC79 SDK's applications with the LLVM toolchain in place of JieLi's | [docs/DROPIN.md](docs/DROPIN.md), [tools/dropin/](tools/dropin/) |
 | work on the LLVM backend | [docs/LLVM.md](docs/LLVM.md), [docs/COMPILER.md](docs/COMPILER.md) (what JieLi's compiler emits), [tools/llvm/](tools/llvm/) |
 | look up an instruction | [docs/ISA.md](docs/ISA.md), the table [isa/pi32v2.toml](isa/pi32v2.toml) ([format](docs/TABLE-FORMAT.md)), `python3 -m pi32v2isa disasm` |
 | use the assembler, linker or objdump | [docs/ASSEMBLER.md](docs/ASSEMBLER.md), [docs/LINKER.md](docs/LINKER.md), [docs/OBJDUMP.md](docs/OBJDUMP.md), [docs/ELF.md](docs/ELF.md) |

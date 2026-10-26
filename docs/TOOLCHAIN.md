@@ -26,6 +26,11 @@ it was built from.
 There is no C library yet: firmware brings its own start-up code and linker script, and links with
 `-nostartfiles -nolibc`.
 
+## As JieLi's toolchain
+
+`tools/dropin/make_dropin.sh` builds a directory with the layout and tool names of JieLi's `/opt/jieli`, on these tools,
+so that the AC79 SDK's Makefiles build with it ([DROPIN.md](DROPIN.md)).
+
 ## Compiling
 
 ```sh

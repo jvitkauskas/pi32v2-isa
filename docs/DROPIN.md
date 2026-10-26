@@ -1,0 +1,148 @@
+<!-- SPDX-FileCopyrightText: 2026 Julius Vitkauskas -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
+# A drop-in for JieLi's Linux toolchain
+
+`tools/dropin/make_dropin.sh` builds a directory with the layout and the tool names of JieLi's Linux toolchain
+(`/opt/jieli`: `common/bin`, `pi32v2/bin`, `pi32v2/lib`) on the LLVM fork's tools ([LLVM.md](LLVM.md)), so that the
+AC79 SDK's own Makefiles build with it. Nothing of JieLi's is read, run or copied to make it; the SDK's Makefiles
+and scripts are used unchanged. Facts about JieLi's tools are black-box **[oracle]** (their command lines and output
+on the SDK builds, `20260730.1`), the SDK's build files **[sources-in-use]** ([source ids](SOURCES.md)).
+
+## Make and use
+
+```sh
+tools/llvm/build_builtins.sh LLVM_BIN LLVM_PROJECT RT          # libclang_rt.builtins-pi32v2.a, libpi32v2.a
+tools/dropin/make_dropin.sh [--copy] LLVM_BIN RT /opt/jieli    # OUT must not exist
+cd fw-AC79_AIoT_SDK
+ulimit -n 8192
+make -j6 ac791n_demo_demo_hello TOOL_DIR=/opt/jieli/pi32v2/bin
+```
+
+`TOOL_DIR` on make's command line replaces the Makefile's `TOOL_DIR := /opt/jieli/pi32v2/bin` (every other path
+in the Makefiles is relative to it: `$(TOOL_DIR)/../lib/r3`, `$(TOOL_DIR)/../include`); no SDK file is edited. A
+symlink `/opt/jieli` to the directory works the same, without the argument. The directory finds its own place
+from the name each tool is started under, so it can be moved. Without `--copy` the LLVM tools are links to
+`LLVM_BIN`; with it they, and clang's headers, are copied into `llvm/` and the directory needs only Python 3.11.
+
+The tools that need translating are one Python script (`common/lib/pi32v2-dropin/jlwrap.py`) started under the
+tool's name. `PI32V2_DROPIN_VERBOSE=1` prints each command it runs; `PI32V2_DROPIN_LDFLAGS` adds options to
+`ld.lld` (for experiments, such as `--noinhibit-exec`).
+
+## The tools
+
+| JieLi's | What the SDK uses it for | Here |
+| --- | --- | --- |
+| `pi32v2/bin/clang` (`common/bin/clang`; `clang++`, `cc`, `cxx`) | every C, C++ and `.S` compile to a bitcode object (`-flto -c`, `-MMD -MF`); `-E -P` of `sdk_ld.c`, `sdk_used_list.c`, `section.c`, `download.c`, `isd_config_rule*.c` in the pre-build step (linker script, symbol list, shell script, `.ini` files) | `jlwrap.py` → `llvm/bin/clang`, options below |
+| `pi32v2/bin/lto-wrapper` | the link, `lto-wrapper -o sdk.elf @objs.txt LFLAGS` | `jlwrap.py`: `--extra-arguments-from-file`, `--output-version-info`, then `ld` |
+| `pi32v2/bin/ld` | run by `lto-wrapper` with `--plugin LLVMgold.so` | `jlwrap.py` → `ld.lld` (its link-time optimizer replaces the plug-in), options below |
+| `LLVMgold.so` | JieLi's LTO plug-in | an empty file: only its name is looked up |
+| `objdump` | post-build: `-D -print-dbg -mcpu=r3` (listing with source lines), `-section-headers -address-mask=0x1ffffff`, `-t` | `jlwrap.py` → `pi32v2isa objdump` ([OBJDUMP.md](OBJDUMP.md)), with `-print-dbg` done by `llvm-symbolizer` |
+| `objsizedump` | post-build: `-lite -skip-zero [-enable-dbg-info]` sorted into `symbol_tbl.txt` and `map.lit`; read by `report_elf_sizes.py` | `jlwrap.py`: the same text from the ELF symbol table and, for the file column, `llvm-symbolizer` |
+| `objcopy` | post-build (the Windows script): `-O binary -j SECTION` of five sections | `llvm-objcopy` |
+| `lto-ar`, `ar` | `AR` in the Makefiles; no application target runs it | `jlwrap.py` (drops `--plugin`) → `llvm-ar` |
+| `nm`, `strip` | not used by the SDK | `llvm-nm`, `llvm-objcopy` as `strip` |
+| `llvm-read-version`, `link-version` | the version strings of the libraries (`.sys.version`); not used by the SDK's applications | `jlwrap.py`: the strings of objects and archives; `link-version` writes them as text |
+| `llvm-bcrename`, `llvm-link` | building the SDK's libraries | not provided |
+| `pi32v2/lib/rN[-large]/lib{c,m,g,compiler-rt}.a`, `pi32v2/include` | the Makefiles name `lib/r3` and `include`; the SDK links its own C library (`include_lib/newlib`) | `libcompiler-rt.a` (and `libcompiler_rt.a`) in each, from compiler-rt's builtins; no C library or headers |
+
+The post-build script (`cpu/wl82/tools/download.sh`, made from `download.c`) cannot finish on Linux with JieLi's
+tools either: it runs its commands from the wrong directory, calls `/opt/utils/strip-ini` and hands the packaging to
+a service (`host-client`); the firmware packages come from Windows programs. `tools/dropin/postbuild.sh TOOL_DIR
+ELF OUT` runs the commands that work (listing, section table, symbol listings, section images, `app.bin`).
+
+## Options of JieLi's clang
+
+| Option | Here |
+| --- | --- |
+| `-target pi32v2 -mcpu=r3 -Oz -g -flto -fms-extensions -femulated-tls -ffunction-sections -fdata-sections -w` and the rest | passed on; `-integrated-as` is accepted |
+| `-mfprev1` | `-Xclang -target-feature -Xclang +fprev1` (`-mcpu=r3` has it already) |
+| `-fallow-pointer-null` | `-fno-delete-null-pointer-checks`: a load or store at address 0 stays |
+| `-fprefer-gnu-section` | dropped: section attributes and `#pragma code_seg`/`data_seg` give the same section names and flags as without it |
+| `-mllvm -pi32v2-large-program=true` | passed on: calls between flash and RAM code are the 6-byte `call.xl` (the 4-byte call reaches 4 MiB) |
+| (default C standard) | `-std=gnu11` for C files without `-std`: clang 4's default; the fork's is gnu17 |
+| `-g` | `-gdwarf-4` added: the SDK's libraries carry DWARF 4, one version in the program |
+| (errors in C) | `implicit-function-declaration`, `implicit-int`, `int-conversion`, `incompatible-(function-)pointer-types`, `return-mismatch` are warnings again: the SDK's sources have them |
+
+## Options of JieLi's ld
+
+| Option | Here |
+| --- | --- |
+| `--plugin FILE` | dropped |
+| `--plugin-opt=mcpu=r3` | passed on (`ld.lld` takes it) |
+| `--plugin-opt=save-temps` | `--save-temps` |
+| `--plugin-opt=-enable-ipra=true`, `-global-merge-on-const`, `-emulated-tls`, `-pi32v2-large-program=true` | `-mllvm=...` |
+| `--plugin-opt=-inline-max-allocated-size=32` | `-mllvm=-inline-max-stacksize=32` |
+| `--plugin-opt=-used-symbol-file=F` | `--undefined-glob=NAME` for each name in F: the names (tables found by their section) must be kept and their archive members taken; a name nothing defines is not an error |
+| `--plugin-opt=-inline-threshold=5` | dropped: the fork's cost model sets the thresholds for size (`adjustInliningThreshold` takes 40 off); a base under 40 hits an assertion in InlineCost with assertions on |
+| `--plugin-opt=-mattr=+fprev1` | dropped: part of `mcpu=r3` |
+| `--plugin-opt=-pi32v2-always-use-itblock=false`, `-pi32v2-merge-max-offset=4096`, `-pi32v2-enable-simd=true`, `-pi32v2-enable-rep-memop`, `-inline-normal-into-special-section=true`, `-dont-used-symbol-list=...` | dropped: not in the fork's code generator (their effect on size is below) |
+| `--plugin-opt=-enable-movable-region=true`, `-movable-region-*` | dropped, with a warning when a map file lists code (`section.txt` of the apps with `CONFIG_*_CODE_MOVABLE`): that code stays where the linker script puts it |
+| `-M=FILE` | `-Map=FILE` (the map is lld's, much longer; nothing in the SDK reads it) |
+| `--start-group` inside `--start-group` | the outer pair only: `ld.lld` refuses nested groups |
+| the archives (`.a`) | the members GNU ld would load, as objects, in its order, then the archives: GNU ld scans each archive until nothing more is taken, group by group, and links the members in the order it took them, which is the order of the tables the scripts collect (`*(.initcall)`, `*(.sys_event.*)`); `ld.lld` takes a symbol from the first archive that has it and orders by its own. The symbols come from the archives' own symbol tables and `llvm-nm`, the scripts' `EXTERN` and `ENTRY`. For `hello` this is the same 99 members in the same order as JieLi's link map (JieLi's has seven more, taken for what its code generator asked for: `memcpy` and the soft-float helpers, which `ld.lld` takes the same way). `PI32V2_DROPIN_NATIVE_ARCHIVES=1` leaves it to `ld.lld`, with the C library moved to the end of its group |
+| `-Tscript` | a copy with `*(.data)` and `*(.bss)` widened to `*(.data .data.*)` and `*(.bss .bss.*)`: `ld.lld`'s code generation gives every variable its own section, where JieLi's puts them in `.data` and `.bss`, which are all the SDK's scripts place |
+| (end of line) | `libclang_rt.builtins-pi32v2.a` and `libpi32v2.a`: soft float, 64-bit divide, `__sync_*` |
+
+## Builds (2026-10-26)
+
+The 14 applications of the SDK `AC79NN_SDK_V1.2.14_2026-10-13` (commit `5fa84a9b2f72`, `make ac791n_...`) build with
+JieLi's toolchain `20260730.1` (clean, `-j6`: 4 s for `demo_hello`, 97 s for `demo_DevKitBoard`). With this
+drop-in on LLVM `a46b6e443` nine link; the rest stop in link-time code generation (below).
+Sizes in bytes (text + RAM data + RAM bss + cache RAM data of the linked ELF):
+
+| Application | JieLi | Drop-in | |
+| --- | ---: | ---: | --- |
+| `demo_hello` | 260 516 | 265 044 | +1.7 % |
+| `demo_ble` | 408 156 | 414 496 | +1.6 % |
+| `demo_video` | 499 068 | 505 792 | +1.3 % |
+| `demo_uvc` | 824 120 | 842 424 | +2.2 % |
+| `demo_ui` | 1 062 392 | 1 042 108 | −1.9 % |
+| `scan_box` | 1 188 448 | 1 200 696 | +1.0 % |
+| `demo_wifi` | 839 520 | 583 838 | −30.5 % |
+| `wifi_camera` | 1 033 268 | 944 844 | −8.6 % |
+| `wifi_ipc` | 1 147 088 | 1 027 796 | −10.4 % |
+
+For `demo_hello`: `.text` 231 936 → 236 608, `.ram0_data` 11 376 → 11 240, `.ram0_bss` 17 172 → 17 164;
+`app.bin` 243 344 → 247 880; 859 against 921 sized functions and objects (the others inlined or removed), all of
+the global ones present in both except that the drop-in keeps 45 library-named ones global ([above](#known-differences)).
+The same 99 archive members are linked, in the same order. The post-build commands give the same section headers
+(except the sizes), the same symbol table text, and `objcopy -O binary` the same bytes of the same ELF; on JieLi's
+own ELF the listing, section table, symbol table and section images are byte for byte JieLi's (listing: 188 of
+190 000 lines differ, the source line of a few instructions; `symbol_tbl.txt`: the file of 35 of 992 symbols).
+Neither toolchain gives the same ELF twice: one byte of `.text` differs (the build time).
+
+`demo_wifi`, `wifi_camera` and `wifi_ipc` are smaller than JieLi's because link-time optimization removes code
+JieLi's keeps (for `demo_wifi` the USB Wi-Fi driver, 270 KB: `rtusb_probe` is removed as having no effect); that
+has not been explained and is not assumed to be right.
+
+Stopped: `demo_edr`, `demo_DevKitBoard`, `demo_audio` and `wifi_story_machine` in the assembler (inline assembly
+the fork does not read yet: `if(r2<0)`, a nested `$(`/`$)` block); `demo_wifi_ext` at the link: code that JieLi's
+link-time optimizer proves dead (`Init_LwIP` with a constant per call, three call sites) is kept by LLVM's, and it
+refers to `ext_netdev_*`, which nothing in this configuration defines.
+
+## Known differences
+
+What differs from JieLi's output, with the cause:
+
+- **Link-time code generation is the fork's.** Sizes differ a little (below), local names get other numbers,
+  other functions are inlined.
+- **Library functions stay global.** LLVM's link-time optimizer keeps symbols named like library functions
+  (`malloc`, `printf`, `fopen`, ...) external; JieLi's `-dont-used-symbol-list` let it drop them.
+  Their callees stay too, so some code the reference drops is present (and its references must resolve).
+- **No movable regions.** See above.
+- **Address 0.** The SDK's bitcode marks its functions `"allow-nullptr-deref"` (JieLi's `-fallow-pointer-null`);
+  the fork does not read that as `null_pointer_is_valid` yet, so link-time optimization may treat a load from a
+  constant null as undefined (`tools/dropin/` has no way to change that in the libraries' bitcode).
+- **Dead code the SDK relies on being removed.** `demo_wifi_ext` links only if the optimizer proves a switch on a
+  per-call constant dead (it refers to symbols nothing defines in that configuration). `PI32V2_DROPIN_LDFLAGS=--warn-unresolved-symbols`
+  links it anyway, with those references at address 0.
+- **`make -jN` and the pre-build step.** The SDK's Makefiles run `pre_build` (linker script, symbol list) in parallel
+  with the link when the objects are up to date, so the link can read the previous application's files; clean first
+  (`make clean_ac791n_...`) when switching applications. This is the same with JieLi's toolchain.
+- **ld.lld warnings.** `address (0x2000120) of section .text is not a multiple of alignment (64)`: the script's
+  address is explicit, as with GNU ld, which aligns inside the section from the real address; so does `ld.lld`.
+- **`.map` and `.lst` details.** The map is lld's; the listing's source lines agree with JieLi's for 99.8 % of the
+  instructions (the others differ by a line number).
+- **ELF details.** Program headers are page-aligned (0x1000, JieLi's 0x500), an empty `.bss` is `PROGBITS`,
+  sections carry the retain flag; `objcopy -O binary` of a section gives the same bytes.
