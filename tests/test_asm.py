@@ -495,6 +495,31 @@ class Live(unittest.TestCase):
                 else:
                     self.assertEqual(diffs, [])
 
+    def test_implicit_steps_and_vector_compare_aliases(self):
+        # Exercise every generated fixed-operand alias at both register-bank
+        # extremes. These are fresh oracle results, not table-derived evidence.
+        cases = []
+        for m in asm.Isa(TABLE).matchers:
+            fixed = m.alias[1] if m.alias and m.alias[0] == "fixed" else None
+            if fixed is None and not (m.insn.id.startswith("cmp.") and "cmpu(" in m.template):
+                continue
+            for high in (False, True):
+                vals = {n: (1 << len(m.insn.field_bits(n))) - 1 if high else 0 for n in m.insn.fields}
+                vals.update(fixed or {})
+                text = m.template
+                for k, (name, _) in enumerate(m.holders):
+                    text = text.replace(chr(asm.SENT + k),
+                                        codec.operand(m.insn.fields[name], vals[name], len(m.insn.field_bits(name))))
+                if text.endswith("#"):
+                    text += "\nr0 = [r0]"
+                cases.append((m.insn.id, text))
+        self.assertGreater(len(cases), 300)
+        refs = self.o.encode([text for _, text in cases], ["fprev1", "instrev3"])
+        for (ident, text), ref in zip(cases, refs):
+            with self.subTest(id=ident, text=text):
+                self.assertIsInstance(ref, bytes, ref)
+                self.assertEqual(text_of(text + "\n")[:len(ref)], ref)
+
     def test_choices_agree_with_jielis_assembler(self):
         lines = ["r1 = 5", "r1 = 1024", "r1 = 0x10000", "r15 = -1", "r1 += r2", "r1 = r2 | r1", "r0 = r0 - 0", "r1 = r2 - 3",
                  "r1 -= 3", "r1 = r2 + 0x1FE", "{pc} = [sp++]", "r1 = r1 + 200", "if (r3 == 33280) goto -2", "r0 = r7 * r0",

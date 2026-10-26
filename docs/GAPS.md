@@ -141,3 +141,19 @@ are in [COMPILER.md](COMPILER.md), the special registers as read on the FM-1 in 
   the 426 forms they lack, and anything the rev3 models add, is not in the table.
 - Instruction revisions and newer CPU models, and which instructions each needs (`instrev3` so far).
 - The other CPU models `r1`, `r2`, `r4`, `r5` and how they differ from `r3`.
+
+
+## SDK inline assembly rejected by the oracle
+
+The 20260730.1 compiler (`-target pi32v2 -mcpu=r3 -O2 -S -x ir`) also rejects two members in the
+AC79 SDK sweep. No encoding is invented for them:
+
+- `media_app.a`, `sw_drc.c.o`: two word accesses with a post-increment of 2. Independent assembly of
+  `[r2++=2] = r4` and `r4 = [r1++=2]` fails with `immediate out of range (imm11m4)`.
+- `libjlsp.a`, `libjlsp_gemm.a__jlsp_gemm_pi32v2.c.o`: one function has an extra destination in a
+  four-lane compound add and uses `.hl` as a source suffix in a halfword multiply. Independent probes of
+  `r9_r8 += r9_r8 +|+|+|+ r5_r4 (ssat)` and `r3 += r9.hl * 1 (ssat)` fail with `invalid operand`.
+  Later parallel-issue errors in the function follow the rejected add.
+
+Whether those members were intended for a different toolchain revision or require source corrections is
+unknown. No SDK assembly body or binary is included here; the lines above are independent oracle probes.

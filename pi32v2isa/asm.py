@@ -12,6 +12,7 @@ import re
 import struct
 import subprocess
 import sys
+from itertools import product
 
 from . import codec, elf, table as tbl
 
@@ -87,7 +88,14 @@ def canon(text, info=None):
     res = parts[0]
     for p in parts[1:]:
         res += (" " if word(res[-1], True) and word(p[0], False) else "") + p
-    return res
+    # A pair's .l/.h names its low/high word (not a 16-bit half).
+    def pair_word(m):
+        hi, lo = int(m[1]), int(m[2])
+        return f"r{lo if m[3] == 'l' else hi}" if hi == lo + 1 and lo % 2 == 0 and hi <= 15 else m[0]
+    res = re.sub(r"(?<![\w.])r(\d+)_r(\d+)\.([lh])(?![\w.])", pair_word, res)
+    # JieLi's decimal single-precision constants denote their IEEE bit pattern.
+    return re.sub(r"(?<![\w.])(-?\d+\.\d*f)(?![\w.])",
+                  lambda m: str(struct.unpack("<I", struct.pack("<f", float(m[1][:-1])))[0]), res)
 
 
 # --- expressions -------------------------------------------------------------------------------------------
@@ -480,6 +488,42 @@ def alias_syntaxes(insn, syntax):
         m2 = re.fullmatch(r"\{(\w)\} \+= \{(\w)\}", syntax)
         if m2:
             out.append((f"{{{m2.group(1)}}} = {{{m2.group(1)}}} - {{{m2.group(2)}}}", ("neg", m2.group(2))))
+    # Operand-less spellings supply fixed raw fields. Keep the encoding in
+    # the table, including the increment's scale and the modified immediate.
+    base_id = insn.id.removesuffix(".p")
+    par = " #" if insn.id.endswith(".p") else ""
+    if base_id.startswith("cmp.") and "(v)" in syntax:
+        out.append((syntax.replace("cmp(", "cmpu("), None))
+    if base_id == "rsub.modimm.rri":
+        out.append(("{r} = -{s}" + par, ("fixed", {"n": numeric_raw(insn, "n", 0)})))
+    if base_id == "and.nmodimm.rri":
+        out.append(("{r} = fabs({s})" + par, ("fixed", {"n": numeric_raw(insn, "n", 0x7FFFFFFF)})))
+    # Each memory operand may independently omit its natural increment.
+    # The six mem2.hh immediate forms reject implicit steps, even though
+    # their disassembler syntax accepts explicit halfword-sized offsets.
+    if ".mem2.hh.i." in base_id:
+        return out
+    mem = list(re.finditer(r"([bhd]?)\[\{(\w)\}\s*\+\+=\s*\{(\w)\}\]", syntax))
+    choices = []
+    for m in mem:
+        name = m[3]
+        options = [(m[0], {})]
+        if insn.fields[name].kind in NUMERIC_KINDS:
+            step = {"": 4, "h": 2, "b": 1, "d": 8}[m[1]]
+            for sign, op in ((1, "++"), (-1, "--")):
+                raw = numeric_raw(insn, name, sign * step)
+                if raw is not None:
+                    options.append((f"{m[1]}[{{{m[2]}}}{op}]", {name: raw}))
+        choices.append(options)
+    for combo in product(*choices):
+        fixed = {k: v for _, fields in combo for k, v in fields.items()}
+        if not fixed:
+            continue
+        sx, pos = "", 0
+        for m, (text, _) in zip(mem, combo):
+            sx += syntax[pos:m.start()] + text
+            pos = m.end()
+        out.append((sx + syntax[pos:], ("fixed", fixed)))
     return out
 
 
@@ -582,6 +626,8 @@ class Isa:
                 ops[name] = raw
         if m.alias and m.alias[0] == "same":
             ops[m.alias[1]] = ops[m.alias[2]]
+        if m.alias and m.alias[0] == "fixed":
+            ops.update(m.alias[1])
         return ops
 
 
@@ -1191,6 +1237,12 @@ class _Core:
 
     # -- statements ----------------------------------------------------------------------------------------
     def instruction(self, text):
+        # A and B may share a physical line; '#' belongs to A.
+        if "#" in text and text.split("#", 1)[1].strip():
+            first, second = text.split("#", 1)
+            self.instruction(first + " #")
+            self.instruction(second)
+            return
         line = canon(text)
         self.stmt_serial += 1
         opens = line.endswith("{")

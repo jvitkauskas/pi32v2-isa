@@ -19,7 +19,7 @@ bytes; `asm.Assembler` gives access to the pieces.
 
 - One statement per line (no statement separator: `;` starts a comment). Comments: `/* ... */` (may span lines),
   `// ...`, `; ...`, and `#` as the first character of a line. A `#` after an instruction is the parallel-issue
-  marker, not a comment.
+  marker, not a comment. Both halves may share a line (`r9 -= 1 # r4 = [r1++=4]`).
 - Labels: `name:` (several per line, or before a statement), numeric labels `1:` referred to as `1f`/`1b`. Names are
   made of letters, digits, `_`, `.`, `$` (and `@` for variants). Registers and special-register names cannot be
   symbols (`r1`, `sr4`, `sp`, `psr`...). Names are case sensitive; registers are lower case.
@@ -47,6 +47,16 @@ JieLi's assembler takes (found with `oracle encode`):
   `0x100000000` is 0. Hex numbers are accepted where JieLi insists on decimal (`if (r1 == 0x0)`).
 - Special registers by name (`reti`, `rete`, `retx`, `rets`, `psr`, `cnum`, `uspn`, `sspn`, `icfgn`, `icfgs`,
   `icfg`, `usp`, `ssp`, `sp`, `pc`) or number (`sr0`..`sr15`); pairs `r1_r0`; halves `r1.l`, `r1.h`; bytes `r1.b0`..`r1.b3`.
+- A pair's `.l`/`.h` names its low/high **word**: `r3_r2.l` is `r2`, `r3_r2.h` is `r3`.
+  A single register's `.l`/`.h` still means its 16-bit halves.
+- Memory post-increments may use `++`/`--` without a number, meaning plus/minus the access size
+  (word 4, halfword 2, byte 1). Each memory operand of a multiply may do so independently.
+  The six `mem2.hh.i` forms reject these spellings; their increments must be explicit.
+- `r1 = -r2` is the reverse subtract from zero (`rsub.modimm.rri`); `fabs(r2)` is an AND with
+  `0x7FFFFFFF` (`and.nmodimm.rri`), including the parallel twins. Vector `cmpu(...)` is accepted
+  wherever `cmp(...)` is (`cmp.*.v`); the spelling alone does not establish unsigned behavior.
+- Decimal constants ending in `f`, such as `1.f`, `10.f`, `1.5f` and `-1.f`, denote their IEEE single
+  precision bit pattern. The chosen load encoding is the same as for those integer bits.
 - Register lists in braces in any order, with or without ranges (`{r3-r0}`, `{r0, r1, r2, r3}`); an empty list is refused.
 - A `#` at the end of a line (with or without a space before it) marks the first instruction of a parallel
   pair; the next instruction must be one JieLi's assembler allows as the second half

@@ -98,7 +98,7 @@ def generate(tab, records, header):
     for name, (insn, fixed, fields) in records.items():
         by_insn.setdefault(insn.id, []).append((name, fixed, fields))
     nums = NumTypes()
-    templates, slots_out, ops_out, rejects = [], [], [], []
+    templates, slots_out, ops_out, rejects, fixed_out = [], [], [], [], []
     op_index = {}
 
     def ops_for(record):
@@ -148,10 +148,15 @@ def generate(tab, records, header):
                 op_start, nops = ops_for(record)
                 # ("same", a, d): field a is field d (asm.Isa._operands)
                 same = (m.alias[2], m.alias[1]) if m.alias and m.alias[0] == "same" else ("\\0", "\\0")
+                fixed_start = len(fixed_out)
+                fixed = m.alias[1] if m.alias and m.alias[0] == "fixed" else {}
+                for field, raw in fixed.items():
+                    value = int(codec.operand(insn.fields[field], raw, len(insn.field_bits(field))), 0)
+                    fixed_out.append(f"    {{'{field}', {value}LL}},")
                 templates.append(
                     f"    {{{c_string(v)}, PI32V2::{record}, {size}, {int(bool(m.negate))}, {tie}, {m.order}, "
                     f"{slot_start}, {len(slots)}, {op_start}, {nops}, {rej_start}, {len(m.rejects)}, "
-                    f"'{same[0]}', '{same[1]}', {int(bool(asm.branch_field(insn)))}, "
+                    f"'{same[0]}', '{same[1]}', {fixed_start}, {len(fixed)}, {int(bool(asm.branch_field(insn)))}, "
                     f"{int(bool(asm.abs32_field(insn)))}, {chr_lit(insn.body)}, {chr_lit(insn.block.get('then'))}, "
                     f"{chr_lit(insn.block.get('else'))}}},")
     relax = relaxations(tab, isa, records, by_insn, ops_for, nums)
@@ -162,6 +167,7 @@ def generate(tab, records, header):
            "static const PI32V2Op Ops[] = {", *ops_out, "};",
            "static const char *const Rejects[] = {", *([f"    {c_string(r.encode())}," for r in rejects] or ["    \"\","]),
            "};",
+           "static const PI32V2Fixed FixedFields[] = {", *(fixed_out or ["    {0, 0},"]), "};",
            "static const PI32V2Template Templates[] = {", *templates, "};",
            "#endif"]
     relax_inc = f"// {header}\n#ifdef PI32V2_GEN_RELAX_TABLES\n#undef PI32V2_GEN_RELAX_TABLES\n{relax}#endif\n"
