@@ -4738,7 +4738,7 @@ group = "logic"
 summary = "XOR with a modified immediate: rd = rs ^ n."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for single-bit constants with destination equal to source the assembler emits the 16-bit xor.bit, which the checker does not equate with `r0 = r0 ^ 0x1`. [compiler] `31 - clz(a)` -> `r0 = r0 ^ 0x1F`. hw/fm1-2026-10-24: result as stated (rs ^ n). Flags: N and Z follow the result; C and V are kept."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints the table's text for every probed encoding. Not confirmed: for single-bit constants with destination equal to source the assembler emits the 16-bit xor.bit, which the checker does not equate with `r0 = r0 ^ 0x1`. [compiler] `31 - clz(a)` -> `r0 = r0 ^ 0x1F`. hw/fm1-2026-10-24: result as stated (rs ^ n). Flags: N and Z follow the result; C and V are kept. [oracle 20260730.1] `r4 = -r4 (f)` is an assembler alias of XOR with 0x80000000, including the parallel twin; no floating-point feature is required."
 
 [[insn.example]]
 bytes = "50 e1 00 00"
@@ -13254,7 +13254,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == constant (equality compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed. [oracle 20260730.1] Signed equality/inequality spellings with ifs are accepted aliases of the neutral if forms, including register and immediate comparisons and branches. The assembler rejects ifu as that prefix."
 
 [[insn.example]]
 bytes = "20 e8 00 00"
@@ -17536,7 +17536,7 @@ group = "dsp"
 summary = "Shift a register left or right by a signed low-6-bit register count with signed saturation."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Sets psr[3] sign, psr[2] zero, psr[1] last shifted-out bit; preserves psr[0]. Count zero preserves psr[1]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. [hardware] hw/fm1-2026-10-24/followup-q.jsonl: 8 controlled cases, zero, signed-count boundaries and upper count bits; result and flag model confirmed."
+notes = "Previously meaning unknown beyond syntax. Positive counts shift left; negative counts shift right. Discards upper count bits. Right shift is arithmetic; left shift clamps to the signed lane range. Sets psr[3] sign, psr[2] zero, psr[1] last shifted-out bit; preserves psr[0]. Count zero preserves psr[1]. [hardware] hw/fm1-2026-10-24: 12 cases; conclusions apply to the tested AC791N. [hardware] hw/fm1-2026-10-24/followup-q.jsonl: 8 controlled cases, zero, signed-count boundaries and upper count bits; result and flag model confirmed. [oracle 20260730.1] The word form accepts the compound spelling `r4 ><= r1 (sat)`, equivalent to repeating r4 as the source. The unsaturated and parallel word forms do too."
 
 [[insn.example]]
 bytes = "cc e1 03 00"
@@ -17670,7 +17670,7 @@ group = "dsp"
 summary = "Shift the 64-bit pair rs right by the constant n (0..63), arithmetic: the pair is a signed 64-bit value, the result is clamped to the signed 32-bit range; the 32-bit result goes to rd."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. rd may be a register of the source pair. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match. rd may be a register of the source pair. psr: bit 3 = bit 31 of the result, bit 2 = result is zero, bit 1 = the last bit shifted out (bit n-1 of the 64-bit input; bit 63 for counts of 64 and up; 0 for a count of 0), bit 0 not written (also not when the result saturates). Seen in all 12 cases. Was: meaning unknown beyond the syntax. [oracle 20260730.1] The assembler also accepts a pair source followed by >>> and a count with no (s), for both immediate and register counts (lsr.s.rpr), including their parallel twins."
 
 [[insn.example]]
 bytes = "de e1 00 08"
@@ -19170,7 +19170,7 @@ absent_on = ["r1", "r5"]
 summary = "Rounding unsigned average per byte: each of the four bytes of rd is (a + b + 1) >> 1 of the matching bytes of rs and rt."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Also what the three revision-3 sum.acc.*.rrr encodings do on this chip. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). Hardware (hw/fm1-2026-10-24): all 12 cases match; psr unchanged. Also what the three revision-3 sum.acc.*.rrr encodings do on this chip. Was: meaning unknown beyond the syntax. The follow-up (hw/fm1-2026-10-24/followup-r.jsonl) tried edge values and the model held. [oracle 20260730.1] The assembler also accepts the modifiers in the order (uavg,rnd); the encoding is unchanged."
 
 [[insn.example]]
 bytes = "20 e4 08 00"

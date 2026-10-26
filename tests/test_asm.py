@@ -501,7 +501,10 @@ class Live(unittest.TestCase):
         cases = []
         for m in asm.Isa(TABLE).matchers:
             fixed = m.alias[1] if m.alias and m.alias[0] == "fixed" else None
-            if fixed is None and not (m.insn.id.startswith("cmp.") and "cmpu(" in m.template):
+            extra = (m.template.startswith("ifs(") or "cmpu(" in m.template or "uavg,rnd" in m.template
+                     or (m.insn.id.startswith("lsr.s.") and ">>>" in m.template)
+                     or (m.insn.id.startswith("xchg.rrr") and "><=" in m.template))
+            if fixed is None and not extra:
                 continue
             for high in (False, True):
                 vals = {n: (1 << len(m.insn.field_bits(n))) - 1 if high else 0 for n in m.insn.fields}
@@ -512,6 +515,8 @@ class Live(unittest.TestCase):
                                         codec.operand(m.insn.fields[name], vals[name], len(m.insn.field_bits(name))))
                 if text.endswith("#"):
                     text += "\nr0 = [r0]"
+                if text.endswith("{"):
+                    text += "\nnop\n}"
                 cases.append((m.insn.id, text))
         self.assertGreater(len(cases), 300)
         refs = self.o.encode([text for _, text in cases], ["fprev1", "instrev3"])

@@ -79,3 +79,30 @@ r2 = -r1 #
 r1 = [r0]
 
 r12 = fabs(r9) # r0 = [r1++]
+
+r4=-r4(f)
+
+r11=-r12(f)
+
+r1=r7_r6>>>7
+
+r2=r15_r14>>>r8
+
+r4=r4+|+|+|+r6(uavg,rnd)
+
+r7><=r10
+
+r4><=r1(sat)
+
+ifs(r6==32) {
+nop
+}
+
+ifs(r7!=0) {
+nop
+}
+
+1:
+nop
+ifs(--r10!=0)goto 1b
+ifs (--r3 != 0) goto 1b

@@ -492,6 +492,17 @@ def alias_syntaxes(insn, syntax):
     # the table, including the increment's scale and the modified immediate.
     base_id = insn.id.removesuffix(".p")
     par = " #" if insn.id.endswith(".p") else ""
+    if re.match(r"if \((?:--)?\{\w\} (?:==|!=) ", syntax):
+        out.append((syntax.replace("if ", "ifs ", 1), None))
+    if base_id in ("xchg.rrr", "xchg.rrr.sat"):
+        suffix = " (sat)" if base_id.endswith(".sat") else ""
+        out.append(("{r} ><= {t}" + suffix + par, ("same", "s", "r")))
+    if base_id in ("lsr.s.rpi", "lsr.s.rpr"):
+        out.append((syntax.replace(">>", ">>>").replace(" (s)", ""), None))
+    if "rnd" in syntax and "uavg" in syntax:
+        out.append((re.sub(r"\(rnd,\s*uavg\)", "(uavg,rnd)", syntax), None))
+    if base_id == "xor.modimm.rri":
+        out.append(("{r} = -{s} (f)" + par, ("fixed", {"n": numeric_raw(insn, "n", 0x80000000)})))
     if base_id.startswith("cmp.") and "(v)" in syntax:
         out.append((syntax.replace("cmp(", "cmpu("), None))
     if base_id == "rsub.modimm.rri":

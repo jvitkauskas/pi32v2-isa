@@ -55,6 +55,11 @@ JieLi's assembler takes (found with `oracle encode`):
 - `r1 = -r2` is the reverse subtract from zero (`rsub.modimm.rri`); `fabs(r2)` is an AND with
   `0x7FFFFFFF` (`and.nmodimm.rri`), including the parallel twins. Vector `cmpu(...)` is accepted
   wherever `cmp(...)` is (`cmp.*.v`); the spelling alone does not establish unsigned behavior.
+- `r1 = -r2 (f)` is XOR with `0x80000000` (`xor.modimm.rri`), without requiring a floating-point feature.
+  A pair-to-word arithmetic shift may use `>>> n` instead of `>> n (s)` (`lsr.s.rpi`, `lsr.s.rpr`).
+- `r1 ><= r2` (also `(sat)`) repeats the destination as the first source of the word shift.
+  Averaging forms accept `(uavg,rnd)` as well as `(rnd,uavg)`. Signed equality/inequality conditions may
+  use `ifs` instead of `if`; `ifu` is not an accepted prefix for those conditions.
 - Decimal constants ending in `f`, such as `1.f`, `10.f`, `1.5f` and `-1.f`, denote their IEEE single
   precision bit pattern. The chosen load encoding is the same as for those integer bits.
 - Register lists in braces in any order, with or without ranges (`{r3-r0}`, `{r0, r1, r2, r3}`); an empty list is refused.
