@@ -80,6 +80,23 @@ static int take(struct S s, int k) { return s.a * k + s.b - s.c + s.d; }
 static struct S make(int a, int b) { struct S s = {a, b, a + b, (char)(a ^ b)}; return s; }
 int f_struct(int a, int b, int k) { struct S s = make(a, b); s.c ^= k; return take(s, k) + make(b, a).d; }
 
+/* structs passed by value through real calls (byval in JieLi's bitcode): in r1, after r0-r3 on the stack, a
+   small one, and a callee that writes to its copy */
+struct T { int a, b, c, d, e; };
+struct B3 { char x, y, z; };
+__attribute__((noinline)) int byval_mid(int k, struct T t, int m, struct B3 q) {
+  t.b += k;
+  t.e ^= m;
+  return t.a + t.b * 3 - t.c + (t.d ^ t.e) + q.x * 5 + q.z - m;
+}
+__attribute__((noinline)) int byval_fifth(int a, int b, int c, int d, struct T t) { return t.e - t.a + a * b - c + d; }
+int f_byval(int a, int b, int c) {
+  struct T t = {a, b, c, a ^ b, b - c};
+  struct B3 q = {(char)a, (char)b, (char)c};
+  int r = byval_mid(c, t, a, q);
+  return r + t.b + byval_fifth(a, b, c, r, t) * 7;
+}
+
 int f_local_array(int a, int b) {
   int v[10];
   for (int i = 0; i < 10; i++)

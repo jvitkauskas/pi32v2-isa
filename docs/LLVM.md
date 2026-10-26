@@ -29,7 +29,9 @@ and how it is checked.
 | An FM-1 application from this toolchain alone (`examples/fm1-blink`) | done: on the FM-1 |
 | m-bootloader 1.2 (FM-1, SMK-37) and fm1-base's template from this toolchain alone | done: on the hardware (`hw/fm1-2026-10-25-open-firmware`) |
 | `llvm-objdump` branch targets as symbols | not yet |
-| `byval`, 64-bit atomics | not yet |
+| `byval` (a struct argument as JieLi's clang writes it: a pointer to the caller's copy) | done |
+| JieLi's bitcode (LLVM 4.0.1: the AC79 SDK's libraries), compiled by `llc` or `ld.lld`'s LTO (below) | done, but for inline-assembly forms not in the table yet |
+| 64-bit atomics | not yet |
 
 ## Building
 
@@ -101,7 +103,28 @@ It follows JieLi's C convention ([ABI.md](ABI.md)): arguments are words of one s
 and the saved registers (`[--sp] = {rets, r15-r4}`), `sp += -n`, and the matching pop into `pc`, which returns; a
 function that saves nothing returns with `rts`. Stack slots use the `[sp+n]` forms. A variadic function first
 pushes the argument registers its named arguments left unused, so they continue the stack arguments. Clang passes
-every aggregate as a pointer to a copy and returns one through a hidden pointer in `r0`.
+every aggregate as a pointer to a copy and returns one through a hidden pointer in `r0`; a `byval` argument (what
+JieLi's clang writes for a struct) is that pointer, to a copy the caller makes in its own frame. The stack is
+word-aligned and never realigned: 64-bit variables are word-aligned, as JieLi's compiler has them, and a local
+that needs more (`aligned(16)`) gets room for its alignment and its address rounded up (`PI32V2AlignAllocas`),
+as JieLi's compiler does.
+
+## JieLi's bitcode
+
+The AC79 SDK's libraries are LLVM bitcode from JieLi's clang (LLVM 4.0.1), which ld.lld's LTO compiles when
+they are linked. This LLVM reads it; on loading, three things are upgraded:
+
+- **Inlined loops' locations.** LLVM 4 left an inlined loop's `llvm.loop` start and end locations in the inlined
+  function, which the verifier rejects: such a loop gets loop metadata of its own with its branch's location
+  (134 of the SDK's objects; no other debug information is wrong).
+- **The data layout** lacks the stack alignment; `-S32` is added.
+- **JieLi's intrinsics.** Its clang writes `__builtin_pi32v2_<name>` as `llvm.pi32v2.<name>` (the 18 builtins of
+  [COMPILER.md](COMPILER.md) section 3), and its optimizer forms `llvm.pi32v2.shfms64(x, n)` from a 64-bit value
+  shifted right to 32 bits (the `r = rp >> n (s)` forms, `lsr.s.rpi`/`lsr.s.rpr`). Calls become what clang emits
+  for the builtins. A call to any other `llvm.*` function that is no intrinsic stops code generation.
+
+Its interrupt handlers carry the same `"interrupt"` attribute as clang's. As of 2026-10-26, `ld.lld -r` compiles
+4807 of the SDK's 4900 bitcode objects; the other 93 have inline assembly in forms the assembler lacks.
 
 The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
 must know about them: loads, stores, branches, calls, `psr`); the emitter then puts each in the shortest form
@@ -120,6 +143,9 @@ JieLi's assembler would choose for its line. Branches start short and grow by re
   calls, the single-instruction idioms and builtins; the LLVM build linked with the builtins above and
   `libpi32v2.a`, JieLi's with the helpers done in Python). As of 2026-10-25 they agree on all 2368 calls at -O0,
   -O1, -O2 and -Os. The test found one code generator bug: the popping return did not keep the result registers live.
+  `--jieli-ir` compiles JieLi's bitcode of `ctest.c` with `ld.lld -r` (LTO) instead, as an SDK library is compiled;
+  it found the missing intrinsic upgrade and a stack alignment bug (an 8-aligned local assumed at a word-aligned
+  address, in compiler-rt's `__moddi3`).
 - `ld.lld` and this repo's linker (which matches JieLi's, [LINKER.md](LINKER.md)) give the same loaded bytes for 97
   of 100 links of the corpus compiled by JieLi's clang; the other three differ in where they place an orphan
   section or merged constants, not in relocations. The test application built with clang, its integrated

@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: MIT-0
 """Differential test of the LLVM PI32V2 target against JieLi's compiler, in the simulator (tools/llvm/sim.py).
 
-    python3 tools/llvm/ctest.py LLVM_BIN_DIR [--opt 2] [--cases 40] [--only-jieli]
+    python3 tools/llvm/ctest.py LLVM_BIN_DIR [--opt 2] [--cases 40] [--only-jieli] [--jieli-ir]
 
 tools/llvm/ctest.c is compiled by JieLi's clang (the oracle) and by LLVM_BIN_DIR/clang, each object linked alone
 with this repo's linker; both run in the simulator on the same inputs (edge values and seeded random ones) and
 every function's results must agree. Library helpers the compilers call (64-bit shifts, memcpy, ...) are done by
 the simulator in Python. --only-jieli runs JieLi's build alone (to see that the simulator covers it).
+--jieli-ir compiles JieLi's bitcode of ctest.c (clang -emit-llvm, LLVM 4.0) with LLVM_BIN_DIR/ld.lld -r instead,
+as an AC79 SDK library's bitcode is compiled when it is linked with ld.lld (LTO).
 """
 import argparse
 import os
@@ -300,6 +302,8 @@ def main():
     p.add_argument("--opt", default="2")
     p.add_argument("--cases", type=int, default=40)
     p.add_argument("--only-jieli", action="store_true")
+    p.add_argument("--jieli-ir", action="store_true",
+                   help="the LLVM build is JieLi's bitcode compiled by ld.lld's LTO (not LLVM_BIN_DIR/clang)")
     p.add_argument("--mcpu", default=oracle.CPU, help="the LLVM build's -mcpu (default: JieLi's, r3: hardware float)")
     p.add_argument("--builtins", type=Path, action="append", default=[],
                    help="libraries linked into the LLVM build: libclang_rt.builtins and libpi32v2 for pi32v2 "
@@ -323,10 +327,21 @@ def main():
         builds["jieli"] = link(jobj, d)
         if not a.only_jieli:
             lobj = Path(d) / "llvm.o"
-            code, err = run([str(a.bin / "clang"), "--target=pi32v2", f"-mcpu={a.mcpu}", f"-O{a.opt}", "-c",
-                             str(HERE / "ctest.c"), "-o", str(lobj)])
-            if code:
-                raise SystemExit(f"clang failed: {err.decode()[:2000]}")
+            if a.jieli_ir:
+                bc = Path(d) / "jieli.bc"
+                code, err = run([str(jl.clang), "-target", "pi32v2", f"-mcpu={oracle.CPU}", f"-O{a.opt}", "-c",
+                                 "-emit-llvm", str(HERE / "ctest.c"), "-o", str(bc)])
+                if code:
+                    raise SystemExit(f"JieLi's clang failed: {err.decode()[:500]}")
+                lto = {"0": "0", "1": "1", "3": "3"}.get(a.opt, "2")
+                code, err = run([str(a.bin / "ld.lld"), "-r", f"--lto-O{lto}", str(bc), "-o", str(lobj)])
+                if code:
+                    raise SystemExit(f"ld.lld failed: {err.decode()[:2000]}")
+            else:
+                code, err = run([str(a.bin / "clang"), "--target=pi32v2", f"-mcpu={a.mcpu}", f"-O{a.opt}", "-c",
+                                 str(HERE / "ctest.c"), "-o", str(lobj)])
+                if code:
+                    raise SystemExit(f"clang failed: {err.decode()[:2000]}")
             builds["llvm"] = link(lobj, d, a.builtins)
         got = {}
         for k, (e, stubs) in builds.items():
