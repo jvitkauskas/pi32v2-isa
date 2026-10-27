@@ -151,7 +151,8 @@ relies on what its older LLVM does, the target does the same:
 As of 2026-10-26, `ld.lld -r` compiles 4898 of the SDK's 4900 bitcode objects; JieLi's compiler rejects the
 other two as well (their inline assembly, [GAPS.md](GAPS.md)). fm1-base's
 Bluetooth build (the SDK's BT libraries LTO-linked) and all 14 applications of the SDK V1.2.14 build with this
-toolchain alone, through the drop-in package ([DROPIN.md](DROPIN.md)); none has run on hardware yet.
+toolchain alone, through the drop-in package ([DROPIN.md](DROPIN.md)); fm1-base's connects over Bluetooth on the FM-1
+([hw run](../hw/fm1-2026-10-27-dropin-ble/README.md)), the applications have not run on hardware.
 
 The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
 must know about them: loads, stores, branches, calls, `psr`); the emitter then puts each in the shortest form

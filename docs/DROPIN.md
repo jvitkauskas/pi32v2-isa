@@ -134,7 +134,7 @@ allocated sections of the linked ELF:
 | `wifi_ipc` | 1 522 300 | 1 535 128 | +0.8 % |
 | `wifi_story_machine` | 4 143 194 | 4 193 916 | +1.2 % |
 
-None of them has been run on hardware. Every application is 0.5 to 2.7 % larger. Objects of 32 bytes or more that
+None of them has been run on hardware (fm1-base's Bluetooth build has: [hw run](../hw/fm1-2026-10-27-dropin-ble/README.md)). Every application is 0.5 to 2.7 % larger. Objects of 32 bytes or more that
 JieLi's build has and the drop-in's does not come to 0 to 1.2 KB per application; most are statics the fork's
 global merge puts in a merged block, the others are on paths the fork's optimizer proves dead (`wifi_camera`'s
 1 KB `RalinkRate` is read only for ioctl command 36, and the one ioctl entry, `rt28xx_ap_ioctl`, is called with
@@ -161,6 +161,10 @@ What it took on the fork's side, beyond reading JieLi's bitcode ([LLVM.md](LLVM.
   argument is a constant. `demo_wifi_ext` links only when the cases its constant calls do not take are gone.
 - **Address 0.** The SDK's `-fallow-pointer-null` comes in its bitcode as `"allow-nullptr-deref"`, read as
   `null_pointer_is_valid`.
+- **Word-aligned locals.** The Bluetooth controller builds HCI events in packed (`align 1`) locals and posts them to
+  the host task as ints; JieLi's frame layout happens to put them on a word, LLVM's did not, and a misaligned word
+  load resets the chip at the first connection ([hw run](../hw/fm1-2026-10-27-dropin-ble/README.md)). Every local of
+  a word or more is word-aligned (JieLi's compiler packs them: a `char[5]` at `sp+3`).
 
 ## Known differences
 
