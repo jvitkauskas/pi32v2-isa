@@ -213,48 +213,6 @@ def ld_args(argv, defer=True):
     return out, relocatable
 
 
-# ld.lld's link-time code generation puts every variable in a section of its own (.data.NAME, .bss.NAME), where
-# JieLi's puts them in .data and .bss: the SDK's linker scripts place `*(.data)` and `*(.bss)` and nothing
-# else, so the variables would be left to the linker's orphan placement (and the heap start would be computed
-# before them). The scripts read by the link are rewritten to take both.
-DATA_PATTERNS = [(re.compile(r"\*\(\s*\.data\s*\)"), "*(.data .data.*)"),
-                 (re.compile(r"\*\(\s*\.bss\s*\)"), "*(.bss .bss.*)")]
-
-
-def widen_script(text):
-    for pat, rep in DATA_PATTERNS:
-        text = pat.sub(rep, text)
-    return text
-
-
-def rewrite_scripts(args):
-    """Replace each -T script by a copy that takes per-variable sections; returns the new arguments and the
-    temporary files to remove."""
-    out, temps = [], []
-    i = 0
-    while i < len(args):
-        a = args[i]
-        path = None
-        if a in ("-T", "--script") and i + 1 < len(args):
-            path = args[i + 1]
-        elif a.startswith("-T") and len(a) > 2:
-            path = a[2:].lstrip("=")
-        elif a.startswith("--script="):
-            path = a[len("--script="):]
-        if path is not None and os.path.isfile(path) and not os.environ.get("PI32V2_DROPIN_KEEP_SCRIPT"):
-            fd, tmp = tempfile.mkstemp(prefix="dropin-", suffix=".ld")
-            with os.fdopen(fd, "w") as f, open(path, errors="replace") as src:
-                f.write(widen_script(src.read()))
-            temps.append(tmp)
-            out += ["-T", tmp]
-            i += 2 if a in ("-T", "--script") else 1
-            continue
-        out.append(a)
-        i += 1
-    return out, temps
-
-
-
 # ---- GNU ld's choice of archive members ---------------------------------------------------------------------------
 #
 # ld.lld takes a symbol from the first archive on the command line that defines it, and the members in the order
@@ -526,7 +484,6 @@ def link(argv, version_out=None):
             args, members_dir = res
         else:
             args, relocatable = ld_args(expand(argv), defer=True)
-    args, temps = rewrite_scripts(args)
     cmd = [os.path.join(LLVM, "ld.lld")] + args + os.environ.get("PI32V2_DROPIN_LDFLAGS", "").split()
     if not relocatable and "--version" not in args and "-v" not in args:
         # the compiler's runtime last, as a compiler driver links it: only what is referenced is taken (a
@@ -538,8 +495,6 @@ def link(argv, version_out=None):
     try:
         rc = run(cmd, replace=False)
     finally:
-        for t in temps:
-            os.unlink(t)
         if members_dir and not os.environ.get("PI32V2_DROPIN_KEEP_MEMBERS"):
             shutil.rmtree(members_dir, ignore_errors=True)
     sys.exit(rc)

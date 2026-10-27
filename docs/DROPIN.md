@@ -74,14 +74,14 @@ ELF OUT` runs the commands that work (listing, section table, symbol listings, s
 | `--plugin-opt=-enable-ipra=true`, `-global-merge-on-const`, `-emulated-tls`, `-pi32v2-large-program=true` | `-mllvm=...` |
 | `--plugin-opt=-inline-max-allocated-size=32` | `-mllvm=-inline-max-stacksize=32` |
 | `--plugin-opt=-used-symbol-file=F` | `--undefined-glob=NAME` for each name in F: the names (tables found by their section) must be kept and their archive members taken; a name nothing defines is not an error |
-| `--plugin-opt=-inline-threshold=5` | dropped: the fork's cost model sets the thresholds for size (`adjustInliningThreshold` takes 40 off); a base under 40 hits an assertion in InlineCost with assertions on |
+| `--plugin-opt=-inline-threshold=5` | dropped: the fork's cost model sets the thresholds for size (`adjustInliningThreshold` takes 40 off; with a base under 40 the threshold stops at 0) |
 | `--plugin-opt=-mattr=+fprev1` | dropped: part of `mcpu=r3` |
 | `--plugin-opt=-pi32v2-always-use-itblock=false`, `-pi32v2-merge-max-offset=4096`, `-pi32v2-enable-simd=true`, `-pi32v2-enable-rep-memop`, `-inline-normal-into-special-section=true`, `-dont-used-symbol-list=...` | dropped: not in the fork's code generator (their effect on size is below) |
 | `--plugin-opt=-enable-movable-region=true`, `-movable-region-*` | dropped, with a warning when a map file lists code (`section.txt` of the apps with `CONFIG_*_CODE_MOVABLE`): that code stays where the linker script puts it |
+| `-T SCRIPT` | passed on unchanged: the fork's LTO puts data in `.data`, `.bss` and `.rodata`, as JieLi's does, which is what the SDK's scripts place |
 | `-M=FILE` | `-Map=FILE` (the map is lld's, much longer; nothing in the SDK reads it) |
 | `--start-group` inside `--start-group` | the outer pair only: `ld.lld` refuses nested groups |
 | the archives (`.a`) | the members GNU ld would load, as objects, in its order, then the archives: GNU ld scans each archive until nothing more is taken, group by group, and links the members in the order it took them, which is the order of the tables the scripts collect (`*(.initcall)`, `*(.sys_event.*)`); `ld.lld` takes a symbol from the first archive that has it and orders by its own. The symbols come from the archives' own symbol tables and `llvm-nm`, the scripts' `EXTERN` and `ENTRY`. For `hello` this is the same 99 members in the same order as JieLi's link map (JieLi's has seven more, taken for what its code generator asked for: `memcpy` and the soft-float helpers, which `ld.lld` takes the same way). `PI32V2_DROPIN_NATIVE_ARCHIVES=1` leaves it to `ld.lld`, with the C library moved to the end of its group |
-| `-Tscript` | a copy with `*(.data)` and `*(.bss)` widened to `*(.data .data.*)` and `*(.bss .bss.*)`: `ld.lld`'s code generation gives every variable its own section, where JieLi's puts them in `.data` and `.bss`, which are all the SDK's scripts place |
 | (end of line) | `libclang_rt.builtins-pi32v2.a` and `libpi32v2.a`: soft float, 64-bit divide, `__sync_*` |
 
 ## Builds (2026-10-26)
