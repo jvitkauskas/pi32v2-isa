@@ -122,6 +122,8 @@ they are linked. This LLVM reads it; on loading, three things are upgraded:
   [COMPILER.md](COMPILER.md) section 3), and its optimizer forms `llvm.pi32v2.shfms64(x, n)` from a 64-bit value
   shifted right to 32 bits (the `r = rp >> n (s)` forms, `lsr.s.rpi`/`lsr.s.rpr`). Calls become what clang emits
   for the builtins. A call to any other `llvm.*` function that is no intrinsic stops code generation.
+- **`"allow-nullptr-deref"`**, JieLi's `-fallow-pointer-null` (the SDK's libraries are built with it), becomes
+  `null_pointer_is_valid`: address 0 is memory on these chips.
 
 Its interrupt handlers carry the same `"interrupt"` attribute as clang's; its inline assembly uses JieLi's
 constraints (`w`, `W`, `d`, `D`) and spellings the assembler accepts as aliases
@@ -134,10 +136,22 @@ relies on what its older LLVM does, the target does the same:
   own allocator, and one whose `calloc` is that zalloc (fm1-base's) would call itself.
 - **`__attribute__((used))`** keeps a global from the compiler, not from `--gc-sections` (no `SHF_GNU_RETAIN`):
   the SDK's BT libraries register handlers in tables of their own sections that a linker script need not place.
+- **A missing return gives a value.** A function that falls off its end returns undef, and a branch on undef is
+  undefined behaviour to today's optimizer; JieLi's left the code alone, and the SDK relies on it (its Wi-Fi
+  libraries' `wf_mem_init`, whose status the driver's probe tests). `PI32V2FreezeReturns` freezes such an undef
+  before interprocedural constant propagation sees it, in the normal and in the LTO pipeline.
+- **`__attribute__((always_inline_when_const_args))`** (JieLi's; IR `"always-inline-when-const-args"`): inlined at
+  every call whose arguments are all constants, a global's address too. The SDK's `Init_LwIP` switches on its
+  argument to names a configuration need not define.
+- **Inline assembly** keeps `{`, `|` and `}` as written (they are pi32v2's block braces; `NoAsmVariants`), and
+  `-fprefer-gnu-section` lets a function's section attribute win over `#pragma code_seg`, as in JieLi's clang.
+- **LTO's sections**: one `.text` (see above) and the data in `.data`, `.bss` and `.rodata`, as the SDK's linker
+  scripts place them.
 
 As of 2026-10-26, `ld.lld -r` compiles 4898 of the SDK's 4900 bitcode objects; JieLi's compiler rejects the
 other two as well (their inline assembly, [GAPS.md](GAPS.md)). fm1-base's
-Bluetooth build (the SDK's BT libraries LTO-linked) builds with this toolchain alone; not yet run on the FM-1.
+Bluetooth build (the SDK's BT libraries LTO-linked) and all 14 applications of the SDK V1.2.14 build with this
+toolchain alone, through the drop-in package ([DROPIN.md](DROPIN.md)); none has run on hardware yet.
 
 The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
 must know about them: loads, stores, branches, calls, `psr`); the emitter then puts each in the shortest form

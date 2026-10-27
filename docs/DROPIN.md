@@ -109,58 +109,58 @@ that have pragmas are in JieLi's prebuilt libraries.
 | the archives (`.a`) | the members GNU ld would load, as objects, in its order, then the archives: GNU ld scans each archive until nothing more is taken, group by group, and links the members in the order it took them, which is the order of the tables the scripts collect (`*(.initcall)`, `*(.sys_event.*)`); `ld.lld` takes a symbol from the first archive that has it and orders by its own. The symbols come from the archives' own symbol tables and `llvm-nm`, the scripts' `EXTERN` and `ENTRY`. For `hello` this is the same 99 members in the same order as JieLi's link map (JieLi's has seven more, taken for what its code generator asked for: `memcpy` and the soft-float helpers, which `ld.lld` takes the same way). `PI32V2_DROPIN_NATIVE_ARCHIVES=1` leaves it to `ld.lld`, with the C library moved to the end of its group |
 | (end of line) | `libclang_rt.builtins-pi32v2.a` and `libpi32v2.a`: soft float, 64-bit divide, `__sync_*` |
 
-## Builds (2026-10-26)
+## Builds (2026-10-27)
 
 The 14 applications of the SDK `AC79NN_SDK_V1.2.14_2026-10-13` (commit `5fa84a9b2f72`, `make ac791n_...`) build with
-JieLi's toolchain `20260730.1` (clean, `-j6`: 4 s for `demo_hello`, 97 s for `demo_DevKitBoard`). With this
-drop-in on LLVM `a46b6e443` nine link; with the later changes (inline assembly, below; LLVM `80c2ec816`) 13 do.
-Sizes in bytes (text + RAM data + RAM bss + cache RAM data of the linked ELF):
+JieLi's toolchain `20260730.1` (clean, `-j6`: 4 s for `demo_hello`, 97 s for `demo_DevKitBoard`), and all 14 link
+with this drop-in on the fork's branch `pi32v2-dropin` (5 s for `demo_hello`, 72 s for `demo_DevKitBoard`). The
+post-build step stops where it does with JieLi's tools (`strip-ini`, `host-client`). Sizes in bytes, the
+allocated sections of the linked ELF:
 
 | Application | JieLi | Drop-in | |
 | --- | ---: | ---: | --- |
-| `demo_hello` | 260 516 | 265 044 | +1.7 % |
-| `demo_ble` | 408 156 | 414 496 | +1.6 % |
-| `demo_video` | 499 068 | 505 792 | +1.3 % |
-| `demo_uvc` | 824 120 | 842 424 | +2.2 % |
-| `demo_ui` | 1 062 392 | 1 042 108 | −1.9 % |
-| `scan_box` | 1 188 448 | 1 200 696 | +1.0 % |
-| `demo_wifi` | 839 520 | 583 838 | −30.5 % |
-| `wifi_camera` | 1 033 268 | 944 844 | −8.6 % |
-| `wifi_ipc` | 1 147 088 | 1 027 796 | −10.4 % |
+| `demo_hello` | 260 568 | 265 068 | +1.7 % |
+| `demo_ble` | 408 208 | 417 204 | +2.2 % |
+| `demo_video` | 499 120 | 506 196 | +1.4 % |
+| `demo_uvc` | 855 748 | 874 796 | +2.2 % |
+| `demo_ui` | 1 827 900 | 1 837 096 | +0.5 % |
+| `scan_box` | 1 336 704 | 1 351 396 | +1.1 % |
+| `demo_edr` | 735 542 | 744 264 | +1.2 % |
+| `demo_audio` | 2 106 106 | 2 162 332 | +2.7 % |
+| `demo_DevKitBoard` | 3 927 218 | 3 983 804 | +1.4 % |
+| `demo_wifi` | 863 984 | 881 806 | +2.1 % |
+| `demo_wifi_ext` | 1 099 580 | 1 113 332 | +1.3 % |
+| `wifi_camera` | 2 097 828 | 2 121 028 | +1.1 % |
+| `wifi_ipc` | 1 522 300 | 1 535 128 | +0.8 % |
+| `wifi_story_machine` | 4 143 194 | 4 193 916 | +1.2 % |
 
-For `demo_hello`: `.text` 231 936 → 236 608, `.ram0_data` 11 376 → 11 240, `.ram0_bss` 17 172 → 17 164;
-`app.bin` 243 344 → 247 880; 859 against 921 sized functions and objects (the others inlined or removed), all of
-the global ones present in both except that the drop-in keeps 45 library-named ones global ([above](#known-differences)).
-The same 99 archive members are linked, in the same order. The post-build commands give the same section headers
-(except the sizes), the same symbol table text, and `objcopy -O binary` the same bytes of the same ELF; on JieLi's
-own ELF the listing, section table, symbol table and section images are byte for byte JieLi's (listing: 188 of
-190 000 lines differ, the source line of a few instructions; `symbol_tbl.txt`: the file of 35 of 992 symbols).
-Neither toolchain gives the same ELF twice: one byte of `.text` differs (the build time).
+None of them has been run on hardware. Every application is 0.5 to 2.7 % larger. Objects of 32 bytes or more that
+JieLi's build has and the drop-in's does not come to 0 to 1.2 KB per application; most are statics the fork's
+global merge puts in a merged block, the others are on paths the fork's optimizer proves dead (`wifi_camera`'s
+1 KB `RalinkRate` is read only for ioctl command 36, and the one ioctl entry, `rt28xx_ap_ioctl`, is called with
+command 35809 alone: inlined there, the switch keeps that case; JieLi's LLVM 4 does not propagate that far).
 
-`demo_wifi`, `wifi_camera` and `wifi_ipc` are smaller than JieLi's because link-time optimization removes code
-JieLi's keeps (for `demo_wifi` the USB Wi-Fi driver, 270 KB: `rtusb_probe` is removed as having no effect); that
-has not been explained and is not assumed to be right.
+For `demo_hello` the same 99 archive members are linked, in the same order, and every sized object is in the same
+section as in JieLi's build. The post-build commands give the same section headers (except the sizes), the same
+symbol table text, and `objcopy -O binary` the same bytes of the same ELF; on JieLi's own ELF the listing, section
+table, symbol table and section images are byte for byte JieLi's (listing: 188 of 190 000 lines differ, the source
+line of a few instructions; `symbol_tbl.txt`: the file of 35 of 992 symbols). Neither toolchain gives the same ELF
+twice: one byte of `.text` differs (the build time).
 
-`demo_edr`, `demo_audio`, `demo_DevKitBoard` and `wifi_story_machine` stopped in the assembler on `a46b6e443` and link
-with the change to inline-assembly strings below (sizes as above; the post-build step stops where JieLi's does):
+What it took on the fork's side, beyond reading JieLi's bitcode ([LLVM.md](LLVM.md#jielis-bitcode)):
 
-| Application | JieLi | Drop-in | |
-| --- | ---: | ---: | --- |
-| `demo_edr` | 735 424 | 742 792 | +1.0 % |
-| `demo_audio` | 2 081 576 | 1 943 280 | −6.6 % |
-| `demo_DevKitBoard` | 2 488 960 | 2 349 376 | −5.6 % |
-| `wifi_story_machine` | 3 129 152 | 3 023 904 | −3.4 % |
-
-**Braces in inline assembly.** The SDK's `flfft_core_pi32v2.c` writes `rep %1 { ... iff(...) { ... } }` and
-`if(%1 < 0){ ... }` in `asm` strings. Stock clang turns `{`, `|` and `}` of an asm string into `$(`, `$|` and
-`$)`, LLVM's dialect markers, and the asm printer eats them (the first block then read `if(r2<0)` without its
-brace; the nested one aborted with `Nested variants found in inline asm string`). JieLi's clang leaves them as
-written ([audit](audits/2026-10-sdk-inline-asm.md#round-3-the-four-applications-that-stopped-in-the-assembler-2026-10-27)),
-and so does the fork's for pi32v2 now (`NoAsmVariants`, the target hook other targets with no dialects use).
-
-Stopped: `demo_wifi_ext` at the link: code that JieLi's
-link-time optimizer proves dead (`Init_LwIP` with a constant per call, three call sites) is kept by LLVM's, and it
-refers to `ext_netdev_*`, which nothing in this configuration defines.
+- **Braces in inline assembly.** The SDK's `flfft_core_pi32v2.c` writes `rep %1 { ... iff(...) { ... } }` and
+  `if(%1 < 0){ ... }` in `asm` strings. Stock clang turns `{`, `|` and `}` of an asm string into `$(`, `$|` and
+  `$)`, LLVM's dialect markers, and the asm printer eats them. JieLi's clang leaves them as written
+  ([audit](audits/2026-10-sdk-inline-asm.md#round-3-the-four-applications-that-stopped-in-the-assembler-2026-10-27)),
+  and so does the fork's for pi32v2 (`NoAsmVariants`, the hook other targets with no dialects use).
+- **A missing return.** The Wi-Fi libraries' `wf_mem_init` has no return when `CONFIG_WIFI_USE_TLSF_MEM` is 0, and
+  the Ralink driver's probe tests its status; a branch on that undefined value is undefined behaviour to today's
+  optimizer, which removed the driver (270 KB of `demo_wifi`). The fork returns a frozen value there instead.
+- **`always_inline_when_const_args`.** JieLi's attribute, on `Init_LwIP` among others: inlined wherever every
+  argument is a constant. `demo_wifi_ext` links only when the cases its constant calls do not take are gone.
+- **Address 0.** The SDK's `-fallow-pointer-null` comes in its bitcode as `"allow-nullptr-deref"`, read as
+  `null_pointer_is_valid`.
 
 ## Known differences
 
@@ -178,12 +178,6 @@ What differs from JieLi's output, with the cause:
   `CONFIG_SDRAM_RE_TRIM_ENABLE` is defined (no application of the SDK does).
 - **`__declspec(allocate)` with `__attribute__((section))`** on one variable: JieLi's clang takes the attribute, the
   fork's the declspec. The SDK has no `__declspec(allocate)`.
-- **Address 0.** The SDK's bitcode marks its functions `"allow-nullptr-deref"` (JieLi's `-fallow-pointer-null`);
-  the fork does not read that as `null_pointer_is_valid` yet, so link-time optimization may treat a load from a
-  constant null as undefined (`tools/dropin/` has no way to change that in the libraries' bitcode).
-- **Dead code the SDK relies on being removed.** `demo_wifi_ext` links only if the optimizer proves a switch on a
-  per-call constant dead (it refers to symbols nothing defines in that configuration). `PI32V2_DROPIN_LDFLAGS=--warn-unresolved-symbols`
-  links it anyway, with those references at address 0.
 - **`make -jN` and the pre-build step.** The SDK's Makefiles run `pre_build` (linker script, symbol list) in parallel
   with the link when the objects are up to date, so the link can read the previous application's files; clean first
   (`make clean_ac791n_...`) when switching applications. This is the same with JieLi's toolchain.
@@ -191,5 +185,5 @@ What differs from JieLi's output, with the cause:
   address is explicit, as with GNU ld, which aligns inside the section from the real address; so does `ld.lld`.
 - **`.map` and `.lst` details.** The map is lld's; the listing's source lines agree with JieLi's for 99.8 % of the
   instructions (the others differ by a line number).
-- **ELF details.** Program headers are page-aligned (0x1000, JieLi's 0x500), an empty `.bss` is `PROGBITS`,
-  sections carry the retain flag; `objcopy -O binary` of a section gives the same bytes.
+- **ELF details.** Program headers are page-aligned (0x1000, JieLi's 0x500), an empty `.bss` is `PROGBITS`;
+  `objcopy -O binary` of a section gives the same bytes.
