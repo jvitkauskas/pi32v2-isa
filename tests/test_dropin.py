@@ -25,8 +25,8 @@ SDK_CFLAGS = ("-target pi32v2 -integrated-as -mcpu=r3 -mfprev1 -Wuninitialized -
 class ClangTest(unittest.TestCase):
     def test_jieli_only_options(self):
         out = jlwrap.clang_args(SDK_CFLAGS)
-        self.assertNotIn("-fprefer-gnu-section", out)
         self.assertNotIn("-fallow-pointer-null", out)
+        self.assertIn("-fprefer-gnu-section", out)       # the fork's clang has the option itself
         self.assertIn("-pi32v2-large-program=true", out)
         self.assertIn("-mllvm", out)
         self.assertIn("-fno-delete-null-pointer-checks", out)

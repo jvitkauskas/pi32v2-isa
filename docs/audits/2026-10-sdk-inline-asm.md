@@ -237,3 +237,36 @@ records the two members and independent reproductions. No encoding was invented 
 ISA live checks used `PI32V2_TOOLCHAIN` pointing at the parent checkout's 20260730.1 oracle. All LLVM
 validation used `/root/work/wt-asm/build/bin`. Neither parent checkout nor `/root/src/build` was modified.
 Nothing was pushed; no hardware or remote machines were used.
+
+## Round 3: the four applications that stopped in the assembler (2026-10-27)
+
+`demo_edr`, `demo_DevKitBoard`, `demo_audio` and `wifi_story_machine` compile `apps/common/jl_math/flfft_core_pi32v2.c`,
+whose inline assembly has `if(%1 < 0){ ... }` and a `rep` block with an `iff` block inside it. The link reported
+`unrecognised instruction or operand: if(r2<0)` (and `if(r2>254)`), then `Nested variants found in inline asm string`.
+
+**The assembler was not at fault.** `if(r1<0){` / `if(r1>254){` / `ifs(...)` written with or without spaces, and `rep`
+with a nested `iff`, are accepted and encode as JieLi's assembler does (`tests/asm/inline-blocks.s`, identical
+object). The diagnostic prints the instruction with its blanks removed, and the block opener `{` was already gone:
+clang turned each `{` of the asm string into `$(`, LLVM's marker for the start of an assembler-dialect variant
+(`{a|b}`), which the asm printer consumes. The first block lost its brace (`if(r2 < 0)` alone is not an instruction)
+and the second `$(` inside the `rep` block was a nested variant.
+
+**What JieLi's compiler does** (clang 4.0.1, black box, `-S -emit-llvm`): `{`, `|` and `}` in an asm string are
+copied into the IR string unchanged (`"rep $0 { $0 = [$1++=4] ... iff($0 > $1) { $0 = $1 } }"`), `$` becomes `$$`,
+so a written `$(` is the literal text `$$(`, which its backend prints as `$(`. The SDK's own bitcode shows the same:
+no inline-asm string in it contains `$(`, and the blocks have plain braces. Its backend copies the braces to the
+assembly, nested ones included (`-S` of the string above shows `rep r1 {` and `iff(r1 > r0) { ... } }`). It also
+rejects `%{`, `%|` and `%}` as invalid escapes (clang here accepts `%{` and `%}` as the characters; kept).
+
+**The change** (LLVM fork, clang): `PI32V2TargetInfo` sets `NoAsmVariants`, the existing hook for targets whose
+assembly has no dialects (AArch64, ARM, Hexagon, ...): `{`, `|`, `}` stay as written. The LLVM side needed nothing:
+its asm printer treats a bare `{` as text, and `llc` assembles the SDK's bitcode with the braces.
+`clang/test/CodeGen/pi32v2-inline-asm.c` checks the IR string; `llvm/test/MC/PI32V2/inline-blocks.s` and
+`tests/asm/inline-blocks.s` keep the block spellings.
+
+No assembler alias was needed, so the table (1165 entries) and the generated parser are unchanged. Validation, LLVM
+`80c2ec816` (Release, assertions): `python3 -m pi32v2isa check` 1165 entries, 0 problems; `unittest discover` 152
+tests OK (1 skipped, the opt-in full confirmation); `tools/llvm/check_mc.py` disassembly 6093/6093, assembly
+5478/5478; `llvm-lit` CodeGen/PI32V2 13/13, MC/PI32V2 5/5, MC/Disassembler/PI32V2 1/1; the RUN lines of
+`clang/test/CodeGen/pi32v2-*.c` (5 files, 6 runs) pass. `demo_edr`, `demo_audio`, `demo_DevKitBoard` and
+`wifi_story_machine` link with the drop-in made from that build (sizes in [DROPIN.md](../DROPIN.md#builds-2026-10-26)).

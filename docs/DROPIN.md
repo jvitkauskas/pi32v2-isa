@@ -58,11 +58,36 @@ ELF OUT` runs the commands that work (listing, section table, symbol listings, s
 | `-target pi32v2 -mcpu=r3 -Oz -g -flto -fms-extensions -femulated-tls -ffunction-sections -fdata-sections -w` and the rest | passed on; `-integrated-as` is accepted |
 | `-mfprev1` | `-Xclang -target-feature -Xclang +fprev1` (`-mcpu=r3` has it already) |
 | `-fallow-pointer-null` | `-fno-delete-null-pointer-checks`: a load or store at address 0 stays |
-| `-fprefer-gnu-section` | dropped: section attributes and `#pragma code_seg`/`data_seg` give the same section names and flags as without it |
+| `-fprefer-gnu-section` | passed on: the fork's clang has the option. A `section` attribute written on a function definition replaces the section an active `#pragma code_seg` gave it; without the option the pragma wins, with a warning. Nothing else changes (below) |
 | `-mllvm -pi32v2-large-program=true` | passed on: calls between flash and RAM code are the 6-byte `call.xl` (the 4-byte call reaches 4 MiB) |
 | (default C standard) | `-std=gnu11` for C files without `-std`: clang 4's default; the fork's is gnu17 |
 | `-g` | `-gdwarf-4` added: the SDK's libraries carry DWARF 4, one version in the program |
 | (errors in C) | `implicit-function-declaration`, `implicit-int`, `int-conversion`, `incompatible-(function-)pointer-types`, `return-mismatch` are warnings again: the SDK's sources have them |
+
+### `-fprefer-gnu-section`
+
+Black box, JieLi's clang with and without the option (`-fms-extensions`, `-S`, section of every function and
+variable; 5 test files of 10 to 25 definitions):
+
+- **Variables:** no difference. `data_seg`, `bss_seg` and `const_seg` name the section of what follows; a
+  `section` attribute on a variable always wins (also over `__declspec(allocate)`, with and without the option).
+- **Functions, without the option:** an active `#pragma code_seg` decides, and a `section` attribute on the
+  function definition is ignored with `-Wsection` ("section does not match previous declaration"), also inside
+  `code_seg(push, ...)`. This is stock clang's behaviour, and the fork's.
+- **Functions, with the option:** the `section` attribute of the definition wins, with no warning. An attribute
+  on an earlier declaration, or on a redeclaration before the definition, does not (the pragma's section stays,
+  warning kept); a function outside any pragma is not affected.
+
+The fork's clang has the option now (`-fprefer-gnu-section`, `-fno-prefer-gnu-section`): the attribute written on
+the declarator replaces the implicit one of `code_seg`. For the SDK's builds this decides nothing yet: of the five
+sources with these pragmas (`effects_adj.c`, `mem_heap.c`, `custom_cfg.c`, `flfft_core_pi32v2.c`,
+`sdram_re_trim.c`) three have them compiled out (`MEDIA_SUPPORT_MS_EXTENSIONS`, `#if 0`, a comment),
+`mem_heap.c` is in no application, and `sdram_re_trim.c` needs `CONFIG_SDRAM_RE_TRIM_ENABLE`; none of them has a
+function with a `section` attribute and a pragma. The 52 symbols of `effects_adj.c` and `flfft_core_pi32v2.c` that
+`demo_audio` keeps are in the same output section in JieLi's ELF and the drop-in's; `mem_heap.c` and
+`sdram_re_trim.c` (enabled by hand) give the same section for every function and variable in both compilers,
+except the string literals of `str_literal_override` ([below](#known-differences)). The `btmesh` and `wolfssl` sources
+that have pragmas are in JieLi's prebuilt libraries.
 
 ## Options of JieLi's ld
 
@@ -88,7 +113,7 @@ ELF OUT` runs the commands that work (listing, section table, symbol listings, s
 
 The 14 applications of the SDK `AC79NN_SDK_V1.2.14_2026-10-13` (commit `5fa84a9b2f72`, `make ac791n_...`) build with
 JieLi's toolchain `20260730.1` (clean, `-j6`: 4 s for `demo_hello`, 97 s for `demo_DevKitBoard`). With this
-drop-in on LLVM `a46b6e443` nine link; the rest stop in link-time code generation (below).
+drop-in on LLVM `a46b6e443` nine link; with the later changes (inline assembly, below; LLVM `80c2ec816`) 13 do.
 Sizes in bytes (text + RAM data + RAM bss + cache RAM data of the linked ELF):
 
 | Application | JieLi | Drop-in | |
@@ -116,8 +141,24 @@ Neither toolchain gives the same ELF twice: one byte of `.text` differs (the bui
 JieLi's keeps (for `demo_wifi` the USB Wi-Fi driver, 270 KB: `rtusb_probe` is removed as having no effect); that
 has not been explained and is not assumed to be right.
 
-Stopped: `demo_edr`, `demo_DevKitBoard`, `demo_audio` and `wifi_story_machine` in the assembler (inline assembly
-the fork does not read yet: `if(r2<0)`, a nested `$(`/`$)` block); `demo_wifi_ext` at the link: code that JieLi's
+`demo_edr`, `demo_audio`, `demo_DevKitBoard` and `wifi_story_machine` stopped in the assembler on `a46b6e443` and link
+with the change to inline-assembly strings below (sizes as above; the post-build step stops where JieLi's does):
+
+| Application | JieLi | Drop-in | |
+| --- | ---: | ---: | --- |
+| `demo_edr` | 735 424 | 742 792 | +1.0 % |
+| `demo_audio` | 2 081 576 | 1 943 280 | −6.6 % |
+| `demo_DevKitBoard` | 2 488 960 | 2 349 376 | −5.6 % |
+| `wifi_story_machine` | 3 129 152 | 3 023 904 | −3.4 % |
+
+**Braces in inline assembly.** The SDK's `flfft_core_pi32v2.c` writes `rep %1 { ... iff(...) { ... } }` and
+`if(%1 < 0){ ... }` in `asm` strings. Stock clang turns `{`, `|` and `}` of an asm string into `$(`, `$|` and
+`$)`, LLVM's dialect markers, and the asm printer eats them (the first block then read `if(r2<0)` without its
+brace; the nested one aborted with `Nested variants found in inline asm string`). JieLi's clang leaves them as
+written ([audit](audits/2026-10-sdk-inline-asm.md#round-3-the-four-applications-that-stopped-in-the-assembler-2026-10-27)),
+and so does the fork's for pi32v2 now (`NoAsmVariants`, the target hook other targets with no dialects use).
+
+Stopped: `demo_wifi_ext` at the link: code that JieLi's
 link-time optimizer proves dead (`Init_LwIP` with a constant per call, three call sites) is kept by LLVM's, and it
 refers to `ext_netdev_*`, which nothing in this configuration defines.
 
@@ -131,6 +172,12 @@ What differs from JieLi's output, with the cause:
   (`malloc`, `printf`, `fopen`, ...) external; JieLi's `-dont-used-symbol-list` let it drop them.
   Their callees stay too, so some code the reference drops is present (and its references must resolve).
 - **No movable regions.** See above.
+- **`#pragma str_literal_override`.** JieLi's clang accepts `#pragma str_literal_override(".sec")` (the one-argument
+  form only; `()`, `push` and `pop` make it fail): string literals after it go to `.sec` (flags `aMS`), the first use
+  of a text deciding. The fork's clang ignores it. The SDK uses it in `sdram_re_trim.c`, which is compiled out unless
+  `CONFIG_SDRAM_RE_TRIM_ENABLE` is defined (no application of the SDK does).
+- **`__declspec(allocate)` with `__attribute__((section))`** on one variable: JieLi's clang takes the attribute, the
+  fork's the declspec. The SDK has no `__declspec(allocate)`.
 - **Address 0.** The SDK's bitcode marks its functions `"allow-nullptr-deref"` (JieLi's `-fallow-pointer-null`);
   the fork does not read that as `null_pointer_is_valid` yet, so link-time optimization may treat a load from a
   constant null as undefined (`tools/dropin/` has no way to change that in the libraries' bitcode).

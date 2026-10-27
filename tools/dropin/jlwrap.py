@@ -69,10 +69,6 @@ def clang_args(argv):
             out.append("-fno-delete-null-pointer-checks")
         elif a == "-fno-allow-pointer-null":
             out.append("-fdelete-null-pointer-checks")
-        elif a == "-fprefer-gnu-section":
-            # a function's __attribute__((section)) over #pragma code_seg: no difference in section names
-            # or flags was found against JieLi's compiler (docs/DROPIN.md)
-            pass
         elif a == "-mllvm" and i + 1 < len(argv) and argv[i + 1].split("=")[0] in MLLVM_DROPPED:
             i += 1
         else:
