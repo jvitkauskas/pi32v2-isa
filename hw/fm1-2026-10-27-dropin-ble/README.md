@@ -15,6 +15,7 @@ unit's own log read over USB-MIDI (`F0 7D 4C 47 F7`).
 | Connect, services resolved | yes | link up, then a connection timeout | yes |
 | Disconnect, advertising again, no reset | yes | the chip resets at the connection | yes |
 | The unit's log (connect, MTU, CCC, connection update, terminate) | | | line for line JieLi's build's |
+| MIDI over Bluetooth with an iPhone, both ways (the owner) | | | yes |
 
 The reset: exception 1 in fm1-base's `q_put` (its OS shim's task queue) at a word load from `0x01C32D0E`. The
 controller's `hci_send_event_cmd_complete` builds the event in a packed local (`alloca %struct.hci_event, align
@@ -23,4 +24,4 @@ itself as their array; here a 22-byte Command Complete, six words. JieLi's frame
 fork's put it at `sp+6` (the padding under it), and a misaligned word load resets the chip ([GAPS.md](../../docs/GAPS.md)).
 The fork now word-aligns every local of a word or more (`PI32V2AlignAllocas`); the event is at `sp+4`.
 
-Not exercised: MIDI notes over Bluetooth, pairing, a phone.
+Not exercised: Bluetooth MIDI devices (the unit as central), WiFi.
