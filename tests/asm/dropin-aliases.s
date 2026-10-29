@@ -106,3 +106,8 @@ nop
 nop
 ifs(--r10!=0)goto 1b
 ifs (--r3 != 0) goto 1b
+r1 = ~r2
+r9 = ~r8
+r3 = ~r12
+r12 = ~r3
+r9 = ~r9

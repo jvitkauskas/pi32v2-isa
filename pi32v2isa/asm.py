@@ -503,6 +503,8 @@ def alias_syntaxes(insn, syntax):
         out.append((re.sub(r"\(rnd,\s*uavg\)", "(uavg,rnd)", syntax), None))
     if base_id == "xor.modimm.rri":
         out.append(("{r} = -{s} (f)" + par, ("fixed", {"n": numeric_raw(insn, "n", 0x80000000)})))
+        # `rD = ~rS` on a register the 2-byte not cannot name (JieLi's assembler: an xor with all ones)
+        out.append(("{r} = ~{s}" + par, ("fixed", {"n": numeric_raw(insn, "n", 0xFFFFFFFF)})))
     if base_id.startswith("cmp.") and "(v)" in syntax:
         out.append((syntax.replace("cmp(", "cmpu("), None))
     if base_id == "rsub.modimm.rri":
