@@ -248,3 +248,82 @@ int f_tablecall(int a, int b) {
   }
   return (int)sent;
 }
+
+/* ---- selection checks (size work) ---- */
+int f_rsub(int a, int b) { return 100 - a + (0x12000 - b) + (-a) + (7 - b); }
+int f_bitops(int a, int b) {
+  b &= 31;
+  return (a | (1u << b)) ^ (a & ~(1u << b)) ^ (a ^ (1u << b)) ^ (a & (1u << b)) ^ (a & ~b);
+}
+int f_insert(int a, int b, int c) {
+  int r = (a & ~0xff00) | ((b & 0xff) << 8);
+  r ^= (c & ~0x7f80) | (b << 7 & 0x7f80);
+  int d = (a & 0xffffff00) | (c & 0xff);
+  int e = (a & 0x7f) | ((b & 0x7f) << 7) | ((c & 0x7f) << 14);
+  return r ^ d ^ (e * 3);
+}
+long long l_sh1(long long a, int b) { return (a << 1) ^ (a >> 1) ^ (long long)((unsigned long long)a >> 1) ^ b; }
+long long l_sh31(long long a, int b) { return (a << 31) ^ (a >> 31) ^ (long long)((unsigned long long)a >> 31) ^ b; }
+long long l_sh32(long long a, int b) { return (a << 32) ^ (a >> 32) ^ (long long)((unsigned long long)a >> 32) ^ b; }
+long long l_sh33(long long a, int b) { return (a << 33) ^ (a >> 33) ^ (long long)((unsigned long long)a >> 33) ^ b; }
+long long l_sh63(long long a, int b) { return (a << 63) ^ (a >> 63) ^ (long long)((unsigned long long)a >> 63) ^ b; }
+long long l_sh45(long long a, int b) { return (a << 45) + (a >> 45) + (long long)((unsigned long long)a >> 45) + b; }
+struct big { int w[80]; short h[80]; unsigned char b[200]; };
+static struct big gbig;
+int f_anchor(int a, int b) {
+  struct big *s = &gbig;
+  s->w[30] = a; s->w[31] = b; s->w[33] = a ^ b; s->h[40] = a; s->h[41] = b; s->b[100] = a; s->b[101] = b; s->b[103] = a + b;
+  return s->w[30] + s->w[31] * 3 + s->w[33] * 5 + s->h[40] * 7 + s->h[41] * 9 + s->b[100] + s->b[101] * 2 + s->b[103] * 3 + s->w[a & 15];
+}
+int f_dbnz(int a, int b) {
+  int s = 0;
+  a = (a & 15) + 1;
+  do { s += a * b; } while (--a);
+  int n = (b & 7) + 1;
+  for (int i = n; i; i--) s ^= i;
+  return s;
+}
+int f_selz(int a, int b) { return (a ? b : 7) + (a == 0 ? 3 : b) + (b ? a : 11); }
+int f_post(int a, int b) {
+  static int buf[24];
+  int *p = buf; int s = 0;
+  for (int i = 0; i < 24; i++) *p++ = a + i * b;
+  p = buf;
+  for (int i = 0; i < 24; i++) s += *p++ * (i + 1);
+  return s;
+}
+
+/* ---- round 2 selection checks (size work): far struct fields, constant stores, pair shifts, 64/32 divides ---- */
+struct farst { int w[700]; unsigned char b[64]; short h[16]; };
+static struct farst gfar;
+int f_far(int a, int b) {
+  struct farst *s = &gfar;
+  int r = s->w[400];
+  if (a & 1) r += s->w[401] * 3;
+  else r ^= s->w[402];
+  if (b & 2) { s->w[403] = a; r += s->w[404]; }
+  s->w[400] += b;
+  s->w[650]++; s->w[650] += a;
+  if (a & 4) s->b[7] = b;
+  return r + s->w[400] + s->w[650] + s->w[a & 7] + s->b[7];
+}
+int f_farloop(int a, int b) {
+  struct farst *s = &gfar;
+  int r = 0;
+  for (int i = 0; i < (a & 7) + 1; i++) { s->w[600 + (i & 3)] += b + i; r += s->w[500] ^ s->w[610]; s->w[610] = r; }
+  return r + s->w[600] + s->w[603];
+}
+void f_stc_helper(float *p) { p[1] = 1.0f; p[2] = 1.0f; p[3] = 1.0f; p[4] = 1.0f; p[5] = 2.0f; p[6] = 2.0f; }
+int f_stc(int a, int b) {
+  static float buf[8];
+  f_stc_helper(buf);
+  buf[0] = (float)a;
+  return (int)(buf[0] + buf[1] + buf[2] * 4 + buf[3] * 8 + buf[4] * 16 + buf[5] * 32 + buf[6] * b);
+}
+#define PSH(n) long long l_psh##n(long long a, int b) { return (a << n) ^ (a >> n) ^ (long long)((unsigned long long)a >> n) ^ b; }
+PSH(2) PSH(3) PSH(5) PSH(7) PSH(8) PSH(12) PSH(15) PSH(16) PSH(17) PSH(20) PSH(24) PSH(29) PSH(30)
+long long l_pshlo(long long a, int b) { return (long long)((int)(a >> 16) + (int)((a * b) >> 7) + (int)((a << 5) >> 31)) ^ (a >> 3); }
+long long l_dnn(long long a, int b) { return a / (long long)(unsigned)(b & 0x7fffffff | 1); }
+long long l_dabs(long long a, int b) { int d = (b < 0 ? -b : b) / 4 + 3; return a / d + a % d; }
+long long l_dzx(long long a, unsigned b) { return a / (long long)b + (a % (long long)b); }
+int f_clr31(int a, int b) { return (a & 0x7fffffff) + (b & 0x7fffffff); }
