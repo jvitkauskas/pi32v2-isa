@@ -10,7 +10,7 @@ what the hardware runs showed for the arithmetic ones (docs/COMPILER.md) and saf
 
 ALU = """add.rrr.l sub.rrr.l and.rrr or.rrr xor.rrr lsl.rrr lsr.rrr asr.rrr lsl.rri.l lsr.rri.l asr.rri.l mul.rrr
 div.u.rrr div.s.rrr add.s14.rri and.modimm.rri and.nmodimm.rri or.modimm.rri xor.modimm.rri sub.modimm.rri add.modimm.rri
-rsub.modimm.rri mul.u.prr mul.s.prr mul.modimm.rri clz.rr cls.rr div.u.ppr div.s.ppr lsl.pair.r lsr.pair.r asr.pair.r rev8.rr smax.rrr smin.rrr umax.rrr umin.rrr ror.rri ror.rrr uextra.rrii sextra.rrii""".split()
+rsub.modimm.rri or.bit.rrr xor.bit.rrr and.bit.rrr and.invbit.rrr bic.rrr insert.rrii abs.rr mul.u.prr mul.s.prr mul.modimm.rri clz.rr cls.rr div.u.ppr div.s.ppr lsl.pair.r lsr.pair.r asr.pair.r rev8.rr smax.rrr smin.rrr umax.rrr umin.rrr ror.rri ror.rrr uextra.rrii sextra.rrii""".split()
 MOVES = "mov.rr mov.pair li.s16 li.u32 li.modimm add.r_sp_i.l".split()
 LOADS = """ld.w.l ld.bu.l ld.bs.l ld.hu.l ld.hs.l ld.w.sp.l ld.bu.sp.l ld.bs.sp.l ld.hu.sp.l ld.hs.sp.l
 ld.w.idx ld.w.idxs ld.hu.idx ld.hs.idx ld.hu.idxs ld.hs.idxs ld.bu.idx ld.bs.idx
@@ -31,7 +31,7 @@ FLOAT = "add.f.rrr sub.f.rrr mul.f.rrr div.f.rrr itof.rr utof.rr ftoi.trunc.rr f
 
 # read-modify-write of a word in memory, and a constant stored: a load and a store; psr as the ALU forms
 RMW = """rmw.or.r rmw.xor.r rmw.and.r rmw.add.r rmw.sub.r rmw.and.invr rmw.or.modimm rmw.xor.modimm rmw.and.modimm
-rmw.and.nmodimm rmw.add.s12 rmw.add.modimm""".split()
+rmw.and.nmodimm rmw.add.s12 rmw.add.modimm rmw.or.bitr rmw.xor.bitr rmw.and.invbitr""".split()
 
 
 def flags():
