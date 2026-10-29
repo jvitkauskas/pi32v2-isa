@@ -60,6 +60,8 @@ ELF OUT` runs the commands that work (listing, section table, symbol listings, s
 | `-fallow-pointer-null` | `-fno-delete-null-pointer-checks`: a load or store at address 0 stays |
 | `-fprefer-gnu-section` | passed on: the fork's clang has the option. A `section` attribute written on a function definition replaces the section an active `#pragma code_seg` gave it; without the option the pragma wins, with a warning. Nothing else changes (below) |
 | `-mllvm -pi32v2-large-program=true` | passed on: calls between flash and RAM code are the 6-byte `call.xl` (the 4-byte call reaches 4 MiB) |
+| `-mllvm -pi32v2-merge-max-offset=N` | passed on, JieLi's meaning: blocks of merged globals of at most N words (N * 4 bytes, N at most 127; JieLi's default 127). Without it the fork's limit is 255 bytes, and globals are merged in the sets functions use together, as `-mllvm -global-merge-ignore-single-use=false` asks of JieLi's |
+| (memset of a constant size) | stores up to JieLi's limits, 32 bytes of words at `-Os`, 64 at `-O2`; memcpy and memmove at least as far (code run from RAM must not call into flash) |
 | (default C standard) | `-std=gnu11` for C files without `-std`: clang 4's default; the fork's is gnu17 |
 | `-g` | `-gdwarf-4` added: the SDK's libraries carry DWARF 4, one version in the program |
 | (errors in C) | `implicit-function-declaration`, `implicit-int`, `int-conversion`, `incompatible-(function-)pointer-types`, `return-mismatch` are warnings again: the SDK's sources have them |
