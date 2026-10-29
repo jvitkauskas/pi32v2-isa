@@ -166,6 +166,58 @@ What it took on the fork's side, beyond reading JieLi's bitcode ([LLVM.md](LLVM.
   load resets the chip at the first connection ([hw run](../hw/fm1-2026-10-27-dropin-ble/README.md)). Every local of
   a word or more is word-aligned (JieLi's compiler packs them: a `char[5]` at `sp+3`).
 
+## Code size against JieLi's toolchain (2026-10-29)
+
+Thirteen open-source firmwares for the FM-1 and the SMK-37 (15 builds), each built by its own build script with
+JieLi's toolchain 20260730.1 and with this drop-in (fork 6e5cbfedb), the SDK V1.2.1 they expect. Code is the sum of the
+ELF's `FUNC` symbols (the linker scripts put the constants in `.text`, so its size is mostly not code); App is the
+image the build writes. Bytes:
+
+| Firmware | Code, JieLi | Code, fork | | App, JieLi | App, fork | |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| felucca | 270 132 | 255 912 | -5.3 % | 513 512 | 500 556 | -2.5 % |
+| sloop-fm1 | 209 772 | 197 302 | -5.9 % | 570 176 | 558 364 | -2.1 % |
+| x0x | 181 690 | 170 138 | -6.4 % | 480 032 | 469 056 | -2.3 % |
+| melodee | 416 162 | 402 828 | -3.2 % | 517 676 | 506 472 | -2.2 % |
+| amb | 63 638 | 62 992 | -1.0 % | 114 916 | 114 372 | -0.5 % |
+| skiff-fm1 | 338 120 | 321 734 | -4.8 % | 557 872 | 542 976 | -2.7 % |
+| skiff-smk37 | 343 698 | 327 140 | -4.8 % | 571 656 | 556 172 | -2.7 % |
+| choralroot | 339 624 | 321 128 | -5.4 % | 552 884 | 535 792 | -3.1 % |
+| sloop-pro | 236 674 | 223 942 | -5.4 % | 599 112 | 587 228 | -2.0 % |
+| speak37 | 77 244 | 70 682 | -8.5 % | 613 968 | 608 788 | -0.8 % |
+| erik37 | 66 446 | 60 892 | -8.4 % | 581 956 | 576 352 | -1.0 % |
+| doom-fm1 | 131 820 | 131 510 | -0.2 % | 578 644 | 577 060 | -0.3 % |
+| doom-smk37 | 132 674 | 132 740 | +0.0 % | 580 304 | 578 920 | -0.2 % |
+| fm1-base | 149 354 | 140 920 | -5.6 % | 219 368 | 208 356 | -5.0 % |
+| **total** | 2 957 048 | 2 819 860 | **-4.64 %** | 7 052 076 | 6 920 464 | **-1.87 %** |
+
+Optimist (w0ts/optimist) is not in the totals: it fails its own checks with the drop-in (a `memset` call from RAM
+code to flash, a jump table its checker reads as code, its slot budget). Doom's comparison is not like for like: the
+drop-in links the SDK's newlib, JieLi's toolchain its own C library. Builds needing an adaptation: Melodee
+(`tools/audio_ram.py` and `stack_budget.py` parse LLVM 4's typed-pointer IR text; the former ported, the audit
+skipped), Skiff FM-1 and Doom (RAM or flash budgets a few hundred bytes too tight, raised for both toolchains).
+
+Before this work the drop-in was 0.8 % smaller in code than JieLi's (the newer optimizer gains about 2.7 %, the code
+generator lost 2.5 % on JieLi's own IR). The code generator is now 1.5 % smaller than JieLi's on the same IR (20
+translation units of these firmwares, JieLi's optimized IR compiled by both backends). What it took, in the fork:
+
+- **Instruction selection**: the forms the backend did not use (reverse subtract, bit set/clear/toggle/test by
+  register, `bic`, field insert); a compare with zero of r0-r7 stays a 2-byte branch (as JieLi's); decrement and
+  branch for counted loops; exact addressing modes for the loop optimizer, pre- and post-increment, one shared add
+  for runs of far struct fields; 64-bit shifts by a constant as the pair shifts; a repeated constant stored from a
+  register.
+- **Register allocation**: most 2-byte encodings name r0-r7 only, and our allocator spread values over r8-r15.
+  Allocation hints toward r0-r7 and toward the result-into-source (2-byte) forms, in size-optimized functions
+  without loops; a recoloring pass after allocation (callee-saved permutations costed with the real encodings,
+  pairs, regions across blocks), which adds no instruction. No loop block of these firmwares gains an instruction.
+- **Inliner**: the inline-hint threshold capped at 300 in size-optimized callers; the last-call bonus kept at cold
+  call sites; small local address helpers inlined (JieLi's does, and ChoralRoot links only then: its RAM render
+  function calls one).
+
+Checked with the differential test (`tools/llvm/ctest.py`, 3328 calls at -O0, -O2, -Os and from JieLi's IR, all
+agree). On hardware: SLOOP Pro from this toolchain plays on the SMK-37 Pro
+([hw run](../hw/smk37-2026-10-29-size/README.md)).
+
 ## Known differences
 
 What differs from JieLi's output, with the cause:

@@ -151,7 +151,8 @@ relies on what its older LLVM does, the target does the same:
 As of 2026-10-26, `ld.lld -r` compiles 4898 of the SDK's 4900 bitcode objects; JieLi's compiler rejects the
 other two as well (their inline assembly, [GAPS.md](GAPS.md)). fm1-base's
 Bluetooth build (the SDK's BT libraries LTO-linked) and all 14 applications of the SDK V1.2.14 build with this
-toolchain alone, through the drop-in package ([DROPIN.md](DROPIN.md)); fm1-base's plays MIDI over Bluetooth on the FM-1 with an
+toolchain alone, through the drop-in package ([DROPIN.md](DROPIN.md#code-size-against-jielis-toolchain-2026-10-29):
+its code is 4.6 % smaller than JieLi's over 13 open firmwares); fm1-base's plays MIDI over Bluetooth on the FM-1 with an
 iPhone ([hw run](../hw/fm1-2026-10-27-dropin-ble/README.md)), the applications have not run on hardware.
 
 The code generator uses the general forms of the table (`tools/llvm/codegen_flags.py` says which, and what LLVM
