@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+# Checks the setup-pi32v2 action with a pi32v2-llvm release on every runner it supports: installs it, compiles and
+# links a program that needs the builtins, and builds examples/fm1-blink into a .fwsc package.
+name: setup-pi32v2
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: pi32v2-llvm release tag
+        required: true
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025, macos-15, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+      - id: llvm
+        uses: ./.github/actions/setup-pi32v2
+        with:
+          version: ${{ inputs.version }}
+      - name: Compile and link
+        shell: bash
+        run: |
+          printf 'volatile long long a = 1234567890123LL, b = 97;\nint main(void) { return (int)(a / b); }\n' > t.c
+          clang -O2 -nostartfiles -nolibc -Wl,-e,main t.c -o t.elf
+          llvm-nm t.elf | grep -E ' (main|__divdi3)$'
+          llvm-objdump -d --disassemble-symbols=main t.elf
+      - name: examples/fm1-blink
+        shell: bash
+        run: |
+          py=$(command -v python3 || command -v python)
+          bin='${{ steps.llvm.outputs.path }}/bin'
+          mkdir -p out
+          "$bin/clang" --target=pi32v2 -O2 -c examples/fm1-blink/crt0.S -o out/crt0.o
+          "$bin/clang" --target=pi32v2 -O2 -ffreestanding -c examples/fm1-blink/blink.c -o out/blink.o
+          "$bin/ld.lld" -T examples/fm1-blink/fm1.ld out/crt0.o out/blink.o -o out/blink.elf
+          "$py" tools/hwtest/fm1app.py out/blink.fwsc --from-elf out/blink.elf
+          ls -l out/blink.fwsc

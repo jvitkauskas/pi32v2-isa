@@ -4,6 +4,23 @@ The pi32v2 toolchain is the LLVM fork ([LLVM.md](LLVM.md)) built as one package:
 binary tools for the PI32V2 target only, statically linked, with compiler-rt's builtins and this repo's runtime.
 Nothing of JieLi's is needed to build firmware with it.
 
+## Downloading it
+
+[pi32v2-llvm's releases](https://github.com/jvitkauskas/pi32v2-llvm/releases) have the package built for Linux
+x64 and arm64 (static executables), Windows x64 and macOS (Apple silicon and Intel), with `SHA256SUMS`. On
+Windows there are no `pi32v2-` names: use `clang`, `ld.lld` and the `llvm-` tools.
+
+In GitHub Actions, `.github/actions/setup-pi32v2` downloads the release for the runner, checks it against
+`SHA256SUMS`, caches it and puts its `bin/` on `PATH` (`steps.<id>.outputs.path` is its directory):
+
+```yaml
+- uses: jvitkauskas/pi32v2-isa/.github/actions/setup-pi32v2@main
+  with:
+    version: pi32v2-23.1.5-1
+```
+
+The `setup-pi32v2` workflow checks the action on every runner it supports.
+
 ## Building the package
 
 ```sh

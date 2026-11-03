@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 Julius Vitkauskas
+# SPDX-License-Identifier: MIT-0
+name: Set up the pi32v2 LLVM toolchain
+description: >
+  Downloads a release of jvitkauskas/pi32v2-llvm for the runner (Linux x64/arm64, Windows x64, macOS arm64/x64),
+  checks it against the release's SHA256SUMS, caches it and puts its bin/ on PATH.
+inputs:
+  version:
+    description: The release tag, such as pi32v2-23.1.5-1
+    required: true
+  repository:
+    description: The repository the releases are in
+    default: jvitkauskas/pi32v2-llvm
+  token:
+    description: Token for the download (the default works for the public repository)
+    default: ${{ github.token }}
+outputs:
+  path:
+    description: The toolchain's directory (bin/ is on PATH)
+    value: ${{ steps.install.outputs.path }}
+runs:
+  using: composite
+  steps:
+    - id: platform
+      shell: bash
+      run: |
+        case "$RUNNER_OS-$RUNNER_ARCH" in
+          Linux-X64) p=linux-x64 ext=tar.xz ;;
+          Linux-ARM64) p=linux-arm64 ext=tar.xz ;;
+          Windows-X64) p=windows-x64 ext=zip ;;
+          macOS-ARM64) p=macos-arm64 ext=tar.xz ;;
+          macOS-X64) p=macos-x64 ext=tar.xz ;;
+          *) echo "::error::no pi32v2 toolchain package for $RUNNER_OS $RUNNER_ARCH"; exit 1 ;;
+        esac
+        v='${{ inputs.version }}'
+        echo "asset=pi32v2-llvm-${v#pi32v2-}-$p.$ext" >> "$GITHUB_OUTPUT"
+        echo "dir=$RUNNER_TOOL_CACHE/pi32v2-llvm/${v#pi32v2-}-$p" >> "$GITHUB_OUTPUT"
+    - id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.platform.outputs.dir }}
+        key: pi32v2-llvm-${{ steps.platform.outputs.asset }}
+    - if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        dl="$RUNNER_TEMP/pi32v2-llvm-download"
+        rm -rf "$dl" && mkdir -p "$dl"
+        gh release download '${{ inputs.version }}' -R '${{ inputs.repository }}' -D "$dl" \
+          -p '${{ steps.platform.outputs.asset }}' -p SHA256SUMS
+        py=$(command -v python3 || command -v python)
+        "$py" "$GITHUB_ACTION_PATH/install.py" "$dl/${{ steps.platform.outputs.asset }}" "$dl/SHA256SUMS" \
+          '${{ steps.platform.outputs.dir }}'
+    - id: install
+      shell: bash
+      run: |
+        d='${{ steps.platform.outputs.dir }}'
+        echo "path=$d" >> "$GITHUB_OUTPUT"
+        echo "$d/bin" >> "$GITHUB_PATH"
+        "$d/bin/clang" --version | head -1
