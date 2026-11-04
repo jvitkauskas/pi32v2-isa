@@ -28,7 +28,7 @@ and how it is checked.
 | Inline assembly (`r`, `w`/`W`, `d`/`D` constraints), a frame pointer (`r7`) for dynamic stack | done |
 | An FM-1 application from this toolchain alone (`examples/fm1-blink`) | done: on the FM-1 |
 | m-bootloader 1.2 (FM-1, SMK-37) and fm1-base's template from this toolchain alone | done: on the hardware (`hw/fm1-2026-10-25-open-firmware`) |
-| `llvm-objdump` branch targets as symbols | not yet |
+| `llvm-objdump` branch targets as symbols | done: agrees with JieLi's objdump on every form it annotates (all but `ifs2ns`) |
 | `byval` (a struct argument as JieLi's clang writes it: a pointer to the caller's copy) | done |
 | JieLi's bitcode (LLVM 4.0.1: the AC79 SDK's libraries), compiled by `llc` or `ld.lld`'s LTO (below) | done: 4898 of the SDK's 4900 objects; JieLi's compiler rejects the other two |
 | 64-bit atomics | not yet |
