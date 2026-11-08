@@ -16,7 +16,7 @@ In GitHub Actions, `.github/actions/setup-pi32v2` downloads the release for the 
 ```yaml
 - uses: jvitkauskas/pi32v2-isa/.github/actions/setup-pi32v2@main
   with:
-    version: pi32v2-23.1.5-2
+    version: pi32v2-23.1.5-3
 ```
 
 The `setup-pi32v2` workflow checks the action on every runner it supports.

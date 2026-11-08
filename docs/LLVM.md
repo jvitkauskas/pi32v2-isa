@@ -30,6 +30,7 @@ and how it is checked.
 | m-bootloader 1.2 (FM-1, SMK-37) and fm1-base's template from this toolchain alone | done: on the hardware (`hw/fm1-2026-10-25-open-firmware`) |
 | `llvm-objdump` branch targets as symbols | done: agrees with JieLi's objdump on every form it annotates (all but `ifs2ns`) |
 | `byval` (a struct argument as JieLi's clang writes it: a pointer to the caller's copy) | done |
+| Parallel issue: `A #` and a short load or store as one packet, instructions moved to make pairs (`PI32V2Packetize`) | done: Snoop37 2.7.2 built with it runs on the SMK-37 Pro |
 | JieLi's bitcode (LLVM 4.0.1: the AC79 SDK's libraries), compiled by `llc` or `ld.lld`'s LTO (below) | done: 4898 of the SDK's 4900 objects; JieLi's compiler rejects the other two |
 | 64-bit atomics | not yet |
 
@@ -212,3 +213,32 @@ against 13670). It was 40% larger before; what closed the gap, in order of bytes
 Left: 64-bit compares through the flags (`sub; subc; psr`), pair shifts and rotates, post-increment loads and
 stores, memory read-modify-write forms (`[r+n] |= r`), SIMD byte lanes. `__builtin_pi32v2_popcount` is computed in
 software on purpose: the AC791N runs `popcnt` as a nop.
+
+## Speed
+
+Measured on an SMK-37 Pro, with the code where its firmware runs it: Ripple's 28 audio "currents" (Faust, C and
+C++ DSP modules of [fm1-ripple](https://github.com/charlesvestal/fm1-ripple)) loaded into SRAM by a benchmark
+application started by m-bootloader, each one's `process` timed over 256-frame blocks with TIMER4 (the 24 MHz
+crystal). The output of every current is the same with both compilers. Against JieLi's compiler, in total:
+release `pi32v2-23.1.5-2` 2.7% slower, `pi32v2-23.1.5-3` 5.1% faster (up to 28% on single currents; macro-string
+is still 12.5% slower, see below). What made the difference:
+
+- parallel issue: an instruction with a `#` twin and the 16-bit load or store after it go as one packet
+  ([COMPILER.md](COMPILER.md)), and the last pass moves an independent instruction next to a load or store to make
+  one. Worth about 4% on the device (the twin is the same size: code size does not change);
+- for functions not optimized for size: the DAG scheduled in source order (the ILP scheduler started values early
+  and loops spilled them), no post-incremented pointer per array from the loop optimizer, 32-bit constants made
+  again where they are used instead of spilled;
+- selects whose two values commute (the inverse condition), so a loop's running maximum keeps its register.
+
+Instruction costs measured in the chip's download mode (code and data in SRAM, the ROM's clock): ALU 1 cycle, load 2,
+store 1.5, float add and multiply 2 (not pipelined), float divide 4, integer multiply 3, a taken branch 7.5 to 10, an
+untaken one 1, an `if (...) {` block about 2. Pair and multi-register accesses (`d[...]`, `{r, r} = [r+]`) take as
+long as the single ones: JieLi's compiler uses them for size, they are no faster. A simulator count of
+instructions (`tools/llvm/sim.py`) is not a measure of speed: it counted such a pair as one, and it does not see
+the clock, the flash and the cache.
+
+macro-string's remaining difference is in plaits' `String::ProcessInternal`: each sample picks the random
+generator's state by the core it runs on (`stmlib::Random`, `plaits_core_sp`), an `extern` array whose size LLVM
+does not assume from its declaration, so a store through `this` may change it and the choice is made again every
+sample. JieLi's compiler (LLVM 4) moves it out of the loop.
