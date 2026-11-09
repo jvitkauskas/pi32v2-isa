@@ -225,7 +225,8 @@ single currents; macro-string is still 6.2% slower, see below). What made the di
 
 - parallel issue: an instruction with a `#` twin and the 16-bit load or store after it go as one packet
   ([COMPILER.md](COMPILER.md)), and the last pass moves an independent instruction next to a load or store to make
-  one. Worth about 4% on the device (the twin is the same size: code size does not change);
+  one. Worth about 4% on the device (the twin is the same size: code size does not change). Not when minimizing
+  size (`-Oz`, 23.1.5-5): code with the twins compresses worse (m-bootloader's packed stage 1: 80-100 bytes);
 - for functions not optimized for size: the DAG scheduled in source order (the ILP scheduler started values early
   and loops spilled them), no post-incremented pointer per array from the loop optimizer, 32-bit constants made
   again where they are used instead of spilled;
