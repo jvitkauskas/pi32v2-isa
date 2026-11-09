@@ -50,6 +50,10 @@ def flags():
         out[i] = ["let hasSideEffects = 0;", "let isMoveImm = 1;" if i.startswith("li.") else
                   "let isMoveReg = 1;" if i.startswith("mov.") else "let Uses = [SP];"]
     out["li.s16"] += ["let isReMaterializable = 1;", "let isAsCheapAsAMove = 1;"]
+    # remade where used instead of reloaded, for speed only (PI32V2InstrInfo::isReMaterializableImpl refuses them
+    # in a function optimized for size)
+    out["li.u32"] += ["let isReMaterializable = 1;"]
+    out["li.modimm"] += ["let isReMaterializable = 1;"]
     for i in LOADS:
         out[i] = ["let hasSideEffects = 0;", "let mayLoad = 1;"] + (["let Uses = [SP];"] if ".sp." in i else [])
     for i in STORES:
