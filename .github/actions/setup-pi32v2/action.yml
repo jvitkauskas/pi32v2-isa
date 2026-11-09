@@ -6,7 +6,7 @@ description: >
   checks it against the release's SHA256SUMS, caches it and puts its bin/ on PATH.
 inputs:
   version:
-    description: The release tag, such as pi32v2-23.1.5-3
+    description: The release tag, such as pi32v2-23.1.5-4
     required: true
   repository:
     description: The repository the releases are in

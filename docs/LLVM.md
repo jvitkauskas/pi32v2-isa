@@ -220,8 +220,8 @@ Measured on an SMK-37 Pro, with the code where its firmware runs it: Ripple's 28
 C++ DSP modules of [fm1-ripple](https://github.com/charlesvestal/fm1-ripple)) loaded into SRAM by a benchmark
 application started by m-bootloader, each one's `process` timed over 256-frame blocks with TIMER4 (the 24 MHz
 crystal). The output of every current is the same with both compilers. Against JieLi's compiler, in total:
-release `pi32v2-23.1.5-2` 2.7% slower, `pi32v2-23.1.5-3` 5.1% faster (up to 28% on single currents; macro-string
-is still 12.5% slower, see below). What made the difference:
+release `pi32v2-23.1.5-2` 2.7% slower, `pi32v2-23.1.5-3` 5.1% faster, `pi32v2-23.1.5-4` 9.1% faster (up to 28% on
+single currents; macro-string is still 6.2% slower, see below). What made the difference:
 
 - parallel issue: an instruction with a `#` twin and the 16-bit load or store after it go as one packet
   ([COMPILER.md](COMPILER.md)), and the last pass moves an independent instruction next to a load or store to make
@@ -229,7 +229,10 @@ is still 12.5% slower, see below). What made the difference:
 - for functions not optimized for size: the DAG scheduled in source order (the ILP scheduler started values early
   and loops spilled them), no post-incremented pointer per array from the loop optimizer, 32-bit constants made
   again where they are used instead of spilled;
-- selects whose two values commute (the inverse condition), so a loop's running maximum keeps its register.
+- selects whose two values commute (the inverse condition), so a loop's running maximum keeps its register;
+- (23.1.5-4) for functions not optimized for size: the machine scheduler, top-down in a region that sets up a call's
+  arguments (bottom-up kept a stack argument in a register that then had to be saved), and `li.modimm` constants
+  made again instead of reloaded (a reload is 2 cycles, the constant 1).
 
 Instruction costs measured in the chip's download mode (code and data in SRAM, the ROM's clock): ALU 1 cycle, load 2,
 store 1.5, float add and multiply 2 (not pipelined), float divide 4, integer multiply 3, a taken branch 7.5 to 10, an
@@ -241,4 +244,5 @@ the clock, the flash and the cache.
 macro-string's remaining difference is in plaits' `String::ProcessInternal`: each sample picks the random
 generator's state by the core it runs on (`stmlib::Random`, `plaits_core_sp`), an `extern` array whose size LLVM
 does not assume from its declaration, so a store through `this` may change it and the choice is made again every
-sample. JieLi's compiler (LLVM 4) moves it out of the loop.
+sample. JieLi's compiler (LLVM 4) moves it out of the loop. Taking the state once a block in the source (a reference
+to `Random::state_ref()` before the loop) makes both compilers' builds equally fast.
