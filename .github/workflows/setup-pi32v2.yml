@@ -9,6 +9,7 @@ on:
       version:
         description: pi32v2-llvm release tag
         required: true
+        default: pi32v2-23.1.5-5
 jobs:
   check:
     name: ${{ matrix.os }}
