@@ -7,9 +7,9 @@ count TIMER4 measured over them, the port A outputs and `RUST` to 0x01C7C000, an
 (`tools/hwtest/runapp.sh` reads the record back).
 
 A proof of concept: it needs the patched rustc of [jvitkauskas/pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust)
-(Rust 1.99.1) built against the [pi32v2-llvm](https://github.com/jvitkauskas/pi32v2-llvm) fork's LLVM. On the FM-1
-([hw/fm1-2026-10-25-rust](../../hw/fm1-2026-10-25-rust/README.md)) the `autotest` build counted 300 interrupts in
-72000008 crystal counts (3.00000 s at 24 MHz), and the picture showed.
+(Rust 1.100.0) built against the [pi32v2-llvm](https://github.com/jvitkauskas/pi32v2-llvm) fork's LLVM. On the FM-1
+([hw/fm1-2026-10-25-rust](../../hw/fm1-2026-10-25-rust/README.md)) the `autotest` build, by rustc 1.99.1, counted 300
+interrupts in 72000008 crystal counts (3.00000 s at 24 MHz), and the picture showed.
 
 | File | What |
 | --- | --- |
@@ -19,7 +19,7 @@ A proof of concept: it needs the patched rustc of [jvitkauskas/pi32v2-rust](http
 | `shim.c` | what Rust cannot say on pi32v2 yet: the interrupt entry (`__attribute__((interrupt))`, which calls Rust) and `cli`, `csync`, the `icfg` write |
 | `pi32v2-none.json` | the target specification (`"arch": "pi32v2"`, the LLVM data layout, `ld.lld`) |
 | `build.sh` | the build: clang for `fm1-blink`'s start-up code and the shim, cargo with `-Zbuild-std`, `ld.lld` with `fm1-blink`'s linker script, `fm1app.py` for the package |
-| `rustc/rustc-1.99.1-pi32v2.patch` | the patch to rustc 1.99.1 (MIT OR Apache-2.0, rustc's licence), the commit of the `pi32v2` branch of [pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust) |
+| `rustc/rustc-1.100.0-pi32v2.patch` | the patch to rustc 1.100.0 (MIT OR Apache-2.0, rustc's licence), the commit of the `pi32v2` branch of [pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust) |
 
 ## The patched rustc
 
@@ -40,11 +40,11 @@ cmake -G Ninja -S pi32v2-llvm/llvm -B build-rust -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=$PWD/llvm-rust
 ninja -C build-rust install
 
-# rustc 1.99.1 (it uses LLVM 23, as the fork), patched: the fork's branch, or the source tarball and the patch
-git clone --depth 1 --branch pi32v2 https://github.com/jvitkauskas/pi32v2-rust.git rustc-1.99.1-src
-#   or: curl -LO https://static.rust-lang.org/dist/rustc-1.99.1-src.tar.xz && tar xJf rustc-1.99.1-src.tar.xz
-#       (cd rustc-1.99.1-src && patch -p1 < .../examples/fm1-blink-rust/rustc/rustc-1.99.1-pi32v2.patch)
-cd rustc-1.99.1-src
+# rustc 1.100.0 (it uses LLVM 23, as the fork), patched: the fork's branch, or the source tarball and the patch
+git clone --depth 1 --branch pi32v2 https://github.com/jvitkauskas/pi32v2-rust.git rustc-1.100.0-src
+#   or: curl -LO https://static.rust-lang.org/dist/rustc-1.100.0-src.tar.xz && tar xJf rustc-1.100.0-src.tar.xz
+#       (cd rustc-1.100.0-src && patch -p1 < .../examples/fm1-blink-rust/rustc/rustc-1.100.0-pi32v2.patch)
+cd rustc-1.100.0-src
 cat > bootstrap.toml <<EOF
 change-id = "ignore"
 [llvm]
@@ -65,7 +65,7 @@ EOF
 Any recent cargo works with that rustc (`RUSTC_BOOTSTRAP=1` lets it use the `-Z` options):
 
 ```sh
-RUSTC=.../rustc-1.99.1-src/build/host/stage1/bin/rustc examples/fm1-blink-rust/build.sh LLVM_BIN_DIR OUT
+RUSTC=.../rustc-1.100.0-src/build/host/stage1/bin/rustc examples/fm1-blink-rust/build.sh LLVM_BIN_DIR OUT
 RUSTC=... examples/fm1-blink-rust/build.sh LLVM_BIN_DIR OUT --features autotest
 ```
 

@@ -30,7 +30,7 @@ Pro uses the same chip family.
   | SLOOP 2.8.1 (Felucca's groovebox fork, both cores) | 563688 (567564) | FM-1: screen, keys, sound, patterns |
 
   Its output is checked against JieLi's compiler in a simulator on every change ([docs/LLVM.md](docs/LLVM.md)).
-- **Rust (proof of concept):** rustc 1.99.1 with a small patch ([jvitkauskas/pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust)),
+- **Rust (proof of concept):** rustc 1.100.0 with a small patch ([jvitkauskas/pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust)),
   on the same LLVM, builds `no_std` firmware: [examples/fm1-blink-rust](examples/fm1-blink-rust/) runs on the FM-1
   (a timer interrupt, Ferris on the screen).
 
