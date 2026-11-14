@@ -8,8 +8,9 @@ count TIMER4 measured over them, the port A outputs and `RUST` to 0x01C7C000, an
 
 A proof of concept: it needs the patched rustc of [jvitkauskas/pi32v2-rust](https://github.com/jvitkauskas/pi32v2-rust)
 (Rust 1.100.0) built against the [pi32v2-llvm](https://github.com/jvitkauskas/pi32v2-llvm) fork's LLVM. On the FM-1
-([hw/fm1-2026-10-25-rust](../../hw/fm1-2026-10-25-rust/README.md)) the `autotest` build, by rustc 1.99.1, counted 300
-interrupts in 72000008 crystal counts (3.00000 s at 24 MHz), and the picture showed.
+([hw/fm1-2026-11-13-rust-1.100](../../hw/fm1-2026-11-13-rust-1.100/README.md)) the `autotest` build counted 300
+interrupts in 71999994 crystal counts (3.00000 s at 24 MHz), and the picture showed; rustc 1.99.1's build did the
+same ([hw/fm1-2026-10-25-rust](../../hw/fm1-2026-10-25-rust/README.md)).
 
 | File | What |
 | --- | --- |

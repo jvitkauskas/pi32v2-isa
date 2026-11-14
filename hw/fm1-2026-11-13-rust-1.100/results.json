@@ -1,0 +1,17 @@
+{
+  "run": "fm1-blink-rust, rustc 1.100.0 (pi32v2-rust 3ee95ae), LLVM pi32v2-23.1.5-5",
+  "autotest_package_sha256": "84c25a2becdef7a7827b527b09dec020acc235aabc46303ccf16a2a420816699",
+  "autotest_app_bytes": 116464,
+  "record_0x01C7C000": {
+    "magic": "4b4e4c42",
+    "ticks": 300,
+    "crystal_counts": 71999994,
+    "pa_out": "00000010",
+    "tag": "54535552"
+  },
+  "ticks_in_bss_0x01C40F00": 300,
+  "seconds": 2.99999975,
+  "picture_package_sha256": "848c8b2a0728063f2b221c49835769c49a12f69594055cc9533d400619652db1",
+  "picture_app_bytes": 116468,
+  "picture_screen": "shown (owner's check)"
+}
