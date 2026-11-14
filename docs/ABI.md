@@ -17,7 +17,7 @@ Each evidence group names a C translation unit. Save its C block under that name
 in a scratch directory, then run from the repository root:
 
 ```sh
-export PI32V2_TOOLCHAIN=/root/.t3/projects/pi32v2-isa/oracle/jieli-linux-toolchains-20260730.1
+export PI32V2_TOOLCHAIN=$PWD/oracle/jieli-linux-toolchains-20260730.1
 python3 -m pi32v2isa oracle cc /tmp/f/types.c --flag=-O2 --feature fprev1
 python3 -m pi32v2isa oracle cc /tmp/f/types.c --flag=-O0 --feature fprev1
 python3 -m pi32v2isa oracle cc /tmp/f/types.c --flag=-Os --feature fprev1

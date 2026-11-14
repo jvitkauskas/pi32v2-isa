@@ -6,6 +6,8 @@ Built from the ids by `_spec`: ld/st, the size (b h w d), the extension of a loa
 (offset, sp, register index, scaled index, post/pre-increment by a number or a register) and, for the
 read-modify-write forms, the operation. The condition flags are never touched by these forms, except by `testset.b`.
 """
+from pi32v2isa import table
+
 M = 0xFFFFFFFF
 SIZE = {"b": 1, "h": 2, "w": 4, "d": 8}
 
@@ -106,9 +108,12 @@ def memop(i):
     return f
 
 
+# the table's ld/st forms, but the pc-relative loads, st.w.modimm (below) and the plain ld.w and st.w (basic2.py)
+IDS = [i.id for i in table.load().insns]
 MODELS = {}
-for _i in open("/root/.t3/projects/pi32v2-isa-wt/ids5-m.txt").read().split():
-    if _i.startswith(("ld.", "st.")) and not _i.startswith(("ld.w.npc", "st.w.modimm")):
+for _i in IDS:
+    if (_i.startswith(("ld.", "st.")) and not _i.startswith(("ld.w.npc", "st.w.modimm"))
+            and _i not in ("ld.w", "st.w")):
         MODELS[_i] = memop(_i)
 
 
@@ -168,7 +173,7 @@ def rmw(i):
     return f
 
 
-for _i in open("/root/.t3/projects/pi32v2-isa-wt/ids5-m.txt").read().split():
+for _i in IDS:
     if _i.startswith("rmw."):
         MODELS[_i] = rmw(_i)
 
