@@ -291,6 +291,9 @@ def confirm(oracle, table, insn):
     encodings = [codec.encode(insn, v) for v in values_list]
     texts = [codec.format(insn, v) for v in values_list]
     problems = []
+    if insn.objdump_releases and oracle.release not in insn.objdump_releases:
+        return ([f"only the objdump of {', '.join(insn.objdump_releases)} shows it: confirm with --release "
+                 f"{insn.objdump_releases[-1]}"], [], 0, collections.Counter())
     # a block opener's body is the words after it: pad with more than the longest body (16 words), so the
     # next probe is never inside it
     decoded = oracle.decode(encodings, insn.requires, pad=bytes(34) if insn.body or insn.block else PAD)
@@ -503,7 +506,8 @@ def check_examples(oracle, table):
     problems = []
     by_features = collections.defaultdict(list)
     for i in table.insns:
-        if i.status == "confirmed":
+        # an entry another release's objdump shows (objdump_releases) is checked with that release
+        if i.status == "confirmed" and (not i.objdump_releases or oracle.release in i.objdump_releases):
             for x in i.examples:
                 by_features[tuple(i.requires)].append((i, x))
     for features, items in by_features.items():

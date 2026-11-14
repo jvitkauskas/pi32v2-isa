@@ -7,7 +7,7 @@ black box: give it input, record its output, and compare that with what this rep
 
 | Release | SHA-256 of the `.tar.xz` | Notes |
 | --- | --- | --- |
-| `20250324.1` | `f686586bcfb45e0f0bb27fd2b39c7a7f313cb4f0e88a66a14da621ffa8225958` | used by m-bootloader |
+| `20250324.1` | `f686586bcfb45e0f0bb27fd2b39c7a7f313cb4f0e88a66a14da621ffa8225958` | used by m-bootloader; its objdump also prints the `x2` dual multiplies with second-word bit 12 set (the table's `objdump_releases` entries) and writes `(usat)`/`(ssat)` where 20260730.1 writes `sum(...) (u)`/`(s)` |
 | `20260730.1` | `a1545cddbc451a06bac43eb5cd96d831470c42a97c5c0b1f98879a20fc7647bd` | current as of 2026-10; rebuilt `clang`, `LLVMgold.so`, `objdump`, `objcopy` and `llvm-read-version`, everything else identical |
 
 ```sh

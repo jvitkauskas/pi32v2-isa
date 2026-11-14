@@ -26,6 +26,14 @@ Still open on the encoding side:
   the branches also reset in run 4, while the unnamed `if` forms ran like AND-zero blocks in its operand grid.
 - 16-bit words were swept completely; 32-bit and 48-bit second and third words outside E000-FFFF do not
   exist (every first word there is 16-bit).
+- The older release 20250324.1 (done 2026-11-14): at `-mcpu=r3`, every 16-bit word and 32 random second words
+  after every E000-FFFF first word, compared with 20260730.1. Apart from the `sum` spelling, the only words one
+  release decodes and the other does not are the `x2` dual multiplies with second-word bit 12 set; they are in
+  the table with `objdump_releases = ["20250324.1"]` ([hw](../hw/fm1-2026-11-14-bit12/README.md)). No other
+  second words or CPU models were compared between releases.
+- Words no objdump decodes that the chip executes: the twelve `d[...]` pair loads and stores run with
+  second-word bit 12 set exactly as with it clear (their notes, [hw](../hw/fm1-2026-11-14-bit12/README.md)).
+  Other fixed bits that the chip may ignore have not been looked for systematically.
 
 ## Meaning (behaviour)
 

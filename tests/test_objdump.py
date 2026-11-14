@@ -177,6 +177,13 @@ class HandMade(unittest.TestCase):
         for option in ("-mcpu=r3", "-mcpu=r4", "-mattr=+fprev1"):
             self.assertEqual(self.disassemble(fadd, (), option), ".text:\n       0:    3f e5 00 00       \tr0 = r0 + r0 (f)\n\n")
 
+    def test_release_option_shows_older_objdump_forms(self):
+        """mul2 x2 with second-word bit 12 set: 20250324.1's objdump prints it, the current one does not."""
+        x2 = bytes.fromhex("72 e5 41 12")
+        self.assertIn("<unknown instruction>", self.disassemble(x2, (), "-mcpu=r3"))
+        self.assertEqual(self.disassemble(x2, (), "-mcpu=r3", "--release=20250324.1"),
+                         ".text:\n       0:    72 e5 41 12       \tr1_r0 = r4.l,r4.h *|* r2.l,r2.l (usat,x2)\n\n")
+
     def test_unknown_instruction_lengths(self):
         """A word that is no instruction takes 2 bytes, or 1 when its instruction would not fit; with no whole
         word left the last length is used again, and the bytes shown come from the file."""

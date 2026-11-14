@@ -348,6 +348,8 @@ def _mk_mul2(pair, imm, acc, mode=None):
 for _m, _a in (("mul2", 0), ("madd.mul2", 1), ("msub.mul2", -1)):
     MODELS[f"{_m}.rrhrhrhrhe"] = _mk_mul2(False, False, _a)
     MODELS[f"{_m}.prhrhrhrhe"] = _mk_mul2(True, False, _a)
+    # second-word bit 12 set (20250324.1's objdump prints these, 20260730.1's does not): the chip ignores the bit
+    MODELS[f"{_m}.prhrhrhrhe.b12"] = _mk_mul2(True, False, _a)
     MODELS[f"{_m}.prhrhi.ssat"] = _mk_mul2(True, True, _a, "(ssat)")
     MODELS[f"{_m}.prhrhi.usat"] = _mk_mul2(True, True, _a, "(usat)")
 

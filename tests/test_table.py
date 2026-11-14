@@ -112,11 +112,20 @@ class CpuModels(unittest.TestCase):
         self.assertTrue(table.shown_by_objdump(plain, "r1"))
         self.assertFalse(table.shown_by_objdump(rev3, "r3"))
         self.assertTrue(table.shown_by_objdump(rev3, "r3", ["instrev3"]))
-        self.assertEqual(sum(1 for i in t.insns if "r1" in i.absent_on), 426)
+        self.assertEqual(sum(1 for i in t.insns if "r1" in i.absent_on), 432)
+        old = t.by_id("mul2.prhrhrhrhe.b12")                                # only 20250324.1's objdump prints it
+        self.assertFalse(table.shown_by_objdump(old, "r3"))
+        self.assertTrue(table.shown_by_objdump(old, "r3", release="20250324.1"))
+        self.assertFalse(table.shown_by_objdump(old, "r1", release="20250324.1"))
+        self.assertTrue(table.shown_by_objdump(plain, "r1", release="20250324.1"))
 
     def test_unknown_model_is_an_error(self):
         e = insn(absent_on=["r9"])
         self.assertTrue(any("unknown CPU model" in p for p in problems(e)))
+
+    def test_unknown_release_is_an_error(self):
+        e = insn(objdump_releases=["20990101.1"])
+        self.assertTrue(any("unknown toolchain release" in p for p in problems(e)))
 
 
 class HardwareBehaviour(unittest.TestCase):

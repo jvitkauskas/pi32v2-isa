@@ -475,6 +475,9 @@ def main():
     p.add_argument("--tests", type=Path, help="llvm/test/MC of the LLVM tree")
     a = p.parse_args()
     tab = table.load(a.table)
+    # forms only an older objdump release shows (objdump_releases) are left out: the backend follows the current
+    # release, whose objdump calls them unknown, and its assembler never chooses them
+    tab.insns = [i for i in tab.insns if not i.objdump_releases or table.CURRENT_RELEASE in i.objdump_releases]
     td_text, inc, ids, count, fix, records, ops = generate(tab)
     import gen_parser
     parser_inc, relax_inc = gen_parser.generate(tab, records, HEADER)
