@@ -1,0 +1,22 @@
+45 00 00 00: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+46 00 00 00: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+47 00 00 00: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+48 00 00 00: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+d0 e1 3c 97: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r8 01c72800->ffffffff r9 01c72900->7fffffff
+d0 e1 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r6 01c72600->71c9c000 r7 01c72700->00000000
+d8 e1 3c 97: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+d8 e1 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+d0 e9 3c 97: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r8 01c72800->00000000 r9 01c72900->00000000
+d0 e9 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r6 01c72600->00000000 r7 01c72700->00000000
+d0 e9 03 e8: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+d4 e9 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r7 01c72700->00000000
+d4 e9 03 e8: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran
+50 ec 3c 97: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r8 01c72800->a5a5037c r9 01c72900->a5a50380
+50 ec 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r6 01c72600->a5a50998 r7 01c72700->a5a5099c r9 01c72900->01c72998
+51 ec 3c 97: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r8 01c72800->a5a5047c r9 01c72900->a5a50480
+51 ec 9a 79: psr 0 traps 0 emu 0 dbg 0 | r2 +1 ran r6 01c72600->a5a50a98 r7 01c72700->a5a50a9c r9 01c72900->01c72a98
+00 e8 01 1e: psr 0 traps 1 emu 2 dbg 0 | r2 +1 ran
+00 e9 01 1e: psr 0 traps 1 emu 2 dbg 0 | r2 +1 ran
+00 ec 01 1e: psr 0 traps 1 emu 2 dbg 0 | r2 +1 ran
+00 ed 01 1e: psr 0 traps 1 emu 2 dbg 0 | r2 +1 ran
+00 ee 01 1e: psr 0 traps 1 emu 2 dbg 0 | r2 +1 ran

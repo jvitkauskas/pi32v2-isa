@@ -1,0 +1,31 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+DBG_CON 0, CKCNT e0109d60
+empty: 2 cycles
+c_nop: 258 cycles, 1.00 per (net)
+c_add_dep: 258 cycles, 1.00 per (net)
+c_add_indep: 514 cycles, 2.00 per (net)
+c_mov32: 377 cycles, 1.46 per (net)
+c_ld: 514 cycles, 2.00 per (net)
+c_ld_use: 770 cycles, 3.00 per (net)
+c_st: 510 cycles, 1.98 per (net)
+c_mul: 512 cycles, 1.99 per (net)
+c_div: 2553 cycles, 9.96 per (net)
+c_fadd: 513 cycles, 1.99 per (net)
+c_fmul: 513 cycles, 1.99 per (net)
+c_fdiv: 1023 cycles, 3.98 per (net)
+c_mul64: 512 cycles, 1.99 per (net)
+c_goto: 1925 cycles, 7.51 per (net)
+c_br_nt: 259 cycles, 1.00 per (net)
+c_br_t: 1925 cycles, 7.51 per (net)
+c_call: 5765 cycles, 22.51 per (net)
+c_push1: 1537 cycles, 5.99 per (net)
+c_ldd: 1026 cycles, 4.00 per (net)
+app_main returned 0
+--- returned 0
+restart failed:
+Connecting to /dev/sg0
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Refused: the unit reset and came back in download mode (/dev/sg0): its application did not start (none installed, not valid, or the bootloader is waiting: see the unit's screen)
+

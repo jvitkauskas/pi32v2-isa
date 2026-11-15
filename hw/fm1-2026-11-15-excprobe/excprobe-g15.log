@@ -1,0 +1,9 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+pair in then, condition false: A 0, B stored 0, after 1, other part 0
+pair in then, condition true: A 1, B stored 1234, after 1, other part 0
+pair in else, condition false: A 1, B stored 1234, after 1, other part 0
+pair in else, condition true: A 0, B stored 0, after 1, other part 1
+app_main returned 0
+--- returned 0

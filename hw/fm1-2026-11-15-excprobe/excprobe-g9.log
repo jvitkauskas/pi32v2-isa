@@ -1,0 +1,15 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+fresh @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+again @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+fresh @1c17400: n0 emu 0 dbg 0 reti far+fe3e8c00 mk 0, after: mk 12
+again @1c17400: n0 emu 0 dbg 0 reti far+fe3e8c00 mk 0, after: mk 12
+fresh @1c17800: n0 emu 0 dbg 0 reti far+fe3e8800 mk 0, after: mk 12
+again @1c17800: n0 emu 0 dbg 0 reti far+fe3e8800 mk 0, after: mk 12
+fresh @1c17c00: n0 emu 0 dbg 0 reti far+fe3e8400 mk 0, after: mk 12
+again @1c17c00: n0 emu 0 dbg 0 reti far+fe3e8400 mk 0, after: mk 12
+first again @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+rewritten @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+app_main returned 0
+--- returned 0

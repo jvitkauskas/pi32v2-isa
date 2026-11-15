@@ -1,0 +1,27 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+== rep
+rep 1: start
+rep 1: body ran 1, count register 00000000
+rep 7: start
+rep 7: body ran 7, count register 00000000
+rep 255: start
+rep 255: body ran 32, count register 000000df
+rep 256: start
+rep 256: body ran 1, count register 000000ff
+rep 65535: start
+rep 65535: body ran 32, count register 0000ffdf
+rep 65536: start
+rep 65536: body ran 1, count register 0000ffff
+rep 16777217: start
+rep 16777217: body ran 2, count register 00ffffff
+rep 0: start
+rep 0: body ran 0, count register 00000000
+app_main returned 0
+--- returned 0
+restart failed:
+Connecting to /dev/sg0
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Refused: the unit reset and came back in download mode (/dev/sg0): its application did not start (none installed, not valid, or the bootloader is waiting: see the unit's screen)
+

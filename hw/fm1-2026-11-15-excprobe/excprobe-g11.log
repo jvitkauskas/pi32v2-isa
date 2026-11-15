@@ -1,0 +1,22 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+first @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+  DBG_CON 200000 DBG_MSG 0
+second, nothing acknowledged @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+  DBG_CON |= 20000: reads 200000
+after the ack @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+once more @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+  DBG_CON |= 40000: reads 0
+after the ack @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+once more @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+  DBG_CON |= 60000: reads 0
+after the ack @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+once more @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+app_main returned 0
+--- returned 0
+restart failed:
+Connecting to /dev/sg0
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Refused: the unit reset and came back in download mode (/dev/sg0): its application did not start (none installed, not valid, or the bootloader is waiting: see the unit's screen)
+

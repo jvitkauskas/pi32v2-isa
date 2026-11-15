@@ -1,0 +1,35 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+== misaligned, EMU_CON as found
+p_ldw 1c31678: ok mk 12 | 13121110 0 0
+p_ldw 1c31679: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 13121110 0 0
+p_ldw 1c3167a: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 13121110 0 0
+p_ldw 1c3167b: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 13121110 0 0
+p_ldhu 1c31678: ok mk 12 | 1110 0 0
+p_ldhu 1c31679: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 1110 0 0
+p_ldhu 1c3167a: ok mk 12 | 1312 0 0
+p_ldhu 1c3167b: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 1312 0 0
+p_ldhs 1c31679: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 1110 0 0
+p_ldbu 1c3167b: ok mk 12 | 13 0 0
+p_stw 1c31679: TRAP n1 emu 1 dbg 0 reti+1e rete 0 retx 0 mk 7 | 5eed5eed a1b2c3d4 0
+  stw mem a1b2c3d4 17161514 1b1a1918 1f1e1d1c
+p_stw 1c3167a: TRAP n1 emu 1 dbg 0 reti+1e rete 0 retx 0 mk 7 | 5eed5eed a1b2c3d4 0
+  stw mem a1b2c3d4 17161514 1b1a1918 1f1e1d1c
+p_stw 1c3167b: TRAP n1 emu 1 dbg 0 reti+1e rete 0 retx 0 mk 7 | 5eed5eed a1b2c3d4 0
+  stw mem a1b2c3d4 17161514 1b1a1918 1f1e1d1c
+p_sth 1c31679: TRAP n1 emu 1 dbg 0 reti+1e rete 0 retx 0 mk 7 | 5eed5eed a1b2c3d4 0
+  sth+1 mem 1312c3d4 17161514 1b1a1918 1f1e1d1c
+p_ldd 1c31678: ok mk 12 | 5eed5eed 13121110 17161514
+p_ldd 1c3167a: TRAP n1 emu 1 dbg 0 reti+18 rete 0 retx 0 mk 5 | 5eed5eed 13121110 17161514
+p_ldd 1c3167c: ok mk 12 | 5eed5eed 17161514 1b1a1918
+p_std 1c3167a: TRAP n1 emu 1 dbg 0 reti+1c rete 0 retx 0 mk 6 | 5eed5eed a1b2c3d4 55667788
+  std mem a1b2c3d4 55667788 1b1a1918 1f1e1d1c
+p_std 1c3167c: ok mk 12 | 5eed5eed a1b2c3d4 55667788
+  std mem 13121110 a1b2c3d4 55667788 1f1e1d1c
+== ldw+1 with EMU_CON 3
+p_ldw 1c31679: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 13121110 0 0
+== ldw+1 with EMU_CON 3
+p_ldw 1c31679: TRAP n1 emu 1 dbg 0 reti+20 rete 0 retx 0 mk 7 | 13121110 0 0
+app_main returned 0
+--- returned 0

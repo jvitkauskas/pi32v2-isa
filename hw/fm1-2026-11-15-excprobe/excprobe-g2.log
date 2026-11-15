@@ -1,0 +1,21 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+== divides, EMU_CON as found
+p_divs 0: ok mk 12 | 0 7 0
+p_divu 0: ok mk 12 | 0 7 0
+p_divsp 0: ok mk 12 | 5eed5eed 0 0
+p_divup 0: ok mk 12 | 5eed5eed 0 0
+p_divf 0: ok mk 12 | 7f800000 3f800000 0
+p_divf 0: ok mk 12 | 7f800001 0 0
+p_addf 0: ok mk 12 | 7f800001 7f800000 ff800000
+== divides, EMU_CON 7
+p_divs 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 0 7 0
+p_divu 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 0 7 0
+p_divsp 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 5eed5eed 0 0
+p_divup 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 5eed5eed 0 0
+p_divf 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 7f800000 3f800000 0
+p_divf 0: TRAP n1 emu 4 dbg 0 reti+20 rete 0 retx 0 mk 7 | 7f800001 0 0
+p_addf 0: ok mk 12 | 7f800001 7f800000 ff800000
+app_main returned 0
+--- returned 0

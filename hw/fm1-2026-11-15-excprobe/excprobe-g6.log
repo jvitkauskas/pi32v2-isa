@@ -1,0 +1,12 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+DBG_EN 0 DBG_CON 0 DBG_WR_EN 1 PCL0 0-7ffffff PCL1 0-7ffffff
+no limits @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+set: PCL0 1c30000-1c7f000 PCL1 1c30000-1c7f000
+limits, DBG_EN as found @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+DBG_EN now 3f0030
+limits, DBG_EN as the SDK @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+limits restored @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+app_main returned 0
+--- returned 0

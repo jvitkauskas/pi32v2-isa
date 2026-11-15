@@ -1,0 +1,14 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+limits rewritten @1c17000: n1 emu 0 dbg 1000 reti far+24 mk 9, after: mk 9
+  PCL0 1c30000-1c7f000 PCL1 1c30000-1c7f000 DBG_MSG 0
+limits rewritten @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+  PCL0 1c30000-1c7f000 PCL1 1c30000-1c7f000 DBG_MSG 1000
+limits rewritten @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+  PCL0 1c30000-1c7f000 PCL1 1c30000-1c7f000 DBG_MSG 1000
+limits opened, then narrowed @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+limits opened, then narrowed @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+window 0 open, window 1 narrow @1c17000: n0 emu 0 dbg 0 reti far+fe3e9000 mk 0, after: mk 12
+app_main returned 0
+--- returned 0

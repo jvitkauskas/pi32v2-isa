@@ -1,0 +1,8 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+x14: 22 runs stored at 70000
+app_main returned 0
+--- returned 0
+The program is still running; switch the unit off and on to return it to normal
+Running: the M-VAVE FM-1 is on USB MIDI

@@ -15,6 +15,7 @@ before every write and stay with the owner; no flash image, RAM dump or vendor f
 | [fm1-2026-10-24-v4](fm1-2026-10-24-v4/README.md) | Control flow, returns, special-register writes |
 | [fm1-2026-10-24-v5](fm1-2026-10-24-v5/README.md) | Return selection, block aliases, handlers in RAM. Analysis: [report5-b](report5-b.md), [report5-d](report5-d.md), [report5-k](report5-k.md), [report5-m](report5-m.md) |
 | [fm1-2026-11-14-bit12](fm1-2026-11-14-bit12/README.md) | The `x2` dual multiplies only objdump 20250324.1 prints; pair loads and stores ignore second-word bit 12; a parallel pair is one unit of an `if` block |
+| [fm1-2026-11-15-excprobe](fm1-2026-11-15-excprobe/README.md) | Misaligned accesses (always trap, 7 instructions late, move the aligned-down word), divide by zero and the FPU traps under EMU_CON, one `rep` runs at most 32 times, the PC-limit guard (one trip until DBG_CON bit 18), cycle costs, and words only fm1-emu decoded |
 
 ## The chip as a system (test applications installed in the application area)
 
@@ -24,6 +25,7 @@ before every write and stay with the owner; no flash image, RAM dump or vendor f
 | [fm1-2026-10-24-app2](fm1-2026-10-24-app2/README.md) | Exception and interrupt handlers, the watchdog, interrupt delivery |
 | [fm1-2026-10-24-app3](fm1-2026-10-24-app3/README.md) | Waits, nested software interrupts, starting the second core |
 | [fm1-2026-10-24-app4](fm1-2026-10-24-app4/README.md) | The second core's boot, events, shared memory ([docs/CPU1.md](../docs/CPU1.md)) |
+| [fm1-2026-11-14-bootprobe](fm1-2026-11-14-bootprobe/README.md) | The application's entry state under M-VAVE's stock loader and m-bootloader 2.3 (registers, boot object, clocks, flash controller), and instruction timing from flash |
 
 ## The open toolchain
 

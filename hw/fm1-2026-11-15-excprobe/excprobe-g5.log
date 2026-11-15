@@ -1,0 +1,32 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+== rep boundaries
+rep 2: start
+rep 2: body ran 2, count register 00000000
+rep 31: start
+rep 31: body ran 31, count register 00000000
+rep 32: start
+rep 32: body ran 1, count register 0000001f
+rep 33: start
+rep 33: body ran 2, count register 0000001f
+rep 34: start
+rep 34: body ran 3, count register 0000001f
+rep 63: start
+rep 63: body ran 32, count register 0000001f
+rep 64: start
+rep 64: body ran 1, count register 0000003f
+rep 65: start
+rep 65: body ran 2, count register 0000003f
+rep 96: start
+rep 96: body ran 1, count register 0000005f
+rep 97: start
+rep 97: body ran 2, count register 0000005f
+rep 2147483647: start
+rep 2147483647: body ran 32, count register 7fffffdf
+rep 2147483648: start
+rep 2147483648: body ran 1, count register 7fffffff
+rep 4294967295: start
+rep 4294967295: body ran 32, count register ffffffdf
+app_main returned 0
+--- returned 0

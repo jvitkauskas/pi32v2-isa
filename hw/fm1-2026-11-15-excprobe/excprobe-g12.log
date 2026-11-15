@@ -1,0 +1,21 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+rep 31: body ran 31, r6 0 | irqs 0: in body 0, at rep 0, other 0, last reti 0
+rep 31: body ran 31, r6 0 | irqs 1: in body 0, at rep 0, other 1, last reti 1c30c72
+rep 31: body ran 31, r6 0 | irqs 1: in body 0, at rep 0, other 1, last reti 1c30c72
+rep 7: body ran 7, r6 0 | irqs 0: in body 0, at rep 0, other 0, last reti 0
+rep 7: body ran 7, r6 0 | irqs 1: in body 0, at rep 0, other 1, last reti 1c30c72
+rep 7: body ran 7, r6 0 | irqs 0: in body 0, at rep 0, other 0, last reti 0
+rep 1000+loop: body ran 1000, r6 0 | irqs 24: in body 0, at rep 1, other 23, last reti 1c30c72
+rep 1000+loop: body ran 1000, r6 0 | irqs 24: in body 0, at rep 0, other 24, last reti 1c30c72
+rep 1000+loop: body ran 1000, r6 0 | irqs 24: in body 0, at rep 0, other 24, last reti 1c30c72
+rep 100000+loop: body ran 100000, r6 0 | irqs 2423: in body 0, at rep 14, other 2409, last reti 1c30c78
+rep 100000+loop: body ran 100000, r6 0 | irqs 2422: in body 0, at rep 15, other 2407, last reti 1c30c72
+rep 100000+loop: body ran 100000, r6 0 | irqs 2422: in body 0, at rep 16, other 2406, last reti 1c30c72
+rep 65536+loop: body ran 65536, r6 0 | irqs 1587: in body 0, at rep 10, other 1577, last reti 1c30c72
+rep 65536+loop: body ran 65536, r6 0 | irqs 1588: in body 0, at rep 12, other 1576, last reti 1c30c72
+rep 65536+loop: body ran 65536, r6 0 | irqs 1587: in body 0, at rep 10, other 1577, last reti 1c30c72
+rep at 1c30c52, body 1c30c54..1c30c72
+app_main returned 0
+--- returned 0

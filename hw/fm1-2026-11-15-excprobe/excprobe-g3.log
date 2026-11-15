@@ -1,0 +1,40 @@
+starting build/excprobe.app
+started by the ROM, LSB 48 MHz
+EMU_CON=00000003 EMU_MSG=00000000 DBG_MSG=00000000
+== float, EMU_CON 10003
+p_divf 0: ok mk 12 | 7f800000 3f800000 0
+p_divf 0: ok mk 12 | 7f800001 0 0
+p_addf 0: ok mk 12 | 7f800001 7f800000 ff800000
+p_addf 0: TRAP n1 emu 10000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800000 7f7fffff 7f7fffff
+p_divf 0: ok mk 12 | 1 800000 4b000000
+p_divf 0: TRAP n1 emu 10000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 3eaaaaab 3f800000 40400000
+== float, EMU_CON 20003
+p_divf 0: ok mk 12 | 7f800000 3f800000 0
+p_divf 0: ok mk 12 | 7f800001 0 0
+p_addf 0: ok mk 12 | 7f800001 7f800000 ff800000
+p_addf 0: TRAP n1 emu 20000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800000 7f7fffff 7f7fffff
+p_divf 0: ok mk 12 | 1 800000 4b000000
+p_divf 0: ok mk 12 | 3eaaaaab 3f800000 40400000
+== float, EMU_CON 40003
+p_divf 0: ok mk 12 | 7f800000 3f800000 0
+p_divf 0: ok mk 12 | 7f800001 0 0
+p_addf 0: ok mk 12 | 7f800001 7f800000 ff800000
+p_addf 0: ok mk 12 | 7f800000 7f7fffff 7f7fffff
+p_divf 0: TRAP n1 emu 40000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 1 800000 4b000000
+p_divf 0: ok mk 12 | 3eaaaaab 3f800000 40400000
+== float, EMU_CON 80003
+p_divf 0: TRAP n1 emu 80000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800000 3f800000 0
+p_divf 0: ok mk 12 | 7f800001 0 0
+p_addf 0: TRAP n2 emu 80000 dbg 0 reti+0 rete 0 retx 0 mk 0 | 5eed5eed 7f800000 ff800000
+p_addf 0: TRAP n1 emu 80000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800000 7f7fffff 7f7fffff
+p_divf 0: ok mk 12 | 1 800000 4b000000
+p_divf 0: ok mk 12 | 3eaaaaab 3f800000 40400000
+== float, EMU_CON 100003
+p_divf 0: ok mk 12 | 7f800000 3f800000 0
+p_divf 0: TRAP n1 emu 100000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800001 0 0
+p_addf 0: TRAP n1 emu 100000 dbg 0 reti+10 rete 0 retx 0 mk 3 | 7f800001 7f800000 ff800000
+p_addf 0: ok mk 12 | 7f800000 7f7fffff 7f7fffff
+p_divf 0: ok mk 12 | 1 800000 4b000000
+p_divf 0: ok mk 12 | 3eaaaaab 3f800000 40400000
+app_main returned 0
+--- returned 0
