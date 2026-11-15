@@ -126,6 +126,8 @@ def main():
     a = p.parse_args()
     mc = a.bin / "llvm-mc"
     tab = table.load()
+    # the backend follows the current objdump release; forms only an older one shows are not in it (gen_td.py)
+    tab.insns = [i for i in tab.insns if not i.objdump_releases or table.CURRENT_RELEASE in i.objdump_releases]
     status = 0
     for name, fn in (("disasm", disassembly), ("asm", assembly)):
         if a.only and a.only != name:

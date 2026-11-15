@@ -27,6 +27,8 @@ OPTIONS_HELP = """usage: objdump [options] FILE...
   -mattr=+fprev1            enable the floating-point forms
   --chip=NAME               not in JieLi's objdump: note forms that misbehave on that chip (ac791n),
                             from the table's hw key (`; ac791n: resets the chip`)
+  --release=R               not in JieLi's objdump: print as the objdump of toolchain release R does
+                            (default the current one; the table's objdump_releases key)
 """
 
 # Instruction forms JieLi's objdump decodes only when told the CPU has them (found with `oracle` probes of every
@@ -104,13 +106,16 @@ class Decoder:
         return got
 
 
-def decoder_for(tab, mcpu=None, mattr=()):
-    """The decoder for a CPU choice, from the table's absent_on and decode_requires (no -mcpu is "generic")."""
+def decoder_for(tab, mcpu=None, mattr=(), release=tablemod.CURRENT_RELEASE):
+    """The decoder for a CPU choice and toolchain release, from the table's absent_on, decode_requires and
+    objdump_releases (no -mcpu is "generic")."""
     cpu = (mcpu or "generic").lower()
     if cpu not in SUPPORTED_CPUS:
         raise ObjdumpError(f"unsupported -mcpu={mcpu}")
     given = {a.lstrip("+") for a in mattr}
-    off = frozenset(i.id for i in tab.insns if not tablemod.shown_by_objdump(i, cpu, given))
+    if release not in tablemod.OBJDUMP_RELEASES:
+        raise ObjdumpError(f"unknown release {release} (known: {', '.join(tablemod.OBJDUMP_RELEASES)})")
+    off = frozenset(i.id for i in tab.insns if not tablemod.shown_by_objdump(i, cpu, given, release))
     return Decoder(tab, off)
 
 
@@ -569,7 +574,7 @@ def run_file(f, opts, tab):
     if opts.get("d") or opts.get("D") or opts.get("t"):
         check_symbols(f)
     if opts.get("d") or opts.get("D"):
-        dec = decoder_for(tab, opts.get("mcpu"), opts.get("mattr", ()))
+        dec = decoder_for(tab, opts.get("mcpu"), opts.get("mattr", ()), opts.get("release", tablemod.CURRENT_RELEASE))
         code = [s for s in secs if opts.get("D") or s.flags & elf.SHF_EXECINSTR]
         out.append(Disassembler(f, dec, opts).run(code))
     if opts.get("r") and not (opts.get("d") or opts.get("D")):
@@ -613,6 +618,8 @@ def parse_args(argv):
             opts["mcpu"] = a.split("=", 1)[1]
         elif a.startswith("-mattr="):
             opts["mattr"] += a.split("=", 1)[1].split(",")
+        elif a.startswith("--release="):
+            opts["release"] = a.split("=", 1)[1]
         elif a.startswith("--chip="):
             opts["chip"] = a.split("=", 1)[1]
             if opts["chip"] not in tablemod.CHIPS:

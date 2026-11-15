@@ -15,7 +15,7 @@ Pro uses the same chip family.
 ## What works
 
 - **The instruction table** holds every instruction form JieLi's objdump decodes, each confirmed against JieLi's
-  toolchain (encoding and syntax); 1079 of its 1165 forms are also confirmed on the chip ([hw/](hw/README.md)).
+  toolchain (encoding and syntax); 1085 of its 1171 forms are also confirmed on the chip ([hw/](hw/README.md)).
 - **This repository's assembler, linker and objdump** write and read the files JieLi's do, byte for byte: the
   FM-1 firmwares build identically with them in place of JieLi's ([docs/BUILDING-OPEN.md](docs/BUILDING-OPEN.md)).
 - **An LLVM toolchain** (clang and `ld.lld` from the fork

@@ -18,6 +18,10 @@ CPU_FEATURES = {"r3": ("fprev1",), "r4": ("fprev1",), "r5": ("fprev1",), "r3v3":
                 "r4v3": ("fprev1",), "r4v3s": ("fprev1",)}
 # Chips whose behaviour the table records with `hw` (docs/TABLE-FORMAT.md, "Hardware behaviour"): what a form
 # does on that chip when it is not what its syntax says.
+# JieLi toolchain releases whose objdump the table was compared with (docs/ORACLE.md); the last is the current one,
+# which objdump.py follows. An entry with objdump_releases is shown only by those.
+OBJDUMP_RELEASES = ("20250324.1", "20260730.1")
+CURRENT_RELEASE = OBJDUMP_RELEASES[-1]
 CHIPS = {"ac791n": "JieLi AC791N (M-VAVE FM-1), hardware runs hw/fm1-2026-10-24*"}
 HW_KINDS = {"resets": "resets the chip", "nop": "does nothing", "unpredictable": "gives unpredictable results"}
 WORD_CHARS = re.compile(r"^[01a-z-]{16}$")
@@ -84,6 +88,7 @@ class Insn:
     requires: list[str] = field(default_factory=list)          # features the assembler needs for it
     decode_requires: list[str] = field(default_factory=list)   # features without which objdump does not show it
     absent_on: list[str] = field(default_factory=list)         # CPU models whose objdump does not show it
+    objdump_releases: list[str] = field(default_factory=list)  # toolchain releases whose objdump shows it (all if empty)
     notes: str = ""
     examples: list[Example] = field(default_factory=list)
     asm_rejects: list[str] = field(default_factory=list)   # texts objdump prints but the assembler refuses
@@ -162,6 +167,7 @@ def load(path=TABLE):
             requires=list(e.get("requires", [])),
             decode_requires=list(e.get("decode_requires", [])),
             absent_on=list(e.get("absent_on", [])),
+            objdump_releases=list(e.get("objdump_releases", [])),
             notes=e.get("notes", ""),
             examples=[Example(_parse_bytes(x.get("bytes", "")), x.get("text", ""), x.get("origin", ""))
                       for x in e.get("example", [])],
@@ -296,6 +302,9 @@ def check(table, sources=None):
         for cpu in i.absent_on:
             if cpu not in CPU_MODELS:
                 errors.append(f"{where}: unknown CPU model {cpu!r} in absent_on")
+        for rel in i.objdump_releases:
+            if rel not in OBJDUMP_RELEASES:
+                errors.append(f"{where}: unknown toolchain release {rel!r} in objdump_releases")
         for chip, what in i.hw.items():
             if chip not in CHIPS:
                 errors.append(f"{where}: unknown chip {chip!r} in hw")
@@ -351,7 +360,9 @@ def hw_note(insn, chip):
     return f"runs as {what[3:]}" if what.startswith("as:") else HW_KINDS[what]
 
 
-def shown_by_objdump(insn, cpu="generic", features=()):
-    """Whether JieLi's objdump with -mcpu=cpu (or none: "generic") and -mattr=features shows this form."""
+def shown_by_objdump(insn, cpu="generic", features=(), release=CURRENT_RELEASE):
+    """Whether JieLi's objdump of toolchain `release` with -mcpu=cpu (or none: "generic") and -mattr=features shows
+    this form."""
     have = set(features) | set(CPU_FEATURES.get(cpu, ()))
-    return cpu not in insn.absent_on and set(insn.decode_requires) <= have
+    return (cpu not in insn.absent_on and set(insn.decode_requires) <= have
+            and (not insn.objdump_releases or release in insn.objdump_releases))

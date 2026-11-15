@@ -9427,7 +9427,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at the stack pointer plus a constant offset."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] 64-bit argument or spill: `r1_r0 = d[sp+12]`. Arguments after the fourth are on the stack, the fifth at [sp] (`f(a..j)` reads h and i with one `d[sp+12]` and j with `[sp+20]`). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] 64-bit argument or spill: `r1_r0 = d[sp+12]`. Arguments after the fourth are on the stack, the fifth at [sp] (`f(a..j)` reads h and i with one `d[sp+12]` and j with `[sp+20]`). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "d0 e9 00 00"
@@ -9458,7 +9458,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at the stack pointer plus a constant offset."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0: a 64-bit argument or a register pair saved: `d[sp] = r1_r0`. hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump omits the offset when it is 0. [compiler] -O0: a 64-bit argument or a register pair saved: `d[sp] = r1_r0`. hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to sp plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "d0 e9 01 00"
@@ -9845,7 +9845,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at register plus a constant offset."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` load -> `r1_r0 = d[r0+0]`: the low word goes to the even register, i.e. the lower address; `p[3]` -> `d[r0+24]`. Also loads a PIC function descriptor (code address, then the r15 value). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` load -> `r1_r0 = d[r0+0]`: the low word goes to the even register, i.e. the lower address; `p[3]` -> `d[r0+24]`. Also loads a PIC function descriptor (code address, then the r15 value). hw/fm1-2026-10-24-v2 (12 cases): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "50 ec 00 00"
@@ -9881,7 +9881,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "50 ec 02 00"
@@ -9917,7 +9917,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at register plus a constant offset."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` store -> `d[r0+0] = r3_r2` (even register at the lower address). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `long long` store -> `d[r0+0] = r3_r2` (even register at the lower address). hw/fm1-2026-10-24-v2 (12 cases): stores the 64-bit pair (the even register at the lower address) to the base register plus the offset; the flags N Z C V are left alone. Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "50 ec 01 00"
@@ -9953,7 +9953,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the constant, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "50 ec 03 00"
@@ -10133,7 +10133,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "5c ec 02 00"
@@ -10169,7 +10169,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at pre-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the base register plus the index register, which is also written back to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "5c ec 03 00"
@@ -10205,7 +10205,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 5 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (5 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 5 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (4 cases). With the index register also the destination, the base gets old base + old register value (5 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "5e ec 02 00"
@@ -10241,7 +10241,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a register."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (4 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 3 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the increment register to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (4 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "5e ec 03 00"
@@ -10277,7 +10277,7 @@ group = "memory"
 summary = "Load a 64-bit pair from memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump decodes offsets -1024..1020 for every probed encoding. Not confirmed: the assembler only accepts -512..508 here (`immediate out of range (imm11m4)` above that), although it assembles the same range for the word form. [compiler] 64-bit pointer-walking loop `s += *p++` -> `r5_r4 = d[r3++=8]`; walking downwards `*p--` -> `d[r0++=-8]` (the sign of the step is a bit in the encoding). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): loads a 64-bit pair (the word at the lower address into the even register) from the old base address, then adds the constant to the base register; the flags N Z C V are left alone. If the destination is also the base register, the loaded value is kept, not the updated address (3 cases). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "58 ec 00 00"
@@ -10313,7 +10313,7 @@ group = "memory"
 summary = "Store a 64-bit pair to memory at post-increment by a constant."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). hw/fm1-2026-10-24-v2 (12 cases, 2 more in followup5-m.jsonl): stores the 64-bit pair (the even register at the lower address) to the old base address, then adds the constant to the base register; the flags N Z C V are left alone. The even register of the pair is read before the base update and the odd one after it: with the base as the odd register the high word stored is the updated base, with the base as the even register the low word stored is the old base (3 cases, both registers, followup5-m.jsonl). Addresses 4 mod 8 work: only 4-byte alignment is needed. [hardware] hw/fm1-2026-11-14-bit12: the chip ignores second-word bit 12, which neither JieLi objdump release decodes (both print `<unknown instruction>`): 4 cases with the bit set did exactly what the bit-clear encoding did with the same inputs (registers, scratch memory, sp, psr), and fit this entry's model."
 
 [[insn.example]]
 bytes = "58 ec 01 00"
@@ -13159,7 +13159,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == b (equality compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a == b) return f(a); return 7` -> `if (r2 == r1) { r0 = r2; call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a == b) return f(a); return 7` -> `if (r2 == r1) { r0 = r2; call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 e8 00 00"
@@ -13207,7 +13207,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a == b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a != b` -> `r0 = 1; iff (r2 == r1) { r0 = 0 }`; `if (a == b) f()` -> `iff (r0 == r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a != b` -> `r0 = 1; iff (r2 == r1) { r0 = 0 }`; `if (a == b) f()` -> `iff (r0 == r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 e8 80 00"
@@ -13254,7 +13254,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == constant (equality compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed. [oracle 20260730.1] Signed equality/inequality spellings with ifs are accepted aliases of the neutral if forms, including register and immediate comparisons and branches. The assembler rejects ifu as that prefix."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed. [oracle 20260730.1] Signed equality/inequality spellings with ifs are accepted aliases of the neutral if forms, including register and immediate comparisons and branches. The assembler rejects ifu as that prefix."
 
 [[insn.example]]
 bytes = "20 e8 00 00"
@@ -13301,7 +13301,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a == constant (equality compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a != 10` as `if (r0 == 10) { goto ... }`; unsigned `a == 0xffffffff` -> `if (r1 == -1) { ... }` (the constant is sign-extended to 32 bits). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a != 10` as `if (r0 == 10) { goto ... }`; unsigned `a == 0xffffffff` -> `if (r1 == -1) { ... }` (the constant is sign-extended to 32 bits). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 e8 00 00"
@@ -13556,7 +13556,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != b (equality compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] `a == b` as `if (r0 != r1) { goto ... } else { ... }` (the branch is to the not-equal case). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] `a == b` as `if (r0 != r1) { goto ... } else { ... }` (the branch is to the not-equal case). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 e8 00 00"
@@ -13604,7 +13604,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a != b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a == b` -> `r0 = 1; iff (r2 u!= r1) { r0 = 0 }`; `if (a != b) f()` -> `iff (r0 u!= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a == b` -> `r0 = 1; iff (r2 u!= r1) { r0 = 0 }`; `if (a != b) f()` -> `iff (r0 u!= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 e8 80 00"
@@ -13651,7 +13651,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != constant (equality compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "a0 e8 00 00"
@@ -13698,7 +13698,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a != constant (equality compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a == 10` as `if (r0 != 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] `a == 10` as `if (r0 != 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "b0 e8 00 00"
@@ -13839,7 +13839,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `(a + b) < a` (carry out) -> `r0 = 1; if (r2 >= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `(a + b) < a` (carry out) -> `r0 = 1; if (r2 >= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 e9 00 00"
@@ -13887,7 +13887,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a >= b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a < b ? a : b` -> `iff (r0 u>= r1) { r0 = r1 }`; `!(a < b)` -> `iff (r0 u>= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a < b ? a : b` -> `iff (r0 u>= r1) { r0 = r1 }`; `!(a < b)` -> `iff (r0 u>= r1) { call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 e9 80 00"
@@ -13934,7 +13934,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "20 e9 00 00"
@@ -13981,7 +13981,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 e9 00 00"
@@ -14122,7 +14122,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a < b) a = f(a)` -> `if (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `if (a < b) a = f(a)` -> `if (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 e9 00 00"
@@ -14170,7 +14170,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a < b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a < b) f()` -> `iff (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a < b) f()` -> `iff (r0 < r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 e9 80 00"
@@ -14217,7 +14217,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "a0 e9 00 00"
@@ -14264,7 +14264,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a > 10` -> `if (r0 < 11) { goto else-case }`; `a >= 10` -> `if (r0 < 10)`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a > 10` -> `if (r0 < 11) { goto else-case }`; `a >= 10` -> `if (r0 < 10)`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "b0 e9 00 00"
@@ -14363,7 +14363,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a register) is zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & b)` guarding a call -> `if ((r1 & r2) == 0) { r0 = r2; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & b)` guarding a call -> `if ((r1 & r2) == 0) { r0 = r2; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ea 00 00"
@@ -14410,7 +14410,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a register) is non-zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & b` -> `if ((r1 & r0) != 0) { goto ... } else { r0 = 1 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & b` -> `if ((r1 & r0) != 0) { goto ... } else { r0 = 1 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ea 80 00"
@@ -14460,7 +14460,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea 81 00"
@@ -14510,7 +14510,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea 82 00"
@@ -14560,7 +14560,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea 84 00"
@@ -14610,7 +14610,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea 88 00"
@@ -14660,7 +14660,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea 90 00"
@@ -14710,7 +14710,7 @@ hw = { ac791n = "as:if.ne.and.rr" }
 summary = "Objdump names a floating not-equal block; on the AC791N it tests whether the bitwise AND is nonzero."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
+notes = "Six encodings decode to this same text; the compiler never emits them (it uses `u!=`, iff.une.rr, for C `!=`). Second-word bits 15..12 are the block shape (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v5: all 480 prior run-3 captures and 48 new distinguishing probes across these six forms match (R[r] & R[s]) != 0, with unchanged flags. The clean-float equal-or-unordered description was an accidental fit to that operand subset. Zero, identical nonzero integers, disjoint nonzero bits and adjacent unequal floats distinguish the rules. On this AC791N these forms act as if.ne.and.rr; other cores are untested."
 
 [[insn.example]]
 bytes = "10 ea a0 00"
@@ -14757,7 +14757,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a modified immediate) is zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & 4)` -> `if ((r1 & 0x4) == 0) { ... }`; with a 64-bit compare it tests a psr bit (`if ((r0 & 0x2) == 0)`). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `!(a & 4)` -> `if ((r1 & 0x4) == 0) { ... }`; with a 64-bit compare it tests a psr bit (`if ((r0 & 0x2) == 0)`). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "20 ea 00 00"
@@ -14804,7 +14804,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when (ra & a modified immediate) is non-zero; optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & 0x8000` -> `if ((r1 & 0x8000) != 0) { r0 = r1; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace; the compared constant is always 0. [compiler] `a & 0x8000` -> `if ((r1 & 0x8000) != 0) { r0 = r1; call }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 ea 00 00"
@@ -14924,7 +14924,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a <= b` -> `if (r0 > r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a <= b` -> `if (r0 > r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ec 00 00"
@@ -14972,7 +14972,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a > b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a <= b` -> `r0 = 1; iff (r2 u> r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a <= b` -> `r0 = 1; iff (r2 u> r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ec 80 00"
@@ -15019,7 +15019,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "20 ec 00 00"
@@ -15066,7 +15066,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 10` -> `if (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 10` -> `if (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 ec 00 00"
@@ -15207,7 +15207,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= b (unsigned compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a > b ? a - b : 0` -> `if (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] unsigned `a > b ? a - b : 0` -> `if (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ec 00 00"
@@ -15255,7 +15255,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a <= b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a <= b) f()` -> `iff (r0 <= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a <= b) f()` -> `iff (r0 <= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ec 80 00"
@@ -15302,7 +15302,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (unsigned compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "a0 ec 00 00"
@@ -15349,7 +15349,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (unsigned compare, unsigned 12-bit constant (0..4095)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 4095` -> `if (r1 <= 4094) { ... }`: the constant is unsigned 0..4095 here (the table's field is uimm). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] unsigned `a < 4095` -> `if (r1 <= 4094) { ... }`: the constant is unsigned 0..4095 here (the table's field is uimm). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares unsigned (as the unsuffixed compare branches); the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "b0 ec 00 00"
@@ -15490,7 +15490,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a < b` -> `ifs (r0 >= r1) { goto else-case }`; `a < b ? c : d` -> `ifs (r0 >= r1) { r2 = r3 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a < b` -> `ifs (r0 >= r1) { goto else-case }`; `a < b ? c : d` -> `ifs (r0 >= r1) { r2 = r3 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ed 00 00"
@@ -15538,7 +15538,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a >= b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a >= b) f()` -> `iff (r0 >= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a >= b) f()` -> `iff (r0 >= r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ed 80 00"
@@ -15585,7 +15585,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `x > 65535` clamp -> `ifs (r1 >= 65536) { r0 = 65535 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `x > 65535` clamp -> `ifs (r1 >= 65536) { r0 = 65535 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "20 ed 00 00"
@@ -15632,7 +15632,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a >= constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 >= 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 >= 10) { goto ... }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 ed 00 00"
@@ -15773,7 +15773,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a >= b` -> `ifs (r0 < r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a >= b` -> `ifs (r0 < r1) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ed 00 00"
@@ -15821,7 +15821,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a < b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a >= b` -> `r0 = 1; iff (r2 u< r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a >= b` -> `r0 = 1; iff (r2 u< r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ed 80 00"
@@ -15868,7 +15868,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 32768` -> `ifs (r1 < 32768) { ... }`; `a < 16384` -> `ifs (r1 < 16384)` (the constant is a modified immediate, printed in decimal). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 32768` -> `ifs (r1 < 32768) { ... }`; `a < 16384` -> `ifs (r1 < 16384)` (the constant is a modified immediate, printed in decimal). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "a0 ed 00 00"
@@ -15915,7 +15915,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a < constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a > 10` -> `ifs (r0 < 11) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a > 10` -> `ifs (r0 < 11) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "b0 ed 00 00"
@@ -16056,7 +16056,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a <= b` -> `ifs (r2 > r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a <= b` -> `ifs (r2 > r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ee 00 00"
@@ -16104,7 +16104,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a > b; false if either is NaN (ordered compare)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a > b) f()` -> `iff (r0 > r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `if (a > b) f()` -> `iff (r0 > r1) { call f }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "10 ee 80 00"
@@ -16151,7 +16151,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "20 ee 00 00"
@@ -16198,7 +16198,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a > constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 10` -> `ifs (r0 > 9) { goto else-case }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "30 ee 00 00"
@@ -16339,7 +16339,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= b (signed compare of two registers); an optional `} else {` part of 1..3 instructions runs otherwise."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a > b` -> `ifs (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] signed `a > b` -> `ifs (r2 <= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ee 00 00"
@@ -16387,7 +16387,7 @@ decode_requires = ["fprev1"]
 summary = "Conditional block on a floating-point compare: runs when a <= b or when either is NaN (unordered)."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a > b ? a : b` -> `iff (r0 u<= r1) { r0 = r1 }`; float `a > b` -> `r0 = 1; iff (r2 u<= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). objdump prints an opening brace and no end; the unused second-word bits are ignored. [compiler] float `a > b ? a : b` -> `iff (r0 u<= r1) { r0 = r1 }`; float `a > b` -> `r0 = 1; iff (r2 u<= r1) { r0 = 0 }`. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares as single-precision floats; a `u` condition is also true when either operand is a NaN, the others false; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "90 ee 80 00"
@@ -16434,7 +16434,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (signed compare, constant is a modified immediate); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] Not emitted in the tests; meaning by analogy with the seen forms (if = unsigned, ifs = signed). Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "a0 ee 00 00"
@@ -16481,7 +16481,7 @@ group = "branches"
 summary = "Conditional block: runs the next 1..4 instructions when a <= constant (signed compare, signed 12-bit constant (-2048..2047, sign-extended to 32 bits)); optional `} else {` part of 1..3 instructions."
 status = "confirmed"
 sources = ["oracle", "compiler", "hardware"]
-notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 2048` -> `ifs (r1 <= 2047) { ... }`; `a < -2000` -> `ifs (r1 <= -2001)`: the constant is signed -2048..2047. Second-word bits 15..14 are the then-part length minus 1 (1..4 instructions) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
+notes = "Layout fitted from sweeps of every second word after each first word (docs/ORACLE.md). [compiler] signed `a < 2048` -> `ifs (r1 <= 2047) { ... }`; `a < -2000` -> `ifs (r1 <= -2001)`: the constant is signed -2048..2047. Second-word bits 15..14 are the then-part length minus 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12) and bits 13..12 the else-part length (0..3); the table lists them as don't-care (docs/COMPILER.md). Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] 12 cases with then/else parts of 1..4 and 0..3 marker instructions (hw/fm1-2026-10-24-v3): the then-part runs when the condition holds, else the else-part; it compares signed; the second-word shape bits hold the part lengths as described; the flags are not changed."
 
 [[insn.example]]
 bytes = "b0 ee 00 00"
@@ -25503,6 +25503,195 @@ origin = "oracle:objdump+clang:20260730.1"
 bytes = "7f e5 ff ef"
 text = "r15_r14 -= r15.h,r15.h *|* r15.h,r15.h (ssat,x2)"
 origin = "oracle:objdump+clang:20260730.1"
+
+[[insn]]
+id = "mul2.prhrhrhrhe.b12"
+syntax = "{r} = {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}"
+encoding = ["111001010111pq1i", "rrr1ttttssss00nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of mul2.prhrhrhrhe with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, into the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the mul2.prhrhrhrhe text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as mul2.prhrhrhrhe (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.u and sum.s entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 cases, every one giving the same registers and psr as mul2.prhrhrhrhe with the same values and inputs, and the mul2 model (doubled lane products, each clamped to 32 bits) holds; 20 of the run's 48 cases reached a clamp."
+
+[[insn.example]]
+bytes = "72 e5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 e5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.l (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 01 10"
+text = "r1_r0 = r0.l,r0.h *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 02 10"
+text = "r1_r0 = r0.h,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a e5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.h,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 e5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.h (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 00 f0"
+text = "r15_r14 = r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 f0 10"
+text = "r1_r0 = r15.l,r15.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 00 1f"
+text = "r1_r0 = r0.l,r0.l *|* r15.l,r15.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f e5 f3 ff"
+text = "r15_r14 = r15.h,r15.h *|* r15.h,r15.h (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn]]
+id = "madd.mul2.prhrhrhrhe.b12"
+syntax = "{r} += {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}"
+encoding = ["111001010111pq1i", "rrr1ttttssss10nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of madd.mul2.prhrhrhrhe with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, added to the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the madd.mul2.prhrhrhrhe text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as madd.mul2.prhrhrhrhe (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.acc entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 cases, every one giving the same registers and psr as madd.mul2.prhrhrhrhe with the same values and inputs, and the mul2 model (doubled lane products, each clamped to 32 bits) holds; 20 of the run's 48 cases reached a clamp."
+
+[[insn.example]]
+bytes = "72 e5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 e5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.l (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 09 10"
+text = "r1_r0 += r0.l,r0.h *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 0a 10"
+text = "r1_r0 += r0.h,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a e5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.h,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 e5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.h (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 08 f0"
+text = "r15_r14 += r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 f8 10"
+text = "r1_r0 += r15.l,r15.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 08 1f"
+text = "r1_r0 += r0.l,r0.l *|* r15.l,r15.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f e5 fb ff"
+text = "r15_r14 += r15.h,r15.h *|* r15.h,r15.h (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn]]
+id = "msub.mul2.prhrhrhrhe.b12"
+syntax = "{r} -= {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}"
+encoding = ["111001010111pq1i", "rrr1ttttssss11nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of msub.mul2.prhrhrhrhe with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, subtracted from the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the msub.mul2.prhrhrhrhe text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as msub.mul2.prhrhrhrhe (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.nacc entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 cases, every one giving the same registers and psr as msub.mul2.prhrhrhrhe with the same values and inputs, and the mul2 model (doubled lane products, each clamped to 32 bits) holds; 20 of the run's 48 cases reached a clamp."
+
+[[insn.example]]
+bytes = "72 e5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 e5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.l (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 0d 10"
+text = "r1_r0 -= r0.l,r0.h *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 0e 10"
+text = "r1_r0 -= r0.h,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a e5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.h,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 e5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.h (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 0c f0"
+text = "r15_r14 -= r0.l,r0.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 fc 10"
+text = "r1_r0 -= r15.l,r15.l *|* r0.l,r0.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 e5 0c 1f"
+text = "r1_r0 -= r0.l,r0.l *|* r15.l,r15.l (usat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f e5 ff ff"
+text = "r15_r14 -= r15.h,r15.h *|* r15.h,r15.h (ssat,x2)"
+origin = "oracle:objdump+clang:20250324.1"
 
 [[insn]]
 id = "mul4.u.prr"
@@ -38177,6 +38366,195 @@ text = "r15_r14 -= r15.h,r15.h *|* r15.h,r15.h (ssat,x2)  #"
 origin = "oracle:objdump+clang:20260730.1"
 
 [[insn]]
+id = "mul2.prhrhrhrhe.b12.p"
+syntax = "{r} = {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}  #"
+encoding = ["111101010111pq1i", "rrr1ttttssss00nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of mul2.prhrhrhrhe.p with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, into the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the mul2.prhrhrhrhe.p text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as mul2.prhrhrhrhe.p (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.u and sum.s entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 parallel-pair cases (gen.py --wave pair) fit the model of mul2.prhrhrhrhe.b12; the second instruction of the pair sees the registers as they were before."
+
+[[insn.example]]
+bytes = "72 f5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 f5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.l (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 01 10"
+text = "r1_r0 = r0.l,r0.h *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 02 10"
+text = "r1_r0 = r0.h,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a f5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.h,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 f5 00 10"
+text = "r1_r0 = r0.l,r0.l *|* r0.l,r0.h (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 00 f0"
+text = "r15_r14 = r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 f0 10"
+text = "r1_r0 = r15.l,r15.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 00 1f"
+text = "r1_r0 = r0.l,r0.l *|* r15.l,r15.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f f5 f3 ff"
+text = "r15_r14 = r15.h,r15.h *|* r15.h,r15.h (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn]]
+id = "madd.mul2.prhrhrhrhe.b12.p"
+syntax = "{r} += {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}  #"
+encoding = ["111101010111pq1i", "rrr1ttttssss10nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of madd.mul2.prhrhrhrhe.p with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, added to the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the madd.mul2.prhrhrhrhe.p text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as madd.mul2.prhrhrhrhe.p (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.acc entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 parallel-pair cases (gen.py --wave pair) fit the model of madd.mul2.prhrhrhrhe.b12; the second instruction of the pair sees the registers as they were before."
+
+[[insn.example]]
+bytes = "72 f5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 f5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.l (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 09 10"
+text = "r1_r0 += r0.l,r0.h *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 0a 10"
+text = "r1_r0 += r0.h,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a f5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.h,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 f5 08 10"
+text = "r1_r0 += r0.l,r0.l *|* r0.l,r0.h (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 08 f0"
+text = "r15_r14 += r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 f8 10"
+text = "r1_r0 += r15.l,r15.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 08 1f"
+text = "r1_r0 += r0.l,r0.l *|* r15.l,r15.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f f5 fb ff"
+text = "r15_r14 += r15.h,r15.h *|* r15.h,r15.h (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn]]
+id = "msub.mul2.prhrhrhrhe.b12.p"
+syntax = "{r} -= {s}{n},{s}{m} *|* {t}{p},{t}{q} {i}  #"
+encoding = ["111101010111pq1i", "rrr1ttttssss11nm"]
+fields = { r = "pair", s = "gpr", n = { kind = "enum", values = [".l", ".h"] }, m = { kind = "enum", values = [".l", ".h"] }, t = "gpr", p = { kind = "enum", values = [".l", ".h"] }, q = { kind = "enum", values = [".l", ".h"] }, i = { kind = "enum", values = ["(usat,x2)", "(ssat,x2)"] } }
+group = "dsp"
+absent_on = ["r1", "r5"]
+objdump_releases = ["20250324.1"]
+summary = "The x2 forms of msub.mul2.prhrhrhrhe.p with second-word bit 12 set, which the chip ignores: the same two doubled 16 x 16 products, subtracted from the lanes of rd, each clamped to 32 bits."
+status = "confirmed"
+sources = ["oracle", "hardware"]
+notes = "Found by comparing JieLi objdump releases (tools in docs/ORACLE.md): 20250324.1 prints this encoding, the msub.mul2.prhrhrhrhe.p text with second-word bit 12 set; 20260730.1 prints `<unknown instruction>`, also with +instrev3 or +fprev1, so it was not in the 20260730.1 sweeps. Both releases assemble the text as msub.mul2.prhrhrhrhe.p (bit 12 clear). It occurs in FM-1 firmware: fm1-emu's corpora of vendor-objdump listings hold these words. The x2 forms of the sum.nacc entries (bit 12 set, first-word bit 1 clear), which 20260730.1 shows as sum(...). [hardware] hw/fm1-2026-11-14-bit12: 8 parallel-pair cases (gen.py --wave pair) fit the model of msub.mul2.prhrhrhrhe.b12; the second instruction of the pair sees the registers as they were before."
+
+[[insn.example]]
+bytes = "72 f5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "73 f5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.l (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 0d 10"
+text = "r1_r0 -= r0.l,r0.h *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 0e 10"
+text = "r1_r0 -= r0.h,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7a f5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.h,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "76 f5 0c 10"
+text = "r1_r0 -= r0.l,r0.l *|* r0.l,r0.h (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 0c f0"
+text = "r15_r14 -= r0.l,r0.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 fc 10"
+text = "r1_r0 -= r15.l,r15.l *|* r0.l,r0.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "72 f5 0c 1f"
+text = "r1_r0 -= r0.l,r0.l *|* r15.l,r15.l (usat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn.example]]
+bytes = "7f f5 ff ff"
+text = "r15_r14 -= r15.h,r15.h *|* r15.h,r15.h (ssat,x2)  #"
+origin = "oracle:objdump+clang:20250324.1"
+
+[[insn]]
 id = "mul4.u.prr.p"
 syntax = "{r} = {s} *|*|*|* {t} (u)  #"
 encoding = ["1111010110-----0", "rrr-ttttssss11-0"]
@@ -42958,7 +43336,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 40 00"
@@ -43006,7 +43384,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 20 00"
@@ -43054,7 +43432,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 10 00"
@@ -43102,7 +43480,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 08 00"
@@ -43150,7 +43528,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 04 00"
@@ -43198,7 +43576,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 02 00"
@@ -43246,7 +43624,7 @@ summary = "Objdump prints a conditional block with an unnamed register compariso
 status = "confirmed"
 sources = ["oracle", "hardware"]
 asm_no_syntax = true
-notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 instructions), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
+notes = "Layout from the complete second-word sweep at EA10 and register probes. Second-word bit 7 is zero and bits 6..0 are nonzero; zero in all seven selects the existing AND-test block instead. The seven entries partition that nonzero field without overlapping it. Second-word bits 15..14 are the then-part length - 1 (1..4 units; a unit is one instruction or a parallel `#` pair, hw/fm1-2026-11-14-bit12), 13..12 the else-part length (0..3), set by the assembler from the block body. [hardware] hw/fm1-2026-10-24-v4: Seven cases matched the AND-zero block: the then-part ran exactly when the bitwise AND of the two operands was zero, else the else-part. The grid includes equal nonzero, disjoint, overlapping, high-bit and float-like words, flags 0/15, and two then markers plus one else marker; flags unchanged. This is behavior on this chip, not a change to the oracle-confirmed encoding or printed unknown condition."
 
 [[insn.example]]
 bytes = "10 ea 01 00"

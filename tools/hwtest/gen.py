@@ -424,7 +424,9 @@ def cases_from_file(tab, path):
     boundary instead of on one), "before" / "after" (lists of {"id", "values"}: instructions run before / after
     the one under test, e.g. to set or read a special register), "force" (true: run a form the generator would
     not, e.g. control forms, one case per batch), and "bytes" (hex) to run exactly those bytes, which
-    must decode as the entry with those values. "model" selects a context model in check.py instead of the
+    must decode as the entry with those values; with "undecoded": true they must instead decode as no entry at
+    all, have the entry's length and field bits, and differ only in fixed bits (a word objdump rejects, run to see
+    whether the chip treats it as the entry: check.py then holds it to the entry's model). "model" selects a context model in check.py instead of the
     entry's ordinary single-instruction model; it has no effect on the image."""
     cases = []
     for c in json.loads(Path(path).read_text()):
@@ -438,12 +440,16 @@ def cases_from_file(tab, path):
         data = codec.encode(i, values)
         if "bytes" in c:                # exact bytes, e.g. to set bits the entry ignores ('-')
             data = bytes.fromhex(c["bytes"].replace(" ", ""))
-            got = codec.decode(tab, data)
-            if not got or got[0].id != i.id or codec.fields_of(i, data) != values:
+            got = codec.decode(tab, data + bytes(8))
+            if c.get("undecoded"):
+                if got or len(data) != 2 * len(i.words) or codec.fields_of(i, data) != values:
+                    raise SystemExit(f"{i.id}: bytes {data.hex()} are not an undecoded variant of this entry "
+                                     "with these values")
+            elif not got or got[0].id != i.id or codec.fields_of(i, data) != values:
                 raise SystemExit(f"{i.id}: bytes {data.hex()} do not decode as this entry with these values")
         case = {"id": i.id, "values": values, "bytes": data.hex(), "text": codec.format(i, values), "in": regs,
                 "flags": c.get("flags", 0) & 0xF}
-        for k in ("sp", "rets", "taken", "misalign", "force", "model"):
+        for k in ("sp", "rets", "taken", "misalign", "force", "model", "undecoded"):
             if k in c:
                 case[k] = c[k]
         if i.block:                     # the block's body: markers (block_lines)
@@ -563,6 +569,7 @@ def main():
                                               "the batches are named after the file")
     p.add_argument("--flag-mask", type=lambda v: int(v, 0), default=0xF,
                    help="psr bits the cases set (default 0xF, the condition flags; 0 leaves psr as it is)")
+    p.add_argument("--ids", help="with --wave: only these entries (comma-separated ids)")
     p.add_argument("--per-entry", type=int, default=12)
     p.add_argument("--batch", type=int, default=60)
     p.add_argument("--seed", type=int, default=1)
@@ -583,6 +590,12 @@ def main():
         a.wave = a.cases.stem
     else:
         insns = select(tab, a.wave)
+        if a.ids:
+            wanted = a.ids.split(",")
+            unknown = set(wanted) - {i.id for i in insns}
+            if unknown:
+                raise SystemExit(f"not in wave {a.wave}: {', '.join(sorted(unknown))}")
+            insns = [i for i in insns if i.id in wanted]
         if a.wave in ("mem", "stack", "branch", "misc"):
             cases = make_special_cases(tab, insns, a.per_entry, rng)
         elif a.wave == "block":

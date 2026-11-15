@@ -15,6 +15,7 @@ group = "memory"                    # optional: a heading for docs/ISA.md
 requires = []                       # CPU features the assembler needs for it, e.g. ["instrev3"]
 decode_requires = []                # optional: features without which JieLi's objdump does not show it
 absent_on = []                      # optional: CPU models whose objdump does not show it, see "CPU models"
+objdump_releases = []               # optional: the only JieLi toolchain releases whose objdump shows it, see "Toolchain releases"
 hw = { ac791n = "resets" }          # optional: what it does on a chip when that is not what the syntax says
 summary = "Load a word from the stack at sp plus 0..252."
 status = "confirmed"                # guessed | documented | confirmed
@@ -134,6 +135,16 @@ JieLi's objdump decodes according to `-mcpu` (one of `r1`..`r5`, `r2v3`, `r3v3`,
 entry's examples: 642 entries show everywhere; 91 floating-point forms need `fprev1`; 426 are absent on `r1` and
 `r5`; 6 (`copex`, `shiftr ... mode`) are absent without `-mcpu`. On `r1` and `r5` some of those words decode as
 other instructions, which the table does not describe (only `r3`, the FM-1's, was swept).
+
+## Toolchain releases
+
+`objdump_releases` lists the JieLi toolchain releases whose objdump prints a form, when that is not every release
+the table was compared with (`pi32v2isa.table.OBJDUMP_RELEASES`: 20250324.1 and 20260730.1, the current one).
+`table.shown_by_objdump` takes the release (default: the current one), so this repo's objdump leaves such a form
+out unless given `--release=`, and `tools/llvm` leaves it out of the backend. Such an entry is confirmed with
+`oracle confirm --release R`; `check_examples` checks its examples only with that release. The six
+`*.mul2.prhrhrhrhe.b12*` entries are the only ones: 20260730.1's objdump calls them unknown, and both releases'
+assemblers write their text with the bit clear ([hw/fm1-2026-11-14-bit12](../hw/fm1-2026-11-14-bit12/README.md)).
 
 ## Hardware behaviour
 

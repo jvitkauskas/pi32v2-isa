@@ -169,9 +169,12 @@ becomes `r1 += r2` where that form exists.
 Known so far [oracle, compiler; evidence in [COMPILER.md](COMPILER.md)]:
 
 - Branch offsets are relative to the end of the branch instruction.
-- `if (cond) {` blocks are predication: the following 1..4 instructions run only if the condition holds,
-  optionally followed by `} else {` and 0..3 more that run otherwise. The shape is in the opener's second
-  word, bits 15..14 (then-count - 1) and 13..12 (else-count); objdump shows it only by where it prints `}`.
+- `if (cond) {` blocks are predication: the following 1..4 units run only if the condition holds,
+  optionally followed by `} else {` and 0..3 more that run otherwise. A unit is one instruction or a parallel
+  pair (`A #` and its partner): both assemblers count a pair once, and on the FM-1 a pair as the whole then- or
+  else-part runs or is skipped as a whole ([hw/fm1-2026-11-14-bit12](../hw/fm1-2026-11-14-bit12/README.md)). The
+  shape is in the opener's second word, bits 15..14 (then-count - 1) and 13..12 (else-count); objdump shows it
+  only by where it prints `}`.
 - Flags: `add`/`sub` set the carry in `psr` bit 1 (set when there is no borrow); `addc` adds it, `subc`
   subtracts its complement; a signed `<` tests `psr` bit 3 xor bit 0.
 - `if` compares are unsigned, `ifs` signed (no difference for `==`, `!=`), `iff` floating point; the `u`

@@ -32,7 +32,9 @@ SAME_SIZE = {
     ("li.modimm.p", "li.s16.p"), ("pop.pc_rmask", "pop.srmask"), ("push.rets_rmask.c", "push.srmask.c"),
     ("rmw.add.s12", "rmw.add.modimm"), ("rmw.and.nmodimm", "rmw.and.modimm"),
 } | {(f"{c}.ri.s12", f"{c}.ri.modimm") for c in
-     ("if.eq", "if.ne", "if.ge", "if.gt", "if.le", "if.lt", "ifs.ge", "ifs.gt", "ifs.le", "ifs.lt")}
+     ("if.eq", "if.ne", "if.ge", "if.gt", "if.le", "if.lt", "ifs.ge", "ifs.gt", "ifs.le", "ifs.lt")
+     } | {(f"{m}.prhrhrhrhe.b12{p}", f"{m}.prhrhrhrhe{p}")       # the same text with second-word bit 12 clear,
+          for m in ("mul2", "madd.mul2", "msub.mul2") for p in ("", ".p")}   # as both JieLi releases assemble it
 
 
 class RoundTrip(unittest.TestCase):

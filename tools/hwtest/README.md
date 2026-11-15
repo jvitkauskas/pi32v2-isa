@@ -54,7 +54,7 @@ python3 tools/hwtest/analyze.py /tmp/hw  # check the self-test before running wa
 python3 tools/hwtest/analyze.py /tmp/hw --json results.jsonl
 ```
 
-`gen.py` prints the slot of each wave's last batch. To run waves one after another without a power cycle, start
+`--ids a,b,...` limits a wave to those entries (e.g. `--wave pair --ids ...` for a few parallel twins). `gen.py` prints the slot of each wave's last batch. To run waves one after another without a power cycle, start
 the next wave in the other slot (`--first-slot`); otherwise its first upload would land on the runner that is
 answering the ROM. Results of real runs are kept under [hw/](../../hw/).
 
@@ -93,6 +93,8 @@ ordinary numerical instruction models are complementary.
 in `check.py`) and lists the forms whose hardware results differ. To test particular inputs, write them as a
 JSON list of `{"id", "values" (raw field values), "in" (16 registers), "flags"}` and build batches with
 `gen.py OUTDIR --cases FILE.json --first-slot ...`.
+
+A case with exact `bytes` and `"undecoded": true` runs a word that decodes as no entry but carries the entry's field bits (a fixed bit flipped), so `check.py` can test whether the chip runs it as that entry ([hw/fm1-2026-11-14-bit12](../../hw/fm1-2026-11-14-bit12/README.md)).
 
 Cases may also supply `sp` and `rets` (numbers or symbols), `misalign` (start the tested instruction at
 2 mod 4), `taken` (aim a branch at the stub's taken exit), or exact `bytes` (which must decode as the given
