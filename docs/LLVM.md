@@ -47,7 +47,9 @@ ninja llvm-mc llvm-objdump llvm-readobj llc   # add -DLLVM_ENABLE_PROJECTS="clan
 The generated files are committed in the LLVM tree, each with a header naming the generator: `PI32V2InstrGen.td`
 (operands and instructions), `PI32V2OperandsGen.inc` (their decoders, encoders and printers),
 `AsmParser/PI32V2ParserGen.inc` (the assembler's templates), `MCTargetDesc/PI32V2FixupsGen.inc` (where an
-expression goes in each instruction) and `MCTargetDesc/PI32V2RelaxGen.inc` (branch relaxation). Regenerate them
+expression goes in each instruction), `MCTargetDesc/PI32V2RelaxGen.inc` (branch relaxation) and
+`AsmParser/PI32V2HwGen.inc` (the forms a chip's hardware runs differently, the table's `hw` key, which the assembler
+warns about with that chip as the CPU: `-mcpu=ac791n`). Regenerate them
 after any change to `isa/pi32v2.toml` or `pi32v2isa/asm.py`.
 
 ## How the table maps to LLVM
