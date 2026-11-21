@@ -13,6 +13,8 @@ Writes, into LLVM_TARGET_DIR (llvm/lib/Target/PI32V2 of the LLVM tree):
                            PI32V2_GEN_PRINTER_DECLS, PI32V2_GEN_PRINTERS)
   PI32V2InstrIds.txt       LLVM instruction name -> table id and enum values (for tests and tools)
   AsmParser/PI32V2ParserGen.inc   the assembler's templates (tools/llvm/gen_parser.py)
+  AsmParser/PI32V2HwGen.inc       the forms a chip's hardware runs differently (the table's `hw` key), for the
+                           assembler's warnings with that chip as the CPU (a section per chip: PI32V2_GEN_HW_AC791N)
   MCTargetDesc/PI32V2CompressGen.inc the shorter form JieLi's assembler would use for a code generator form
                            (tools/llvm/gen_compress.py)
   MCTargetDesc/PI32V2RelaxGen.inc    branch relaxation: each branch form's next larger form (tools/llvm/gen_parser.py)
@@ -39,6 +41,7 @@ How the table maps to TableGen (docs/LLVM.md):
   default variant never chooses them.
 """
 import argparse
+import json
 import re
 import sys
 from itertools import product
@@ -468,6 +471,21 @@ def asm_test(tab):
     return "\n".join(lines) + "\n"
 
 
+def hw_inc(records):
+    """The forms a chip's hardware does not run as their syntax says (the table's `hw` key): a section per chip of
+    {instruction, "<table id> <what it does>"} rows, for the assembler's warnings."""
+    out = [f"// {HEADER}\n"]
+    for chip in sorted(table.CHIPS):
+        macro = f"PI32V2_GEN_HW_{chip.upper()}"
+        out.append(f"#ifdef {macro}\n#undef {macro}\n")
+        for name, (insn, _, _) in records.items():
+            note = table.hw_note(insn, chip)
+            if note:
+                out.append(f"  {{PI32V2::{name}, {json.dumps(f'{insn.id} {note}')}}},\n")
+        out.append(f"#endif // {macro}\n")
+    return "".join(out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("target_dir", type=Path)
@@ -482,6 +500,7 @@ def main():
     import gen_parser
     parser_inc, relax_inc = gen_parser.generate(tab, records, HEADER)
     (a.target_dir / "AsmParser" / "PI32V2ParserGen.inc").write_text(parser_inc)
+    (a.target_dir / "AsmParser" / "PI32V2HwGen.inc").write_text(hw_inc(records))
     (a.target_dir / "MCTargetDesc" / "PI32V2RelaxGen.inc").write_text(relax_inc)
     import gen_compress
     (a.target_dir / "MCTargetDesc" / "PI32V2CompressGen.inc").write_text(
