@@ -193,7 +193,8 @@ and `libpi32v2.a` from `tools/llvm/runtime`: the `__sync_*` functions of 1, 2 an
 core's interrupts masked (`cli`/`sti` of the previous state) and holding the shared core lock (`lockset`, csync,
 the access, csync, `lockclr`), which excludes the other core (hw/fm1-2026-10-24-app4: two cores' 1000 locked
 increments each gave 2000), as the AC79 SDK's critical sections take it. The lock is taken once per call, never
-nested (its recursion is not known). Aligned loads and stores of up to a word are single accesses, fences
+nested (its recursion is not known). The compiler passes an operand narrower than a word without extending it, so
+each function uses only the low bytes of its operands. Aligned loads and stores of up to a word are single accesses, fences
 `csync`. The two-core use of the runtime itself has not been run on the FM-1 yet.
 
 ## Code size
